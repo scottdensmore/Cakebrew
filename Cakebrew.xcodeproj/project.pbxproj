@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -19,8 +19,6 @@
 		1540FA3518ECF66B00334A5C /* download.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1540FA3418ECF66B00334A5C /* download.icns */; };
 		1570BA3618EE0A66001C3C5C /* BPHomebrewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1570BA3518EE0A66001C3C5C /* BPHomebrewManager.m */; };
 		1570BA5618EE50BD001C3C5C /* BPFormula.m in Sources */ = {isa = PBXBuildFile; fileRef = 1570BA5518EE50BD001C3C5C /* BPFormula.m */; };
-		1570EFAF1B2B91170075453A /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 15B23A2818F4F21E00714212 /* Sparkle.framework */; };
-		1570EFB01B2B91170075453A /* Sparkle.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 15B23A2818F4F21E00714212 /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		15715F611C78050B00AE0E66 /* BPBundleWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 15715F5F1C78050B00AE0E66 /* BPBundleWindow.xib */; };
 		15715F641C78053300AE0E66 /* BPBundleWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 15715F631C78053300AE0E66 /* BPBundleWindowController.m */; };
 		1584884A1F0708F000BD2CD9 /* brewinfo_nmap.txt in Resources */ = {isa = PBXBuildFile; fileRef = 158488491F0708F000BD2CD9 /* brewinfo_nmap.txt */; };
@@ -99,7 +97,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				1570EFB01B2B91170075453A /* Sparkle.framework in CopyFiles */,
 				15A89D2C25F2C5F1003D33F5 /* PXSourceList.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -168,9 +165,7 @@
 		15A89D2A25F2C5F1003D33F5 /* PXSourceList.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = PXSourceList.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		15A89D3725F2F467003D33F5 /* NSLayoutConstraint+Shims.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSLayoutConstraint+Shims.h"; sourceTree = "<group>"; };
 		15A89D3825F2F467003D33F5 /* NSLayoutConstraint+Shims.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSLayoutConstraint+Shims.m"; sourceTree = "<group>"; };
-		15B23A2818F4F21E00714212 /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sparkle.framework; path = Cakebrew/Frameworks/Sparkle.framework; sourceTree = "<group>"; };
 		15B23A2B18F5003600714212 /* dsa_pub.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dsa_pub.pem; sourceTree = "<group>"; };
-		15B5E51B25F1C5DA00A079ED /* PXSourceList.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = PXSourceList.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		15BBA18C1BD031C9002C0127 /* BPBackgroundView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPBackgroundView.h; path = Views/BPBackgroundView.h; sourceTree = "<group>"; };
 		15BBA18D1BD031C9002C0127 /* BPBackgroundView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPBackgroundView.m; path = Views/BPBackgroundView.m; sourceTree = "<group>"; };
 		15C34CBD19512DE100B92E36 /* BPAutoScrollTextView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPAutoScrollTextView.h; path = Views/BPAutoScrollTextView.h; sourceTree = "<group>"; };
@@ -295,7 +290,6 @@
 				15D2CFAD18F202D000B6D9F1 /* QuartzCore.framework in Frameworks */,
 				1FE4FE59148E4CDD008EDE8B /* Cocoa.framework in Frameworks */,
 				15A89D2B25F2C5F1003D33F5 /* PXSourceList.framework in Frameworks */,
-				1570EFAF1B2B91170075453A /* Sparkle.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -458,9 +452,7 @@
 			isa = PBXGroup;
 			children = (
 				15A89D2A25F2C5F1003D33F5 /* PXSourceList.framework */,
-				15B5E51B25F1C5DA00A079ED /* PXSourceList.framework */,
 				D2CC8CA61B90F04C00F763DF /* Security.framework */,
-				15B23A2818F4F21E00714212 /* Sparkle.framework */,
 				15D2CFAC18F202D000B6D9F1 /* QuartzCore.framework */,
 				1FE4FE58148E4CDD008EDE8B /* Cocoa.framework */,
 				1FE4FE5A148E4CDD008EDE8B /* Other Frameworks */,
@@ -568,7 +560,6 @@
 				1FE4FE51148E4CDD008EDE8B /* Frameworks */,
 				1FE4FE52148E4CDD008EDE8B /* Resources */,
 				1570BA6018EF9B0F001C3C5C /* CopyFiles */,
-				1555FD5F25CF4E5800E5D344 /* Fix Sparkle Hardened Runtime */,
 			);
 			buildRules = (
 			);
@@ -602,12 +593,13 @@
 		1FE4FE4B148E4CDD008EDE8B /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = YES;
 				CLASSPREFIX = BP;
-				LastUpgradeCheck = 1250;
+				LastUpgradeCheck = 2600;
 				ORGANIZATIONNAME = "Bruno Philipe";
 				TargetAttributes = {
 					1FE4FE53148E4CDD008EDE8B = {
-						DevelopmentTeam = R85D3K8ATT;
+						DevelopmentTeam = 27ZDER873F;
 						ProvisioningStyle = Automatic;
 					};
 					D261C9BF1B852FA300409803 = {
@@ -689,27 +681,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		1555FD5F25CF4E5800E5D344 /* Fix Sparkle Hardened Runtime */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Fix Sparkle Hardened Runtime";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "codesign --verbose --force --deep -o runtime \\\n--sign \"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\" \\\n\"${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}/Contents/Frameworks/Sparkle.framework/Versions/A/Resources/AutoUpdate.app\"\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		1FE4FE50148E4CDD008EDE8B /* Sources */ = {
@@ -969,8 +940,10 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
@@ -992,6 +965,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 			};
 			name = Debug;
 		};
@@ -1019,8 +993,10 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -1034,6 +1010,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 			};
 			name = Release;
 		};
@@ -1048,7 +1025,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 594;
-				DEVELOPMENT_TEAM = R85D3K8ATT;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 27ZDER873F;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1058,9 +1036,15 @@
 				GCC_PREFIX_HEADER = "Cakebrew/Cakebrew-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				INFOPLIST_FILE = "Cakebrew/Cakebrew-Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				ONLY_ACTIVE_ARCH = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.brunophilipe.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.scottdensmore.--PRODUCT-NAME-rfc1034identifier-";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = com.scottdensmore.Cakebrew;
 				PRODUCT_NAME = Cakebrew;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				USER_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/Cakebrew/Frameworks/PXSourceList.framework/Headers";
@@ -1079,7 +1063,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 594;
-				DEVELOPMENT_TEAM = R85D3K8ATT;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 27ZDER873F;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1088,9 +1073,15 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Cakebrew/Cakebrew-Prefix.pch";
 				INFOPLIST_FILE = "Cakebrew/Cakebrew-Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				ONLY_ACTIVE_ARCH = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.brunophilipe.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.scottdensmore.--PRODUCT-NAME-rfc1034identifier-";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = com.scottdensmore.Cakebrew;
 				PRODUCT_NAME = Cakebrew;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				USER_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/Cakebrew/Frameworks/PXSourceList.framework/Headers";
@@ -1108,6 +1099,7 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(DEVELOPER_FRAMEWORKS_DIR)",
@@ -1122,10 +1114,14 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				INFOPLIST_FILE = CakebrewTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.hrubasko.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.scottdensmore.--PRODUCT-NAME-rfc1034identifier-";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1141,6 +1137,7 @@
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(DEVELOPER_FRAMEWORKS_DIR)",
@@ -1151,10 +1148,14 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				INFOPLIST_FILE = CakebrewTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.hrubasko.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.scottdensmore.--PRODUCT-NAME-rfc1034identifier-";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

@@ -232,8 +232,6 @@
 		[cellView.imageView setImage:sourceListItem.icon];
 	}
 
-	[cellView.badgeView calcSize];
-
 	return cellView;
 }
 

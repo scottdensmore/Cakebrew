@@ -145,7 +145,7 @@ unichar SPACE_CHARACTER = 0x0020;
 	NSUInteger numberOfPressedCharacters = [[theEvent charactersIgnoringModifiers] length];
 	NSEventType eventType = [theEvent type];
 	
-	if (eventType == NSKeyDown && numberOfPressedCharacters == 1)
+	if (eventType == NSEventTypeKeyDown && numberOfPressedCharacters == 1)
 	{
 		unichar key = [[theEvent charactersIgnoringModifiers] characterAtIndex:0];
 		if (key == SPACE_CHARACTER)
