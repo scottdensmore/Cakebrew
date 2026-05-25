@@ -4,7 +4,4 @@
    <FileRef
       location = "container:Cakebrew.xcodeproj">
    </FileRef>
-   <FileRef
-      location = "group:Dependencies/PXSourceList/PXSourceList.xcodeproj">
-   </FileRef>
 </Workspace>

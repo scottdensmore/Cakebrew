@@ -20,7 +20,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <PXSourceList/PXSourceList.h>
 #import "BPFormula.h"
 #import "BPFormulaeTableView.h"
 #import "BPFormulaPopoverViewController.h"

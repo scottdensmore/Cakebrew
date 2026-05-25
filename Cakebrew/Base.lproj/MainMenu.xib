@@ -949,7 +949,7 @@ CA
                 <rect key="frame" x="0.0" y="0.0" width="210" height="275"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <outlineView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" selectionHighlightStyle="sourceList" columnReordering="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="32" rowSizeStyle="systemDefault" viewBased="YES" indentationPerLevel="13" outlineTableColumn="Dme-LE-cyv" id="9f4-xo-e1c" customClass="PXSourceList">
+                    <outlineView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" selectionHighlightStyle="sourceList" columnReordering="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="32" rowSizeStyle="systemDefault" viewBased="YES" indentationPerLevel="13" outlineTableColumn="Dme-LE-cyv" id="9f4-xo-e1c">
                         <rect key="frame" x="0.0" y="0.0" width="210" height="275"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" name="_sourceListBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -967,7 +967,7 @@ CA
                                 </textFieldCell>
                                 <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                 <prototypeCellViews>
-                                    <tableCellView identifier="HeaderCell" id="266-1g-zfm" customClass="PXSourceListTableCellView">
+                                    <tableCellView identifier="HeaderCell" id="266-1g-zfm" customClass="BPSidebarTableCellView">
                                         <rect key="frame" x="10" y="0.0" width="190" height="17"/>
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                         <subviews>
@@ -985,7 +985,7 @@ CA
                                             <outlet property="textField" destination="zqu-hn-vHh" id="EfQ-O1-U7g"/>
                                         </connections>
                                     </tableCellView>
-                                    <tableCellView identifier="MainCell" id="Emw-wX-GZR" customClass="PXSourceListTableCellView">
+                                    <tableCellView identifier="MainCell" id="Emw-wX-GZR" customClass="BPSidebarTableCellView">
                                         <rect key="frame" x="10" y="17" width="190" height="17"/>
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                         <subviews>
@@ -1008,7 +1008,7 @@ CA
                                                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                         </textFieldCell>
                                                     </textField>
-                                                    <customView horizontalHuggingPriority="252" verticalHuggingPriority="751" horizontalCompressionResistancePriority="780" verticalCompressionResistancePriority="780" placeholderIntrinsicWidth="40" placeholderIntrinsicHeight="16" translatesAutoresizingMaskIntoConstraints="NO" id="NXZ-4S-anG" customClass="PXSourceListBadgeView">
+                                                    <customView horizontalHuggingPriority="252" verticalHuggingPriority="751" horizontalCompressionResistancePriority="780" verticalCompressionResistancePriority="780" placeholderIntrinsicWidth="40" placeholderIntrinsicHeight="16" translatesAutoresizingMaskIntoConstraints="NO" id="NXZ-4S-anG" customClass="BPSidebarBadgeView">
                                                         <rect key="frame" x="142" y="1" width="40" height="16"/>
                                                     </customView>
                                                 </subviews>
