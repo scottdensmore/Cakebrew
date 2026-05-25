@@ -138,7 +138,7 @@
 
 @property (strong, nonatomic) BPSidebarItem *rootSidebarCategory;
 
-@property (strong, nonatomic) BPSidebarItem *instaledFormulaeSidebarItem;
+@property (strong, nonatomic) BPSidebarItem *installedFormulaeSidebarItem;
 @property (strong, nonatomic) BPSidebarItem *outdatedFormulaeSidebarItem;
 @property (strong, nonatomic) BPSidebarItem *allFormulaeSidebarItem;
 @property (strong, nonatomic) BPSidebarItem *leavesFormulaeSidebarItem;
@@ -166,10 +166,10 @@
 							   identifier:@"group"];
 	[_rootSidebarCategory addChildItem:parent];
 
-	_instaledFormulaeSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Installed", nil)
+	_installedFormulaeSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Installed", nil)
 													 identifier:@"item"];
-	_instaledFormulaeSidebarItem.icon = [self installedSidebarIconImage];
-	[parent addChildItem:_instaledFormulaeSidebarItem];
+	_installedFormulaeSidebarItem.icon = [self installedSidebarIconImage];
+	[parent addChildItem:_installedFormulaeSidebarItem];
 
 	_outdatedFormulaeSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Outdated", nil)
 													 identifier:@"item"];
@@ -290,7 +290,7 @@
 
 - (void)refreshSidebarBadges
 {
-	self.instaledFormulaeSidebarItem.badgeValue		= @([[[BPHomebrewManager sharedManager] installedFormulae] count]);
+	self.installedFormulaeSidebarItem.badgeValue		= @([[[BPHomebrewManager sharedManager] installedFormulae] count]);
 	self.outdatedFormulaeSidebarItem.badgeValue		= @([[[BPHomebrewManager sharedManager] outdatedFormulae] count]);
 	self.allFormulaeSidebarItem.badgeValue			= @([[[BPHomebrewManager sharedManager] allFormulae] count]);
 	self.leavesFormulaeSidebarItem.badgeValue		= @([[[BPHomebrewManager sharedManager] leavesFormulae] count]);

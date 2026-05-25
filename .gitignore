@@ -17,6 +17,10 @@ DerivedData
 *.xcuserstate
 
 
+### Genkit ###
+.genkit/
+
+
 ### OSX ###
 .DS_Store
 .AppleDouble
