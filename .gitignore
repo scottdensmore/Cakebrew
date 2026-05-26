@@ -21,6 +21,10 @@ DerivedData
 .genkit/
 
 
+### Claude Code (machine-local settings) ###
+.claude/settings.local.json
+
+
 ### OSX ###
 .DS_Store
 .AppleDouble
