@@ -1,0 +1,60 @@
+{
+  "cli_version": "0.6.2",
+  "checkpoint_id": "5bb32117b400",
+  "session_id": "86f7230f-16a2-4201-9dae-105c1789c2c6",
+  "strategy": "manual-commit",
+  "created_at": "2026-05-26T03:38:40.938951Z",
+  "branch": "cleanup-modernization-leftovers",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "Cakebrew.xcodeproj/project.pbxproj",
+    "Cakebrew/Cakebrew-Info.plist",
+    "Cakebrew/Credits.rtf",
+    "Cakebrew/dsa_pub.pem",
+    "Cakebrew/pt.lproj/Credits.rtf"
+  ],
+  "agent": "Claude Code",
+  "model": "",
+  "turn_id": "b3a85f2af3fa",
+  "token_usage": {
+    "input_tokens": 190,
+    "cache_creation_tokens": 580375,
+    "cache_read_tokens": 13208851,
+    "output_tokens": 134481,
+    "api_call_count": 95
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-05-26T03:38:40.906509Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 12,
+    "total_committed": 0,
+    "total_lines_changed": 12,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 259,
+      "user_lines_removed": 12,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".claude/agents/entire-search.md": 25,
+        ".claude/settings.json": 84,
+        ".claude/settings.local.json": 11,
+        ".codex/agents/entire-search.toml": 23,
+        ".codex/config.toml": 3,
+        ".codex/hooks.json": 52,
+        ".github/hooks/entire.json": 61
+      },
+      "user_removed_per_file": {
+        "Cakebrew/Credits.rtf": 8,
+        "Cakebrew/pt.lproj/Credits.rtf": 4
+      }
+    }
+  ]
+}

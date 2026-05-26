@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.6.2",
+  "checkpoint_id": "5bb32117b400",
+  "strategy": "manual-commit",
+  "branch": "cleanup-modernization-leftovers",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "Cakebrew.xcodeproj/project.pbxproj",
+    "Cakebrew/Cakebrew-Info.plist",
+    "Cakebrew/Credits.rtf",
+    "Cakebrew/dsa_pub.pem",
+    "Cakebrew/pt.lproj/Credits.rtf"
+  ],
+  "sessions": [
+    {
+      "metadata": "/5b/b32117b400/0/metadata.json",
+      "transcript": "/5b/b32117b400/0/full.jsonl",
+      "content_hash": "/5b/b32117b400/0/content_hash.txt",
+      "prompt": "/5b/b32117b400/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 190,
+    "cache_creation_tokens": 580375,
+    "cache_read_tokens": 13208851,
+    "output_tokens": 134481,
+    "api_call_count": 95
+  }
+}
