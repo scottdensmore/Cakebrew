@@ -91,7 +91,9 @@ NSString *const kBP_HOMEBREW_WEBSITE = @"https://www.cakebrew.com";
 
 - (void)cleanupTaskAlerts
 {
-	[[UNUserNotificationCenter currentNotificationCenter] removeAllDeliveredNotifications];
+	UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
+	[center removeAllPendingNotificationRequests];
+	[center removeAllDeliveredNotifications];
 	[[[NSApplication sharedApplication] dockTile] setBadgeLabel:nil];
 }
 

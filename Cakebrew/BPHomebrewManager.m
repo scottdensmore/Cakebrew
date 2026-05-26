@@ -152,19 +152,10 @@ NSString *const kBPCacheDataKey	= @"BPCacheDataKey";
 			NSData *data = [NSData dataWithContentsOfFile:allFormulaeFile.relativePath];
 			NSError *error = nil;
 
-			if (@available(macOS 10.13, *)) {
-				NSSet *classes = [NSSet setWithArray:@[[NSDictionary class], [NSArray class], [NSMutableArray class], [BPFormula class], [NSString class], [NSURL class], [NSNumber class], [BPFormulaOption class]]];
-				cacheDict = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:&error];
-				if (error) {
-					NSLog(@"Failed decoding data: %@", [error localizedDescription]);
-				}
-			} else {
-				// Fallback for older macOS versions
-				NSError *fallbackError = nil;
-				cacheDict = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSDictionary class] fromData:data error:&fallbackError];
-				if (fallbackError) {
-					NSLog(@"Failed decoding data: %@", [fallbackError localizedDescription]);
-				}
+			NSSet *classes = [NSSet setWithArray:@[[NSDictionary class], [NSArray class], [NSMutableArray class], [BPFormula class], [NSString class], [NSURL class], [NSNumber class], [BPFormulaOption class]]];
+			cacheDict = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:&error];
+			if (error) {
+				NSLog(@"Failed decoding data: %@", [error localizedDescription]);
 			}
 			self.allFormulae = [cacheDict objectForKey:kBPCacheDataKey];
 		}
@@ -201,10 +192,11 @@ NSString *const kBPCacheDataKey	= @"BPCacheDataKey";
 														  requiringSecureCoding:YES
 																		  error:&error];
 
-			if (error) {
+			if (error || !cacheData) {
 				NSLog(@"Failed encoding data: %@", [error localizedDescription]);
+				return;
 			}
-			
+
 			if ([[NSFileManager defaultManager] fileExistsAtPath:allFormulaeFile.relativePath])
 			{
 				[cacheData writeToURL:allFormulaeFile atomically:YES];
