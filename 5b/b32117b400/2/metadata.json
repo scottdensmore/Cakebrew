@@ -1,0 +1,47 @@
+{
+  "cli_version": "0.6.2",
+  "checkpoint_id": "5bb32117b400",
+  "session_id": "ff0f4123-0c71-4068-92ca-4e7a2399c8d7",
+  "strategy": "manual-commit",
+  "created_at": "2026-05-26T03:38:41.265954Z",
+  "branch": "cleanup-modernization-leftovers",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "Cakebrew/Credits.rtf",
+    "Cakebrew/pt.lproj/Credits.rtf"
+  ],
+  "agent": "Claude Code",
+  "model": "",
+  "turn_id": "c543220aa1a2",
+  "token_usage": {
+    "input_tokens": 48,
+    "cache_creation_tokens": 44767,
+    "cache_read_tokens": 1094573,
+    "output_tokens": 20383,
+    "api_call_count": 24
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-05-26T03:38:41.257137Z",
+    "agent_lines": 0,
+    "agent_removed": 12,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 0,
+    "total_lines_changed": 44,
+    "agent_percentage": 27.27272727272727,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}
