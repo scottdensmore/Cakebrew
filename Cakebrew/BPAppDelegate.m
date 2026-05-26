@@ -22,11 +22,12 @@
 #import "BPHomebrewManager.h"
 #import "DCOAboutWindowController.h"
 #import "BPAppDelegate.h"
+#import <UserNotifications/UserNotifications.h>
 
 NSString *const kBP_HOMEBREW_WEBSITE = @"https://www.cakebrew.com";
 
 
-@interface BPAppDelegate () <NSUserNotificationCenterDelegate>
+@interface BPAppDelegate () <UNUserNotificationCenterDelegate>
 
 @property (nonatomic, strong) DCOAboutWindowController *aboutWindowController;
 
@@ -55,7 +56,15 @@ NSString *const kBP_HOMEBREW_WEBSITE = @"https://www.cakebrew.com";
 	
 	[[BPHomebrewManager sharedManager] reloadFromInterfaceRebuildingCache:NO];
 	
-	[[NSUserNotificationCenter defaultUserNotificationCenter] setDelegate:self];
+	// Request notification permissions and set delegate
+	UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
+	[center setDelegate:self];
+	[center requestAuthorizationWithOptions:(UNAuthorizationOptionAlert | UNAuthorizationOptionSound)
+						  completionHandler:^(BOOL granted, NSError * _Nullable error) {
+		if (error) {
+			NSLog(@"Error requesting notification permissions: %@", error);
+		}
+	}];
 }
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)sender hasVisibleWindows:(BOOL)flag
@@ -82,7 +91,9 @@ NSString *const kBP_HOMEBREW_WEBSITE = @"https://www.cakebrew.com";
 
 - (void)cleanupTaskAlerts
 {
-	[[NSUserNotificationCenter defaultUserNotificationCenter] removeAllDeliveredNotifications];
+	UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
+	[center removeAllPendingNotificationRequests];
+	[center removeAllDeliveredNotifications];
 	[[[NSApplication sharedApplication] dockTile] setBadgeLabel:nil];
 }
 
@@ -154,11 +165,21 @@ NSString *const kBP_HOMEBREW_WEBSITE = @"https://www.cakebrew.com";
 		[[[NSApplication sharedApplication] dockTile] setBadgeLabel:@"●"];
 	}
 	
-	NSUserNotification *userNotification = [NSUserNotification new];
-	[userNotification setTitle:title];
-	[userNotification setSubtitle:desc];
+	UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
+	content.title = title;
+	content.subtitle = desc;
+	content.sound = [UNNotificationSound defaultSound];
 	
-	[[NSUserNotificationCenter defaultUserNotificationCenter] scheduleNotification:userNotification];
+	UNTimeIntervalNotificationTrigger *trigger = [UNTimeIntervalNotificationTrigger triggerWithTimeInterval:0.1 repeats:NO];
+	
+	NSString *identifier = [[NSUUID UUID] UUIDString];
+	UNNotificationRequest *request = [UNNotificationRequest requestWithIdentifier:identifier content:content trigger:trigger];
+	
+	[[UNUserNotificationCenter currentNotificationCenter] addNotificationRequest:request withCompletionHandler:^(NSError * _Nullable error) {
+		if (error) {
+			NSLog(@"Error scheduling notification: %@", error);
+		}
+	}];
 }
 
 #pragma mark - IBActions
@@ -176,10 +197,27 @@ NSString *const kBP_HOMEBREW_WEBSITE = @"https://www.cakebrew.com";
 
 #pragma mark - User Notification Center Delegate
 
-- (void)userNotificationCenter:(NSUserNotificationCenter *)center
-	   didActivateNotification:(NSUserNotification *)notification
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center 
+	   didReceiveNotificationResponse:(UNNotificationResponse *)response 
+				withCompletionHandler:(void(^)(void))completionHandler
 {
 	[self cleanupTaskAlerts];
+	completionHandler();
+}
+
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center 
+	   willPresentNotification:(UNNotification *)notification 
+				withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler
+{
+	// Show notification even when app is in foreground
+	if (@available(macOS 11.0, *)) {
+		completionHandler(UNNotificationPresentationOptionBanner | UNNotificationPresentationOptionSound);
+	} else {
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+		completionHandler(UNNotificationPresentationOptionAlert | UNNotificationPresentationOptionSound);
+		#pragma clang diagnostic pop
+	}
 }
 
 @end

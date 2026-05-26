@@ -6,8 +6,7 @@
 //  Copyright (c) 2014 Bruno Philipe. All rights reserved.
 //
 
-@import PXSourceList;
-@import Foundation;
+@import Cocoa;
 
 typedef NS_ENUM(NSUInteger, FormulaeSideBarItem)
 {
@@ -26,9 +25,36 @@ typedef NS_ENUM(NSUInteger, FormulaeSideBarItem)
 - (void)sourceListSelectionDidChange;
 @end
 
-@interface BPSideBarController : NSObject <PXSourceListDataSource, PXSourceListDelegate>
+@interface BPSidebarItem : NSObject
 
-@property (assign) IBOutlet PXSourceList *sidebar;
+@property (copy) NSString *title;
+@property (copy) NSString *identifier;
+@property (strong) NSImage *icon;
+@property (strong) NSNumber *badgeValue;
+@property (readonly) NSArray<BPSidebarItem *> *children;
+
++ (instancetype)itemWithTitle:(NSString *)title identifier:(NSString *)identifier;
+- (void)addChildItem:(BPSidebarItem *)item;
+- (BOOL)hasChildren;
+
+@end
+
+@interface BPSidebarBadgeView : NSView
+
+@property (nonatomic) NSUInteger badgeValue;
+@property (nonatomic, getter=isEmphasized) BOOL emphasized;
+
+@end
+
+@interface BPSidebarTableCellView : NSTableCellView
+
+@property (assign) IBOutlet BPSidebarBadgeView *badgeView;
+
+@end
+
+@interface BPSideBarController : NSObject <NSOutlineViewDataSource, NSOutlineViewDelegate>
+
+@property (assign) IBOutlet NSOutlineView *sidebar;
 
 @property (weak) id <BPSideBarControllerDelegate>delegate;
 

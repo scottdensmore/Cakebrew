@@ -221,14 +221,12 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 			systemToolbarItems =  @[
 				NSToolbarSpaceItemIdentifier,
 				NSToolbarFlexibleSpaceItemIdentifier,
-				NSToolbarSidebarTrackingSeparatorItemIdentifier,
-				NSToolbarSeparatorItemIdentifier
+				NSToolbarSidebarTrackingSeparatorItemIdentifier
 			];
 		} else {
 			systemToolbarItems =  @[
 				NSToolbarSpaceItemIdentifier,
-				NSToolbarFlexibleSpaceItemIdentifier,
-				NSToolbarSeparatorItemIdentifier
+				NSToolbarFlexibleSpaceItemIdentifier
 			];
 		}
 	}

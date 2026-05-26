@@ -22,6 +22,7 @@
 #import "BPHomebrewManager.h"
 #import "BPHomebrewInterface.h"
 #import "BPAppDelegate.h"
+#import "BPFormulaOption.h"
 
 NSString *const kBPCacheLastUpdateKey = @"BPCacheLastUpdateKey";
 NSString *const kBPCacheDataKey	= @"BPCacheDataKey";
@@ -151,14 +152,10 @@ NSString *const kBPCacheDataKey	= @"BPCacheDataKey";
 			NSData *data = [NSData dataWithContentsOfFile:allFormulaeFile.relativePath];
 			NSError *error = nil;
 
-			if (@available(macOS 10.13, *)) {
-				NSSet *classes = [NSSet setWithArray:@[[NSDictionary class], [NSMutableArray class], [BPFormula class]]];
-				cacheDict = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:&error];
-				if (error) {
-					NSLog(@"Failed decoding data: %@", [error localizedDescription]);
-				}
-			} else {
-				cacheDict = [NSKeyedUnarchiver unarchiveObjectWithFile:allFormulaeFile.relativePath];
+			NSSet *classes = [NSSet setWithArray:@[[NSDictionary class], [NSArray class], [NSMutableArray class], [BPFormula class], [NSString class], [NSURL class], [NSNumber class], [BPFormulaOption class]]];
+			cacheDict = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:&error];
+			if (error) {
+				NSLog(@"Failed decoding data: %@", [error localizedDescription]);
 			}
 			self.allFormulae = [cacheDict objectForKey:kBPCacheDataKey];
 		}
@@ -190,21 +187,16 @@ NSString *const kBPCacheDataKey	= @"BPCacheDataKey";
 			}
 			
 			NSDictionary *cacheDict = @{kBPCacheDataKey: self.allFormulae};
-			NSData *cacheData;
+			NSError *error = nil;
+			NSData *cacheData = [NSKeyedArchiver archivedDataWithRootObject:cacheDict
+														  requiringSecureCoding:YES
+																		  error:&error];
 
-			if (@available(macOS 10.13, *)) {
-				NSError *error = nil;
-				cacheData = [NSKeyedArchiver archivedDataWithRootObject:cacheDict
-												  requiringSecureCoding:YES
-																  error:&error];
-
-				if (error) {
-					NSLog(@"Failed encoding data: %@", [error localizedDescription]);
-				}
-			} else {
-				cacheData = [NSKeyedArchiver archivedDataWithRootObject:cacheDict];
+			if (error || !cacheData) {
+				NSLog(@"Failed encoding data: %@", [error localizedDescription]);
+				return;
 			}
-			
+
 			if ([[NSFileManager defaultManager] fileExistsAtPath:allFormulaeFile.relativePath])
 			{
 				[cacheData writeToURL:allFormulaeFile atomically:YES];

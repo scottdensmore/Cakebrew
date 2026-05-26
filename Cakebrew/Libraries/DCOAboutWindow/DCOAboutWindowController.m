@@ -143,7 +143,8 @@
     if(self.acknowledgementsPath) {
         
         // Load in default editor
-        [[NSWorkspace sharedWorkspace] openFile:self.acknowledgementsPath];
+        NSURL *acknowledgementsURL = [NSURL fileURLWithPath:self.acknowledgementsPath];
+        [[NSWorkspace sharedWorkspace] openURL:acknowledgementsURL];
         
     } else {
         NSLog(@"Error: couldn't load the acknowledgements file");
