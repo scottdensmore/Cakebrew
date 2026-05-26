@@ -153,7 +153,7 @@ NSString *const kBPCacheDataKey	= @"BPCacheDataKey";
 			NSError *error = nil;
 
 			if (@available(macOS 10.13, *)) {
-				NSSet *classes = [NSSet setWithArray:@[[NSDictionary class], [NSMutableArray class], [BPFormula class], [NSString class], [NSURL class], [NSNumber class], [BPFormulaOption class]]];
+				NSSet *classes = [NSSet setWithArray:@[[NSDictionary class], [NSArray class], [NSMutableArray class], [BPFormula class], [NSString class], [NSURL class], [NSNumber class], [BPFormulaOption class]]];
 				cacheDict = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:&error];
 				if (error) {
 					NSLog(@"Failed decoding data: %@", [error localizedDescription]);

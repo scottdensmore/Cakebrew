@@ -28,6 +28,7 @@
 	self = [super init];
 	if (self) {
 		_mutableChildren = [NSMutableArray array];
+		_badgeValue = @(-1); // Hidden by default until a real count is assigned
 	}
 	return self;
 }
