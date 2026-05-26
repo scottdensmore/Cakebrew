@@ -1,0 +1,25 @@
+{
+  "cli_version": "0.6.2",
+  "checkpoint_id": "ee68ee231c50",
+  "strategy": "manual-commit",
+  "branch": "add-entire-integration",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".gitignore"
+  ],
+  "sessions": [
+    {
+      "metadata": "/ee/68ee231c50/0/metadata.json",
+      "transcript": "/ee/68ee231c50/0/full.jsonl",
+      "content_hash": "/ee/68ee231c50/0/content_hash.txt",
+      "prompt": "/ee/68ee231c50/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 232,
+    "cache_creation_tokens": 606949,
+    "cache_read_tokens": 18223540,
+    "output_tokens": 152329,
+    "api_call_count": 116
+  }
+}
