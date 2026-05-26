@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.6.2",
+  "checkpoint_id": "0a4c1bd299d1",
+  "session_id": "86f7230f-16a2-4201-9dae-105c1789c2c6",
+  "strategy": "manual-commit",
+  "created_at": "2026-05-26T05:24:11.284932Z",
+  "branch": "tier1-tahoe-unified-toolbar",
+  "checkpoints_count": 1,
+  "files_touched": [],
+  "agent": "Claude Code",
+  "model": "",
+  "turn_id": "1b42112283e2",
+  "token_usage": {
+    "input_tokens": 314,
+    "cache_creation_tokens": 695140,
+    "cache_read_tokens": 30240491,
+    "output_tokens": 220624,
+    "api_call_count": 157
+  },
+  "session_metrics": {
+    "turn_count": 7
+  }
+}
