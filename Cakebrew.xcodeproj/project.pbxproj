@@ -25,7 +25,6 @@
 		1594D13C1B8A6D1A00F764FA /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 15D2CFAC18F202D000B6D9F1 /* QuartzCore.framework */; };
 		15A00B411B8406FB00528486 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 15A00B401B8406FB00528486 /* Credits.rtf */; };
 		15A89D3925F2F467003D33F5 /* NSLayoutConstraint+Shims.m in Sources */ = {isa = PBXBuildFile; fileRef = 15A89D3825F2F467003D33F5 /* NSLayoutConstraint+Shims.m */; };
-		15B23A2C18F5003600714212 /* dsa_pub.pem in Resources */ = {isa = PBXBuildFile; fileRef = 15B23A2B18F5003600714212 /* dsa_pub.pem */; };
 		15BBA18E1BD031C9002C0127 /* BPBackgroundView.m in Sources */ = {isa = PBXBuildFile; fileRef = 15BBA18D1BD031C9002C0127 /* BPBackgroundView.m */; };
 		15C34CBF19512DE100B92E36 /* BPAutoScrollTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = 15C34CBE19512DE100B92E36 /* BPAutoScrollTextView.m */; };
 		15CEFC631AB335B2005CF54A /* BPLoadingView.m in Sources */ = {isa = PBXBuildFile; fileRef = 15CEFC621AB335B2005CF54A /* BPLoadingView.m */; };
@@ -161,7 +160,6 @@
 		15A00B4C1B84072700528486 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/BPUpdateView.strings; sourceTree = "<group>"; };
 		15A89D3725F2F467003D33F5 /* NSLayoutConstraint+Shims.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSLayoutConstraint+Shims.h"; sourceTree = "<group>"; };
 		15A89D3825F2F467003D33F5 /* NSLayoutConstraint+Shims.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSLayoutConstraint+Shims.m"; sourceTree = "<group>"; };
-		15B23A2B18F5003600714212 /* dsa_pub.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dsa_pub.pem; sourceTree = "<group>"; };
 		15BBA18C1BD031C9002C0127 /* BPBackgroundView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPBackgroundView.h; path = Views/BPBackgroundView.h; sourceTree = "<group>"; };
 		15BBA18D1BD031C9002C0127 /* BPBackgroundView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPBackgroundView.m; path = Views/BPBackgroundView.m; sourceTree = "<group>"; };
 		15C34CBD19512DE100B92E36 /* BPAutoScrollTextView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPAutoScrollTextView.h; path = Views/BPAutoScrollTextView.h; sourceTree = "<group>"; };
@@ -493,7 +491,6 @@
 			isa = PBXGroup;
 			children = (
 				15D28A301AE33453005C8A3E /* Localizable.strings */,
-				15B23A2B18F5003600714212 /* dsa_pub.pem */,
 				15D2CFB918F20A8200B6D9F1 /* LICENSE */,
 				15D2CFB718F206DF00B6D9F1 /* README.md */,
 				1FE4FE60148E4CDD008EDE8B /* Cakebrew-Info.plist */,
@@ -648,7 +645,6 @@
 				1536BFF718EBA92400B67C5C /* Images.xcassets in Resources */,
 				15D2CFA418F1EAD200B6D9F1 /* globe.icns in Resources */,
 				15D2CFB818F206DF00B6D9F1 /* README.md in Resources */,
-				15B23A2C18F5003600714212 /* dsa_pub.pem in Resources */,
 				15D28A201AE332F4005C8A3E /* BPInstallationWindow.xib in Resources */,
 				15D28A291AE33301005C8A3E /* BPUpdateView.xib in Resources */,
 				D2C3E02A1B8E15B2000D89BB /* Disabled.xib in Resources */,

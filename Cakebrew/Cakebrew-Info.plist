@@ -30,13 +30,5 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<key>SUEnableSystemProfiling</key>
-	<true/>
-	<key>SUFeedURL</key>
-	<string>https://www.cakebrew.com/appcast/profileInfo.php</string>
-	<key>SUPublicDSAKeyFile</key>
-	<string>dsa_pub.pem</string>
-	<key>SUPublicEDKey</key>
-	<string>1sKGeLLLnuNrzUhK2NKn5CKf6AOTAqg74Yu3arkbRrA=</string>
 </dict>
 </plist>
