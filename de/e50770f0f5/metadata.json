@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.6.2",
+  "checkpoint_id": "dee50770f0f5",
+  "strategy": "manual-commit",
+  "branch": "tier1-tahoe-unified-toolbar",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/de/e50770f0f5/0/metadata.json",
+      "transcript": "/de/e50770f0f5/0/full.jsonl",
+      "content_hash": "/de/e50770f0f5/0/content_hash.txt",
+      "prompt": "/de/e50770f0f5/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 326,
+    "cache_creation_tokens": 1047804,
+    "cache_read_tokens": 31971372,
+    "output_tokens": 226414,
+    "api_call_count": 163
+  }
+}
