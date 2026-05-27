@@ -30,18 +30,14 @@
 
 - (void)sharedInit
 {
-	if (@available(macOS 11.0, *)) {
-		NSWindowStyleMask mask = [self styleMask];
-		mask |= NSWindowStyleMaskFullSizeContentView;
-		[self setStyleMask:mask];
+	NSWindowStyleMask mask = [self styleMask];
+	mask |= NSWindowStyleMaskFullSizeContentView;
+	[self setStyleMask:mask];
 
-		// Tahoe / Liquid Glass: merge the toolbar into the title bar and let the
-		// full-height sidebar's material show through the title bar area.
-		self.titlebarAppearsTransparent = YES;
-		self.toolbarStyle = NSWindowToolbarStyleUnified;
-	} else {
-		[self setContentBorderThickness:22 forEdge:NSRectEdgeMinY];
-	}
+	// Tahoe / Liquid Glass: merge the toolbar into the title bar and let the
+	// full-height sidebar's material show through the title bar area.
+	self.titlebarAppearsTransparent = YES;
+	self.toolbarStyle = NSWindowToolbarStyleUnified;
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem
