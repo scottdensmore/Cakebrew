@@ -53,3 +53,7 @@ have all the local changes been merged into this branch?
 ---
 
 Are there any background tasks that need to be cleaned up?
+
+---
+
+Yes. Lets pick up where you left off
