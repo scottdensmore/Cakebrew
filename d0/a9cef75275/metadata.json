@@ -1,0 +1,25 @@
+{
+  "cli_version": "0.7.5",
+  "checkpoint_id": "d0a9cef75275",
+  "strategy": "manual-commit",
+  "branch": "tier3-color-material-audit",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "Cakebrew/Controllers/BPSideBarController.m"
+  ],
+  "sessions": [
+    {
+      "metadata": "/d0/a9cef75275/0/metadata.json",
+      "transcript": "/d0/a9cef75275/0/full.jsonl",
+      "content_hash": "/d0/a9cef75275/0/content_hash.txt",
+      "prompt": "/d0/a9cef75275/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1487,
+    "cache_creation_tokens": 1725590,
+    "cache_read_tokens": 48045722,
+    "output_tokens": 274904,
+    "api_call_count": 227
+  }
+}
