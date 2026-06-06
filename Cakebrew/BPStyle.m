@@ -174,16 +174,4 @@ static BOOL shouldUseFlatUserInterface;
 	return color;
 }
 
-#pragma mark Sidebar
-
-+ (NSColor *)sidebarDividerColor
-{
-	static NSColor *color;
-	if (!color) {
-		color = [NSColor colorWithCalibratedRed:0.835294 green:0.858824 blue:0.858824 alpha:1.0];
-	}
-	
-	return color;
-}
-
 @end
