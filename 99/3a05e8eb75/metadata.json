@@ -1,0 +1,25 @@
+{
+  "cli_version": "0.7.5",
+  "checkpoint_id": "993a05e8eb75",
+  "strategy": "manual-commit",
+  "branch": "tier2-tahoe-toolbar-buttons",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "Cakebrew/BPToolbar.m"
+  ],
+  "sessions": [
+    {
+      "metadata": "/99/3a05e8eb75/0/metadata.json",
+      "transcript": "/99/3a05e8eb75/0/full.jsonl",
+      "content_hash": "/99/3a05e8eb75/0/content_hash.txt",
+      "prompt": "/99/3a05e8eb75/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 633,
+    "cache_creation_tokens": 1690359,
+    "cache_read_tokens": 37817669,
+    "output_tokens": 253327,
+    "api_call_count": 187
+  }
+}
