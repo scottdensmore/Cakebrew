@@ -323,13 +323,12 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 									   label:(NSString *)label
 									  action:(SEL)action
 {
+	// Native bordered toolbar items let AppKit render the system button — and on
+	// macOS 26 that means the Liquid Glass capsule, with correct hover/press states.
 	NSToolbarItem *item = [[NSToolbarItem alloc] initWithItemIdentifier:identifier];
-	if (@available(macOS 11.0, *)) {
-		item.view = [self makeButtonForItemImage:image target:[self controller] action:action];
-	} else {
-		item.image = image;
-		item.target = [self controller];
-	}
+	item.image = image;
+	item.bordered = YES;
+	item.target = [self controller];
 	item.label = label;
 	item.paletteLabel = label;
 	item.action = action;
@@ -342,47 +341,15 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 {
 	assert([NSThread isMainThread]);
 
-	static BOOL (^staticBlock)(NSRect) = ^BOOL(NSRect dstRect) {
-		return YES;
-	};
-	
-	if (!image) {
-		if (@available(macOS 11.0, *)) {
-			item.view = nil;
-		} else {
-			item.image = [NSImage imageWithSize:NSMakeSize(32, 32) flipped:NO drawingHandler:staticBlock];
-		}
-
-		item.action = action;
-	} else {
-		if (@available(macOS 11.0, *)) {
-			item.view = [self makeButtonForItemImage:image target:[self controller] action:action];
-		} else {
-			item.image = image;
-			item.action = action;
-		}
-	}
-
-	item.label = label;
+	// A nil image means this slot is inactive for the current mode: drop the glass
+	// capsule and disable it so it reads as empty rather than a dead button.
+	item.image = image;
+	item.bordered = (image != nil);
+	item.enabled = (action != nil);
+	item.target = [self controller];
+	item.action = action;
+	item.label = label ?: @"";
 	item.toolTip = label;
-}
-
-- (NSButton *)makeButtonForItemImage:(NSImage *)image target:(id)target action:(SEL)action
-{
-	if (image == nil) {
-		return nil;
-	}
-	NSButton *button = [NSButton buttonWithImage:image target:target action:action];
-	[button setBezelStyle:NSBezelStyleRegularSquare];
-	[button setBordered:NO];
-	[button setTranslatesAutoresizingMaskIntoConstraints:NO];
-	if (@available(macOS 11, *)) {
-		[button setSymbolConfiguration:[NSImageSymbolConfiguration configurationWithPointSize:24
-																						  weight:NSFontWeightMedium
-																						   scale:NSImageSymbolScaleMedium]];
-	}
-	[button setImageScaling:NSImageScaleProportionallyUpOrDown];
-	return button;
 }
 
 - (void)makeSearchFieldFirstResponder
