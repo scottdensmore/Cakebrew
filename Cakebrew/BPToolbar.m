@@ -154,7 +154,10 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 	NSDictionary *supportedItems = [self customToolbarItems];
 	[supportedItems enumerateKeysAndObjectsUsingBlock:^(id key, NSToolbarItem *object, BOOL *stop) {
 		[object setTarget:target];
-		[object setEnabled:target != nil]; //Disables the searchbox toolbar item
+		// Only enable items that actually have an action for the current mode, so
+		// the empty multi-action / info slots stay disabled instead of being
+		// re-enabled here after reconfigureItem: cleared them.
+		[object setEnabled:(target != nil && object.action != NULL)];
 	}];
 }
 
@@ -182,23 +185,14 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 
 - (NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar
 {
-	if (@available(macOS 11.0, *)) {
-		return @[NSToolbarFlexibleSpaceItemIdentifier,
-				 kToolbarItemHomebrewUpdateIdentifier,
-				 NSToolbarSidebarTrackingSeparatorItemIdentifier,
-				 NSToolbarFlexibleSpaceItemIdentifier,
-				 kToolbarItemMultiActionIdentifier,
-				 kToolbarItemInformationIdentifier,
-				 kToolbarItemSearchIdentifier,
-		];
-	} else {
-		return @[kToolbarItemHomebrewUpdateIdentifier,
-				 NSToolbarFlexibleSpaceItemIdentifier,
-				 kToolbarItemMultiActionIdentifier,
-				 kToolbarItemInformationIdentifier,
-				 kToolbarItemSearchIdentifier,
-				 ];
-	}
+	return @[NSToolbarFlexibleSpaceItemIdentifier,
+			 kToolbarItemHomebrewUpdateIdentifier,
+			 NSToolbarSidebarTrackingSeparatorItemIdentifier,
+			 NSToolbarFlexibleSpaceItemIdentifier,
+			 kToolbarItemMultiActionIdentifier,
+			 kToolbarItemInformationIdentifier,
+			 kToolbarItemSearchIdentifier,
+	];
 }
 
 - (NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
@@ -217,18 +211,11 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 	static NSArray *systemToolbarItems = nil;
 	if (!systemToolbarItems)
 	{
-		if (@available(macOS 11.0, *)) {
-			systemToolbarItems =  @[
-				NSToolbarSpaceItemIdentifier,
-				NSToolbarFlexibleSpaceItemIdentifier,
-				NSToolbarSidebarTrackingSeparatorItemIdentifier
-			];
-		} else {
-			systemToolbarItems =  @[
-				NSToolbarSpaceItemIdentifier,
-				NSToolbarFlexibleSpaceItemIdentifier
-			];
-		}
+		systemToolbarItems = @[
+			NSToolbarSpaceItemIdentifier,
+			NSToolbarFlexibleSpaceItemIdentifier,
+			NSToolbarSidebarTrackingSeparatorItemIdentifier
+		];
 	}
 	return systemToolbarItems;
 }
@@ -292,28 +279,20 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 
 - (NSToolbarItem *)toolbarItemSearch
 {
-	static NSToolbarItem* item = nil;
+	static NSSearchToolbarItem* item = nil;
 	if (!item)
 	{
-		if (@available(macOS 11.0, *)) {
-			item = [[NSSearchToolbarItem alloc] initWithItemIdentifier:kToolbarItemSearchIdentifier];
-		} else {
-			item = [[NSToolbarItem alloc] initWithItemIdentifier:kToolbarItemSearchIdentifier];
-		}
+		item = [[NSSearchToolbarItem alloc] initWithItemIdentifier:kToolbarItemSearchIdentifier];
 		item.label = NSLocalizedString(@"Toolbar_Search", nil);
 		item.paletteLabel = NSLocalizedString(@"Toolbar_Search", nil);
 		item.action = @selector(performSearchWithString:);
-		
+
 		self.searchField = [[NSSearchField alloc] initWithFrame:NSZeroRect];
 		self.searchField.delegate = self;
 		self.searchField.continuous = YES;
 		[self.searchField setRecentsAutosaveName:@"RecentSearches"];
 
-		if (@available(macOS 11.0, *)) {
-			[(NSSearchToolbarItem *)item setSearchField:self.searchField];
-		} else {
-			[item setView:self.searchField];
-		}
+		item.searchField = self.searchField;
 	}
 	return item;
 }
@@ -354,14 +333,8 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 
 - (void)makeSearchFieldFirstResponder
 {
-	NSView *searchView;
-
-	if (@available(macOS 11.0, *)) {
-		searchView = [(NSSearchToolbarItem *)[self toolbarItemSearch] searchField];
-	} else {
-		searchView = [[self toolbarItemSearch] view];
-	}
-
+	NSSearchToolbarItem *searchItem = (NSSearchToolbarItem *)[self toolbarItemSearch];
+	NSView *searchView = searchItem.searchField;
 	[[searchView window] makeFirstResponder:searchView];
 }
 
