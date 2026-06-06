@@ -154,7 +154,10 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 	NSDictionary *supportedItems = [self customToolbarItems];
 	[supportedItems enumerateKeysAndObjectsUsingBlock:^(id key, NSToolbarItem *object, BOOL *stop) {
 		[object setTarget:target];
-		[object setEnabled:target != nil]; //Disables the searchbox toolbar item
+		// Only enable items that actually have an action for the current mode, so
+		// the empty multi-action / info slots stay disabled instead of being
+		// re-enabled here after reconfigureItem: cleared them.
+		[object setEnabled:(target != nil && object.action != NULL)];
 	}];
 }
 
@@ -182,23 +185,14 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 
 - (NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar
 {
-	if (@available(macOS 11.0, *)) {
-		return @[NSToolbarFlexibleSpaceItemIdentifier,
-				 kToolbarItemHomebrewUpdateIdentifier,
-				 NSToolbarSidebarTrackingSeparatorItemIdentifier,
-				 NSToolbarFlexibleSpaceItemIdentifier,
-				 kToolbarItemMultiActionIdentifier,
-				 kToolbarItemInformationIdentifier,
-				 kToolbarItemSearchIdentifier,
-		];
-	} else {
-		return @[kToolbarItemHomebrewUpdateIdentifier,
-				 NSToolbarFlexibleSpaceItemIdentifier,
-				 kToolbarItemMultiActionIdentifier,
-				 kToolbarItemInformationIdentifier,
-				 kToolbarItemSearchIdentifier,
-				 ];
-	}
+	return @[NSToolbarFlexibleSpaceItemIdentifier,
+			 kToolbarItemHomebrewUpdateIdentifier,
+			 NSToolbarSidebarTrackingSeparatorItemIdentifier,
+			 NSToolbarFlexibleSpaceItemIdentifier,
+			 kToolbarItemMultiActionIdentifier,
+			 kToolbarItemInformationIdentifier,
+			 kToolbarItemSearchIdentifier,
+	];
 }
 
 - (NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
@@ -217,18 +211,11 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 	static NSArray *systemToolbarItems = nil;
 	if (!systemToolbarItems)
 	{
-		if (@available(macOS 11.0, *)) {
-			systemToolbarItems =  @[
-				NSToolbarSpaceItemIdentifier,
-				NSToolbarFlexibleSpaceItemIdentifier,
-				NSToolbarSidebarTrackingSeparatorItemIdentifier
-			];
-		} else {
-			systemToolbarItems =  @[
-				NSToolbarSpaceItemIdentifier,
-				NSToolbarFlexibleSpaceItemIdentifier
-			];
-		}
+		systemToolbarItems = @[
+			NSToolbarSpaceItemIdentifier,
+			NSToolbarFlexibleSpaceItemIdentifier,
+			NSToolbarSidebarTrackingSeparatorItemIdentifier
+		];
 	}
 	return systemToolbarItems;
 }
@@ -292,28 +279,20 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 
 - (NSToolbarItem *)toolbarItemSearch
 {
-	static NSToolbarItem* item = nil;
+	static NSSearchToolbarItem* item = nil;
 	if (!item)
 	{
-		if (@available(macOS 11.0, *)) {
-			item = [[NSSearchToolbarItem alloc] initWithItemIdentifier:kToolbarItemSearchIdentifier];
-		} else {
-			item = [[NSToolbarItem alloc] initWithItemIdentifier:kToolbarItemSearchIdentifier];
-		}
+		item = [[NSSearchToolbarItem alloc] initWithItemIdentifier:kToolbarItemSearchIdentifier];
 		item.label = NSLocalizedString(@"Toolbar_Search", nil);
 		item.paletteLabel = NSLocalizedString(@"Toolbar_Search", nil);
 		item.action = @selector(performSearchWithString:);
-		
+
 		self.searchField = [[NSSearchField alloc] initWithFrame:NSZeroRect];
 		self.searchField.delegate = self;
 		self.searchField.continuous = YES;
 		[self.searchField setRecentsAutosaveName:@"RecentSearches"];
 
-		if (@available(macOS 11.0, *)) {
-			[(NSSearchToolbarItem *)item setSearchField:self.searchField];
-		} else {
-			[item setView:self.searchField];
-		}
+		item.searchField = self.searchField;
 	}
 	return item;
 }
@@ -323,13 +302,12 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 									   label:(NSString *)label
 									  action:(SEL)action
 {
+	// Native bordered toolbar items let AppKit render the system button — and on
+	// macOS 26 that means the Liquid Glass capsule, with correct hover/press states.
 	NSToolbarItem *item = [[NSToolbarItem alloc] initWithItemIdentifier:identifier];
-	if (@available(macOS 11.0, *)) {
-		item.view = [self makeButtonForItemImage:image target:[self controller] action:action];
-	} else {
-		item.image = image;
-		item.target = [self controller];
-	}
+	item.image = image;
+	item.bordered = YES;
+	item.target = [self controller];
 	item.label = label;
 	item.paletteLabel = label;
 	item.action = action;
@@ -342,59 +320,21 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 {
 	assert([NSThread isMainThread]);
 
-	static BOOL (^staticBlock)(NSRect) = ^BOOL(NSRect dstRect) {
-		return YES;
-	};
-	
-	if (!image) {
-		if (@available(macOS 11.0, *)) {
-			item.view = nil;
-		} else {
-			item.image = [NSImage imageWithSize:NSMakeSize(32, 32) flipped:NO drawingHandler:staticBlock];
-		}
-
-		item.action = action;
-	} else {
-		if (@available(macOS 11.0, *)) {
-			item.view = [self makeButtonForItemImage:image target:[self controller] action:action];
-		} else {
-			item.image = image;
-			item.action = action;
-		}
-	}
-
-	item.label = label;
+	// A nil image means this slot is inactive for the current mode: drop the glass
+	// capsule and disable it so it reads as empty rather than a dead button.
+	item.image = image;
+	item.bordered = (image != nil);
+	item.enabled = (action != nil);
+	item.target = [self controller];
+	item.action = action;
+	item.label = label ?: @"";
 	item.toolTip = label;
-}
-
-- (NSButton *)makeButtonForItemImage:(NSImage *)image target:(id)target action:(SEL)action
-{
-	if (image == nil) {
-		return nil;
-	}
-	NSButton *button = [NSButton buttonWithImage:image target:target action:action];
-	[button setBezelStyle:NSBezelStyleRegularSquare];
-	[button setBordered:NO];
-	[button setTranslatesAutoresizingMaskIntoConstraints:NO];
-	if (@available(macOS 11, *)) {
-		[button setSymbolConfiguration:[NSImageSymbolConfiguration configurationWithPointSize:24
-																						  weight:NSFontWeightMedium
-																						   scale:NSImageSymbolScaleMedium]];
-	}
-	[button setImageScaling:NSImageScaleProportionallyUpOrDown];
-	return button;
 }
 
 - (void)makeSearchFieldFirstResponder
 {
-	NSView *searchView;
-
-	if (@available(macOS 11.0, *)) {
-		searchView = [(NSSearchToolbarItem *)[self toolbarItemSearch] searchField];
-	} else {
-		searchView = [[self toolbarItemSearch] view];
-	}
-
+	NSSearchToolbarItem *searchItem = (NSSearchToolbarItem *)[self toolbarItemSearch];
+	NSView *searchView = searchItem.searchField;
 	[[searchView window] makeFirstResponder:searchView];
 }
 
