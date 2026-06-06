@@ -347,6 +347,10 @@
 	if ([sidebarItem.identifier isEqualToString:@"group"]) {
 		BPSidebarTableCellView *headerView = [outlineView makeViewWithIdentifier:@"HeaderCell" owner:self];
 		headerView.textField.stringValue = sidebarItem.title;
+		// Use the semantic secondary label color so group headers match the system
+		// source-list style and adapt to light/dark, instead of the hardcoded
+		// gray-blue baked into the cell in the XIB.
+		headerView.textField.textColor = NSColor.secondaryLabelColor;
 		return headerView;
 	}
 

@@ -39,7 +39,4 @@
 + (NSColor *)popoverTitleColor;
 + (NSColor *)popoverTextViewColor;
 
-//Sidebar
-+ (NSColor *)sidebarDividerColor;
-
 @end
