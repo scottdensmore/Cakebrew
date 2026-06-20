@@ -365,14 +365,14 @@
 	XCTAssertTrue([[self formulaCellWithName:@"mockhtop"] waitForExistenceWithTimeout:30.0],
 				  @"All Formulae should be loaded before searching");
 
-	XCTAssertTrue([self.app.searchFields.firstMatch waitForExistenceWithTimeout:15.0],
-				  @"the toolbar search field should exist");
+	[self.app activate];
+	XCUIElement *searchField = self.app.searchFields.firstMatch;
+	XCTAssertTrue([searchField waitForExistenceWithTimeout:15.0], @"the toolbar search field should exist");
 
-	// Focus the search field via the Search shortcut (Cmd+F → beginFormulaSearch:),
-	// which is more reliable than clicking the toolbar field for keyboard focus,
-	// then type into the now-focused field.
-	[self.app typeKey:@"f" modifierFlags:XCUIKeyModifierCommand];
-	[self.app typeText:@"wget"];
+	// Click the field's center to give it keyboard focus (a plain element click
+	// didn't focus the toolbar search field on the runner), then type.
+	[[searchField coordinateWithNormalizedOffset:CGVectorMake(0.5, 0.5)] click];
+	[searchField typeText:@"wget"];
 
 	// Diagnostic: show the search-field value and the resulting table contents.
 	[NSThread sleepForTimeInterval:3.0];
