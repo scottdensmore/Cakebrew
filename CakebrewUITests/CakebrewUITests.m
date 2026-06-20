@@ -400,4 +400,27 @@
 	XCTAssertTrue(appeared, @"More Information should show the formula info in a popover");
 }
 
+#pragma mark - Tools journeys
+
+// Journey: Tools > Brew Cleanup runs cleanup and streams its output.
+- (void)testCleanupStreamsOutput
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+	XCTAssertTrue([[self formulaCellWithName:@"mockwget"] waitForExistenceWithTimeout:30.0],
+				  @"the mock data should load");
+
+	[self.app.menuBars.menuBarItems[@"Tools"] click];
+	XCUIElement *cleanupItem = self.app.menuItems[@"Brew Cleanup…"];
+	XCTAssertTrue([cleanupItem waitForExistenceWithTimeout:10.0], @"Tools > Brew Cleanup should exist");
+	[cleanupItem click];
+
+	NSPredicate *predicate = [NSPredicate predicateWithFormat:@"value CONTAINS %@", @"MOCK_CLEANUP_OK"];
+	XCUIElement *output = [[self.app.textViews matchingPredicate:predicate] firstMatch];
+	BOOL appeared = [output waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"running Cleanup should stream its output");
+}
+
 @end
