@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.7.5",
+  "checkpoint_id": "0c01ddc74269",
+  "strategy": "manual-commit",
+  "branch": "feat/ui-cleanup-journey",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/0c/01ddc74269/0/metadata.json",
+      "transcript": "/0c/01ddc74269/0/full.jsonl",
+      "content_hash": "/0c/01ddc74269/0/content_hash.txt",
+      "prompt": "/0c/01ddc74269/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 25227,
+    "cache_creation_tokens": 3658992,
+    "cache_read_tokens": 307541252,
+    "output_tokens": 771880,
+    "api_call_count": 659
+  }
+}
