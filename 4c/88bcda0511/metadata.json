@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.7.5",
+  "checkpoint_id": "4c88bcda0511",
+  "strategy": "manual-commit",
+  "branch": "test/formula-option-coverage",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/4c/88bcda0511/0/metadata.json",
+      "transcript": "/4c/88bcda0511/0/full.jsonl",
+      "content_hash": "/4c/88bcda0511/0/content_hash.txt",
+      "prompt": "/4c/88bcda0511/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 25370,
+    "cache_creation_tokens": 3667563,
+    "cache_read_tokens": 314214346,
+    "output_tokens": 778458,
+    "api_call_count": 666
+  }
+}
