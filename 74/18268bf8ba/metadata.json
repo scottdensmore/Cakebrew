@@ -1,0 +1,25 @@
+{
+  "cli_version": "0.7.5",
+  "checkpoint_id": "7418268bf8ba",
+  "strategy": "manual-commit",
+  "branch": "fix/formula-info-url-parsing",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "Cakebrew/Models/BPFormula.m"
+  ],
+  "sessions": [
+    {
+      "metadata": "/74/18268bf8ba/0/metadata.json",
+      "transcript": "/74/18268bf8ba/0/full.jsonl",
+      "content_hash": "/74/18268bf8ba/0/content_hash.txt",
+      "prompt": "/74/18268bf8ba/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 4375,
+    "cache_creation_tokens": 2149779,
+    "cache_read_tokens": 70464286,
+    "output_tokens": 349057,
+    "api_call_count": 297
+  }
+}
