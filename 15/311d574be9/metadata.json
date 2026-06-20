@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.7.5",
+  "checkpoint_id": "15311d574be9",
+  "strategy": "manual-commit",
+  "branch": "test/ui-upgrade-toolbar-journey",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/15/311d574be9/0/metadata.json",
+      "transcript": "/15/311d574be9/0/full.jsonl",
+      "content_hash": "/15/311d574be9/0/content_hash.txt",
+      "prompt": "/15/311d574be9/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 9410,
+    "cache_creation_tokens": 3356335,
+    "cache_read_tokens": 165874013,
+    "output_tokens": 544575,
+    "api_call_count": 483
+  }
+}
