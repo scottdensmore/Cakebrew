@@ -36,4 +36,43 @@
 				  @"The main window should appear after launch");
 }
 
+#pragma mark - Sidebar navigation journeys
+
+- (XCUIElement *)sidebar
+{
+	XCUIElement *sidebar = self.app.outlines.firstMatch;
+	XCTAssertTrue([sidebar waitForExistenceWithTimeout:30.0], @"the sidebar outline should appear");
+	return sidebar;
+}
+
+// Journey: the sidebar presents every navigation destination.
+- (void)testSidebarShowsAllNavigationItems
+{
+	XCUIElement *sidebar = [self sidebar];
+	NSArray<NSString *> *items = @[ @"Installed", @"Outdated", @"All Formulae",
+									@"Leaves", @"Repositories", @"Doctor", @"Update" ];
+	for (NSString *item in items) {
+		XCTAssertTrue([sidebar.staticTexts[item] waitForExistenceWithTimeout:15.0],
+					  @"the sidebar should show the %@ item", item);
+	}
+}
+
+// Journey: selecting a Tools item switches the content to that tool's view.
+- (void)testNavigatingToToolViewsFromSidebar
+{
+	XCUIElement *sidebar = [self sidebar];
+
+	XCUIElement *doctorItem = sidebar.staticTexts[@"Doctor"];
+	XCTAssertTrue([doctorItem waitForExistenceWithTimeout:15.0], @"Doctor item should exist");
+	[doctorItem click];
+	XCTAssertTrue([self.app.staticTexts[@"Homebrew Doctor"] waitForExistenceWithTimeout:15.0],
+				  @"selecting Doctor should show the Homebrew Doctor view");
+
+	XCUIElement *updateItem = sidebar.staticTexts[@"Update"];
+	XCTAssertTrue([updateItem waitForExistenceWithTimeout:15.0], @"Update item should exist");
+	[updateItem click];
+	XCTAssertTrue([self.app.staticTexts[@"Homebrew Updater"] waitForExistenceWithTimeout:15.0],
+				  @"selecting Update should show the Homebrew Updater view");
+}
+
 @end
