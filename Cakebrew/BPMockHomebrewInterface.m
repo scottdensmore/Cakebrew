@@ -64,4 +64,21 @@
 	return YES;
 }
 
+// Serve well-formed `brew info` output so selecting a formula doesn't shell out
+// to real brew for a fixture name (which returns unparseable output and crashes
+// BPFormula getInformation). The format matches what getInformation expects.
+- (NSString *)informationForFormulaName:(NSString *)name
+{
+	return [NSString stringWithFormat:
+			@"%@: stable 1.0.0\n"
+			@"A mock formula used for Cakebrew UI tests.\n"
+			@"https://example.com\n"
+			@"Not installed\n", name];
+}
+
+- (NSString *)dependantsForFormulaName:(NSString *)name onlyInstalled:(BOOL)onlyInstalled
+{
+	return @"";
+}
+
 @end
