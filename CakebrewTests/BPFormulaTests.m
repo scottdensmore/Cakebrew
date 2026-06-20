@@ -11,6 +11,12 @@
 #import "BPFormula.h"
 #import "BPHomebrewInterface.h"
 
+// getInformation is private to BPFormula.m (compiled into this test target);
+// re-declare it so the robustness tests can drive it directly.
+@interface BPFormula (BPFormulaTestsPrivate)
+- (BOOL)getInformation;
+@end
+
 @interface BPFormulaDataProvider : NSObject <BPFormulaDataProvider>
 - (NSString *)informationForFormulaName:(NSString *)name;
 @end
@@ -360,6 +366,42 @@ static BPCustomFormula *nmapFormula;
 {
 	BPFormula *formula = [BPFormula formulaWithName:@"foo"];
 	XCTAssertNil(formula.shortLatestVersion);
+}
+
+#pragma mark - getInformation robustness
+
+- (void)testGetInformationDoesNotCrashOnMalformedOutput
+{
+	// `brew info` can return output that doesn't match the expected layout
+	// (errors, taps, new formats). getInformation must never crash on it.
+	NSArray<NSString *> *malformedInputs = @[
+		@"no colon on the first line\na description\nhttps://example.com\n", // line 0 has no ':'
+		@"foo: stable 1.0\n",                                                // only one real line
+		@"\n\n",                                                             // blank-ish multi-line
+		@"==> Caveats\nsomething unexpected\n",                              // jumps straight to a section
+		@"foo:\n",                                                          // ':' at end, nothing after
+		@"foo: stable 1.0\nConflicts\n",                                    // short conflicts-ish line
+	];
+
+	for (NSString *input in malformedInputs) {
+		BPFormula *malformed = [BPFormula formulaWithName:@"malformed"];
+		[malformed setValue:input forKey:@"information"];
+		XCTAssertNoThrow([malformed getInformation],
+						 @"getInformation must not crash on malformed input: %@", input);
+	}
+}
+
+- (void)testGetInformationStillParsesWellFormedOutput
+{
+	// Guarding malformed input must not regress the normal happy path.
+	BPFormula *formula = [BPFormula formulaWithName:@"goodformula"];
+	[formula setValue:@"goodformula: stable 2.5.0\nA well-formed formula.\nhttps://example.com\nNot installed\n"
+			   forKey:@"information"];
+
+	XCTAssertNoThrow([formula getInformation]);
+	XCTAssertEqualObjects(formula.latestVersion, @"stable 2.5.0");
+	XCTAssertEqualObjects(formula.shortDescription, @"A well-formed formula.");
+	XCTAssertEqualObjects(formula.website.absoluteString, @"https://example.com");
 }
 
 @end
