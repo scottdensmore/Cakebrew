@@ -57,9 +57,12 @@
 		1FE4FE77148E4D43008EDE8B /* BPHomebrewInterface.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4FE76148E4D43008EDE8B /* BPHomebrewInterface.m */; };
 		7FE49B0EE97F41AC5F5513B9 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C155F549AE6671B51A3FCAD /* Cocoa.framework */; };
 		AB88EC9D48EC75643B93E566 /* CakebrewUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 37C4CCE578FE8963CDACE841 /* CakebrewUITests.m */; };
+		B72EA49F9D216CA6B623DDCF /* BPFormulaeDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = D2B3A3AF19B9D7FC00DE23B5 /* BPFormulaeDataSource.m */; };
 		CB7E57A001000001000000F2 /* BPHomebrewInterfaceListCallTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB7E57A001000001000000F1 /* BPHomebrewInterfaceListCallTests.m */; };
 		CB7E57A001000001000000F4 /* BPHomebrewManagerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB7E57A001000001000000F3 /* BPHomebrewManagerTests.m */; };
 		CB7E57A001000001000000F6 /* BPFormulaOptionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB7E57A001000001000000F5 /* BPFormulaOptionTests.m */; };
+		CB7E57A001000001000000F8 /* BPFormulaeDataSourceTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB7E57A001000001000000F7 /* BPFormulaeDataSourceTests.m */; };
+		CFC6235C90449D13C035A5DD /* BPFormulaeTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = D2B3A3A919B9CBEC00DE23B5 /* BPFormulaeTableView.m */; };
 		D212A5881B853069003000ED /* BPFormulaTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D212A5871B853069003000ED /* BPFormulaTests.m */; };
 		D212A5891B853132003000ED /* BPFormula.m in Sources */ = {isa = PBXBuildFile; fileRef = 1570BA5518EE50BD001C3C5C /* BPFormula.m */; };
 		D228335A1BA71B9900E44C82 /* BPTask.m in Sources */ = {isa = PBXBuildFile; fileRef = D23620E01B8B3094006D293D /* BPTask.m */; };
@@ -248,6 +251,7 @@
 		CB7E57A001000001000000F1 /* BPHomebrewInterfaceListCallTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPHomebrewInterfaceListCallTests.m; sourceTree = "<group>"; };
 		CB7E57A001000001000000F3 /* BPHomebrewManagerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPHomebrewManagerTests.m; sourceTree = "<group>"; };
 		CB7E57A001000001000000F5 /* BPFormulaOptionTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPFormulaOptionTests.m; sourceTree = "<group>"; };
+		CB7E57A001000001000000F7 /* BPFormulaeDataSourceTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPFormulaeDataSourceTests.m; sourceTree = "<group>"; };
 		D212A5871B853069003000ED /* BPFormulaTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPFormulaTests.m; sourceTree = "<group>"; };
 		D23620DF1B8B3094006D293D /* BPTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BPTask.h; sourceTree = "<group>"; };
 		D23620E01B8B3094006D293D /* BPTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPTask.m; sourceTree = "<group>"; };
@@ -564,6 +568,7 @@
 				CB7E57A001000001000000F1 /* BPHomebrewInterfaceListCallTests.m */,
 				CB7E57A001000001000000F3 /* BPHomebrewManagerTests.m */,
 				CB7E57A001000001000000F5 /* BPFormulaOptionTests.m */,
+				CB7E57A001000001000000F7 /* BPFormulaeDataSourceTests.m */,
 				D2BBAB701B87377D00F21332 /* brewInfo_sbtenv.txt */,
 				D2BBAB6E1B87290B00F21332 /* brewInfo_bison.txt */,
 				D2BBAB621B87142F00F21332 /* brewInfo_acme.txt */,
@@ -820,6 +825,9 @@
 				CB7E57A001000001000000F2 /* BPHomebrewInterfaceListCallTests.m in Sources */,
 				CB7E57A001000001000000F4 /* BPHomebrewManagerTests.m in Sources */,
 				CB7E57A001000001000000F6 /* BPFormulaOptionTests.m in Sources */,
+				CB7E57A001000001000000F8 /* BPFormulaeDataSourceTests.m in Sources */,
+				B72EA49F9D216CA6B623DDCF /* BPFormulaeDataSource.m in Sources */,
+				CFC6235C90449D13C035A5DD /* BPFormulaeTableView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
