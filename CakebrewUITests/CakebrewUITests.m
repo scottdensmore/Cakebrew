@@ -352,4 +352,37 @@
 	[self dismissConfirmationSheet];
 }
 
+#pragma mark - Search journey
+
+// Journey: typing in the toolbar search field filters the list to matches.
+- (void)testSearchFiltersFormulae
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+	XCUIElement *sidebar = [self sidebar];
+
+	// Browse All Formulae first so the searchable list (allFormulae) is loaded.
+	[sidebar.staticTexts[@"All Formulae"] click];
+	XCTAssertTrue([[self formulaCellWithName:@"mockhtop"] waitForExistenceWithTimeout:30.0],
+				  @"All Formulae should be loaded before searching");
+
+	XCUIElement *searchField = self.app.searchFields.firstMatch;
+	BOOL searchFieldExists = [searchField waitForExistenceWithTimeout:15.0];
+	if (!searchFieldExists) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(searchFieldExists, @"the toolbar search field should exist");
+	[searchField click];
+	[searchField typeText:@"wget"];
+
+	// Only mockwget matches "wget".
+	XCUIElement *wgetCell = [self formulaCellWithName:@"mockwget"];
+	BOOL found = [wgetCell waitForExistenceWithTimeout:15.0];
+	if (!found) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(found, @"searching 'wget' should show mockwget");
+	XCTAssertFalse([self formulaCellWithName:@"mockhtop"].exists,
+				   @"searching 'wget' should filter out non-matching formulae");
+}
+
 @end
