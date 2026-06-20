@@ -43,6 +43,14 @@
 	return sidebar;
 }
 
+// Dismiss a confirmation alert sheet with Escape. Avoids matching the ambiguous
+// "Cancel" button (the toolbar search field also exposes one) and leaves a clean
+// state for teardown.
+- (void)dismissConfirmationSheet
+{
+	[self.app typeKey:XCUIKeyboardKeyEscape modifierFlags:XCUIKeyModifierNone];
+}
+
 #pragma mark - Launch / chrome
 
 // Smoke test: the app launches and presents its main window.
@@ -150,10 +158,7 @@
 	XCTAssertTrue(confirmationAppeared, @"clicking Install should present a Yes/Cancel confirmation");
 
 	// Cancel so the test doesn't proceed into the install operation.
-	XCUIElement *cancelButton = self.app.buttons[@"Cancel"];
-	if (cancelButton.exists) {
-		[cancelButton click];
-	}
+	[self dismissConfirmationSheet];
 }
 
 // Journey: selecting an installed formula offers Uninstall in the toolbar.
@@ -195,10 +200,8 @@
 	}
 	XCTAssertTrue(confirmationAppeared, @"clicking Uninstall should present a Yes/Cancel confirmation");
 
-	XCUIElement *cancelButton = self.app.buttons[@"Cancel"];
-	if (cancelButton.exists) {
-		[cancelButton click];
-	}
+	// Cancel so the test doesn't proceed into the uninstall operation.
+	[self dismissConfirmationSheet];
 }
 
 // Journey: selecting an outdated formula offers Update in the toolbar.
