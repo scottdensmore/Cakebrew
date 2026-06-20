@@ -375,4 +375,29 @@
 	XCTAssertTrue(exists, @"the toolbar should provide a search field");
 }
 
+#pragma mark - Formula info journey
+
+// Journey: More Information shows the selected formula's details in a popover.
+- (void)testMoreInformationShowsFormulaInfoPopover
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	XCUIElement *wget = [self formulaCellWithName:@"mockwget"];
+	XCTAssertTrue([wget waitForExistenceWithTimeout:30.0], @"mockwget should be in the Installed list");
+	[wget click];
+
+	XCUIElement *infoButton = self.app.buttons[@"More Information"];
+	XCTAssertTrue([infoButton waitForExistenceWithTimeout:15.0], @"More Information should be offered");
+	[infoButton click];
+
+	// The popover shows the formula's info (served by the mock interface).
+	NSPredicate *predicate = [NSPredicate predicateWithFormat:@"value CONTAINS %@", @"A mock formula"];
+	XCUIElement *infoText = [[self.app.textViews matchingPredicate:predicate] firstMatch];
+	BOOL appeared = [infoText waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"More Information should show the formula info in a popover");
+}
+
 @end
