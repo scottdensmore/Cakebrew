@@ -26,14 +26,52 @@
 	self.manager = [BPHomebrewManager sharedManager];
 	self.manager.installedFormulae = @[];
 	self.manager.outdatedFormulae = @[];
+	self.manager.allFormulae = @[];
+	self.manager.searchFormulae = @[];
 }
 
 - (void)tearDown
 {
 	self.manager.installedFormulae = @[];
 	self.manager.outdatedFormulae = @[];
+	self.manager.allFormulae = @[];
+	self.manager.searchFormulae = @[];
 	self.manager = nil;
 	[super tearDown];
+}
+
+- (void)testUpdateSearchFiltersAllFormulaeByName
+{
+	BPFormula *wget = [BPFormula formulaWithName:@"wget"];
+	BPFormula *git = [BPFormula formulaWithName:@"git"];
+	BPFormula *wgetpaste = [BPFormula formulaWithName:@"wgetpaste"];
+	self.manager.allFormulae = @[ wget, git, wgetpaste ];
+
+	[self.manager updateSearchWithName:@"wget"];
+
+	XCTAssertEqual(self.manager.searchFormulae.count, 2u, @"wget and wgetpaste contain 'wget'");
+	XCTAssertTrue([self.manager.searchFormulae containsObject:wget]);
+	XCTAssertTrue([self.manager.searchFormulae containsObject:wgetpaste]);
+	XCTAssertFalse([self.manager.searchFormulae containsObject:git]);
+}
+
+- (void)testUpdateSearchIsCaseInsensitive
+{
+	BPFormula *node = [BPFormula formulaWithName:@"node"];
+	self.manager.allFormulae = @[ node ];
+
+	[self.manager updateSearchWithName:@"NODE"];
+
+	XCTAssertEqualObjects(self.manager.searchFormulae, @[ node ]);
+}
+
+- (void)testUpdateSearchWithNoMatchesIsEmpty
+{
+	self.manager.allFormulae = @[ [BPFormula formulaWithName:@"wget"] ];
+
+	[self.manager updateSearchWithName:@"zzznope"];
+
+	XCTAssertEqual(self.manager.searchFormulae.count, 0u);
 }
 
 - (void)testStatusIsNotInstalledWhenAbsent

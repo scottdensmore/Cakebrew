@@ -352,4 +352,27 @@
 	[self dismissConfirmationSheet];
 }
 
+#pragma mark - Search journey
+
+// Journey: the toolbar provides a search field.
+//
+// The actual type-and-filter behaviour can't be driven here: the headless CI
+// session never makes the app window key, so no text field can take keyboard
+// focus (XCUITest reports "Neither element nor any descendant has keyboard
+// focus"). The search *filtering* logic is covered deterministically by a unit
+// test instead (BPHomebrewManagerTests testUpdateSearchFiltersAllFormulaeByName).
+- (void)testSearchFieldIsAvailable
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+	XCTAssertTrue([[self formulaCellWithName:@"mockwget"] waitForExistenceWithTimeout:30.0],
+				  @"the mock data should load");
+
+	XCUIElement *searchField = self.app.searchFields.firstMatch;
+	BOOL exists = [searchField waitForExistenceWithTimeout:15.0];
+	if (!exists) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(exists, @"the toolbar should provide a search field");
+}
+
 @end
