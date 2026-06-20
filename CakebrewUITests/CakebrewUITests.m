@@ -107,6 +107,43 @@
 				  @"the mock installed list should include mockgit");
 }
 
+// Journey: selecting a not-installed formula offers Install in the toolbar.
+- (void)testNotInstalledFormulaOffersInstall
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+	XCUIElement *sidebar = [self sidebar];
+
+	[sidebar.staticTexts[@"All Formulae"] click];
+	XCUIElement *htop = [self formulaCellWithName:@"mockhtop"];
+	XCTAssertTrue([htop waitForExistenceWithTimeout:30.0], @"mockhtop should be listed under All Formulae");
+	[htop click];
+
+	XCUIElement *installButton = self.app.buttons[@"Install Formula"];
+	BOOL appeared = [installButton waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"selecting a not-installed formula should offer Install in the toolbar");
+}
+
+// Journey: selecting an installed formula offers Uninstall in the toolbar.
+- (void)testInstalledFormulaOffersUninstall
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	// The Installed list is selected by default; mockwget is installed.
+	XCUIElement *wget = [self formulaCellWithName:@"mockwget"];
+	XCTAssertTrue([wget waitForExistenceWithTimeout:30.0], @"mockwget should be in the Installed list");
+	[wget click];
+
+	XCUIElement *uninstallButton = self.app.buttons[@"Uninstall Formula"];
+	BOOL appeared = [uninstallButton waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"selecting an installed formula should offer Uninstall in the toolbar");
+}
+
 // Journey: running Doctor streams its report into the Doctor view.
 - (void)testRunningDoctorShowsOutput
 {
