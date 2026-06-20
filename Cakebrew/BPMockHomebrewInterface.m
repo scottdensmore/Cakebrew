@@ -64,6 +64,15 @@
 	return YES;
 }
 
+// Stream a fixed, recognizable cleanup report instead of running `brew cleanup`.
+- (BOOL)runCleanupWithReturnBlock:(void (^)(NSString *))block
+{
+	if (block) {
+		block(@"MOCK_CLEANUP_OK\nFreed 0 bytes.\n");
+	}
+	return YES;
+}
+
 // Serve well-formed `brew info` output so selecting a formula doesn't shell out
 // to real brew for a fixture name (which returns unparseable output and crashes
 // BPFormula getInformation). The format matches what getInformation expects.
