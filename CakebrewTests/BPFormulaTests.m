@@ -327,6 +327,41 @@ static BPCustomFormula *nmapFormula;
 	[self waitForExpectationsWithTimeout:0.5 handler:nil];
 }
 
+#pragma mark - shortLatestVersion
+
+- (void)testShortLatestVersionExtractsFromFourComponentString
+{
+	// "stable 1.6.23 (bottled), HEAD" -> "1.6.23"
+	BPFormula *formula = [BPFormula formulaWithName:@"foo" version:@"1.0" andLatestVersion:@"stable 1.6.23 (bottled), HEAD"];
+	XCTAssertEqualObjects(formula.shortLatestVersion, @"1.6.23");
+}
+
+- (void)testShortLatestVersionExtractsFromThreeComponentString
+{
+	// "stable 1.6.23 (bottled)" -> "1.6.23"
+	BPFormula *formula = [BPFormula formulaWithName:@"foo" version:@"1.0" andLatestVersion:@"stable 1.6.23 (bottled)"];
+	XCTAssertEqualObjects(formula.shortLatestVersion, @"1.6.23");
+}
+
+- (void)testShortLatestVersionReturnsPlainVersionUnchanged
+{
+	BPFormula *formula = [BPFormula formulaWithName:@"foo" version:@"1.0" andLatestVersion:@"1.6.23"];
+	XCTAssertEqualObjects(formula.shortLatestVersion, @"1.6.23");
+}
+
+- (void)testShortLatestVersionReturnsTwoComponentStringUnchanged
+{
+	// Boundary: only 3- or 4-component strings are treated as the verbose form.
+	BPFormula *formula = [BPFormula formulaWithName:@"foo" version:@"1.0" andLatestVersion:@"stable 1.6.23"];
+	XCTAssertEqualObjects(formula.shortLatestVersion, @"stable 1.6.23");
+}
+
+- (void)testShortLatestVersionIsNilWhenLatestVersionMissing
+{
+	BPFormula *formula = [BPFormula formulaWithName:@"foo"];
+	XCTAssertNil(formula.shortLatestVersion);
+}
+
 @end
 
 
