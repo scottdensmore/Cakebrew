@@ -374,13 +374,13 @@
 	[self.app typeKey:@"f" modifierFlags:XCUIKeyModifierCommand];
 	[self.app typeText:@"wget"];
 
+	// Diagnostic: show the search-field value and the resulting table contents.
+	[NSThread sleepForTimeInterval:3.0];
+	NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+
 	// Only mockwget matches "wget".
 	XCUIElement *wgetCell = [self formulaCellWithName:@"mockwget"];
-	BOOL found = [wgetCell waitForExistenceWithTimeout:15.0];
-	if (!found) {
-		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
-	}
-	XCTAssertTrue(found, @"searching 'wget' should show mockwget");
+	XCTAssertTrue([wgetCell waitForExistenceWithTimeout:15.0], @"searching 'wget' should show mockwget");
 	XCTAssertFalse([self formulaCellWithName:@"mockhtop"].exists,
 				   @"searching 'wget' should filter out non-matching formulae");
 }
