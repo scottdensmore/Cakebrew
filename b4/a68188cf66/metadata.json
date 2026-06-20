@@ -1,0 +1,25 @@
+{
+  "cli_version": "0.7.5",
+  "checkpoint_id": "b4a68188cf66",
+  "strategy": "manual-commit",
+  "branch": "feat/ui-test-target",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".github/workflows/ci.yml"
+  ],
+  "sessions": [
+    {
+      "metadata": "/b4/a68188cf66/0/metadata.json",
+      "transcript": "/b4/a68188cf66/0/full.jsonl",
+      "content_hash": "/b4/a68188cf66/0/content_hash.txt",
+      "prompt": "/b4/a68188cf66/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 6948,
+    "cache_creation_tokens": 2659054,
+    "cache_read_tokens": 111801186,
+    "output_tokens": 442908,
+    "api_call_count": 389
+  }
+}

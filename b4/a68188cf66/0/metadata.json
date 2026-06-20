@@ -1,0 +1,80 @@
+{
+  "cli_version": "0.7.5",
+  "checkpoint_id": "b4a68188cf66",
+  "session_id": "86f7230f-16a2-4201-9dae-105c1789c2c6",
+  "strategy": "manual-commit",
+  "created_at": "2026-06-20T04:44:36.108385Z",
+  "branch": "feat/ui-test-target",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".github/workflows/ci.yml"
+  ],
+  "agent": "Claude Code",
+  "model": "",
+  "turn_id": "2b8078939857",
+  "token_usage": {
+    "input_tokens": 6948,
+    "cache_creation_tokens": 2659054,
+    "cache_read_tokens": 111801186,
+    "output_tokens": 442908,
+    "api_call_count": 389
+  },
+  "skill_events_version": 1,
+  "skill_events": [
+    {
+      "id": "claude-skill-toolu_015eSjgGiuu1Ae9sQBbRcCdj",
+      "event_type": "tool_invocation",
+      "skill": {
+        "name": "code-review"
+      },
+      "source": {
+        "agent": "claude-code",
+        "signal": "skill_tool_use",
+        "confidence": "explicit"
+      },
+      "turn_id": "2b8078939857",
+      "transcript_anchor": {
+        "unit": "line",
+        "start": 1526,
+        "end": 1527,
+        "entry_ids": [
+          "77042f52-3625-4b47-b573-a8fa32dd6a7d"
+        ],
+        "tool_use_id": "toolu_015eSjgGiuu1Ae9sQBbRcCdj"
+      },
+      "native": {
+        "tool_name": "Skill",
+        "tool_use_id": "toolu_015eSjgGiuu1Ae9sQBbRcCdj"
+      },
+      "collapse": {
+        "target": "tool_pair",
+        "label": "Skill: code-review",
+        "default_collapsed": true
+      }
+    }
+  ],
+  "session_metrics": {
+    "turn_count": 5
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-06-20T04:44:35.925963Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 342,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 342,
+    "total_lines_changed": 344,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}
