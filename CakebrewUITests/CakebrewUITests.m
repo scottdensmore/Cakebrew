@@ -223,6 +223,33 @@
 	XCTAssertTrue(appeared, @"selecting an outdated formula should offer Update in the toolbar");
 }
 
+// Journey: clicking Update on an outdated formula asks for confirmation.
+- (void)testUpgradePresentsConfirmationDialog
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+	XCUIElement *sidebar = [self sidebar];
+
+	[sidebar.staticTexts[@"Outdated"] click];
+	XCUIElement *git = [self formulaCellWithName:@"mockgit"];
+	XCTAssertTrue([git waitForExistenceWithTimeout:30.0], @"mockgit should be in the Outdated list");
+	[git click];
+
+	XCUIElement *updateButton = self.app.buttons[@"Update Formula"];
+	XCTAssertTrue([updateButton waitForExistenceWithTimeout:15.0], @"Update should be offered");
+	[updateButton click];
+
+	// upgradeSelectedFormulae: presents a Yes / Cancel confirmation sheet.
+	XCUIElement *yesButton = self.app.buttons[@"Yes"];
+	BOOL confirmationAppeared = [yesButton waitForExistenceWithTimeout:15.0];
+	if (!confirmationAppeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(confirmationAppeared, @"clicking Update should present a Yes/Cancel confirmation");
+
+	// Cancel so the test doesn't proceed into the upgrade operation.
+	[self dismissConfirmationSheet];
+}
+
 // Journey: running Doctor streams its report into the Doctor view.
 - (void)testRunningDoctorShowsOutput
 {
