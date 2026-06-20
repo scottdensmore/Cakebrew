@@ -59,6 +59,7 @@
 		AB88EC9D48EC75643B93E566 /* CakebrewUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 37C4CCE578FE8963CDACE841 /* CakebrewUITests.m */; };
 		CB7E57A001000001000000F2 /* BPHomebrewInterfaceListCallTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB7E57A001000001000000F1 /* BPHomebrewInterfaceListCallTests.m */; };
 		CB7E57A001000001000000F4 /* BPHomebrewManagerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB7E57A001000001000000F3 /* BPHomebrewManagerTests.m */; };
+		CB7E57A001000001000000F6 /* BPFormulaOptionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB7E57A001000001000000F5 /* BPFormulaOptionTests.m */; };
 		D212A5881B853069003000ED /* BPFormulaTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D212A5871B853069003000ED /* BPFormulaTests.m */; };
 		D212A5891B853132003000ED /* BPFormula.m in Sources */ = {isa = PBXBuildFile; fileRef = 1570BA5518EE50BD001C3C5C /* BPFormula.m */; };
 		D228335A1BA71B9900E44C82 /* BPTask.m in Sources */ = {isa = PBXBuildFile; fileRef = D23620E01B8B3094006D293D /* BPTask.m */; };
@@ -246,6 +247,7 @@
 		B15AF968007B8829A04A4ECC /* BPMockHomebrewInterface.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPMockHomebrewInterface.m; sourceTree = "<group>"; };
 		CB7E57A001000001000000F1 /* BPHomebrewInterfaceListCallTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPHomebrewInterfaceListCallTests.m; sourceTree = "<group>"; };
 		CB7E57A001000001000000F3 /* BPHomebrewManagerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPHomebrewManagerTests.m; sourceTree = "<group>"; };
+		CB7E57A001000001000000F5 /* BPFormulaOptionTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPFormulaOptionTests.m; sourceTree = "<group>"; };
 		D212A5871B853069003000ED /* BPFormulaTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPFormulaTests.m; sourceTree = "<group>"; };
 		D23620DF1B8B3094006D293D /* BPTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BPTask.h; sourceTree = "<group>"; };
 		D23620E01B8B3094006D293D /* BPTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPTask.m; sourceTree = "<group>"; };
@@ -561,6 +563,7 @@
 				D212A5871B853069003000ED /* BPFormulaTests.m */,
 				CB7E57A001000001000000F1 /* BPHomebrewInterfaceListCallTests.m */,
 				CB7E57A001000001000000F3 /* BPHomebrewManagerTests.m */,
+				CB7E57A001000001000000F5 /* BPFormulaOptionTests.m */,
 				D2BBAB701B87377D00F21332 /* brewInfo_sbtenv.txt */,
 				D2BBAB6E1B87290B00F21332 /* brewInfo_bison.txt */,
 				D2BBAB621B87142F00F21332 /* brewInfo_acme.txt */,
@@ -816,6 +819,7 @@
 				D212A5881B853069003000ED /* BPFormulaTests.m in Sources */,
 				CB7E57A001000001000000F2 /* BPHomebrewInterfaceListCallTests.m in Sources */,
 				CB7E57A001000001000000F4 /* BPHomebrewManagerTests.m in Sources */,
+				CB7E57A001000001000000F6 /* BPFormulaOptionTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
