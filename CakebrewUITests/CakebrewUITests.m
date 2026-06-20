@@ -107,4 +107,27 @@
 				  @"the mock installed list should include mockgit");
 }
 
+// Journey: running Doctor streams its report into the Doctor view.
+- (void)testRunningDoctorShowsOutput
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+	XCUIElement *sidebar = [self sidebar];
+
+	[sidebar.staticTexts[@"Doctor"] click];
+	XCTAssertTrue([self.app.staticTexts[@"Homebrew Doctor"] waitForExistenceWithTimeout:15.0],
+				  @"the Doctor view should appear");
+
+	XCUIElement *runButton = self.app.buttons[@"Run Doctor"];
+	XCTAssertTrue([runButton waitForExistenceWithTimeout:15.0], @"the Run Doctor button should exist");
+	[runButton click];
+
+	NSPredicate *predicate = [NSPredicate predicateWithFormat:@"value CONTAINS %@", @"MOCK_DOCTOR_OK"];
+	XCUIElement *output = [[self.app.textViews matchingPredicate:predicate] firstMatch];
+	BOOL appeared = [output waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"running Doctor should stream its report into the Doctor view");
+}
+
 @end

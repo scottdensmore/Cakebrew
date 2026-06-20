@@ -46,4 +46,13 @@
 	}
 }
 
+// Stream a fixed, recognizable doctor report instead of running `brew doctor`.
+- (BOOL)runDoctorWithReturnBlock:(void (^)(NSString *))block
+{
+	if (block) {
+		block(@"MOCK_DOCTOR_OK\nYour system is ready to brew.\n");
+	}
+	return YES;
+}
+
 @end
