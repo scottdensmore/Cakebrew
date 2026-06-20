@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.7.5",
+  "checkpoint_id": "e72c5a4d6e9c",
+  "strategy": "manual-commit",
+  "branch": "feat/mock-brew-injection",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/e7/2c5a4d6e9c/0/metadata.json",
+      "transcript": "/e7/2c5a4d6e9c/0/full.jsonl",
+      "content_hash": "/e7/2c5a4d6e9c/0/content_hash.txt",
+      "prompt": "/e7/2c5a4d6e9c/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 8836,
+    "cache_creation_tokens": 3317261,
+    "cache_read_tokens": 147669901,
+    "output_tokens": 511651,
+    "api_call_count": 454
+  }
+}
