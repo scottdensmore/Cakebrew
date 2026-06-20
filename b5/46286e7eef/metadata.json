@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.7.5",
+  "checkpoint_id": "b546286e7eef",
+  "strategy": "manual-commit",
+  "branch": "feat/ui-more-info-popover-journey",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/b5/46286e7eef/0/metadata.json",
+      "transcript": "/b5/46286e7eef/0/full.jsonl",
+      "content_hash": "/b5/46286e7eef/0/content_hash.txt",
+      "prompt": "/b5/46286e7eef/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 25078,
+    "cache_creation_tokens": 3648946,
+    "cache_read_tokens": 298093579,
+    "output_tokens": 764146,
+    "api_call_count": 649
+  }
+}
