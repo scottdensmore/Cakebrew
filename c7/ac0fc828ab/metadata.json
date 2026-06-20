@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.7.5",
+  "checkpoint_id": "c7ac0fc828ab",
+  "strategy": "manual-commit",
+  "branch": "test/ui-doctor-run-journey",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/c7/ac0fc828ab/0/metadata.json",
+      "transcript": "/c7/ac0fc828ab/0/full.jsonl",
+      "content_hash": "/c7/ac0fc828ab/0/content_hash.txt",
+      "prompt": "/c7/ac0fc828ab/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 9116,
+    "cache_creation_tokens": 3333682,
+    "cache_read_tokens": 154428758,
+    "output_tokens": 525539,
+    "api_call_count": 465
+  }
+}
