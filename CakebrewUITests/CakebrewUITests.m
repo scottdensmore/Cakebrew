@@ -296,4 +296,60 @@
 	XCTAssertTrue(appeared, @"running Update Homebrew should stream its output into the Update view");
 }
 
+#pragma mark - Repository (tap/untap) journeys
+
+// Journey: with no repository selected, Tap offers a repo-name input dialog.
+- (void)testTapPresentsInputDialog
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+	XCUIElement *sidebar = [self sidebar];
+
+	[sidebar.staticTexts[@"Repositories"] click];
+
+	XCUIElement *tapButton = self.app.buttons[@"Tap Repository"];
+	XCTAssertTrue([tapButton waitForExistenceWithTimeout:15.0], @"Tap Repository should be offered");
+	[tapButton click];
+
+	// tapRepository: presents an OK/Cancel input dialog.
+	XCUIElement *okButton = self.app.buttons[@"OK"];
+	BOOL appeared = [okButton waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"Tap should present an input dialog with OK/Cancel");
+
+	[self dismissConfirmationSheet];
+}
+
+// Journey: selecting a tapped repository and choosing Untap asks for confirmation.
+- (void)testUntapPresentsConfirmationDialog
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+	XCUIElement *sidebar = [self sidebar];
+
+	[sidebar.staticTexts[@"Repositories"] click];
+
+	XCUIElement *repo = [self formulaCellWithName:@"homebrew/core"];
+	BOOL repoListed = [repo waitForExistenceWithTimeout:30.0];
+	if (!repoListed) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(repoListed, @"a tapped repository should be listed");
+	[repo click];
+
+	XCUIElement *untapButton = self.app.buttons[@"Untap Repository"];
+	XCTAssertTrue([untapButton waitForExistenceWithTimeout:15.0], @"Untap Repository should be offered");
+	[untapButton click];
+
+	// untapRepository: presents an OK/Cancel confirmation.
+	XCUIElement *okButton = self.app.buttons[@"OK"];
+	BOOL appeared = [okButton waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"Untap should present a confirmation with OK/Cancel");
+
+	[self dismissConfirmationSheet];
+}
+
 @end

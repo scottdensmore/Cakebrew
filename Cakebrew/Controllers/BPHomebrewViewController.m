@@ -785,24 +785,25 @@ NSOpenSavePanelDelegate>
 	[alert addButtonWithTitle:NSLocalizedString(@"Generic_OK", nil)];
 	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Cancel", nil)];
 	[alert setInformativeText:NSLocalizedString(@"Message_Tap_Body", nil)];
-	[alert.window setTitle:NSLocalizedString(@"Cakebrew", nil)];
-	
+
 	NSTextField *input = [[NSTextField alloc] initWithFrame:NSMakeRect(0,0,200,24)];
 	[alert setAccessoryView:input];
-	
-	NSInteger returnValue = [alert runModal];
-	if (returnValue == NSAlertFirstButtonReturn)
-	{
-		NSString* name = [input stringValue];
-		if ([name length] <= 0)
-		{
+
+	// Present as a sheet rather than an app-modal runModal (non-blocking,
+	// UI-testable, standard macOS style), matching the other confirmations here.
+	[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
+		if (returnCode != NSAlertFirstButtonReturn) {
+			return;
+		}
+		NSString *name = [input stringValue];
+		if ([name length] <= 0) {
 			return;
 		}
 		BPFormula *lformula = [BPFormula formulaWithName:name];
 		self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationTap
 																				 formulae:@[lformula]
 																				  options:nil];
-	}
+	}];
 }
 
 - (IBAction)untapRepository:(id)sender
@@ -820,14 +821,16 @@ NSOpenSavePanelDelegate>
 	[alert addButtonWithTitle:NSLocalizedString(@"Generic_OK", nil)];
 	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Cancel", nil)];
 	[alert setInformativeText:[NSString stringWithFormat:NSLocalizedString(@"Message_Untap_Body", nil), formula.name]];
-	[alert.window setTitle:NSLocalizedString(@"Cakebrew", nil)];
-	
-	if ([alert runModal] == NSAlertFirstButtonReturn)
-	{
-		self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationUntap
-																				 formulae:@[formula]
-																				  options:nil];
-	}
+
+	// Present as a sheet rather than an app-modal runModal (non-blocking,
+	// UI-testable, standard macOS style), matching the other confirmations here.
+	[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
+		if (returnCode == NSAlertFirstButtonReturn) {
+			self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationUntap
+																					 formulae:@[formula]
+																					  options:nil];
+		}
+	}];
 }
 
 - (IBAction)updateHomebrew:(id)sender
