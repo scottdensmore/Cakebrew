@@ -40,3 +40,25 @@ jobs:
             -scheme CakebrewTests \
             -destination 'platform=macOS' \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+
+  ui-tests:
+    name: UI Tests
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run UI tests
+        run: |
+          set -o pipefail
+          # UI tests must launch the app, so it has to be (ad-hoc) signed.
+          # Force ad-hoc signing so no developer team / provisioning profile is needed.
+          xcodebuild test \
+            -scheme CakebrewUITests \
+            -destination 'platform=macOS' \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=YES \
+            DEVELOPMENT_TEAM="" \
+            PROVISIONING_PROFILE_SPECIFIER=""

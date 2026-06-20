@@ -55,9 +55,11 @@
 		1FE4FE6C148E4CDD008EDE8B /* BPAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4FE6B148E4CDD008EDE8B /* BPAppDelegate.m */; };
 		1FE4FE6F148E4CDD008EDE8B /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FE4FE6D148E4CDD008EDE8B /* MainMenu.xib */; };
 		1FE4FE77148E4D43008EDE8B /* BPHomebrewInterface.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4FE76148E4D43008EDE8B /* BPHomebrewInterface.m */; };
-		D212A5881B853069003000ED /* BPFormulaTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D212A5871B853069003000ED /* BPFormulaTests.m */; };
+		7FE49B0EE97F41AC5F5513B9 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C155F549AE6671B51A3FCAD /* Cocoa.framework */; };
+		AB88EC9D48EC75643B93E566 /* CakebrewUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 37C4CCE578FE8963CDACE841 /* CakebrewUITests.m */; };
 		CB7E57A001000001000000F2 /* BPHomebrewInterfaceListCallTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB7E57A001000001000000F1 /* BPHomebrewInterfaceListCallTests.m */; };
 		CB7E57A001000001000000F4 /* BPHomebrewManagerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB7E57A001000001000000F3 /* BPHomebrewManagerTests.m */; };
+		D212A5881B853069003000ED /* BPFormulaTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D212A5871B853069003000ED /* BPFormulaTests.m */; };
 		D212A5891B853132003000ED /* BPFormula.m in Sources */ = {isa = PBXBuildFile; fileRef = 1570BA5518EE50BD001C3C5C /* BPFormula.m */; };
 		D228335A1BA71B9900E44C82 /* BPTask.m in Sources */ = {isa = PBXBuildFile; fileRef = D23620E01B8B3094006D293D /* BPTask.m */; };
 		D23620E11B8B3094006D293D /* BPTask.m in Sources */ = {isa = PBXBuildFile; fileRef = D23620E01B8B3094006D293D /* BPTask.m */; };
@@ -89,6 +91,16 @@
 		D2F732F119190B75002B2512 /* NSString+URLValidation.m in Sources */ = {isa = PBXBuildFile; fileRef = D2F732F019190B75002B2512 /* NSString+URLValidation.m */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		E7C495845F1999CA9E24D4F0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1FE4FE4B148E4CDD008EDE8B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1FE4FE53148E4CDD008EDE8B;
+			remoteInfo = Cakebrew;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		1570BA6018EF9B0F001C3C5C /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -102,6 +114,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0D42C8684E62ED50FB7A319A /* CakebrewUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CakebrewUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		150AEC381B3F999A00163767 /* BPDoctorViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPDoctorViewController.h; path = Controllers/BPDoctorViewController.h; sourceTree = "<group>"; };
 		150AEC391B3F999A00163767 /* BPDoctorViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPDoctorViewController.m; path = Controllers/BPDoctorViewController.m; sourceTree = "<group>"; };
 		150AEC3A1B3F999A00163767 /* BPFormulaOptionsWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPFormulaOptionsWindowController.h; path = Controllers/BPFormulaOptionsWindowController.h; sourceTree = "<group>"; };
@@ -226,9 +239,11 @@
 		1FE4FE6B148E4CDD008EDE8B /* BPAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BPAppDelegate.m; sourceTree = "<group>"; };
 		1FE4FE75148E4D43008EDE8B /* BPHomebrewInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BPHomebrewInterface.h; sourceTree = "<group>"; };
 		1FE4FE76148E4D43008EDE8B /* BPHomebrewInterface.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPHomebrewInterface.m; sourceTree = "<group>"; };
-		D212A5871B853069003000ED /* BPFormulaTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPFormulaTests.m; sourceTree = "<group>"; };
+		37C4CCE578FE8963CDACE841 /* CakebrewUITests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = CakebrewUITests.m; sourceTree = "<group>"; };
+		9C155F549AE6671B51A3FCAD /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
 		CB7E57A001000001000000F1 /* BPHomebrewInterfaceListCallTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPHomebrewInterfaceListCallTests.m; sourceTree = "<group>"; };
 		CB7E57A001000001000000F3 /* BPHomebrewManagerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPHomebrewManagerTests.m; sourceTree = "<group>"; };
+		D212A5871B853069003000ED /* BPFormulaTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPFormulaTests.m; sourceTree = "<group>"; };
 		D23620DF1B8B3094006D293D /* BPTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BPTask.h; sourceTree = "<group>"; };
 		D23620E01B8B3094006D293D /* BPTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPTask.m; sourceTree = "<group>"; };
 		D261C9C01B852FA300409803 /* CakebrewTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CakebrewTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -287,6 +302,14 @@
 				D2CC8CA71B90F04C00F763DF /* Security.framework in Frameworks */,
 				15D2CFAD18F202D000B6D9F1 /* QuartzCore.framework in Frameworks */,
 				1FE4FE59148E4CDD008EDE8B /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2B584BE8073161AA70589D96 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7FE49B0EE97F41AC5F5513B9 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -431,6 +454,7 @@
 				D261C9C11B852FA300409803 /* CakebrewTests */,
 				1FE4FE57148E4CDD008EDE8B /* Frameworks */,
 				1FE4FE55148E4CDD008EDE8B /* Products */,
+				9DF1C447B2F02AF931AB0454 /* CakebrewUITests */,
 			);
 			sourceTree = "<group>";
 			tabWidth = 4;
@@ -441,6 +465,7 @@
 			children = (
 				1FE4FE54148E4CDD008EDE8B /* Cakebrew.app */,
 				D261C9C01B852FA300409803 /* CakebrewTests.xctest */,
+				0D42C8684E62ED50FB7A319A /* CakebrewUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -452,6 +477,7 @@
 				15D2CFAC18F202D000B6D9F1 /* QuartzCore.framework */,
 				1FE4FE58148E4CDD008EDE8B /* Cocoa.framework */,
 				1FE4FE5A148E4CDD008EDE8B /* Other Frameworks */,
+				8DB74B2651C44E744BCDD4E5 /* OS X */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -507,6 +533,23 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
+		8DB74B2651C44E744BCDD4E5 /* OS X */ = {
+			isa = PBXGroup;
+			children = (
+				9C155F549AE6671B51A3FCAD /* Cocoa.framework */,
+			);
+			name = "OS X";
+			sourceTree = "<group>";
+		};
+		9DF1C447B2F02AF931AB0454 /* CakebrewUITests */ = {
+			isa = PBXGroup;
+			children = (
+				37C4CCE578FE8963CDACE841 /* CakebrewUITests.m */,
+			);
+			name = CakebrewUITests;
+			path = CakebrewUITests;
+			sourceTree = SOURCE_ROOT;
+		};
 		D261C9C11B852FA300409803 /* CakebrewTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -549,6 +592,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		080D4B6D911CF19CB392F346 /* CakebrewUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 39ACB56EBC215069440999D0 /* Build configuration list for PBXNativeTarget "CakebrewUITests" */;
+			buildPhases = (
+				BB14A5DD794CFA54E178D30E /* Sources */,
+				2B584BE8073161AA70589D96 /* Frameworks */,
+				E58314AE85CD73857A535A65 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				36E95B9ABD3704D5C8684BDF /* PBXTargetDependency */,
+			);
+			name = CakebrewUITests;
+			productName = CakebrewUITests;
+			productReference = 0D42C8684E62ED50FB7A319A /* CakebrewUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		1FE4FE53148E4CDD008EDE8B /* Cakebrew */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1FE4FE72148E4CDD008EDE8B /* Build configuration list for PBXNativeTarget "Cakebrew" */;
@@ -624,6 +685,7 @@
 			targets = (
 				1FE4FE53148E4CDD008EDE8B /* Cakebrew */,
 				D261C9BF1B852FA300409803 /* CakebrewTests */,
+				080D4B6D911CF19CB392F346 /* CakebrewUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -676,6 +738,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E58314AE85CD73857A535A65 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -717,6 +786,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BB14A5DD794CFA54E178D30E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AB88EC9D48EC75643B93E566 /* CakebrewUITests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D261C9BC1B852FA300409803 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -737,6 +814,15 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		36E95B9ABD3704D5C8684BDF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Cakebrew;
+			target = 1FE4FE53148E4CDD008EDE8B /* Cakebrew */;
+			targetProxy = E7C495845F1999CA9E24D4F0 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		15715F5F1C78050B00AE0E66 /* BPBundleWindow.xib */ = {
@@ -914,6 +1000,21 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		17B08E6F69071D4438CF2774 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.scottdensmore.CakebrewUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				TEST_TARGET_NAME = Cakebrew;
+			};
+			name = Debug;
+		};
 		1FE4FE70148E4CDD008EDE8B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1083,6 +1184,21 @@
 			};
 			name = Release;
 		};
+		24CA8BDCAD53D3646B424CFB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.scottdensmore.CakebrewUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				TEST_TARGET_NAME = Cakebrew;
+			};
+			name = Release;
+		};
 		D261C9C81B852FA300409803 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1171,6 +1287,15 @@
 			buildConfigurations = (
 				1FE4FE73148E4CDD008EDE8B /* Debug */,
 				1FE4FE74148E4CDD008EDE8B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		39ACB56EBC215069440999D0 /* Build configuration list for PBXNativeTarget "CakebrewUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				24CA8BDCAD53D3646B424CFB /* Release */,
+				17B08E6F69071D4438CF2774 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
