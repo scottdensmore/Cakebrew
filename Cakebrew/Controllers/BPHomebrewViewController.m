@@ -715,13 +715,16 @@ NSOpenSavePanelDelegate>
 	[alert setInformativeText:[NSString stringWithFormat:NSLocalizedString(@"Confirmation_Uninstall_Formula", nil),
 							   formula.name]];
 
-	[alert.window setTitle:NSLocalizedString(@"Cakebrew", nil)];
-	
-	if ([alert runModal] == NSAlertFirstButtonReturn) {
-		self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationUninstall
-																				 formulae:@[formula]
-																				  options:nil];
-	}
+	// Present as a sheet rather than an app-modal runModal: non-blocking (so the
+	// app stays responsive / UI-testable) and the expected macOS confirmation
+	// style. Attach to the app's main window like the other sheets here.
+	[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
+		if (returnCode == NSAlertFirstButtonReturn) {
+			self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationUninstall
+																					 formulae:@[formula]
+																					  options:nil];
+		}
+	}];
 }
 
 - (IBAction)upgradeSelectedFormulae:(id)sender

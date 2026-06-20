@@ -43,6 +43,14 @@
 	return sidebar;
 }
 
+// Dismiss a confirmation alert sheet with Escape. Avoids matching the ambiguous
+// "Cancel" button (the toolbar search field also exposes one) and leaves a clean
+// state for teardown.
+- (void)dismissConfirmationSheet
+{
+	[self.app typeKey:XCUIKeyboardKeyEscape modifierFlags:XCUIKeyModifierNone];
+}
+
 #pragma mark - Launch / chrome
 
 // Smoke test: the app launches and presents its main window.
@@ -150,10 +158,7 @@
 	XCTAssertTrue(confirmationAppeared, @"clicking Install should present a Yes/Cancel confirmation");
 
 	// Cancel so the test doesn't proceed into the install operation.
-	XCUIElement *cancelButton = self.app.buttons[@"Cancel"];
-	if (cancelButton.exists) {
-		[cancelButton click];
-	}
+	[self dismissConfirmationSheet];
 }
 
 // Journey: selecting an installed formula offers Uninstall in the toolbar.
@@ -172,6 +177,31 @@
 		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
 	}
 	XCTAssertTrue(appeared, @"selecting an installed formula should offer Uninstall in the toolbar");
+}
+
+// Journey: clicking Uninstall on an installed formula asks for confirmation.
+- (void)testUninstallPresentsConfirmationDialog
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	XCUIElement *wget = [self formulaCellWithName:@"mockwget"];
+	XCTAssertTrue([wget waitForExistenceWithTimeout:30.0], @"mockwget should be in the Installed list");
+	[wget click];
+
+	XCUIElement *uninstallButton = self.app.buttons[@"Uninstall Formula"];
+	XCTAssertTrue([uninstallButton waitForExistenceWithTimeout:15.0], @"Uninstall should be offered");
+	[uninstallButton click];
+
+	// uninstallFormula: presents a Yes / Cancel confirmation sheet.
+	XCUIElement *yesButton = self.app.buttons[@"Yes"];
+	BOOL confirmationAppeared = [yesButton waitForExistenceWithTimeout:15.0];
+	if (!confirmationAppeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(confirmationAppeared, @"clicking Uninstall should present a Yes/Cancel confirmation");
+
+	// Cancel so the test doesn't proceed into the uninstall operation.
+	[self dismissConfirmationSheet];
 }
 
 // Journey: selecting an outdated formula offers Update in the toolbar.
