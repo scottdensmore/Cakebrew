@@ -93,7 +93,12 @@
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 
-	XCTAssertTrue([self.app.staticTexts[@"mockwget"] waitForExistenceWithTimeout:30.0],
+	// Diagnostic: dump the element tree so CI shows whether the mock data is
+	// present and how the formula cells are exposed.
+	[NSThread sleepForTimeInterval:6.0];
+	NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+
+	XCTAssertTrue([self.app.staticTexts[@"mockwget"] waitForExistenceWithTimeout:20.0],
 				  @"the mock installed list should populate the formula table");
 	XCTAssertTrue([self.app.staticTexts[@"mockgit"] waitForExistenceWithTimeout:15.0],
 				  @"the mock installed list should include mockgit");
