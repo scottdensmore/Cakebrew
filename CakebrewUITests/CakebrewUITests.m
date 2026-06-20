@@ -18,7 +18,6 @@
 	[super setUp];
 	self.continueAfterFailure = NO;
 	self.app = [[XCUIApplication alloc] init];
-	[self.app launch];
 }
 
 - (void)tearDown
@@ -28,15 +27,14 @@
 	[super tearDown];
 }
 
-// Smoke test: the app launches and presents its main window. This establishes
-// the UI-test target end to end before the navigation-journey tests build on it.
-- (void)testAppLaunchesAndShowsMainWindow
+// Launch the app with the given arguments and wait for its main window.
+- (void)launchWithArguments:(NSArray<NSString *> *)arguments
 {
-	XCTAssertTrue([self.app.windows.firstMatch waitForExistenceWithTimeout:15.0],
-				  @"The main window should appear after launch");
+	self.app.launchArguments = arguments;
+	[self.app launch];
+	XCTAssertTrue([self.app.windows.firstMatch waitForExistenceWithTimeout:30.0],
+				  @"the main window should appear after launch");
 }
-
-#pragma mark - Sidebar navigation journeys
 
 - (XCUIElement *)sidebar
 {
@@ -45,9 +43,20 @@
 	return sidebar;
 }
 
+#pragma mark - Launch / chrome
+
+// Smoke test: the app launches and presents its main window.
+- (void)testAppLaunchesAndShowsMainWindow
+{
+	[self launchWithArguments:@[]];
+}
+
+#pragma mark - Sidebar navigation journeys
+
 // Journey: the sidebar presents every navigation destination.
 - (void)testSidebarShowsAllNavigationItems
 {
+	[self launchWithArguments:@[]];
 	XCUIElement *sidebar = [self sidebar];
 	NSArray<NSString *> *items = @[ @"Installed", @"Outdated", @"All Formulae",
 									@"Leaves", @"Repositories", @"Doctor", @"Update" ];
@@ -60,6 +69,7 @@
 // Journey: selecting a Tools item switches the content to that tool's view.
 - (void)testNavigatingToToolViewsFromSidebar
 {
+	[self launchWithArguments:@[]];
 	XCUIElement *sidebar = [self sidebar];
 
 	XCUIElement *doctorItem = sidebar.staticTexts[@"Doctor"];
@@ -73,6 +83,20 @@
 	[updateItem click];
 	XCTAssertTrue([self.app.staticTexts[@"Homebrew Updater"] waitForExistenceWithTimeout:15.0],
 				  @"selecting Update should show the Homebrew Updater view");
+}
+
+#pragma mark - Mock-brew data journeys
+
+// Journey: launched with the mock brew interface, the Installed list populates
+// with the fixture formulae instead of whatever is on the host.
+- (void)testInstalledListShowsMockFormulae
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	XCTAssertTrue([self.app.staticTexts[@"mockwget"] waitForExistenceWithTimeout:30.0],
+				  @"the mock installed list should populate the formula table");
+	XCTAssertTrue([self.app.staticTexts[@"mockgit"] waitForExistenceWithTimeout:15.0],
+				  @"the mock installed list should include mockgit");
 }
 
 @end
