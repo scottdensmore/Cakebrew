@@ -423,4 +423,26 @@
 	XCTAssertTrue(appeared, @"running Cleanup should stream its output");
 }
 
+// Journey: the Tools menu exposes the Import / Export Brewfile actions.
+//
+// The full flow opens a system file panel (a separate process) and needs a
+// typed filename — neither is drivable under the CI key-window limit — so this
+// verifies the menu entry points are present rather than the whole operation.
+- (void)testToolsMenuExposesImportAndExport
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+	XCTAssertTrue([[self formulaCellWithName:@"mockwget"] waitForExistenceWithTimeout:30.0],
+				  @"the mock data should load");
+
+	[self.app.menuBars.menuBarItems[@"Tools"] click];
+
+	BOOL exportPresent = [self.app.menuItems[@"Export Brew Installation…"] waitForExistenceWithTimeout:10.0];
+	BOOL importPresent = self.app.menuItems[@"Import Brew Installation…"].exists;
+	if (!exportPresent || !importPresent) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(exportPresent, @"Tools should offer Export Brew Installation");
+	XCTAssertTrue(importPresent, @"Tools should offer Import Brew Installation");
+}
+
 @end
