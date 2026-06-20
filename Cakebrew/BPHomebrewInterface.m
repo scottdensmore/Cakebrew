@@ -73,7 +73,19 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 	{
 		static dispatch_once_t once;
 		static BPHomebrewInterface *instance;
-		dispatch_once(&once, ^ { instance = [[BPHomebrewInterface alloc] initUniqueInstance]; });
+		dispatch_once(&once, ^ {
+			// When launched with -BPMockBrew, use the fixture-backed mock interface
+			// so UI tests run without a real Homebrew install. Resolved dynamically
+			// so production code carries no dependency on the test-support class.
+			Class interfaceClass = [BPHomebrewInterface class];
+			if ([[[NSProcessInfo processInfo] arguments] containsObject:@"-BPMockBrew"]) {
+				Class mockClass = NSClassFromString(@"BPMockHomebrewInterface");
+				if (mockClass) {
+					interfaceClass = mockClass;
+				}
+			}
+			instance = [[interfaceClass alloc] initUniqueInstance];
+		});
 		return instance;
 	}
 }
