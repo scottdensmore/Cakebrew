@@ -202,6 +202,16 @@ NSString *const BPFormulaDidUpdateNotification = @"BPFormulaDidUpdateNotificatio
 	}
 }
 
+static BOOL BPLineLooksLikeWebsite(NSString *line)
+{
+	// A homepage line is a single URL token (https://…, git://…, etc.); a
+	// description line is prose. Detect the scheme separator rather than relying
+	// on +[NSURL URLWithString:] returning nil — modern NSURL percent-encodes
+	// arbitrary text and returns a non-nil URL even for a plain sentence.
+	NSString *trimmed = [line stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	return [trimmed containsString:@"://"];
+}
+
 - (BOOL)getInformation
 {
 	NSString *line         = nil;
@@ -259,19 +269,23 @@ NSString *const BPFormulaDidUpdateNotification = @"BPFormulaDidUpdateNotificatio
 	
 	lineIndex = 1;
 	line = [lines objectAtIndex:lineIndex];
-	id url = [NSURL URLWithString:line];
-	
-	if (url == nil)
+
+	// Some formulae have a one-line description before the homepage, others jump
+	// straight to the homepage. Decide by whether the line looks like a web URL.
+	// (We can't use +[NSURL URLWithString:] returning nil to detect the homepage:
+	// modern NSURL percent-encodes arbitrary text and returns a non-nil URL, so a
+	// description like "Play, record, ..." would wrongly be taken as the website.)
+	if (BPLineLooksLikeWebsite(line))
 	{
-		[self setShortDescription:line];
-		
-		lineIndex = 2;
-		line = [lines objectAtIndex:lineIndex];
 		[self setWebsite:[NSURL URLWithString:line]];
 	}
 	else
 	{
-		[self setWebsite:url];
+		[self setShortDescription:line];
+
+		lineIndex = 2;
+		line = [lines objectAtIndex:lineIndex];
+		[self setWebsite:[NSURL URLWithString:line]];
 	}
 	
 	lineIndex++;
