@@ -262,7 +262,13 @@ static BOOL BPLineLooksLikeWebsite(NSString *line)
 	}
 	
 	lines = [output componentsSeparatedByString:@"\n"];
-	
+
+	// `brew info` can return output that doesn't match the expected layout
+	// (errors, taps, new formats). The parser below indexes specific lines and
+	// columns, so parse defensively: bail on any out-of-range access rather than
+	// crash the app (the exception is otherwise thrown on a background queue).
+	@try {
+
 	lineIndex = 0;
 	line = [lines objectAtIndex:lineIndex];
 	[self setLatestVersion:[line substringFromIndex:[line rangeOfString:@":"].location+2]];
@@ -400,9 +406,14 @@ static BOOL BPLineLooksLikeWebsite(NSString *line)
 	} else {
 		[self setOptions:nil];
 	}
-	
+
+	}
+	@catch (NSException *exception) {
+		NSLog(@"Skipping malformed formula info for %@: %@", self.name, [exception reason]);
+	}
+
 	_needsInformation = NO;
-	
+
 	[[NSNotificationCenter defaultCenter] postNotificationName:BPFormulaDidUpdateNotification object:self];
 	return YES;
 }
