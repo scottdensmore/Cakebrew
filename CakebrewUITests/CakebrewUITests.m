@@ -186,4 +186,27 @@
 	XCTAssertTrue(appeared, @"running Doctor should stream its report into the Doctor view");
 }
 
+// Journey: the toolbar's Update Homebrew button switches to the Update view and
+// streams the update output into it. The toolbar button (scoped via toolbars)
+// is used to avoid the name clash with the Update view's own button.
+- (void)testRunningUpdateHomebrewShowsOutput
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	XCUIElement *updateButton = [self.app.toolbars.buttons[@"Update Homebrew"] firstMatch];
+	XCTAssertTrue([updateButton waitForExistenceWithTimeout:15.0], @"the toolbar Update Homebrew button should exist");
+	[updateButton click];
+
+	XCTAssertTrue([self.app.staticTexts[@"Homebrew Updater"] waitForExistenceWithTimeout:15.0],
+				  @"clicking Update Homebrew should show the Update view");
+
+	NSPredicate *predicate = [NSPredicate predicateWithFormat:@"value CONTAINS %@", @"MOCK_UPDATE_OK"];
+	XCUIElement *output = [[self.app.textViews matchingPredicate:predicate] firstMatch];
+	BOOL appeared = [output waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"running Update Homebrew should stream its output into the Update view");
+}
+
 @end
