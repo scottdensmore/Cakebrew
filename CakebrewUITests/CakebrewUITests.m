@@ -87,20 +87,23 @@
 
 #pragma mark - Mock-brew data journeys
 
+// Formula names render as NSTextField cells in the table, so the displayed name
+// is the element's value rather than its label — match on value.
+- (XCUIElement *)formulaCellWithName:(NSString *)name
+{
+	NSPredicate *predicate = [NSPredicate predicateWithFormat:@"value == %@", name];
+	return [[self.app.textFields matchingPredicate:predicate] firstMatch];
+}
+
 // Journey: launched with the mock brew interface, the Installed list populates
 // with the fixture formulae instead of whatever is on the host.
 - (void)testInstalledListShowsMockFormulae
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 
-	// Diagnostic: dump the element tree so CI shows whether the mock data is
-	// present and how the formula cells are exposed.
-	[NSThread sleepForTimeInterval:6.0];
-	NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
-
-	XCTAssertTrue([self.app.staticTexts[@"mockwget"] waitForExistenceWithTimeout:20.0],
+	XCTAssertTrue([[self formulaCellWithName:@"mockwget"] waitForExistenceWithTimeout:30.0],
 				  @"the mock installed list should populate the formula table");
-	XCTAssertTrue([self.app.staticTexts[@"mockgit"] waitForExistenceWithTimeout:15.0],
+	XCTAssertTrue([[self formulaCellWithName:@"mockgit"] waitForExistenceWithTimeout:15.0],
 				  @"the mock installed list should include mockgit");
 }
 
