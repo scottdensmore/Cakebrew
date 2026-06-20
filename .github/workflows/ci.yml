@@ -62,3 +62,18 @@ jobs:
             CODE_SIGNING_ALLOWED=YES \
             DEVELOPMENT_TEAM="" \
             PROVISIONING_PROFILE_SPECIFIER=""
+
+      - name: Collect crash logs
+        if: failure()
+        run: |
+          mkdir -p /tmp/uitest-diagnostics
+          cp -R "$HOME/Library/Logs/DiagnosticReports/." /tmp/uitest-diagnostics/ 2>/dev/null || true
+          ls -la /tmp/uitest-diagnostics || true
+
+      - name: Upload crash logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-crash-logs
+          path: /tmp/uitest-diagnostics
+          if-no-files-found: ignore
