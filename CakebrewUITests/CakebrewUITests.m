@@ -365,14 +365,14 @@
 	XCTAssertTrue([[self formulaCellWithName:@"mockhtop"] waitForExistenceWithTimeout:30.0],
 				  @"All Formulae should be loaded before searching");
 
-	XCUIElement *searchField = self.app.searchFields.firstMatch;
-	BOOL searchFieldExists = [searchField waitForExistenceWithTimeout:15.0];
-	if (!searchFieldExists) {
-		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
-	}
-	XCTAssertTrue(searchFieldExists, @"the toolbar search field should exist");
-	[searchField click];
-	[searchField typeText:@"wget"];
+	XCTAssertTrue([self.app.searchFields.firstMatch waitForExistenceWithTimeout:15.0],
+				  @"the toolbar search field should exist");
+
+	// Focus the search field via the Search shortcut (Cmd+F → beginFormulaSearch:),
+	// which is more reliable than clicking the toolbar field for keyboard focus,
+	// then type into the now-focused field.
+	[self.app typeKey:@"f" modifierFlags:XCUIKeyModifierCommand];
+	[self.app typeText:@"wget"];
 
 	// Only mockwget matches "wget".
 	XCUIElement *wgetCell = [self formulaCellWithName:@"mockwget"];
