@@ -126,6 +126,36 @@
 	XCTAssertTrue(appeared, @"selecting a not-installed formula should offer Install in the toolbar");
 }
 
+// Journey: clicking Install on a not-installed formula asks for confirmation.
+- (void)testInstallPresentsConfirmationDialog
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+	XCUIElement *sidebar = [self sidebar];
+
+	[sidebar.staticTexts[@"All Formulae"] click];
+	XCUIElement *htop = [self formulaCellWithName:@"mockhtop"];
+	XCTAssertTrue([htop waitForExistenceWithTimeout:30.0], @"mockhtop should be listed under All Formulae");
+	[htop click];
+
+	XCUIElement *installButton = self.app.buttons[@"Install Formula"];
+	XCTAssertTrue([installButton waitForExistenceWithTimeout:15.0], @"Install should be offered");
+	[installButton click];
+
+	// installFormula: presents a Yes / Cancel confirmation.
+	XCUIElement *yesButton = self.app.buttons[@"Yes"];
+	BOOL confirmationAppeared = [yesButton waitForExistenceWithTimeout:15.0];
+	if (!confirmationAppeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(confirmationAppeared, @"clicking Install should present a Yes/Cancel confirmation");
+
+	// Cancel so the test doesn't proceed into the install operation.
+	XCUIElement *cancelButton = self.app.buttons[@"Cancel"];
+	if (cancelButton.exists) {
+		[cancelButton click];
+	}
+}
+
 // Journey: selecting an installed formula offers Uninstall in the toolbar.
 - (void)testInstalledFormulaOffersUninstall
 {
