@@ -743,13 +743,15 @@ NSOpenSavePanelDelegate>
 	[alert setInformativeText:[NSString stringWithFormat:NSLocalizedString(@"Message_Update_Formulae_Body", nil),
 							   formulaNames]];
 
-	[alert.window setTitle:NSLocalizedString(@"Cakebrew", nil)];
-	if ([alert runModal] == NSAlertFirstButtonReturn)
-	{
-		self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationUpgrade
-																				 formulae:selectedFormulae
-																				  options:nil];
-	}
+	// Present as a sheet rather than an app-modal runModal (non-blocking,
+	// UI-testable, standard macOS style), matching the other confirmations here.
+	[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
+		if (returnCode == NSAlertFirstButtonReturn) {
+			self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationUpgrade
+																					 formulae:selectedFormulae
+																					  options:nil];
+		}
+	}];
 }
 
 
@@ -762,14 +764,16 @@ NSOpenSavePanelDelegate>
 	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Yes", nil)];
 	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Cancel", nil)];
 	[alert setInformativeText:NSLocalizedString(@"Message_Update_All_Outdated_Body", nil)];
-	[alert.window setTitle:NSLocalizedString(@"Cakebrew", nil)];
-	
-	if ([alert runModal] == NSAlertFirstButtonReturn)
-	{
-		self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationUpgrade
-																				 formulae:nil
-																				  options:nil];
-	}
+
+	// Present as a sheet rather than an app-modal runModal (non-blocking,
+	// UI-testable, standard macOS style), matching the other confirmations here.
+	[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
+		if (returnCode == NSAlertFirstButtonReturn) {
+			self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationUpgrade
+																					 formulae:nil
+																					  options:nil];
+		}
+	}];
 }
 
 - (IBAction)tapRepository:(id)sender
