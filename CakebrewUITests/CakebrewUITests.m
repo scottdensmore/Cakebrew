@@ -174,6 +174,33 @@
 	XCTAssertTrue(appeared, @"selecting an installed formula should offer Uninstall in the toolbar");
 }
 
+// Journey: clicking Uninstall on an installed formula asks for confirmation.
+- (void)testUninstallPresentsConfirmationDialog
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	XCUIElement *wget = [self formulaCellWithName:@"mockwget"];
+	XCTAssertTrue([wget waitForExistenceWithTimeout:30.0], @"mockwget should be in the Installed list");
+	[wget click];
+
+	XCUIElement *uninstallButton = self.app.buttons[@"Uninstall Formula"];
+	XCTAssertTrue([uninstallButton waitForExistenceWithTimeout:15.0], @"Uninstall should be offered");
+	[uninstallButton click];
+
+	// uninstallFormula: presents a Yes / Cancel confirmation sheet.
+	XCUIElement *yesButton = self.app.buttons[@"Yes"];
+	BOOL confirmationAppeared = [yesButton waitForExistenceWithTimeout:15.0];
+	if (!confirmationAppeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(confirmationAppeared, @"clicking Uninstall should present a Yes/Cancel confirmation");
+
+	XCUIElement *cancelButton = self.app.buttons[@"Cancel"];
+	if (cancelButton.exists) {
+		[cancelButton click];
+	}
+}
+
 // Journey: selecting an outdated formula offers Update in the toolbar.
 - (void)testOutdatedFormulaOffersUpdate
 {
