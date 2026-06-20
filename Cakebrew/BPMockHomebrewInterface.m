@@ -55,4 +55,13 @@
 	return YES;
 }
 
+// Stream a fixed, recognizable update report instead of running `brew update`.
+- (BOOL)updateWithReturnBlock:(void (^)(NSString *))block
+{
+	if (block) {
+		block(@"MOCK_UPDATE_OK\nAlready up-to-date.\n");
+	}
+	return YES;
+}
+
 @end
