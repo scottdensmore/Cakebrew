@@ -673,13 +673,16 @@ NSOpenSavePanelDelegate>
 	[alert setInformativeText:[NSString stringWithFormat:NSLocalizedString(@"Confirmation_Install_Formula", nil),
 							   formula.name]];
 
-	[alert.window setTitle:NSLocalizedString(@"Cakebrew", nil)];
-	
-	if ([alert runModal] == NSAlertFirstButtonReturn) {
-		self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationInstall
-																				 formulae:@[formula]
-																				  options:nil];
-	}
+	// Present as a sheet rather than an app-modal runModal: it keeps the main run
+	// loop responsive (so the app stays UI-testable) and is the expected macOS
+	// confirmation style.
+	[alert beginSheetModalForWindow:self.view.window completionHandler:^(NSModalResponse returnCode) {
+		if (returnCode == NSAlertFirstButtonReturn) {
+			self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationInstall
+																					 formulae:@[formula]
+																					  options:nil];
+		}
+	}];
 }
 
 - (IBAction)installFormulaWithOptions:(id)sender
