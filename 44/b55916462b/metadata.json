@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.7.5",
+  "checkpoint_id": "44b55916462b",
+  "strategy": "manual-commit",
+  "branch": "fix/formula-info-url-parsing",
+  "checkpoints_count": 0,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/44/b55916462b/0/metadata.json",
+      "transcript": "/44/b55916462b/0/full.jsonl",
+      "content_hash": "/44/b55916462b/0/content_hash.txt",
+      "prompt": "/44/b55916462b/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 3965,
+    "cache_creation_tokens": 2121631,
+    "cache_read_tokens": 65798971,
+    "output_tokens": 330820,
+    "api_call_count": 285
+  }
+}
