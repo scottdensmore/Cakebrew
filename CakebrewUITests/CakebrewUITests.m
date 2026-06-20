@@ -144,6 +144,25 @@
 	XCTAssertTrue(appeared, @"selecting an installed formula should offer Uninstall in the toolbar");
 }
 
+// Journey: selecting an outdated formula offers Update in the toolbar.
+- (void)testOutdatedFormulaOffersUpdate
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+	XCUIElement *sidebar = [self sidebar];
+
+	[sidebar.staticTexts[@"Outdated"] click];
+	XCUIElement *git = [self formulaCellWithName:@"mockgit"];
+	XCTAssertTrue([git waitForExistenceWithTimeout:30.0], @"mockgit should be in the Outdated list");
+	[git click];
+
+	XCUIElement *updateButton = self.app.buttons[@"Update Formula"];
+	BOOL appeared = [updateButton waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"selecting an outdated formula should offer Update in the toolbar");
+}
+
 // Journey: running Doctor streams its report into the Doctor view.
 - (void)testRunningDoctorShowsOutput
 {
