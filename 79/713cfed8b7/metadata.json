@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.7.5",
+  "checkpoint_id": "79713cfed8b7",
+  "strategy": "manual-commit",
+  "branch": "feat/uninstall-confirmation-sheet",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/79/713cfed8b7/0/metadata.json",
+      "transcript": "/79/713cfed8b7/0/full.jsonl",
+      "content_hash": "/79/713cfed8b7/0/content_hash.txt",
+      "prompt": "/79/713cfed8b7/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 10546,
+    "cache_creation_tokens": 3433432,
+    "cache_read_tokens": 201497836,
+    "output_tokens": 608541,
+    "api_call_count": 535
+  }
+}
