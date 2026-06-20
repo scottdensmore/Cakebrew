@@ -1,0 +1,25 @@
+{
+  "cli_version": "0.7.5",
+  "checkpoint_id": "59ef94da5610",
+  "strategy": "manual-commit",
+  "branch": "feat/ui-search-journey",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "CakebrewTests/BPHomebrewManagerTests.m"
+  ],
+  "sessions": [
+    {
+      "metadata": "/59/ef94da5610/0/metadata.json",
+      "transcript": "/59/ef94da5610/0/full.jsonl",
+      "content_hash": "/59/ef94da5610/0/content_hash.txt",
+      "prompt": "/59/ef94da5610/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 24933,
+    "cache_creation_tokens": 3638045,
+    "cache_read_tokens": 290632985,
+    "output_tokens": 755511,
+    "api_call_count": 641
+  }
+}
