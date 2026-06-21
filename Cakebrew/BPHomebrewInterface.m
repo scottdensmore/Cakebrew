@@ -179,6 +179,9 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 			[alert addButtonWithTitle:NSLocalizedString(@"Generic_OK", nil)];
 			[alert setInformativeText:[NSString stringWithFormat:NSLocalizedString(@"Message_Shell_Invalid_Body", nil), userShell]];
 		}
+		// Intentionally app-modal: this runs deep in the interface layer on a
+		// background thread with no window to anchor a sheet, and it blocks a
+		// fatal "no usable shell" path that must halt before returning nil.
 		[alert performSelectorOnMainThread:@selector(runModal) withObject:nil waitUntilDone:YES];
 		
 		NSLog(@"No valid shell found...");

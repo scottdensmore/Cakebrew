@@ -485,19 +485,12 @@ NSOpenSavePanelDelegate>
 		[alert.window setTitle:NSLocalizedString(@"Cakebrew", nil)];
 		
 		NSURL *brew_URL = [NSURL URLWithString:@"http://brew.sh"];
-		
-		if ([alert respondsToSelector:@selector(beginSheetModalForWindow:completionHandler:)]) {
-			[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
-				if (returnCode == NSAlertFirstButtonReturn) {
-					[[NSWorkspace sharedWorkspace] openURL:brew_URL];
-				}
-			}];
-		} else {
-			NSModalResponse returnCode = [alert runModal];
+
+		[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
 			if (returnCode == NSAlertFirstButtonReturn) {
 				[[NSWorkspace sharedWorkspace] openURL:brew_URL];
 			}
-		}
+		}];
 	}
 	else
 	{
