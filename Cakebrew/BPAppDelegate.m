@@ -145,15 +145,14 @@ NSString *const kBP_HOMEBREW_WEBSITE = @"https://www.cakebrew.com";
 
 - (void)displayBackgroundWarning
 {
-	static NSAlert *alert= nil;
-	if (!alert) {
-		alert = [[NSAlert alloc] init];
-		[alert setMessageText:NSLocalizedString(@"Message_BGTask_Title", nil)];
-		[alert addButtonWithTitle:NSLocalizedString(@"Generic_OK", nil)];
-		[alert setInformativeText:NSLocalizedString(@"Message_BGTask_Body", nil)];
-	}
+	// A fresh alert each time so it can be presented as a non-blocking sheet
+	// (a reused static instance can't be re-presented while already on screen).
+	NSAlert *alert = [[NSAlert alloc] init];
+	[alert setMessageText:NSLocalizedString(@"Message_BGTask_Title", nil)];
+	[alert addButtonWithTitle:NSLocalizedString(@"Generic_OK", nil)];
+	[alert setInformativeText:NSLocalizedString(@"Message_BGTask_Body", nil)];
 
-	[alert runModal];
+	[alert beginSheetModalForWindow:self.window completionHandler:nil];
 }
 
 - (void)requestUserAttentionWithMessageTitle:(NSString*)title andDescription:(NSString*)desc
