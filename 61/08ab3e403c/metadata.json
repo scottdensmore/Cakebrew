@@ -1,0 +1,25 @@
+{
+  "cli_version": "0.7.5",
+  "checkpoint_id": "6108ab3e403c",
+  "strategy": "manual-commit",
+  "branch": "refactor/remaining-dialogs-to-sheets",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "Cakebrew/BPAppDelegate.m"
+  ],
+  "sessions": [
+    {
+      "metadata": "/61/08ab3e403c/0/metadata.json",
+      "transcript": "/61/08ab3e403c/0/full.jsonl",
+      "content_hash": "/61/08ab3e403c/0/content_hash.txt",
+      "prompt": "/61/08ab3e403c/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 35482,
+    "cache_creation_tokens": 4719484,
+    "cache_read_tokens": 344460593,
+    "output_tokens": 823748,
+    "api_call_count": 714
+  }
+}
