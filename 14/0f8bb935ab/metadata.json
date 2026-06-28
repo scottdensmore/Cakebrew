@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "140f8bb935ab",
+  "strategy": "manual-commit",
+  "branch": "refactor/remove-orphaned-template-assets",
+  "checkpoints_count": 52,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/14/0f8bb935ab/0/metadata.json",
+      "transcript": "/14/0f8bb935ab/0/full.jsonl",
+      "content_hash": "/14/0f8bb935ab/0/content_hash.txt",
+      "prompt": "/14/0f8bb935ab/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 43906,
+    "cache_creation_tokens": 5352963,
+    "cache_read_tokens": 361437557,
+    "output_tokens": 924531,
+    "api_call_count": 847
+  }
+}
