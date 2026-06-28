@@ -135,13 +135,7 @@ static BOOL shouldUseFlatUserInterface;
 
 + (NSImage *)appropriateIconForToolbarWithName:(NSString *)name orSymbol:(NSString *)symbol
 {
-	if (@available(macOS 11.0, *)) {
-		return [NSImage imageWithSystemSymbolName:symbol accessibilityDescription:name];
-	} else if ([self isFlat]) {
-		return [NSImage imageNamed:[NSString stringWithFormat:@"%@_flat", name]];
-	} else {
-		return [NSImage imageNamed:[NSString stringWithFormat:@"%@.icns", name]];
-	}
+	return [NSImage imageWithSystemSymbolName:symbol accessibilityDescription:name];
 }
 
 #pragma mark Popover
@@ -150,13 +144,9 @@ static BOOL shouldUseFlatUserInterface;
 {
 	static NSColor *color;
 	if (!color) {
-		if (@available(macOS 10.14, *)) {
-			color = [NSColor textColor];
-		} else {
-			color = [self isFlat] ? [NSColor blackColor] : [NSColor whiteColor];
-		}
+		color = [NSColor textColor];
 	}
-	
+
 	return color;
 }
 
@@ -164,13 +154,9 @@ static BOOL shouldUseFlatUserInterface;
 {
 	static NSColor *color;
 	if (!color) {
-		if (@available(macOS 10.14, *)) {
-			color = [NSColor textColor];
-		} else {
-			color = [self isFlat] ? [NSColor blackColor] : [NSColor whiteColor];
-		}
+		color = [NSColor textColor];
 	}
-	
+
 	return color;
 }
 
