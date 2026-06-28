@@ -209,14 +209,7 @@ NSString *const kBP_HOMEBREW_WEBSITE = @"https://www.cakebrew.com";
 				withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler
 {
 	// Show notification even when app is in foreground
-	if (@available(macOS 11.0, *)) {
-		completionHandler(UNNotificationPresentationOptionBanner | UNNotificationPresentationOptionSound);
-	} else {
-		#pragma clang diagnostic push
-		#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-		completionHandler(UNNotificationPresentationOptionAlert | UNNotificationPresentationOptionSound);
-		#pragma clang diagnostic pop
-	}
+	completionHandler(UNNotificationPresentationOptionBanner | UNNotificationPresentationOptionSound);
 }
 
 @end

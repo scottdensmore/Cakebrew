@@ -209,9 +209,7 @@ NSOpenSavePanelDelegate>
 	self.toolbar.delegate = self.toolbar;
 	self.toolbar.controller = self;
 	[[[self view] window] setToolbar:self.toolbar];
-	if (@available(macOS 11.0, *)) {
-		[self.toolbar setDisplayMode:NSToolbarDisplayModeIconOnly];
-	}
+	[self.toolbar setDisplayMode:NSToolbarDisplayModeIconOnly];
 	[self.toolbar lockItems];
 }
 
@@ -221,13 +219,7 @@ NSOpenSavePanelDelegate>
 	disabledView.translatesAutoresizingMaskIntoConstraints = NO;
 	[self.view addSubview:disabledView];
 
-	NSView *referenceView;
-
-	if (@available(macOS 11.0, *)) {
-		referenceView = self.mainWindowController.windowContentView;
-	} else {
-		referenceView = self.view;
-	}
+	NSView *referenceView = self.mainWindowController.windowContentView;
 
 	[NSLayoutConstraint activate:@[
 		[NSLayoutConstraint constraintWithItem:referenceView attribute:NSLayoutAttributeLeading
@@ -253,13 +245,7 @@ NSOpenSavePanelDelegate>
 	loadingView.translatesAutoresizingMaskIntoConstraints = NO;
 	[self.view addSubview:loadingView];
 
-	NSView *referenceView;
-
-	if (@available(macOS 11.0, *)) {
-		referenceView = self.mainWindowController.windowContentView;
-	} else {
-		referenceView = self.view;
-	}
+	NSView *referenceView = self.mainWindowController.windowContentView;
 
 	[NSLayoutConstraint activate:@[
 		[NSLayoutConstraint constraintWithItem:referenceView attribute:NSLayoutAttributeLeading

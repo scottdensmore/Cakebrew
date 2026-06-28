@@ -211,72 +211,44 @@
 
 - (NSImage *)installedSidebarIconImage
 {
-	if (@available(macOS 11.0, *)) {
-		return [NSImage imageWithSystemSymbolName:@"checkmark.square"
-						 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_Installed", nil)];
-	} else {
-		return [NSImage imageNamed:@"installedTemplate"];
-	}
+	return [NSImage imageWithSystemSymbolName:@"checkmark.square"
+					 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_Installed", nil)];
 }
 
 - (NSImage *)outdatedSidebarIconImage
 {
-	if (@available(macOS 11.0, *)) {
-		return [NSImage imageWithSystemSymbolName:@"clock.arrow.circlepath"
-						 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_Outdated", nil)];
-	} else {
-		return [NSImage imageNamed:@"outdatedTemplate"];
-	}
+	return [NSImage imageWithSystemSymbolName:@"clock.arrow.circlepath"
+					 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_Outdated", nil)];
 }
 
 - (NSImage *)allFormulaeSidebarIconImage
 {
-	if (@available(macOS 11.0, *)) {
-		return [NSImage imageWithSystemSymbolName:@"books.vertical"
-						 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_All", nil)];
-	} else {
-		return [NSImage imageNamed:@"allFormulaeTemplate"];
-	}
+	return [NSImage imageWithSystemSymbolName:@"books.vertical"
+					 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_All", nil)];
 }
 
 - (NSImage *)leavesSidebarIconImage
 {
-	if (@available(macOS 11.0, *)) {
-		return [NSImage imageWithSystemSymbolName:@"leaf"
-						 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_Leaves", nil)];
-	} else {
-		return [NSImage imageNamed:@"pinTemplate"];
-	}
+	return [NSImage imageWithSystemSymbolName:@"leaf"
+					 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_Leaves", nil)];
 }
 
 - (NSImage *)repositoriesSidebarIconImage
 {
-	if (@available(macOS 11.0, *)) {
-		return [NSImage imageWithSystemSymbolName:@"building.columns"
-						 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_Repos", nil)];
-	} else {
-		return [NSImage imageNamed:@"cloudTemplate"];
-	}
+	return [NSImage imageWithSystemSymbolName:@"building.columns"
+					 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_Repos", nil)];
 }
 
 - (NSImage *)doctorSidebarIconImage
 {
-	if (@available(macOS 11.0, *)) {
-		return [NSImage imageWithSystemSymbolName:@"stethoscope"
-						 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_Doctor", nil)];
-	} else {
-		return [NSImage imageNamed:@"doctorTemplate"];
-	}
+	return [NSImage imageWithSystemSymbolName:@"stethoscope"
+					 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_Doctor", nil)];
 }
 
 - (NSImage *)updateSidebarIconImage
 {
-	if (@available(macOS 11.0, *)) {
-		return [NSImage imageWithSystemSymbolName:@"arrow.triangle.2.circlepath.circle"
-						 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_Update", nil)];
-	} else {
-		return [NSImage imageNamed:@"updateTemplate"];
-	}
+	return [NSImage imageWithSystemSymbolName:@"arrow.triangle.2.circlepath.circle"
+					 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_Update", nil)];
 }
 
 
