@@ -20,21 +20,8 @@
 //
 
 #import "BPStyle.h"
-#import "BPUtilities.h"
-
-static BOOL shouldUseFlatUserInterface;
 
 @implementation BPStyle
-
-+ (void)load
-{
-	shouldUseFlatUserInterface = [BPUtilities isRunningYosemiteOrLater];
-}
-
-+ (BOOL)isFlat
-{
-	return shouldUseFlatUserInterface;
-}
 
 + (NSFont *)defaultFixedWidthFont
 {
@@ -56,11 +43,7 @@ static BOOL shouldUseFlatUserInterface;
 
 + (NSToolbarSizeMode)toolbarSize
 {
-	if (self.isFlat)
-	{
-		return NSToolbarSizeModeSmall;
-	}
-	return NSToolbarSizeModeDefault;
+	return NSToolbarSizeModeSmall;
 }
 
 + (NSImage *)toolbarImageForInstall
