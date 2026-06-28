@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.7.5",
+  "checkpoint_id": "3a5dbd7bca62",
+  "strategy": "manual-commit",
+  "branch": "fix/datasource-test-nonnull-warning",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/3a/5dbd7bca62/0/metadata.json",
+      "transcript": "/3a/5dbd7bca62/0/full.jsonl",
+      "content_hash": "/3a/5dbd7bca62/0/content_hash.txt",
+      "prompt": "/3a/5dbd7bca62/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 41917,
+    "cache_creation_tokens": 4942958,
+    "cache_read_tokens": 351441825,
+    "output_tokens": 871510,
+    "api_call_count": 786
+  }
+}
