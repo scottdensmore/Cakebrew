@@ -28,6 +28,7 @@
 	self.manager.outdatedFormulae = @[];
 	self.manager.allFormulae = @[];
 	self.manager.searchFormulae = @[];
+	self.manager.pinnedFormulae = @[];
 }
 
 - (void)tearDown
@@ -36,6 +37,7 @@
 	self.manager.outdatedFormulae = @[];
 	self.manager.allFormulae = @[];
 	self.manager.searchFormulae = @[];
+	self.manager.pinnedFormulae = @[];
 	self.manager = nil;
 	[super tearDown];
 }
@@ -108,6 +110,36 @@
 	self.manager.installedFormulae = @[];
 	self.manager.outdatedFormulae = @[[BPFormula formulaWithName:@"git"]];
 	XCTAssertEqual([self.manager statusForFormula:[BPFormula formulaWithName:@"git"]], kBPFormulaNotInstalled);
+}
+
+#pragma mark - pinned state (isFormulaPinned:)
+
+- (void)testIsFormulaPinnedReturnsYesForPinnedFormula
+{
+	BPFormula *git = [BPFormula formulaWithName:@"git"];
+	self.manager.pinnedFormulae = @[ git ];
+
+	XCTAssertTrue([self.manager isFormulaPinned:git]);
+}
+
+- (void)testIsFormulaPinnedReturnsNoForUnpinnedFormula
+{
+	self.manager.pinnedFormulae = @[ [BPFormula formulaWithName:@"git"] ];
+
+	XCTAssertFalse([self.manager isFormulaPinned:[BPFormula formulaWithName:@"wget"]]);
+}
+
+- (void)testIsFormulaPinnedIsFalseWhenNothingPinned
+{
+	self.manager.pinnedFormulae = @[];
+	XCTAssertFalse([self.manager isFormulaPinned:[BPFormula formulaWithName:@"git"]]);
+}
+
+- (void)testIsFormulaPinnedMatchesByShortNameAcrossTaps
+{
+	// `brew list --pinned` may emit tap-qualified names; matching uses installedName.
+	self.manager.pinnedFormulae = @[ [BPFormula formulaWithName:@"homebrew/core/git"] ];
+	XCTAssertTrue([self.manager isFormulaPinned:[BPFormula formulaWithName:@"git"]]);
 }
 
 @end

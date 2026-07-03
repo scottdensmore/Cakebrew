@@ -46,6 +46,7 @@ typedef NS_ENUM(NSInteger, BPFormulaStatus) {
 @property (strong) NSArray<BPFormula*> *leavesFormulae;
 @property (strong) NSArray<BPFormula*> *searchFormulae;
 @property (strong) NSArray<BPFormula*> *repositoriesFormulae;
+@property (strong) NSArray<BPFormula*> *pinnedFormulae;
 
 @property (weak) id<BPHomebrewManagerDelegate> delegate;
 
@@ -58,6 +59,7 @@ typedef NS_ENUM(NSInteger, BPFormulaStatus) {
 - (void)updateSearchWithName:(NSString *)name;
 
 - (BPFormulaStatus)statusForFormula:(BPFormula*)formula;
+- (BOOL)isFormulaPinned:(BPFormula*)formula;
 
 - (void)cleanUp;
 

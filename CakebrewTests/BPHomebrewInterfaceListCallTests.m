@@ -12,6 +12,7 @@
 #import "BPFormula.h"
 
 @interface BPHomebrewInterfaceListCall : NSObject
+@property (strong, readonly) NSArray *arguments;
 - (instancetype)initWithArguments:(NSArray *)arguments;
 - (NSArray<BPFormula *> *)parseData:(NSString *)data;
 - (BPFormula *)parseFormulaItem:(NSString *)item;
@@ -22,6 +23,10 @@
 @end
 
 @interface BPHomebrewInterfaceListCallUpgradeable : BPHomebrewInterfaceListCall
+- (instancetype)init;
+@end
+
+@interface BPHomebrewInterfaceListCallPinned : BPHomebrewInterfaceListCall
 - (instancetype)init;
 @end
 
@@ -123,6 +128,26 @@
 
 	XCTAssertEqualObjects(formula.name, @"justaname");
 	XCTAssertNil(formula.latestVersion);
+}
+
+#pragma mark - pinned parser (`list --pinned`)
+
+- (void)testPinnedCallUsesListPinnedArguments
+{
+	BPHomebrewInterfaceListCallPinned *call = [BPHomebrewInterfaceListCallPinned new];
+	XCTAssertEqualObjects(call.arguments, (@[ @"list", @"--pinned" ]));
+}
+
+- (void)testPinnedParserReturnsNameOnlyFormulae
+{
+	// `brew list --pinned` prints one formula name per line, no versions.
+	BPHomebrewInterfaceListCallPinned *call = [BPHomebrewInterfaceListCallPinned new];
+	NSArray<BPFormula *> *formulae = [call parseData:@"git\nwget\n"];
+
+	XCTAssertEqual(formulae.count, 2u);
+	XCTAssertEqualObjects(formulae[0].name, @"git");
+	XCTAssertNil(formulae[0].version, @"pinned list is name-only");
+	XCTAssertEqualObjects(formulae[1].name, @"wget");
 }
 
 @end
