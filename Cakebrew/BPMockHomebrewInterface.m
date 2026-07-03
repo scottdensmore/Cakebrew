@@ -41,6 +41,9 @@
 			return @[ [BPFormula formulaWithName:@"homebrew/core"],
 					  [BPFormula formulaWithName:@"homebrew/cask"] ];
 
+		case kBPListPinned:
+			return @[ [BPFormula formulaWithName:@"mockgit"] ];
+
 		default:
 			return @[];
 	}

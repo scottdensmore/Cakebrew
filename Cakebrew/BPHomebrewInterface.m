@@ -56,6 +56,9 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 @interface BPHomebrewInterfaceListCallRepositories: BPHomebrewInterfaceListCall
 @end
 
+@interface BPHomebrewInterfaceListCallPinned : BPHomebrewInterfaceListCall
+@end
+
 @interface BPHomebrewInterface () <BPTaskCompleted>
 
 @property (strong) NSString *path_cellar;
@@ -352,6 +355,10 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 			listCall = [[BPHomebrewInterfaceListCallRepositories alloc] init];
 			break;
 
+		case kBPListPinned:
+			listCall = [[BPHomebrewInterfaceListCallPinned alloc] init];
+			break;
+
 		default:
 			return nil;
 	}
@@ -625,6 +632,15 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 - (instancetype)init
 {
 	return (BPHomebrewInterfaceListCallRepositories *)[super initWithArguments:@[@"tap"]];
+}
+
+@end
+
+@implementation BPHomebrewInterfaceListCallPinned
+
+- (instancetype)init
+{
+	return (BPHomebrewInterfaceListCallPinned *)[super initWithArguments:@[@"list", @"--pinned"]];
 }
 
 @end
