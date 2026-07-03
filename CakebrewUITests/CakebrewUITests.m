@@ -179,6 +179,31 @@
 	XCTAssertTrue(appeared, @"selecting an installed formula should offer Uninstall in the toolbar");
 }
 
+// Journey: the Formula menu exposes Pin / Unpin items (bindings load without
+// crashing). Presence — not enabled state — is asserted: disabled menu items
+// still exist in the tree, so this guards the xib wiring regardless of selection.
+- (void)testFormulaMenuExposesPinAndUnpin
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	// Select an installed formula so the pin items apply to a real selection.
+	XCUIElement *wget = [self formulaCellWithName:@"mockwget"];
+	XCTAssertTrue([wget waitForExistenceWithTimeout:30.0], @"mockwget should be in the Installed list");
+	[wget click];
+
+	[self.app.menuBars.menuBarItems[@"Formula"] click];
+
+	XCUIElement *pinItem = self.app.menuItems[@"Pin Formula"];
+	BOOL pinAppeared = [pinItem waitForExistenceWithTimeout:10.0];
+	if (!pinAppeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(pinAppeared, @"Formula menu should contain a Pin Formula item");
+	XCTAssertTrue(self.app.menuItems[@"Unpin Formula"].exists, @"Formula menu should contain an Unpin Formula item");
+
+	[self.app typeKey:XCUIKeyboardKeyEscape modifierFlags:XCUIKeyModifierNone];
+}
+
 // Journey: clicking Uninstall on an installed formula asks for confirmation.
 - (void)testUninstallPresentsConfirmationDialog
 {

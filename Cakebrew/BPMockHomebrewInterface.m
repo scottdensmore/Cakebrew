@@ -93,4 +93,15 @@
 	return @"";
 }
 
+// Pin/unpin are no-ops under the mock so UI tests never shell out to real brew.
+- (BOOL)pinFormula:(NSString *)formula withReturnBlock:(void (^)(NSString *))block
+{
+	return YES;
+}
+
+- (BOOL)unpinFormula:(NSString *)formula withReturnBlock:(void (^)(NSString *))block
+{
+	return YES;
+}
+
 @end

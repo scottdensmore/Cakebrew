@@ -171,6 +171,30 @@ CA
                                     </binding>
                                 </connections>
                             </menuItem>
+                            <menuItem isSeparatorItem="YES" id="cbk-Pin-sep"/>
+                            <menuItem title="Pin Formula" id="cbk-Pin-it0">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="pinSelectedFormula:" target="547" id="cbk-Pin-ac0"/>
+                                    <binding destination="547" name="enabled" keyPath="self.currentFormula.installed" id="cbk-Pin-en0"/>
+                                    <binding destination="547" name="enabled2" keyPath="self.currentFormulaPinned" previousBinding="cbk-Pin-en0" id="cbk-Pin-en1">
+                                        <dictionary key="options">
+                                            <integer key="NSMultipleValuesPlaceholder" value="-1"/>
+                                            <integer key="NSNoSelectionPlaceholder" value="-1"/>
+                                            <integer key="NSNotApplicablePlaceholder" value="-1"/>
+                                            <integer key="NSNullPlaceholder" value="-1"/>
+                                            <string key="NSValueTransformerName">NSNegateBoolean</string>
+                                        </dictionary>
+                                    </binding>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Unpin Formula" id="cbk-Unpin-it0">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="unpinSelectedFormula:" target="547" id="cbk-Unpin-ac0"/>
+                                    <binding destination="547" name="enabled" keyPath="self.currentFormulaPinned" id="cbk-Unpin-en0"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="Co2-VP-o4m"/>
                             <menuItem title="List Installed Dependents" id="XQ4-Qf-yNu">
                                 <modifierMask key="keyEquivalentModifierMask"/>

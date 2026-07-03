@@ -706,6 +706,36 @@ NSOpenSavePanelDelegate>
 	}];
 }
 
++ (NSSet *)keyPathsForValuesAffectingCurrentFormulaPinned
+{
+	return [NSSet setWithObject:@"currentFormula"];
+}
+
+- (BOOL)currentFormulaPinned
+{
+	return self.currentFormula != nil && [[BPHomebrewManager sharedManager] isFormulaPinned:self.currentFormula];
+}
+
+- (IBAction)pinSelectedFormula:(id)sender
+{
+	BPFormula *formula = [self selectedFormula];
+	if (!formula) {
+		return;
+	}
+	// Pin is instant and non-destructive, so no confirmation sheet. The interface
+	// posts a formulae-updated call that reloads state (including pinnedFormulae).
+	[[BPHomebrewInterface sharedInterface] pinFormula:formula.name withReturnBlock:nil];
+}
+
+- (IBAction)unpinSelectedFormula:(id)sender
+{
+	BPFormula *formula = [self selectedFormula];
+	if (!formula) {
+		return;
+	}
+	[[BPHomebrewInterface sharedInterface] unpinFormula:formula.name withReturnBlock:nil];
+}
+
 - (IBAction)upgradeSelectedFormulae:(id)sender
 {
 	[self checkForBackgroundTask];

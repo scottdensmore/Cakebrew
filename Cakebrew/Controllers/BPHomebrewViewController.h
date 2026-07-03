@@ -48,6 +48,10 @@ typedef NS_ENUM(NSUInteger, BPWindowOperation) {
 // Cocoa bindings
 @property BOOL enableUpgradeFormulasMenu;
 @property (copy) BPFormula *currentFormula;
+// Whether the currently selected formula is pinned. Drives the enabled state of
+// the Pin/Unpin menu items via bindings; derived from currentFormula, so it
+// re-fires KVO whenever the selection changes.
+@property (readonly) BOOL currentFormulaPinned;
 
 - (BOOL)isHomebrewInstalled;
 
@@ -61,5 +65,7 @@ typedef NS_ENUM(NSUInteger, BPWindowOperation) {
 - (IBAction)runHomebrewCleanup:(id)sender;
 - (IBAction)runHomebrewExport:(id)sender;
 - (IBAction)runHomebrewImport:(id)sender;
+- (IBAction)pinSelectedFormula:(id)sender;
+- (IBAction)unpinSelectedFormula:(id)sender;
 
 @end
