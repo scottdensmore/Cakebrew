@@ -129,6 +129,26 @@ typedef NS_ENUM(NSInteger, BPListMode) {
 - (BOOL)untapRepository:(NSString*)repository withReturnsBlock:(void (^)(NSString*))block;
 
 /**
+ *  Pins a formula, holding it at its installed version so upgrades skip it.
+ *
+ *  @param formula The formula to pin.
+ *  @param block Data callback block, called with new output while the process runs.
+ *
+ *  @return `YES` if successful.
+ */
+- (BOOL)pinFormula:(NSString*)formula withReturnBlock:(void (^)(NSString*))block;
+
+/**
+ *  Unpins a previously pinned formula so it can be upgraded again.
+ *
+ *  @param formula The formula to unpin.
+ *  @param block Data callback block, called with new output while the process runs.
+ *
+ *  @return `YES` if successful.
+ */
+- (BOOL)unpinFormula:(NSString*)formula withReturnBlock:(void (^)(NSString*))block;
+
+/**
  *  Runs Homebrew cleanup tool.
  *
  *  @param block Data callback block. This block will be called with new data to be diplayed while the process runs.

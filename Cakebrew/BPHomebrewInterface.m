@@ -455,6 +455,20 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 	return val;
 }
 
+- (BOOL)pinFormula:(NSString *)formula withReturnBlock:(void (^)(NSString *))block
+{
+	BOOL val = [self performBrewCommandWithArguments:@[@"pin", formula] dataReturnBlock:block];
+	[self sendDelegateFormulaeUpdatedCall];
+	return val;
+}
+
+- (BOOL)unpinFormula:(NSString *)formula withReturnBlock:(void (^)(NSString *))block
+{
+	BOOL val = [self performBrewCommandWithArguments:@[@"unpin", formula] dataReturnBlock:block];
+	[self sendDelegateFormulaeUpdatedCall];
+	return val;
+}
+
 - (BOOL)runCleanupWithReturnBlock:(void (^)(NSString*output))block
 {
 	return [self performBrewCommandWithArguments:@[@"cleanup"] dataReturnBlock:block];;
