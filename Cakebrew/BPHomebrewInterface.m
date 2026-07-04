@@ -271,10 +271,10 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 #ifdef DEBUG
 	if (!isSynchronous)
 	{
-		block([NSString stringWithFormat:kDEBUG_WARNING,
-			   self.path_shell,
-			   [arguments componentsJoinedByString:@" "],
-			   [[NSProcessInfo processInfo] operatingSystemVersionString]]);
+		[self invokeOutputBlock:block withString:[NSString stringWithFormat:kDEBUG_WARNING,
+												  self.path_shell,
+												  [arguments componentsJoinedByString:@" "],
+												  [[NSProcessInfo processInfo] operatingSystemVersionString]]];
 	}
 #endif
 	
@@ -288,9 +288,19 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 															   dateStyle:NSDateFormatterShortStyle
 															   timeStyle:NSDateFormatterShortStyle]];
 	
-	block(taskDoneString);
-	
+	[self invokeOutputBlock:block withString:taskDoneString];
+
 	return status == 0;
+}
+
+// Invokes an optional output block. Callers may legitimately pass a nil block
+// (e.g. pin/unpin, which don't stream output), so guard against calling a NULL
+// block — doing so is an EXC_BAD_ACCESS crash.
+- (void)invokeOutputBlock:(void (^)(NSString *))block withString:(NSString *)string
+{
+	if (block) {
+		block(string);
+	}
 }
 
 - (BOOL)isRunningBackgroundTask

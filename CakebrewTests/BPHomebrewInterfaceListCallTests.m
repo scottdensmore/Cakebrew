@@ -10,6 +10,12 @@
 
 #import <XCTest/XCTest.h>
 #import "BPFormula.h"
+#import "BPHomebrewInterface.h"
+
+// Exposes the private output-block helper for the nil-safety regression tests.
+@interface BPHomebrewInterface (Testing)
+- (void)invokeOutputBlock:(void (^)(NSString *))block withString:(NSString *)string;
+@end
 
 @interface BPHomebrewInterfaceListCall : NSObject
 @property (strong, readonly) NSArray *arguments;
@@ -148,6 +154,27 @@
 	XCTAssertEqualObjects(formulae[0].name, @"git");
 	XCTAssertNil(formulae[0].version, @"pinned list is name-only");
 	XCTAssertEqualObjects(formulae[1].name, @"wget");
+}
+
+#pragma mark - output-block nil safety (regression: pin/unpin pass a nil block)
+
+- (void)testInvokeOutputBlockWithNilBlockIsSafeNoOp
+{
+	// pin/unpin call the brew command with a nil return block. The command path
+	// invoked that block unconditionally, so a nil block was an EXC_BAD_ACCESS.
+	// Reaching the assertion below (no crash) is the regression check.
+	[[BPHomebrewInterface sharedInterface] invokeOutputBlock:nil withString:@"anything"];
+	XCTAssertTrue(YES, @"invoking a nil output block must be a safe no-op");
+}
+
+- (void)testInvokeOutputBlockDeliversStringToNonNilBlock
+{
+	__block NSString *received = nil;
+	[[BPHomebrewInterface sharedInterface] invokeOutputBlock:^(NSString *string) {
+		received = string;
+	} withString:@"hello"];
+
+	XCTAssertEqualObjects(received, @"hello", @"a non-nil block still receives the output");
 }
 
 @end

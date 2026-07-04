@@ -202,7 +202,9 @@ NSString *const kDidEndBackgroundActivityNotification	= @"DidEndBackgroundActivi
 		}
 
 		dispatch_async(queue, ^{
-			self.updateBlock([[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
+			if (self.updateBlock) {
+				self.updateBlock([[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
+			}
 		});
 	}
 }
