@@ -28,5 +28,7 @@
 @property (weak) IBOutlet NSTextField *formulaDependenciesLabel;
 @property (weak) IBOutlet NSTextField *formulaConflictsLabel;
 @property (weak) IBOutlet NSTextField *formulaDependentsLabel;
+// The "Pinned:" row, shown only when the selected formula is pinned.
+@property (weak) IBOutlet NSView *pinnedInfoRow;
 
 @end

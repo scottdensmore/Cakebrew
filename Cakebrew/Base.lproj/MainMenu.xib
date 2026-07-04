@@ -704,6 +704,30 @@ CA
                         </binding>
                     </connections>
                 </menuItem>
+                <menuItem isSeparatorItem="YES" id="cbk-CtxPin-sep"/>
+                <menuItem title="Pin Formula" id="cbk-CtxPin-it0">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="pinSelectedFormula:" target="547" id="cbk-CtxPin-ac0"/>
+                        <binding destination="547" name="enabled" keyPath="self.currentFormula.installed" id="cbk-CtxPin-en0"/>
+                        <binding destination="547" name="enabled2" keyPath="self.currentFormulaPinned" previousBinding="cbk-CtxPin-en0" id="cbk-CtxPin-en1">
+                            <dictionary key="options">
+                                <integer key="NSMultipleValuesPlaceholder" value="-1"/>
+                                <integer key="NSNoSelectionPlaceholder" value="-1"/>
+                                <integer key="NSNotApplicablePlaceholder" value="-1"/>
+                                <integer key="NSNullPlaceholder" value="-1"/>
+                                <string key="NSValueTransformerName">NSNegateBoolean</string>
+                            </dictionary>
+                        </binding>
+                    </connections>
+                </menuItem>
+                <menuItem title="Unpin Formula" id="cbk-CtxUnpin-it0">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="unpinSelectedFormula:" target="547" id="cbk-CtxUnpin-ac0"/>
+                        <binding destination="547" name="enabled" keyPath="self.currentFormulaPinned" id="cbk-CtxUnpin-en0"/>
+                    </connections>
+                </menuItem>
                 <menuItem isSeparatorItem="YES" id="lEK-nB-Jb8"/>
                 <menuItem title="List Installed Dependents" id="AfR-gI-2dx">
                     <modifierMask key="keyEquivalentModifierMask"/>

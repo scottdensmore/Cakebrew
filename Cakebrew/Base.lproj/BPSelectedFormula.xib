@@ -11,6 +11,7 @@
                 <outlet property="formulaConflictsLabel" destination="zEv-zT-rkr" id="9NW-cy-0Rn"/>
                 <outlet property="formulaDependenciesLabel" destination="0zJ-9h-wR5" id="4JG-ym-yKI"/>
                 <outlet property="formulaDependentsLabel" destination="cbk-Dpt-val" id="cbk-Dpt-out"/>
+                <outlet property="pinnedInfoRow" destination="cbk-Pin-row" id="cbk-Pin-out"/>
                 <outlet property="formulaDescriptionLabel" destination="AJU-px-9sR" id="GP7-Wd-buf"/>
                 <outlet property="formulaPathLabel" destination="1Ud-Jm-0ek" id="mZs-Iy-hpv"/>
                 <outlet property="formulaVersionLabel" destination="iBx-hv-6IC" id="6Dx-DT-GLD"/>
@@ -204,9 +205,36 @@
                                 <real value="3.4028234663852886e+38"/>
                             </customSpacing>
                         </stackView>
+                        <stackView hidden="YES" distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="750" verticalStackHuggingPriority="1000" horizontalHuggingPriority="750" verticalHuggingPriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="cbk-Pin-row">
+                            <subviews>
+                                <textField horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="cbk-Pin-ttl">
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Pinned:" id="cbk-Pin-tc">
+                                        <font key="font" metaFont="systemBold" size="11"/>
+                                        <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                </textField>
+                                <textField horizontalHuggingPriority="249" verticalHuggingPriority="1000" horizontalCompressionResistancePriority="251" verticalCompressionResistancePriority="1000" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cbk-Pin-val">
+                                    <textFieldCell key="cell" controlSize="small" selectable="YES" allowsUndo="NO" sendsActionOnEndEditing="YES" title="Yes" id="cbk-Pin-vc">
+                                        <font key="font" metaFont="smallSystem"/>
+                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                </textField>
+                            </subviews>
+                            <visibilityPriorities>
+                                <integer value="1000"/>
+                                <integer value="1000"/>
+                            </visibilityPriorities>
+                            <customSpacing>
+                                <real value="3.4028234663852886e+38"/>
+                                <real value="3.4028234663852886e+38"/>
+                            </customSpacing>
+                        </stackView>
                     </subviews>
                     <constraints>
                         <constraint firstItem="cbk-Dpt-ttl" firstAttribute="width" secondItem="usF-Bi-e2e" secondAttribute="width" id="cbk-Dpt-wc"/>
+                        <constraint firstItem="cbk-Pin-ttl" firstAttribute="width" secondItem="usF-Bi-e2e" secondAttribute="width" id="cbk-Pin-wc"/>
                         <constraint firstItem="qga-yy-j75" firstAttribute="width" secondItem="usF-Bi-e2e" secondAttribute="width" id="6br-WG-Nfw"/>
                         <constraint firstItem="BJs-EC-wJG" firstAttribute="width" secondItem="usF-Bi-e2e" secondAttribute="width" id="6ff-pQ-eoi"/>
                         <constraint firstItem="Cd6-mA-TjE" firstAttribute="width" secondItem="usF-Bi-e2e" secondAttribute="width" id="N5U-AH-y4g"/>
@@ -220,8 +248,10 @@
                         <integer value="1000"/>
                         <integer value="1000"/>
                         <integer value="1000"/>
+                        <integer value="1000"/>
                     </visibilityPriorities>
                     <customSpacing>
+                        <real value="3.4028234663852886e+38"/>
                         <real value="3.4028234663852886e+38"/>
                         <real value="3.4028234663852886e+38"/>
                         <real value="3.4028234663852886e+38"/>
