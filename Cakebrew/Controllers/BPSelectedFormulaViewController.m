@@ -8,6 +8,7 @@
 
 #import "BPSelectedFormulaViewController.h"
 #import "BPTimedDispatch.h"
+#import "BPHomebrewInterface.h"
 
 @interface BPSelectedFormulaViewController ()
 
@@ -41,6 +42,7 @@
 		self.formulaConflictsLabel.preferredMaxLayoutWidth		= self.formulaConflictsLabel.frame.size.width;
 		self.formulaVersionLabel.preferredMaxLayoutWidth		= self.formulaVersionLabel.frame.size.width;
 		self.formulaPathLabel.preferredMaxLayoutWidth			= self.formulaPathLabel.frame.size.width;
+		self.formulaDependentsLabel.preferredMaxLayoutWidth		= self.formulaDependentsLabel.frame.size.width;
 		[[self view] layoutSubtreeIfNeeded];
 	}
 }
@@ -65,13 +67,43 @@
 												   object:formula];
 	}
 	[self displayInformationForFormulae];
+
+	// "Required by" comes from a separate `brew uses` call, not getInformation.
+	// Reset it now (clearing any previous selection) and fetch it debounced.
+	[self.formulaDependentsLabel setStringValue:@"--"];
+
 	[self.timedDispatch scheduleDispatchAfterTimeInterval:0.3
 												  inQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0)
 												  ofBlock:^
 	 {
 		 BPFormula *formula = [self.formulae firstObject];
 		 [formula setNeedsInformation:YES];
+		 [self loadInstalledDependentsForFormula:formula];
 	 }];
+}
+
+// Fetches the installed formulae that depend on `formula` (`brew uses --installed`)
+// and shows them in the Required-by row. Runs on the caller's background queue.
+- (void)loadInstalledDependentsForFormula:(BPFormula *)formula
+{
+	if ([self.formulae count] != 1 || !formula)
+	{
+		return;
+	}
+
+	NSString *name = [formula name];
+	NSString *raw = [[BPHomebrewInterface sharedInterface] dependantsForFormulaName:name onlyInstalled:YES];
+	NSArray<NSString *> *dependents = [BPFormula namesFromListOutput:raw];
+
+	dispatch_async(dispatch_get_main_queue(), ^{
+		// Ignore a late result if the selection changed while the fetch ran.
+		if ([self.formulae count] != 1 || ![[[self.formulae firstObject] name] isEqualToString:name])
+		{
+			return;
+		}
+		NSString *value = [dependents count] > 0 ? [dependents componentsJoinedByString:@", "] : @"--";
+		[self.formulaDependentsLabel setStringValue:value];
+	});
 }
 
 - (void)updateFormulaInformation:(NSNotification *)notification
