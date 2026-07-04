@@ -404,6 +404,33 @@ static BPCustomFormula *nmapFormula;
 	XCTAssertEqualObjects(formula.website.absoluteString, @"https://example.com");
 }
 
+#pragma mark - namesFromListOutput: (parses `brew uses` dependents output)
+
+- (void)testNamesFromListOutputSplitsNewlineSeparatedNames
+{
+	NSArray<NSString *> *names = [BPFormula namesFromListOutput:@"cmake\nffmpeg\nsdl2\n"];
+	XCTAssertEqualObjects(names, (@[ @"cmake", @"ffmpeg", @"sdl2" ]));
+}
+
+- (void)testNamesFromListOutputSplitsSpaceSeparatedNames
+{
+	// `brew uses` can print names on one whitespace-separated line.
+	NSArray<NSString *> *names = [BPFormula namesFromListOutput:@"cmake ffmpeg sdl2"];
+	XCTAssertEqualObjects(names, (@[ @"cmake", @"ffmpeg", @"sdl2" ]));
+}
+
+- (void)testNamesFromListOutputIgnoresBlankAndWhitespaceEntries
+{
+	NSArray<NSString *> *names = [BPFormula namesFromListOutput:@"cmake\n\n   \nffmpeg\n"];
+	XCTAssertEqualObjects(names, (@[ @"cmake", @"ffmpeg" ]));
+}
+
+- (void)testNamesFromListOutputEmptyReturnsEmptyArray
+{
+	XCTAssertEqualObjects([BPFormula namesFromListOutput:@""], @[]);
+	XCTAssertEqualObjects([BPFormula namesFromListOutput:@"\n  \n"], @[]);
+}
+
 @end
 
 

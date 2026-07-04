@@ -27,5 +27,6 @@
 @property (weak) IBOutlet NSTextField *formulaVersionLabel;
 @property (weak) IBOutlet NSTextField *formulaDependenciesLabel;
 @property (weak) IBOutlet NSTextField *formulaConflictsLabel;
+@property (weak) IBOutlet NSTextField *formulaDependentsLabel;
 
 @end

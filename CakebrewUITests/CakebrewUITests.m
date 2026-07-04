@@ -204,6 +204,24 @@
 	[self.app typeKey:XCUIKeyboardKeyEscape modifierFlags:XCUIKeyModifierNone];
 }
 
+// Journey: selecting a formula shows the "Required by" (dependents) row in the
+// detail pane. Guards that the new BPSelectedFormula.xib row loads at runtime.
+- (void)testDetailPaneShowsRequiredByRow
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	XCUIElement *wget = [self formulaCellWithName:@"mockwget"];
+	XCTAssertTrue([wget waitForExistenceWithTimeout:30.0], @"mockwget should be in the Installed list");
+	[wget click];
+
+	XCUIElement *requiredByLabel = self.app.staticTexts[@"Required by:"];
+	BOOL appeared = [requiredByLabel waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"the detail pane should show the Required by row");
+}
+
 // Journey: clicking Uninstall on an installed formula asks for confirmation.
 - (void)testUninstallPresentsConfirmationDialog
 {

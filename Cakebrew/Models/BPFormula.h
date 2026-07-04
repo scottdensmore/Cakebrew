@@ -51,6 +51,15 @@ extern NSString *const BPFormulaDidUpdateNotification;
 + (instancetype)formulaWithName:(NSString*)name;
 
 /**
+ *  Parses whitespace/newline-separated formula names (e.g. the output of
+ *  `brew uses`) into a trimmed list, dropping blank entries.
+ *
+ *  @param output Raw command output.
+ *  @return The formula names, in order, with empties removed.
+ */
++ (NSArray<NSString *> *)namesFromListOutput:(NSString *)output;
+
+/**
  *  The short name for the formula. Useful for taps. Returns the remaining substring after the last slash character.
  *
  *  @return The last substring after the last slash character.

@@ -91,6 +91,18 @@ NSString *const BPFormulaDidUpdateNotification = @"BPFormulaDidUpdateNotificatio
 	return [self formulaWithName:name andVersion:nil];
 }
 
++ (NSArray<NSString *> *)namesFromListOutput:(NSString *)output
+{
+	NSMutableArray<NSString *> *names = [NSMutableArray array];
+	NSCharacterSet *separators = [NSCharacterSet whitespaceAndNewlineCharacterSet];
+	for (NSString *token in [output componentsSeparatedByCharactersInSet:separators]) {
+		if (token.length > 0) {
+			[names addObject:token];
+		}
+	}
+	return names;
+}
+
 - (void)encodeWithCoder:(NSCoder *)aCoder
 {
 	if (self.name)				[aCoder encodeObject:self.name				forKey:kBP_ENCODE_FORMULA_NAME];
