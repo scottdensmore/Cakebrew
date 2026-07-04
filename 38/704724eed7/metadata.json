@@ -1,0 +1,25 @@
+{
+  "cli_version": "0.7.8",
+  "checkpoint_version": "branch-v1",
+  "checkpoint_id": "38704724eed7",
+  "strategy": "manual-commit",
+  "branch": "feat/pin-indicator-and-context-menu",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/38/704724eed7/0/metadata.json",
+      "transcript": "/38/704724eed7/0/full.jsonl",
+      "compact_transcript": "/38/704724eed7/0/transcript.jsonl",
+      "content_hash": "/38/704724eed7/0/content_hash.txt",
+      "prompt": "/38/704724eed7/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 475,
+    "cache_creation_tokens": 570844,
+    "cache_read_tokens": 12039763,
+    "output_tokens": 27194,
+    "api_call_count": 22
+  }
+}
