@@ -1,0 +1,25 @@
+{
+  "cli_version": "0.7.8",
+  "checkpoint_version": "branch-v1",
+  "checkpoint_id": "64af7a944ce6",
+  "strategy": "manual-commit",
+  "branch": "fix/pin-nil-block-crash",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/64/af7a944ce6/0/metadata.json",
+      "transcript": "/64/af7a944ce6/0/full.jsonl",
+      "compact_transcript": "/64/af7a944ce6/0/transcript.jsonl",
+      "content_hash": "/64/af7a944ce6/0/content_hash.txt",
+      "prompt": "/64/af7a944ce6/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 697,
+    "cache_creation_tokens": 463150,
+    "cache_read_tokens": 11333272,
+    "output_tokens": 42075,
+    "api_call_count": 26
+  }
+}
