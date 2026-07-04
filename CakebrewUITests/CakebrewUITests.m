@@ -222,6 +222,26 @@
 	XCTAssertTrue(appeared, @"the detail pane should show the Required by row");
 }
 
+// Journey: selecting a pinned formula shows the "Pinned" row in the detail pane.
+// The mock reports mockgit as pinned (its `brew list --pinned` fixture).
+- (void)testDetailPaneShowsPinnedRowForPinnedFormula
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	XCUIElement *git = [self formulaCellWithName:@"mockgit"];
+	XCTAssertTrue([git waitForExistenceWithTimeout:30.0], @"mockgit should be in the Installed list");
+	[git click];
+
+	// The row is hidden unless the formula is pinned, so its presence in the
+	// accessibility tree confirms both the xib row and the isFormulaPinned wiring.
+	XCUIElement *pinnedLabel = self.app.staticTexts[@"Pinned:"];
+	BOOL appeared = [pinnedLabel waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"the detail pane should show the Pinned row for a pinned formula");
+}
+
 // Journey: clicking Uninstall on an installed formula asks for confirmation.
 - (void)testUninstallPresentsConfirmationDialog
 {

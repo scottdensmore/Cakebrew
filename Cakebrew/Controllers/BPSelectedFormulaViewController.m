@@ -9,6 +9,7 @@
 #import "BPSelectedFormulaViewController.h"
 #import "BPTimedDispatch.h"
 #import "BPHomebrewInterface.h"
+#import "BPHomebrewManager.h"
 
 @interface BPSelectedFormulaViewController ()
 
@@ -126,12 +127,16 @@
 		[self.formulaVersionLabel		setStringValue:emptyString];
 		[self.formulaDependenciesLabel	setStringValue:emptyString];
 		[self.formulaConflictsLabel		setStringValue:emptyString];
+		[self.pinnedInfoRow				setHidden:YES];
 	}
-	
+
 	if ([self.formulae count] == 1)
 	{
 		BPFormula *formula = [self.formulae firstObject];
-		
+
+		// The pinned row is only shown for a single, pinned formula.
+		[self.pinnedInfoRow setHidden:![[BPHomebrewManager sharedManager] isFormulaPinned:formula]];
+
 		if (formula.isInstalled)
 		{
 			if ([formula.installPath length])
