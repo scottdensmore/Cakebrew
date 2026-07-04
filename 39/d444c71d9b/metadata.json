@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.7.8",
+  "checkpoint_version": "branch-v1",
+  "checkpoint_id": "39d444c71d9b",
+  "strategy": "manual-commit",
+  "branch": "feat/dependents-inline",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "Cakebrew/Models/BPFormula.m",
+    "CakebrewTests/BPFormulaTests.m"
+  ],
+  "sessions": [
+    {
+      "metadata": "/39/d444c71d9b/0/metadata.json",
+      "transcript": "/39/d444c71d9b/0/full.jsonl",
+      "compact_transcript": "/39/d444c71d9b/0/transcript.jsonl",
+      "content_hash": "/39/d444c71d9b/0/content_hash.txt",
+      "prompt": "/39/d444c71d9b/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 852,
+    "cache_creation_tokens": 73035,
+    "cache_read_tokens": 20079385,
+    "output_tokens": 47557,
+    "api_call_count": 39
+  }
+}
