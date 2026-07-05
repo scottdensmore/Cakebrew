@@ -99,7 +99,9 @@
 // is the element's value rather than its label — match on value.
 - (XCUIElement *)formulaCellWithName:(NSString *)name
 {
-	NSPredicate *predicate = [NSPredicate predicateWithFormat:@"value == %@", name];
+	// BEGINSWITH (not ==) so a pinned formula's cell — whose value is the name
+	// followed by the pin symbol — still matches.
+	NSPredicate *predicate = [NSPredicate predicateWithFormat:@"value BEGINSWITH %@", name];
 	return [[self.app.textFields matchingPredicate:predicate] firstMatch];
 }
 

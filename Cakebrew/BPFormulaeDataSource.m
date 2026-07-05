@@ -6,6 +6,7 @@
 //  Copyright (c) 2014 Bruno Philipe. All rights reserved.
 //
 
+#import <Cocoa/Cocoa.h>
 #import "BPFormulaeDataSource.h"
 #import "BPHomebrewManager.h"
 #import "BPFormulaeTableView.h"
@@ -19,6 +20,31 @@
 - (instancetype)init
 {
 	return [self initWithMode:kBPListAll];
+}
+
++ (id)nameCellValueForFormula:(BPFormula *)formula pinned:(BOOL)pinned
+{
+	NSString *name = [formula name];
+	if (!pinned || name.length == 0)
+	{
+		return name ?: @"";
+	}
+
+	// Name followed by the OS pin symbol so pinned formulae are spottable in
+	// the list without selecting them.
+	NSMutableAttributedString *value = [[NSMutableAttributedString alloc] initWithString:[name stringByAppendingString:@" "]];
+
+	NSImage *pin = [NSImage imageWithSystemSymbolName:@"pin.fill" accessibilityDescription:@"Pinned"];
+	if (pin)
+	{
+		NSImageSymbolConfiguration *config = [NSImageSymbolConfiguration configurationWithPointSize:[NSFont smallSystemFontSize]
+																							weight:NSFontWeightRegular];
+		NSTextAttachment *attachment = [[NSTextAttachment alloc] init];
+		attachment.image = [pin imageWithSymbolConfiguration:config] ?: pin;
+		[value appendAttributedString:[NSAttributedString attributedStringWithAttachment:attachment]];
+	}
+
+	return value;
 }
 
 - (instancetype)initWithMode:(BPListMode)aMode
@@ -102,7 +128,8 @@
 		// the Person field value appropriate for the column.
 		if ([columnIdentifer isEqualToString:kColumnIdentifierName]) {
 			if ([element isKindOfClass:[BPFormula class]]) {
-				return [(BPFormula*)element name];
+				BOOL pinned = [[BPHomebrewManager sharedManager] isFormulaPinned:element];
+				return [BPFormulaeDataSource nameCellValueForFormula:element pinned:pinned];
 			} else {
 				return element;
 			}
