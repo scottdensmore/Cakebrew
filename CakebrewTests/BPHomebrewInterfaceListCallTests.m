@@ -36,6 +36,10 @@
 - (instancetype)init;
 @end
 
+@interface BPHomebrewInterfaceListCallInstalledCasks : BPHomebrewInterfaceListCallInstalled
+- (instancetype)init;
+@end
+
 @interface BPHomebrewInterfaceListCallTests : XCTestCase
 @end
 
@@ -154,6 +158,35 @@
 	XCTAssertEqualObjects(formulae[0].name, @"git");
 	XCTAssertNil(formulae[0].version, @"pinned list is name-only");
 	XCTAssertEqualObjects(formulae[1].name, @"wget");
+}
+
+#pragma mark - installed casks parser (`list --cask --versions`)
+
+- (void)testInstalledCasksCallUsesListCaskVersionsArguments
+{
+	BPHomebrewInterfaceListCallInstalledCasks *call = [BPHomebrewInterfaceListCallInstalledCasks new];
+	XCTAssertEqualObjects(call.arguments, (@[ @"list", @"--cask", @"--versions" ]));
+}
+
+- (void)testInstalledCasksParserSplitsTokenAndVersion
+{
+	// `brew list --cask --versions` prints "token version", same shape as the
+	// installed-formula list, so the parser is inherited.
+	BPHomebrewInterfaceListCallInstalledCasks *call = [BPHomebrewInterfaceListCallInstalledCasks new];
+	BPFormula *cask = [call parseFormulaItem:@"google-chrome 120.0.6099.109"];
+
+	XCTAssertEqualObjects(cask.name, @"google-chrome");
+	XCTAssertEqualObjects(cask.version, @"120.0.6099.109");
+}
+
+- (void)testInstalledCasksParserKeepsCommaVersion
+{
+	// Cask versions can contain a comma (version,revision) but no spaces.
+	BPHomebrewInterfaceListCallInstalledCasks *call = [BPHomebrewInterfaceListCallInstalledCasks new];
+	BPFormula *cask = [call parseFormulaItem:@"antigravity 2.2.1,5287492581195776"];
+
+	XCTAssertEqualObjects(cask.name, @"antigravity");
+	XCTAssertEqualObjects(cask.version, @"2.2.1,5287492581195776");
 }
 
 #pragma mark - output-block nil safety (regression: pin/unpin pass a nil block)

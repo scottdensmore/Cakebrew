@@ -44,6 +44,10 @@
 		case kBPListPinned:
 			return @[ [BPFormula formulaWithName:@"mockgit"] ];
 
+		case kBPListInstalledCasks:
+			return @[ [BPFormula formulaWithName:@"mockchrome" andVersion:@"120.0"],
+					  [BPFormula formulaWithName:@"mockvscode" andVersion:@"1.85.0"] ];
+
 		default:
 			return @[];
 	}

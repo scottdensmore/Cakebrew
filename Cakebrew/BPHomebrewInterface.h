@@ -30,7 +30,8 @@ typedef NS_ENUM(NSInteger, BPListMode) {
 	kBPListOutdated,
 	kBPListSearch, /* Don't call -[BPHomebrewInterface listMode:] with this parameter. */
 	kBPListRepositories,
-	kBPListPinned
+	kBPListPinned,
+	kBPListInstalledCasks
 };
 
 @protocol BPHomebrewInterfaceDelegate <NSObject>
