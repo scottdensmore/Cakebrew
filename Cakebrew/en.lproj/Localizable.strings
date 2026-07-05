@@ -96,6 +96,7 @@
 "Sidebar_Item_Outdated" = "Outdated";
 "Sidebar_Item_All" = "All Formulae";
 "Sidebar_Item_Leaves" = "Leaves";
+"Sidebar_Item_Pinned" = "Pinned";
 "Sidebar_Item_Repos" = "Repositories";
 "Sidebar_Item_Doctor" = "Doctor";
 "Sidebar_Item_Update" = "Update";

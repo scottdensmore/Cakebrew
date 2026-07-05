@@ -15,10 +15,11 @@ typedef NS_ENUM(NSUInteger, FormulaeSideBarItem)
 	FormulaeSideBarItemOutdated = 2,
 	FormulaeSideBarItemAll = 3,
 	FormulaeSideBarItemLeaves = 4,
-	FormulaeSideBarItemRepositories = 5,
-	FormulaeSideBarItemToolsCategory = 6,
-	FormulaeSideBarItemDoctor = 7,
-	FormulaeSideBarItemUpdate = 8,
+	FormulaeSideBarItemPinned = 5,
+	FormulaeSideBarItemRepositories = 6,
+	FormulaeSideBarItemToolsCategory = 7,
+	FormulaeSideBarItemDoctor = 8,
+	FormulaeSideBarItemUpdate = 9,
 };
 
 @protocol BPSideBarControllerDelegate <NSObject>

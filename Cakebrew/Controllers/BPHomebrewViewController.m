@@ -585,7 +585,11 @@ NSOpenSavePanelDelegate>
 		case FormulaeSideBarItemLeaves:	// Leaves
 			[self configureTableForListing:kBPListLeaves];
 			break;
-			
+
+		case FormulaeSideBarItemPinned:	// Pinned
+			[self configureTableForListing:kBPListPinned];
+			break;
+
 		case FormulaeSideBarItemRepositories: // Repositories
 			[self configureTableForListing:kBPListRepositories];
 			break;

@@ -244,6 +244,24 @@
 	XCTAssertTrue(appeared, @"the detail pane should show the Pinned row for a pinned formula");
 }
 
+// Journey: the Pinned sidebar section lists only pinned formulae.
+- (void)testPinnedSidebarSectionListsPinnedFormulae
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	// The mock pins mockgit (its `brew list --pinned` fixture).
+	[self.sidebar.staticTexts[@"Pinned"] click];
+
+	XCUIElement *git = [self formulaCellWithName:@"mockgit"];
+	BOOL appeared = [git waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"the Pinned section should list mockgit");
+	XCTAssertFalse([self formulaCellWithName:@"mockwget"].exists,
+				   @"unpinned formulae should not appear in the Pinned section");
+}
+
 // Journey: clicking Uninstall on an installed formula asks for confirmation.
 - (void)testUninstallPresentsConfirmationDialog
 {

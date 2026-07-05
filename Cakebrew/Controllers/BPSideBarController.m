@@ -143,6 +143,7 @@
 @property (strong, nonatomic) BPSidebarItem *outdatedFormulaeSidebarItem;
 @property (strong, nonatomic) BPSidebarItem *allFormulaeSidebarItem;
 @property (strong, nonatomic) BPSidebarItem *leavesFormulaeSidebarItem;
+@property (strong, nonatomic) BPSidebarItem *pinnedFormulaeSidebarItem;
 @property (strong, nonatomic) BPSidebarItem *repositoriesFormulaeSidebarItem;
 
 @end
@@ -186,6 +187,11 @@
 												   identifier:@"item"];
 	_leavesFormulaeSidebarItem.icon = [self leavesSidebarIconImage];
 	[parent addChildItem:_leavesFormulaeSidebarItem];
+
+	_pinnedFormulaeSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Pinned", nil)
+												   identifier:@"item"];
+	_pinnedFormulaeSidebarItem.icon = [self pinnedSidebarIconImage];
+	[parent addChildItem:_pinnedFormulaeSidebarItem];
 
 	_repositoriesFormulaeSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Repos", nil)
 														 identifier:@"item"];
@@ -233,6 +239,12 @@
 					 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_Leaves", nil)];
 }
 
+- (NSImage *)pinnedSidebarIconImage
+{
+	return [NSImage imageWithSystemSymbolName:@"pin"
+					 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_Pinned", nil)];
+}
+
 - (NSImage *)repositoriesSidebarIconImage
 {
 	return [NSImage imageWithSystemSymbolName:@"building.columns"
@@ -267,6 +279,7 @@
 	self.outdatedFormulaeSidebarItem.badgeValue		= @([[[BPHomebrewManager sharedManager] outdatedFormulae] count]);
 	self.allFormulaeSidebarItem.badgeValue			= @([[[BPHomebrewManager sharedManager] allFormulae] count]);
 	self.leavesFormulaeSidebarItem.badgeValue		= @([[[BPHomebrewManager sharedManager] leavesFormulae] count]);
+	self.pinnedFormulaeSidebarItem.badgeValue		= @([[[BPHomebrewManager sharedManager] pinnedFormulae] count]);
 	self.repositoriesFormulaeSidebarItem.badgeValue = @([[[BPHomebrewManager sharedManager] repositoriesFormulae] count]);
 }
 
