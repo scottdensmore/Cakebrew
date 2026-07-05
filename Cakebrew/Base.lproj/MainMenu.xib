@@ -535,20 +535,26 @@ CA
                                     <binding destination="547" name="enabled" keyPath="self.isHomebrewInstalled" id="ZMY-TV-Vtp"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Repositories" tag="5" keyEquivalent="5" id="dXD-3s-NhA">
+                            <menuItem title="Pinned" tag="5" keyEquivalent="5" id="cbk-VwPin-it">
+                                <connections>
+                                    <action selector="selectSideBarRowWithSenderTag:" target="SGP-Ky-0Th" id="cbk-VwPin-ac"/>
+                                    <binding destination="547" name="enabled" keyPath="self.isHomebrewInstalled" id="cbk-VwPin-en"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Repositories" tag="6" keyEquivalent="6" id="dXD-3s-NhA">
                                 <connections>
                                     <action selector="selectSideBarRowWithSenderTag:" target="SGP-Ky-0Th" id="s3g-8g-eFB"/>
                                     <binding destination="547" name="enabled" keyPath="self.isHomebrewInstalled" id="Y5h-D2-XfT"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="kEe-QJ-gfj"/>
-                            <menuItem title="Doctor" tag="7" keyEquivalent="6" id="eI9-b4-Rmg">
+                            <menuItem title="Doctor" tag="8" keyEquivalent="7" id="eI9-b4-Rmg">
                                 <connections>
                                     <action selector="selectSideBarRowWithSenderTag:" target="SGP-Ky-0Th" id="DMG-th-yEC"/>
                                     <binding destination="547" name="enabled" keyPath="self.isHomebrewInstalled" id="xxS-YX-gBx"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Update" tag="8" keyEquivalent="7" id="8Vh-lk-gYe">
+                            <menuItem title="Update" tag="9" keyEquivalent="8" id="8Vh-lk-gYe">
                                 <connections>
                                     <action selector="selectSideBarRowWithSenderTag:" target="SGP-Ky-0Th" id="fUp-dE-WjG"/>
                                     <binding destination="547" name="enabled" keyPath="self.isHomebrewInstalled" id="HeO-ww-Vvq"/>

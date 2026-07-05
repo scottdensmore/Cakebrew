@@ -205,6 +205,7 @@
 
 /* No comment provided by engineer. */
 "Sidebar_Item_Leaves" = "Folhas";
+"Sidebar_Item_Pinned" = "Pinned";
 
 /* No comment provided by engineer. */
 "Sidebar_Item_Outdated" = "Desatualizadas";
