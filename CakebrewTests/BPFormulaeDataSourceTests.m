@@ -97,4 +97,25 @@
 	XCTAssertEqual([dataSource numberOfRowsInTableView:self.tableView], 2);
 }
 
+#pragma mark - name cell value (pin badge)
+
+- (void)testNameCellValueForUnpinnedFormulaIsPlainName
+{
+	BPFormula *git = [BPFormula formulaWithName:@"git"];
+	id value = [BPFormulaeDataSource nameCellValueForFormula:git pinned:NO];
+
+	XCTAssertTrue([value isKindOfClass:[NSString class]], @"unpinned name is a plain string");
+	XCTAssertEqualObjects(value, @"git");
+}
+
+- (void)testNameCellValueForPinnedFormulaIsAttributedStartingWithName
+{
+	BPFormula *git = [BPFormula formulaWithName:@"git"];
+	id value = [BPFormulaeDataSource nameCellValueForFormula:git pinned:YES];
+
+	XCTAssertTrue([value isKindOfClass:[NSAttributedString class]], @"pinned name carries a pin badge");
+	XCTAssertTrue([[(NSAttributedString *)value string] hasPrefix:@"git"],
+				  @"the pinned name cell must still start with the formula name");
+}
+
 @end

@@ -18,4 +18,10 @@
 - (BPFormula *)formulaAtIndex:(NSInteger)index;
 - (NSArray *)formulasAtIndexSet:(NSIndexSet *)indexSet;
 - (void)refreshBackingArray;
+
+/**
+ *  The value for a formula's Name cell. Plain name (NSString) normally; when
+ *  pinned, an NSAttributedString of the name followed by the OS pin symbol.
+ */
++ (id)nameCellValueForFormula:(BPFormula *)formula pinned:(BOOL)pinned;
 @end
