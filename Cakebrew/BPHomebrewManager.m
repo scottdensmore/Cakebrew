@@ -82,6 +82,7 @@ NSString *const kBPCacheDataKey	= @"BPCacheDataKey";
 		NSArray *outdatedFormulae = [[BPHomebrewInterface sharedInterface] listMode:kBPListOutdated];
 		NSArray *repositoriesFormulae = [[BPHomebrewInterface sharedInterface] listMode:kBPListRepositories];
 		NSArray *pinnedFormulae = [[BPHomebrewInterface sharedInterface] listMode:kBPListPinned];
+		NSArray *installedCasks = [[BPHomebrewInterface sharedInterface] listMode:kBPListInstalledCasks];
 		NSArray *allFormulae = nil;
 
 		if (![self loadAllFormulaeCaches] || previousCountOfAllFormulae <= 100 || shouldRebuildCache) {
@@ -100,6 +101,7 @@ NSString *const kBPCacheDataKey	= @"BPCacheDataKey";
 			[self setOutdatedFormulae:outdatedFormulae];
 			[self setRepositoriesFormulae:repositoriesFormulae];
 			[self setPinnedFormulae:pinnedFormulae];
+			[self setInstalledCasks:installedCasks];
 
 			[self.delegate homebrewManagerFinishedUpdating:self];
 		});

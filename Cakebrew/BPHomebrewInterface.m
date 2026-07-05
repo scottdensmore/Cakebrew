@@ -59,6 +59,9 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 @interface BPHomebrewInterfaceListCallPinned : BPHomebrewInterfaceListCall
 @end
 
+@interface BPHomebrewInterfaceListCallInstalledCasks : BPHomebrewInterfaceListCallInstalled
+@end
+
 @interface BPHomebrewInterface () <BPTaskCompleted>
 
 @property (strong) NSString *path_cellar;
@@ -369,6 +372,10 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 			listCall = [[BPHomebrewInterfaceListCallPinned alloc] init];
 			break;
 
+		case kBPListInstalledCasks:
+			listCall = [[BPHomebrewInterfaceListCallInstalledCasks alloc] init];
+			break;
+
 		default:
 			return nil;
 	}
@@ -665,6 +672,17 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 - (instancetype)init
 {
 	return (BPHomebrewInterfaceListCallPinned *)[super initWithArguments:@[@"list", @"--pinned"]];
+}
+
+@end
+
+@implementation BPHomebrewInterfaceListCallInstalledCasks
+
+// Same "token version" output as installed formulae, so the parser is inherited
+// from BPHomebrewInterfaceListCallInstalled; only the arguments differ.
+- (instancetype)init
+{
+	return (BPHomebrewInterfaceListCallInstalledCasks *)[super initWithArguments:@[@"list", @"--cask", @"--versions"]];
 }
 
 @end
