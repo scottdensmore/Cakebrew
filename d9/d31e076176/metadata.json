@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.8.42",
+  "checkpoint_id": "d9d31e076176",
+  "strategy": "manual-commit",
+  "branch": "feat/preferences-window",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "Cakebrew/BPAppDelegate.m"
+  ],
+  "sessions": [
+    {
+      "metadata": "/d9/d31e076176/0/metadata.json",
+      "transcript": "/d9/d31e076176/0/full.jsonl",
+      "compact_transcript": "/d9/d31e076176/0/transcript.jsonl",
+      "content_hash": "/d9/d31e076176/0/content_hash.txt",
+      "prompt": "/d9/d31e076176/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 66094,
+    "cache_creation_tokens": 10937182,
+    "cache_read_tokens": 633431046,
+    "output_tokens": 1469632,
+    "api_call_count": 1372
+  }
+}
