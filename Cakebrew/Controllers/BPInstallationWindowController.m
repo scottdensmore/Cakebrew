@@ -179,9 +179,17 @@
 		}
 		else if (self.windowOperation == kBPWindowOperationUninstall)
 		{
-			NSString *name = [[self.formulae firstObject] name];
-			self.operationStatus = [homebrewInterface uninstallFormula:name
-													   withReturnBlock:displayTerminalOutput];
+			BPFormula *formula = [self.formulae firstObject];
+			if (formula.cask)
+			{
+				self.operationStatus = [homebrewInterface uninstallCask:formula.name
+														withReturnBlock:displayTerminalOutput];
+			}
+			else
+			{
+				self.operationStatus = [homebrewInterface uninstallFormula:formula.name
+														   withReturnBlock:displayTerminalOutput];
+			}
 		}
 		else if (self.windowOperation == kBPWindowOperationUpgrade)
 		{

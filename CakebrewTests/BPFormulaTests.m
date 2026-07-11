@@ -404,6 +404,36 @@ static BPCustomFormula *nmapFormula;
 	XCTAssertEqualObjects(formula.website.absoluteString, @"https://example.com");
 }
 
+#pragma mark - cask flag
+
+- (void)testCaskFlagDefaultsToNo
+{
+	XCTAssertFalse([BPFormula formulaWithName:@"wget"].cask);
+}
+
+- (void)testCopyPreservesCaskFlag
+{
+	BPFormula *cask = [BPFormula formulaWithName:@"google-chrome" andVersion:@"120.0"];
+	cask.cask = YES;
+
+	BPFormula *copy = [cask copy];
+	XCTAssertTrue(copy.cask, @"copying must preserve the cask flag");
+}
+
+- (void)testSecureCodingRoundTripPreservesCaskFlag
+{
+	BPFormula *cask = [BPFormula formulaWithName:@"google-chrome" andVersion:@"120.0"];
+	cask.cask = YES;
+
+	NSError *error = nil;
+	NSData *data = [NSKeyedArchiver archivedDataWithRootObject:cask requiringSecureCoding:YES error:&error];
+	XCTAssertNil(error);
+
+	BPFormula *decoded = [NSKeyedUnarchiver unarchivedObjectOfClass:[BPFormula class] fromData:data error:&error];
+	XCTAssertNil(error);
+	XCTAssertTrue(decoded.cask, @"secure-coding round trip must preserve the cask flag");
+}
+
 #pragma mark - namesFromListOutput: (parses `brew uses` dependents output)
 
 - (void)testNamesFromListOutputSplitsNewlineSeparatedNames

@@ -458,6 +458,13 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 	return val;
 }
 
+- (BOOL)uninstallCask:(NSString*)cask withReturnBlock:(void (^)(NSString*output))block
+{
+	BOOL val = [self performBrewCommandWithArguments:@[@"uninstall", @"--cask", cask] dataReturnBlock:block];
+	[self sendDelegateFormulaeUpdatedCall];
+	return val;
+}
+
 - (BOOL)tapRepository:(NSString *)repository withReturnsBlock:(void (^)(NSString *))block
 {
 	BOOL val = [self performBrewCommandWithArguments:@[@"tap", repository] dataReturnBlock:block];
@@ -683,6 +690,13 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 - (instancetype)init
 {
 	return (BPHomebrewInterfaceListCallInstalledCasks *)[super initWithArguments:@[@"list", @"--cask", @"--versions"]];
+}
+
+- (BPFormula *)parseFormulaItem:(NSString *)item
+{
+	BPFormula *cask = [super parseFormulaItem:item];
+	cask.cask = YES;
+	return cask;
 }
 
 @end

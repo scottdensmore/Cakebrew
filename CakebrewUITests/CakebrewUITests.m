@@ -305,6 +305,37 @@
 				   @"formulae should not appear in the Casks section");
 }
 
+// Journey: selecting an installed cask offers Uninstall, which asks for
+// confirmation (the operation pipeline dispatches to `uninstall --cask`).
+- (void)testCaskOffersUninstallWithConfirmation
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	XCUIElement *sidebar = self.sidebar;
+	XCUIElementQuery *installedRows = [sidebar.staticTexts matchingIdentifier:@"Installed"];
+	XCTAssertTrue([installedRows.firstMatch waitForExistenceWithTimeout:30.0], @"sidebar should load");
+	[[installedRows elementBoundByIndex:1] click];
+
+	XCUIElement *chrome = [self formulaCellWithName:@"mockchrome"];
+	XCTAssertTrue([chrome waitForExistenceWithTimeout:15.0], @"mockchrome should be listed");
+	[chrome click];
+
+	XCUIElement *uninstallButton = self.app.buttons[@"Uninstall Formula"];
+	BOOL appeared = [uninstallButton waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"selecting a cask should offer Uninstall in the toolbar");
+	[uninstallButton click];
+
+	XCUIElement *yesButton = self.app.buttons[@"Yes"];
+	XCTAssertTrue([yesButton waitForExistenceWithTimeout:15.0],
+				  @"clicking Uninstall on a cask should present a Yes/Cancel confirmation");
+
+	// Cancel so the test doesn't proceed into the operation.
+	[self dismissConfirmationSheet];
+}
+
 // Journey: clicking Uninstall on an installed formula asks for confirmation.
 - (void)testUninstallPresentsConfirmationDialog
 {

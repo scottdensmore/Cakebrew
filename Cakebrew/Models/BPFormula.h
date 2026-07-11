@@ -46,6 +46,12 @@ extern NSString *const BPFormulaDidUpdateNotification;
 
 @property BOOL needsInformation;
 
+/**
+ *  Whether this entry is a Homebrew cask (application bundle) rather than a
+ *  formula. Operations dispatch on this: casks run `brew <op> --cask`.
+ */
+@property BOOL cask;
+
 + (instancetype)formulaWithName:(NSString*)name version:(NSString*)version andLatestVersion:(NSString*)latestVersion;
 + (instancetype)formulaWithName:(NSString*)name andVersion:(NSString*)version;
 + (instancetype)formulaWithName:(NSString*)name;
