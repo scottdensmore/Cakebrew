@@ -33,6 +33,7 @@ NSString *const kBP_ENCODE_FORMULA_PATH = @"BP_ENCODE_FORMULA_PATH";
 NSString *const kBP_ENCODE_FORMULA_WURL = @"BP_ENCODE_FORMULA_WURL";
 NSString *const kBP_ENCODE_FORMULA_DEPS = @"BP_ENCODE_FORMULA_DEPS";
 NSString *const kBP_ENCODE_FORMULA_INST = @"BP_ENCODE_FORMULA_INST";
+NSString *const kBP_ENCODE_FORMULA_CASK = @"BP_ENCODE_FORMULA_CASK";
 NSString *const kBP_ENCODE_FORMULA_CNFL = @"BP_ENCODE_FORMULA_CNFL";
 NSString *const kBP_ENCODE_FORMULA_SDSC = @"BP_ENCODE_FORMULA_SDSC";
 NSString *const kBP_ENCODE_FORMULA_INFO = @"BP_ENCODE_FORMULA_INFO";
@@ -116,6 +117,7 @@ NSString *const BPFormulaDidUpdateNotification = @"BPFormulaDidUpdateNotificatio
 	if (self.information)		[aCoder encodeObject:self.information		forKey:kBP_ENCODE_FORMULA_INFO];
 	if (self.options)			[aCoder encodeObject:self.options			forKey:kBP_ENCODE_FORMULA_OPTN];
 	[aCoder encodeObject:@([self isInstalled]) forKey:kBP_ENCODE_FORMULA_INST];
+	[aCoder encodeBool:self.cask forKey:kBP_ENCODE_FORMULA_CASK];
 }
 
 - (instancetype)initWithCoder:(NSCoder *)aDecoder
@@ -135,6 +137,7 @@ NSString *const BPFormulaDidUpdateNotification = @"BPFormulaDidUpdateNotificatio
 
 		NSSet *optionsClasses = [NSSet setWithArray:@[[NSArray class], [BPFormulaOption class]]];
 		self.options			= [aDecoder decodeObjectOfClasses:optionsClasses forKey:kBP_ENCODE_FORMULA_OPTN];
+		self.cask				= [aDecoder decodeBoolForKey:kBP_ENCODE_FORMULA_CASK];
 		[self commonInit];
 	}
 	return self;
@@ -167,6 +170,7 @@ NSString *const BPFormulaDidUpdateNotification = @"BPFormulaDidUpdateNotificatio
 		formula->_shortDescription	= [self->_shortDescription	copy];
 		formula->_information		= [self->_information		copy];
 		formula->_options			= [self->_options			copy];
+		formula->_cask				= self->_cask;
 		
 		[formula addObserver:formula forKeyPath:NSStringFromSelector(@selector(needsInformation))
 					 options:NSKeyValueObservingOptionNew

@@ -189,6 +189,24 @@
 	XCTAssertEqualObjects(cask.version, @"2.2.1,5287492581195776");
 }
 
+- (void)testInstalledCasksParserMarksResultAsCask
+{
+	// Operations dispatch on the cask flag (`brew uninstall --cask ...`), so
+	// everything parsed from the cask list must carry it.
+	BPHomebrewInterfaceListCallInstalledCasks *call = [BPHomebrewInterfaceListCallInstalledCasks new];
+	BPFormula *cask = [call parseFormulaItem:@"google-chrome 120.0.6099.109"];
+
+	XCTAssertTrue(cask.cask);
+}
+
+- (void)testInstalledFormulaeParserDoesNotMarkCask
+{
+	BPHomebrewInterfaceListCallInstalled *call = [BPHomebrewInterfaceListCallInstalled new];
+	BPFormula *formula = [call parseFormulaItem:@"ffmpeg 2.7.2"];
+
+	XCTAssertFalse(formula.cask);
+}
+
 #pragma mark - output-block nil safety (regression: pin/unpin pass a nil block)
 
 - (void)testInvokeOutputBlockWithNilBlockIsSafeNoOp

@@ -301,11 +301,17 @@ NSOpenSavePanelDelegate>
 	}
 	else if (selectedSidebarRow == FormulaeSideBarItemInstalledCasks) // Installed Casks
 	{
-		// Casks are browse-only for now: the formula toolbar operations and the
-		// detail pane's `brew info` / `brew uses` fetches are formula-specific
-		// and would run without --cask, so keep both inert.
+		// The detail pane stays hidden: its `brew info` / `brew uses` fetches
+		// are formula-specific and would run without --cask (cask info comes
+		// with the outdated-casks phase). Uninstall works — the operation
+		// pipeline dispatches on the formula's cask flag.
 		showFormulaInfo = false;
-		[self.toolbar configureForMode:BPToolbarModeDefault];
+
+		if (selectedIndex != -1) {
+			[self.toolbar configureForMode:BPToolbarModeUninstall];
+		} else {
+			[self.toolbar configureForMode:BPToolbarModeDefault];
+		}
 	}
 	else if (selectedIndex == -1 || selectedSidebarRow > FormulaeSideBarItemToolsCategory)
 	{

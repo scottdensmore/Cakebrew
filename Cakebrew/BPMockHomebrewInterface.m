@@ -103,6 +103,11 @@
 	return YES;
 }
 
+- (BOOL)uninstallCask:(NSString *)cask withReturnBlock:(void (^)(NSString *))block
+{
+	return YES;
+}
+
 - (BOOL)unpinFormula:(NSString *)formula withReturnBlock:(void (^)(NSString *))block
 {
 	return YES;

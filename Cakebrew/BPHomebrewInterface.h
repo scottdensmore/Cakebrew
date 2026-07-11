@@ -110,6 +110,16 @@ typedef NS_ENUM(NSInteger, BPListMode) {
 - (BOOL)uninstallFormula:(NSString*)formula withReturnBlock:(void (^)(NSString*))block;
 
 /**
+ *  Uninstalls a cask (runs `brew uninstall --cask`).
+ *
+ *  @param cask The cask token to be uninstalled.
+ *  @param block Data callback block, called with new output while the process runs.
+ *
+ *  @return `YES` if successful.
+ */
+- (BOOL)uninstallCask:(NSString*)cask withReturnBlock:(void (^)(NSString*))block;
+
+/**
  *  Taps a repo.
  *
  *  @param repository The repo to be tapped.
