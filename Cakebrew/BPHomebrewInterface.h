@@ -32,7 +32,8 @@ typedef NS_ENUM(NSInteger, BPListMode) {
 	kBPListRepositories,
 	kBPListPinned,
 	kBPListInstalledCasks,
-	kBPListOutdatedCasks
+	kBPListOutdatedCasks,
+	kBPListAllCasks
 };
 
 @protocol BPHomebrewInterfaceDelegate <NSObject>
@@ -109,6 +110,16 @@ typedef NS_ENUM(NSInteger, BPListMode) {
  *  @return `YES` if successful.
  */
 - (BOOL)installFormula:(NSString*)formula withOptions:(NSArray*)options andReturnBlock:(void (^)(NSString*output))block;
+
+/**
+ *  Installs a cask (runs `brew install --cask`). Casks take no install options.
+ *
+ *  @param cask The cask token to be installed.
+ *  @param block Data callback block, called with new output while the process runs.
+ *
+ *  @return `YES` if successful.
+ */
+- (BOOL)installCask:(NSString*)cask withReturnBlock:(void (^)(NSString*))block;
 
 /**
  *  Uninstalls a formula.

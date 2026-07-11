@@ -147,6 +147,7 @@
 @property (strong, nonatomic) BPSidebarItem *repositoriesFormulaeSidebarItem;
 @property (strong, nonatomic) BPSidebarItem *installedCasksSidebarItem;
 @property (strong, nonatomic) BPSidebarItem *outdatedCasksSidebarItem;
+@property (strong, nonatomic) BPSidebarItem *allCasksSidebarItem;
 
 @end
 
@@ -213,6 +214,11 @@
 											  identifier:@"item"];
 	_outdatedCasksSidebarItem.icon = [self outdatedSidebarIconImage];
 	[parent addChildItem:_outdatedCasksSidebarItem];
+
+	_allCasksSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_AllCasks", nil)
+											 identifier:@"item"];
+	_allCasksSidebarItem.icon = [self allFormulaeSidebarIconImage];
+	[parent addChildItem:_allCasksSidebarItem];
 
 	parent = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Group_Tools", nil)
 							   identifier:@"group"];
@@ -305,6 +311,7 @@
 	self.repositoriesFormulaeSidebarItem.badgeValue = @([[[BPHomebrewManager sharedManager] repositoriesFormulae] count]);
 	self.installedCasksSidebarItem.badgeValue		= @([[[BPHomebrewManager sharedManager] installedCasks] count]);
 	self.outdatedCasksSidebarItem.badgeValue		= @([[[BPHomebrewManager sharedManager] outdatedCasks] count]);
+	self.allCasksSidebarItem.badgeValue				= @([[[BPHomebrewManager sharedManager] allCasks] count]);
 }
 
 #pragma mark - NSOutlineView Data Source

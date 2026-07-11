@@ -26,6 +26,7 @@
 
 NSString *const kBPCacheLastUpdateKey = @"BPCacheLastUpdateKey";
 NSString *const kBPCacheDataKey	= @"BPCacheDataKey";
+NSString *const kBPCacheCasksDataKey = @"BPCacheCasksDataKey";
 
 #define kBP_SECONDS_IN_A_DAY 86400
 
@@ -85,15 +86,21 @@ NSString *const kBPCacheDataKey	= @"BPCacheDataKey";
 		NSArray *installedCasks = [[BPHomebrewInterface sharedInterface] listMode:kBPListInstalledCasks];
 		NSArray *outdatedCasks = [[BPHomebrewInterface sharedInterface] listMode:kBPListOutdatedCasks];
 		NSArray *allFormulae = nil;
+		NSArray *allCasks = nil;
 
-		if (![self loadAllFormulaeCaches] || previousCountOfAllFormulae <= 100 || shouldRebuildCache) {
+		// The full catalogs (`brew formulae` / `brew casks`) are slow, so both
+		// ride the same 24h disk cache and refresh together. The allCasks nil
+		// check refreshes a warm cache written before casks were cached.
+		if (![self loadAllFormulaeCaches] || previousCountOfAllFormulae <= 100 || self.allCasks == nil || shouldRebuildCache) {
 			allFormulae = [[BPHomebrewInterface sharedInterface] listMode:kBPListAll];
+			allCasks = [[BPHomebrewInterface sharedInterface] listMode:kBPListAllCasks];
 		}
-		
+
 		dispatch_async(dispatch_get_main_queue(), ^{
 
 			if (allFormulae != nil) {
 				[self setAllFormulae:allFormulae];
+				[self setAllCasks:allCasks];
 				[self storeAllFormulaeCaches];
 			}
 
@@ -164,6 +171,7 @@ NSString *const kBPCacheDataKey	= @"BPCacheDataKey";
 				NSLog(@"Failed decoding data: %@", [error localizedDescription]);
 			}
 			self.allFormulae = [cacheDict objectForKey:kBPCacheDataKey];
+			self.allCasks = [cacheDict objectForKey:kBPCacheCasksDataKey];
 		}
 	}
 	else
@@ -192,7 +200,8 @@ NSString *const kBPCacheDataKey	= @"BPCacheDataKey";
 																	 integerForKey:kBPCacheLastUpdateKey]];
 			}
 			
-			NSDictionary *cacheDict = @{kBPCacheDataKey: self.allFormulae};
+			NSDictionary *cacheDict = @{kBPCacheDataKey: self.allFormulae,
+										kBPCacheCasksDataKey: self.allCasks ?: @[]};
 			NSError *error = nil;
 			NSData *cacheData = [NSKeyedArchiver archivedDataWithRootObject:cacheDict
 														  requiringSecureCoding:YES
@@ -242,9 +251,14 @@ NSString *const kBPCacheDataKey	= @"BPCacheDataKey";
 
 - (BPFormulaStatus)statusForFormula:(BPFormula*)formula
 {
-	if ([self searchForFormula:formula inArray:self.installedFormulae] >= 0)
+	// Casks are tracked in their own lists; a cask must never read the
+	// formula lists (names can collide across the two namespaces).
+	NSArray *installed = formula.cask ? self.installedCasks : self.installedFormulae;
+	NSArray *outdated  = formula.cask ? self.outdatedCasks  : self.outdatedFormulae;
+
+	if ([self searchForFormula:formula inArray:installed] >= 0)
 	{
-		if ([self searchForFormula:formula inArray:self.outdatedFormulae] >= 0)
+		if ([self searchForFormula:formula inArray:outdated] >= 0)
 		{
 			return kBPFormulaOutdated;
 		}

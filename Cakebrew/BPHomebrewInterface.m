@@ -65,6 +65,9 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 @interface BPHomebrewInterfaceListCallOutdatedCasks : BPHomebrewInterfaceListCallUpgradeable
 @end
 
+@interface BPHomebrewInterfaceListCallAllCasks : BPHomebrewInterfaceListCall
+@end
+
 @interface BPHomebrewInterface () <BPTaskCompleted>
 
 @property (strong) NSString *path_cellar;
@@ -383,6 +386,10 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 			listCall = [[BPHomebrewInterfaceListCallOutdatedCasks alloc] init];
 			break;
 
+		case kBPListAllCasks:
+			listCall = [[BPHomebrewInterfaceListCallAllCasks alloc] init];
+			break;
+
 		default:
 			return nil;
 	}
@@ -461,6 +468,13 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 		params = [params arrayByAddingObjectsFromArray:options];
 	}
 	BOOL val = [self performBrewCommandWithArguments:params dataReturnBlock:block];
+	[self sendDelegateFormulaeUpdatedCall];
+	return val;
+}
+
+- (BOOL)installCask:(NSString*)cask withReturnBlock:(void (^)(NSString*output))block
+{
+	BOOL val = [self performBrewCommandWithArguments:@[@"install", @"--cask", cask] dataReturnBlock:block];
 	[self sendDelegateFormulaeUpdatedCall];
 	return val;
 }
@@ -725,6 +739,24 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 - (instancetype)init
 {
 	return (BPHomebrewInterfaceListCallOutdatedCasks *)[super initWithArguments:@[@"outdated", @"--cask", @"--verbose"]];
+}
+
+- (BPFormula *)parseFormulaItem:(NSString *)item
+{
+	BPFormula *cask = [super parseFormulaItem:item];
+	cask.cask = YES;
+	return cask;
+}
+
+@end
+
+@implementation BPHomebrewInterfaceListCallAllCasks
+
+// `brew casks` prints one token per line (like `brew formulae`); the base
+// name-only parser applies.
+- (instancetype)init
+{
+	return (BPHomebrewInterfaceListCallAllCasks *)[super initWithArguments:@[@"casks"]];
 }
 
 - (BPFormula *)parseFormulaItem:(NSString *)item

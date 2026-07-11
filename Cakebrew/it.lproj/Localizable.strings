@@ -186,6 +186,7 @@
 "Sidebar_Info_Repos" = "Repo aggiunti";
 "Sidebar_Info_Casks" = "These are the casks (applications) installed in your system.";
 "Sidebar_Info_OutdatedCasks" = "These are the casks with a newer version available. Auto-updating apps are not listed.";
+"Sidebar_Info_AllCasks" = "These are all the casks (applications) available for installation.";
 
 /* No comment provided by engineer. */
 "Sidebar_Info_SearchResults" = "Risultati della ricerca";
@@ -205,6 +206,7 @@
 /* No comment provided by engineer. */
 "Sidebar_Item_Leaves" = "Foglie";
 "Sidebar_Item_Pinned" = "Pinned";
+"Sidebar_Item_AllCasks" = "All Casks";
 
 /* No comment provided by engineer. */
 "Sidebar_Item_Outdated" = "In attesa di aggiornamento";

@@ -339,6 +339,35 @@
 	[self dismissConfirmationSheet];
 }
 
+// Journey: the All Casks section lists the catalog; a not-installed cask
+// offers Install with confirmation (dispatches to `install --cask`).
+- (void)testAllCasksOffersInstallWithConfirmation
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	[self.sidebar.staticTexts[@"All Casks"] click];
+
+	XCUIElement *firefox = [self formulaCellWithName:@"mockfirefox"];
+	BOOL appeared = [firefox waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"mockfirefox should be listed under All Casks");
+	[firefox click];
+
+	XCUIElement *installButton = self.app.buttons[@"Install Formula"];
+	XCTAssertTrue([installButton waitForExistenceWithTimeout:15.0],
+				  @"selecting a not-installed cask should offer Install in the toolbar");
+	[installButton click];
+
+	XCUIElement *yesButton = self.app.buttons[@"Yes"];
+	XCTAssertTrue([yesButton waitForExistenceWithTimeout:15.0],
+				  @"clicking Install on a cask should present a Yes/Cancel confirmation");
+
+	// Cancel so the test doesn't proceed into the operation.
+	[self dismissConfirmationSheet];
+}
+
 // Journey: selecting an installed cask offers Uninstall, which asks for
 // confirmation (the operation pipeline dispatches to `uninstall --cask`).
 - (void)testCaskOffersUninstallWithConfirmation

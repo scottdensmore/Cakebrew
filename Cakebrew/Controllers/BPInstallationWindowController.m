@@ -172,10 +172,18 @@
 		BPHomebrewInterface *homebrewInterface = [BPHomebrewInterface sharedInterface];
 		if (self.windowOperation == kBPWindowOperationInstall)
 		{
-			NSString *name = [[self.formulae firstObject] name];
-			self.operationStatus = [homebrewInterface installFormula:name
-														 withOptions:self.options
-													  andReturnBlock:displayTerminalOutput];
+			BPFormula *formula = [self.formulae firstObject];
+			if (formula.cask)
+			{
+				self.operationStatus = [homebrewInterface installCask:formula.name
+													  withReturnBlock:displayTerminalOutput];
+			}
+			else
+			{
+				self.operationStatus = [homebrewInterface installFormula:formula.name
+															 withOptions:self.options
+														  andReturnBlock:displayTerminalOutput];
+			}
 		}
 		else if (self.windowOperation == kBPWindowOperationUninstall)
 		{
