@@ -17,6 +17,8 @@
 
 "Message_BGTask_Title" = "Active background task!";
 "Message_BGTask_Body" = "Sorry, a background task is already running. You can't perform two tasks at the same time.";
+"Message_Tap_Invalid_Title" = "Invalid tap name";
+"Message_Tap_Invalid_Body" = "Enter a tap as owner/repository, for example homebrew/cask-fonts.";
 "Message_No_Homebrew_Title" = "Homebrew Website";
 "Message_No_Homebrew_Body" = "Homebrew was not found in your system. Please install Homebrew before using Cakebrew. You can click the button below to open Homebrew's website.";
 "Message_Shell_Invalid_Title" = "No Valid shell was found!";

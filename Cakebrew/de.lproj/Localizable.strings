@@ -114,6 +114,8 @@
 
 /* No comment provided by engineer. */
 "Message_BGTask_Body" = "Entschuldigung, es läuft bereits ein Prozess im Hintergrund. Sie können deshalb keinen zweiten Hintergrundprozess starten.";
+"Message_Tap_Invalid_Title" = "Invalid tap name";
+"Message_Tap_Invalid_Body" = "Enter a tap as owner/repository, for example homebrew/cask-fonts.";
 
 /* No comment provided by engineer. */
 "Message_BGTask_Title" = "Hintergrundprozess aktiv!";

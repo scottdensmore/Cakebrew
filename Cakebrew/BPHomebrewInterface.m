@@ -358,6 +358,17 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 
 #pragma mark - Operations that return on finish
 
++ (BOOL)isValidTapName:(NSString *)name
+{
+	NSString *trimmed = [name stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	// Exactly owner/repo, each segment one or more of [A-Za-z0-9._-]. This
+	// admits every real tap while excluding whitespace and shell metacharacters.
+	static NSString *const pattern = @"^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$";
+	NSRange range = NSMakeRange(0, trimmed.length);
+	NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:pattern options:0 error:nil];
+	return [regex numberOfMatchesInString:trimmed options:0 range:range] == 1;
+}
+
 - (NSArray<BPFormula *> *)listMode:(BPListMode)mode
 {
 	BPHomebrewInterfaceListCall *listCall = nil;

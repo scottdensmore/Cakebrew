@@ -118,6 +118,8 @@
 
 /* No comment provided by engineer. */
 "Message_BGTask_Body" = "Desculpe, uma tarefa já está sendo executada em segundo plano. Você não pode executar mais de uma tarefa simultaneamente.";
+"Message_Tap_Invalid_Title" = "Invalid tap name";
+"Message_Tap_Invalid_Body" = "Enter a tap as owner/repository, for example homebrew/cask-fonts.";
 
 /* No comment provided by engineer. */
 "Message_BGTask_Title" = "Tarefa em Segundo Plano!";

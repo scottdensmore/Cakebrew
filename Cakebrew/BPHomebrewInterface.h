@@ -232,6 +232,13 @@ typedef NS_ENUM(NSInteger, BPListMode) {
 - (NSArray*)listMode:(BPListMode)mode;
 
 /**
+ *  Whether `name` is a well-formed Homebrew tap name (owner/repo). Rejects
+ *  whitespace and shell metacharacters — defense in depth for the free-text
+ *  Tap field. Surrounding whitespace is trimmed before checking.
+ */
++ (BOOL)isValidTapName:(NSString *)name;
+
+/**
  *  Executes `brew info` for parameter formula name.
  *
  *  @param name The name of the formula.
