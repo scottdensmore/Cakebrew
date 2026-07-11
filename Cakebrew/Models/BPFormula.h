@@ -27,6 +27,8 @@ extern NSString *const BPFormulaDidUpdateNotification;
 @protocol BPFormulaDataProvider <NSObject>
 @required
 - (NSString *)informationForFormulaName:(NSString *)name;
+@optional
+- (NSString *)informationForCaskName:(NSString *)name;
 @end
 
 @interface BPFormula : NSObject <NSSecureCoding, NSCopying>

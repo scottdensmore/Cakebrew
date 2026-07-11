@@ -411,6 +411,11 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 	return [self performSyncBrewCommandWithArguments:@[@"info", name]];
 }
 
+- (NSString *)informationForCaskName:(NSString *)name
+{
+	return [self performSyncBrewCommandWithArguments:@[@"info", @"--cask", name]];
+}
+
 - (NSString *)dependantsForFormulaName:(NSString *)name onlyInstalled:(BOOL)onlyInstalled
 {
 	NSMutableArray *arguments = [NSMutableArray arrayWithObject:@"uses"];

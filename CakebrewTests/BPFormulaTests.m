@@ -404,6 +404,62 @@ static BPCustomFormula *nmapFormula;
 	XCTAssertEqualObjects(formula.website.absoluteString, @"https://example.com");
 }
 
+#pragma mark - cask info parsing (`brew info --cask` output shape)
+
+- (void)testGetInformationParsesInstalledCaskOutput
+{
+	// Real shape: "==> token (Display Name): version (auto_updates)", then
+	// description, homepage, an "Installed (on request)" marker line, and the
+	// Caskroom path on the line after the marker.
+	BPFormula *cask = [BPFormula formulaWithName:@"bbedit"];
+	cask.cask = YES;
+	[cask setValue:@"==> bbedit (BBEdit): 16.0.1 (auto_updates)\n"
+					@"Text, code, and markup editor\n"
+					@"https://www.barebones.com/products/bbedit/\n"
+					@"Installed (on request)\n"
+					@"/usr/local/Caskroom/bbedit/16.0.1 (69.8MB)\n"
+					@"From: https://github.com/Homebrew/homebrew-cask/blob/HEAD/Casks/b/bbedit.rb\n"
+			forKey:@"information"];
+
+	XCTAssertNoThrow([cask getInformation]);
+	XCTAssertEqualObjects(cask.latestVersion, @"16.0.1", @"the (auto_updates) marker is stripped");
+	XCTAssertEqualObjects(cask.shortDescription, @"Text, code, and markup editor");
+	XCTAssertEqualObjects(cask.website.absoluteString, @"https://www.barebones.com/products/bbedit/");
+	XCTAssertEqualObjects(cask.installPath, @"/usr/local/Caskroom/bbedit/16.0.1 (69.8MB)");
+}
+
+- (void)testGetInformationParsesNotInstalledCaskOutput
+{
+	BPFormula *cask = [BPFormula formulaWithName:@"firefox"];
+	cask.cask = YES;
+	[cask setValue:@"==> firefox (Mozilla Firefox): 152.0.5 (auto_updates)\n"
+					@"Web browser\n"
+					@"https://www.mozilla.org/firefox/\n"
+					@"Not installed\n"
+					@"From: https://github.com/Homebrew/homebrew-cask/blob/HEAD/Casks/f/firefox.rb\n"
+			forKey:@"information"];
+
+	XCTAssertNoThrow([cask getInformation]);
+	XCTAssertEqualObjects(cask.latestVersion, @"152.0.5");
+	XCTAssertEqualObjects(cask.shortDescription, @"Web browser");
+	XCTAssertNil(cask.installPath, @"a not-installed cask has no install path");
+}
+
+- (void)testGetInformationParsesCaskWithoutAutoUpdates
+{
+	BPFormula *cask = [BPFormula formulaWithName:@"someapp"];
+	cask.cask = YES;
+	[cask setValue:@"==> someapp: 2.0\n"
+					@"Some application\n"
+					@"https://example.com/\n"
+					@"Not installed\n"
+			forKey:@"information"];
+
+	XCTAssertNoThrow([cask getInformation]);
+	XCTAssertEqualObjects(cask.latestVersion, @"2.0");
+	XCTAssertEqualObjects(cask.shortDescription, @"Some application");
+}
+
 #pragma mark - cask flag
 
 - (void)testCaskFlagDefaultsToNo

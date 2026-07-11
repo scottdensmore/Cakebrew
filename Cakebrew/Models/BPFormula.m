@@ -228,6 +228,44 @@ static BOOL BPLineLooksLikeWebsite(NSString *line)
 	return [trimmed containsString:@"://"];
 }
 
+// Normalizes `brew info --cask` output into the formula-info shape the parser
+// in getInformation expects: strips the "==> " header prefix and the
+// " (auto_updates)" marker from the first line, and removes the "Installed…"
+// status line so the Caskroom path sits where the parser looks for the install
+// path ("Not installed" is shared between the two shapes and stays).
++ (NSString *)preprocessedCaskInformation:(NSString *)output
+{
+	NSMutableArray<NSString *> *lines = [[output componentsSeparatedByString:@"\n"] mutableCopy];
+	if (lines.count == 0)
+	{
+		return output;
+	}
+
+	NSString *header = lines[0];
+	if ([header hasPrefix:@"==> "])
+	{
+		header = [header substringFromIndex:4];
+	}
+	header = [header stringByReplacingOccurrencesOfString:@" (auto_updates)" withString:@""];
+	lines[0] = header;
+
+	for (NSUInteger i = 1; i < lines.count; i++)
+	{
+		NSString *line = lines[i];
+		if ([line isEqualToString:@"Installed"] || [line hasPrefix:@"Installed ("])
+		{
+			[lines removeObjectAtIndex:i];
+			break;
+		}
+		if ([line isEqualToString:@"Not installed"])
+		{
+			break;
+		}
+	}
+
+	return [lines componentsJoinedByString:@"\n"];
+}
+
 - (BOOL)getInformation
 {
 	NSString *line         = nil;
@@ -238,14 +276,17 @@ static BOOL BPLineLooksLikeWebsite(NSString *line)
 	if (!self.information)
 	{
 		id<BPFormulaDataProvider> dataProvider = [self dataProvider];
-		
-		if (![dataProvider respondsToSelector:@selector(informationForFormulaName:)])
+
+		SEL infoSelector = self.cask ? @selector(informationForCaskName:)
+									 : @selector(informationForFormulaName:);
+		if (![dataProvider respondsToSelector:infoSelector])
 		{
 			_needsInformation = NO;
 			return NO;
 		}
 
-		NSString *information = [[self dataProvider] informationForFormulaName:self.name];
+		NSString *information = self.cask ? [dataProvider informationForCaskName:self.name]
+										  : [dataProvider informationForFormulaName:self.name];
 
 		if ([information rangeOfString:@"\n"].location == NSNotFound)
 		{
@@ -276,7 +317,12 @@ static BOOL BPLineLooksLikeWebsite(NSString *line)
 		[self setShortDescription:nil];
 		return YES;
 	}
-	
+
+	if (self.cask)
+	{
+		output = [BPFormula preprocessedCaskInformation:output];
+	}
+
 	lines = [output componentsSeparatedByString:@"\n"];
 
 	// `brew info` can return output that doesn't match the expected layout
