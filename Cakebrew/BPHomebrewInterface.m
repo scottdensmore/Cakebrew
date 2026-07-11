@@ -22,6 +22,7 @@
 #import "BPHomebrewInterface.h"
 #import "BPTask.h"
 #import "BPService.h"
+#import "BPPreferences.h"
 
 #define kDEBUG_WARNING @"\
 User Shell: %@\n\
@@ -767,9 +768,14 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 
 // Same "(installed) != latest" line shape as the formula outdated list (the
 // shared regex accepts both comparators); only the arguments and flag differ.
+// The greedy preference includes auto-updating casks in the listing.
 - (instancetype)init
 {
-	return (BPHomebrewInterfaceListCallOutdatedCasks *)[super initWithArguments:@[@"outdated", @"--cask", @"--verbose"]];
+	NSArray *arguments = @[@"outdated", @"--cask", @"--verbose"];
+	if ([BPPreferences greedyCaskUpgrades]) {
+		arguments = [arguments arrayByAddingObject:@"--greedy"];
+	}
+	return (BPHomebrewInterfaceListCallOutdatedCasks *)[super initWithArguments:arguments];
 }
 
 - (BPFormula *)parseFormulaItem:(NSString *)item
