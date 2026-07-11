@@ -49,6 +49,7 @@ typedef NS_ENUM(NSInteger, BPFormulaStatus) {
 @property (strong) NSArray<BPFormula*> *pinnedFormulae;
 @property (strong) NSArray<BPFormula*> *installedCasks;
 @property (strong) NSArray<BPFormula*> *outdatedCasks;
+@property (strong) NSArray<BPFormula*> *allCasks;
 
 @property (weak) id<BPHomebrewManagerDelegate> delegate;
 

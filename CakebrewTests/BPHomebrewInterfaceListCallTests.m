@@ -44,6 +44,10 @@
 - (instancetype)init;
 @end
 
+@interface BPHomebrewInterfaceListCallAllCasks : BPHomebrewInterfaceListCall
+- (instancetype)init;
+@end
+
 @interface BPHomebrewInterfaceListCallTests : XCTestCase
 @end
 
@@ -240,6 +244,26 @@
 	XCTAssertEqualObjects(cask.name, @"claude");
 	XCTAssertEqualObjects(cask.version, @"1.14271.0,c8f4d811");
 	XCTAssertEqualObjects(cask.latestVersion, @"1.20186.1,df1d8a33");
+}
+
+#pragma mark - all casks parser (`brew casks`)
+
+- (void)testAllCasksCallUsesCasksArguments
+{
+	BPHomebrewInterfaceListCallAllCasks *call = [BPHomebrewInterfaceListCallAllCasks new];
+	XCTAssertEqualObjects(call.arguments, @[ @"casks" ]);
+}
+
+- (void)testAllCasksParserReturnsNameOnlyCasks
+{
+	// `brew casks` prints one token per line, no versions.
+	BPHomebrewInterfaceListCallAllCasks *call = [BPHomebrewInterfaceListCallAllCasks new];
+	NSArray<BPFormula *> *casks = [call parseData:@"0-ad\n010-editor\nfirefox\n"];
+
+	XCTAssertEqual(casks.count, 3u);
+	XCTAssertEqualObjects(casks[2].name, @"firefox");
+	XCTAssertNil(casks[2].version);
+	XCTAssertTrue(casks[2].cask, @"the all-casks list must mark results as casks");
 }
 
 - (void)testUpgradeableParserStillParsesFormulaComparator

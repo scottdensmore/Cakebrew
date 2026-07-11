@@ -20,9 +20,10 @@ typedef NS_ENUM(NSUInteger, FormulaeSideBarItem)
 	FormulaeSideBarItemCasksCategory = 7,
 	FormulaeSideBarItemInstalledCasks = 8,
 	FormulaeSideBarItemOutdatedCasks = 9,
-	FormulaeSideBarItemToolsCategory = 10,
-	FormulaeSideBarItemDoctor = 11,
-	FormulaeSideBarItemUpdate = 12,
+	FormulaeSideBarItemAllCasks = 10,
+	FormulaeSideBarItemToolsCategory = 11,
+	FormulaeSideBarItemDoctor = 12,
+	FormulaeSideBarItemUpdate = 13,
 };
 
 @protocol BPSideBarControllerDelegate <NSObject>

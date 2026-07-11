@@ -29,6 +29,8 @@
 	self.manager.allFormulae = @[];
 	self.manager.searchFormulae = @[];
 	self.manager.pinnedFormulae = @[];
+	self.manager.installedCasks = @[];
+	self.manager.outdatedCasks = @[];
 }
 
 - (void)tearDown
@@ -38,6 +40,8 @@
 	self.manager.allFormulae = @[];
 	self.manager.searchFormulae = @[];
 	self.manager.pinnedFormulae = @[];
+	self.manager.installedCasks = @[];
+	self.manager.outdatedCasks = @[];
 	self.manager = nil;
 	[super tearDown];
 }
@@ -110,6 +114,41 @@
 	self.manager.installedFormulae = @[];
 	self.manager.outdatedFormulae = @[[BPFormula formulaWithName:@"git"]];
 	XCTAssertEqual([self.manager statusForFormula:[BPFormula formulaWithName:@"git"]], kBPFormulaNotInstalled);
+}
+
+#pragma mark - cask status (statusForFormula: reads the cask lists)
+
+- (BPFormula *)caskWithName:(NSString *)name
+{
+	BPFormula *cask = [BPFormula formulaWithName:name];
+	cask.cask = YES;
+	return cask;
+}
+
+- (void)testStatusForCaskInstalledWhenInInstalledCasks
+{
+	self.manager.installedCasks = @[ [self caskWithName:@"firefox"] ];
+	XCTAssertEqual([self.manager statusForFormula:[self caskWithName:@"firefox"]], kBPFormulaInstalled);
+}
+
+- (void)testStatusForCaskOutdatedWhenInBothCaskLists
+{
+	self.manager.installedCasks = @[ [self caskWithName:@"firefox"] ];
+	self.manager.outdatedCasks = @[ [self caskWithName:@"firefox"] ];
+	XCTAssertEqual([self.manager statusForFormula:[self caskWithName:@"firefox"]], kBPFormulaOutdated);
+}
+
+- (void)testStatusForCaskNotInstalledWhenAbsentFromCaskLists
+{
+	self.manager.installedCasks = @[ [self caskWithName:@"chrome"] ];
+	XCTAssertEqual([self.manager statusForFormula:[self caskWithName:@"firefox"]], kBPFormulaNotInstalled);
+}
+
+- (void)testStatusForCaskIgnoresFormulaListsOnNameCollision
+{
+	// A cask must not read the formula lists even when a formula shares its name.
+	self.manager.installedFormulae = @[ [BPFormula formulaWithName:@"firefox"] ];
+	XCTAssertEqual([self.manager statusForFormula:[self caskWithName:@"firefox"]], kBPFormulaNotInstalled);
 }
 
 #pragma mark - pinned state (isFormulaPinned:)

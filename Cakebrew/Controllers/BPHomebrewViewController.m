@@ -300,7 +300,8 @@ NSOpenSavePanelDelegate>
 		}
 	}
 	else if (selectedSidebarRow == FormulaeSideBarItemInstalledCasks
-			 || selectedSidebarRow == FormulaeSideBarItemOutdatedCasks) // Casks
+			 || selectedSidebarRow == FormulaeSideBarItemOutdatedCasks
+			 || selectedSidebarRow == FormulaeSideBarItemAllCasks) // Casks
 	{
 		// The detail pane stays hidden: its `brew info` / `brew uses` fetches
 		// are formula-specific and would run without --cask. Operations work —
@@ -312,6 +313,14 @@ NSOpenSavePanelDelegate>
 		} else if (selectedSidebarRow == FormulaeSideBarItemOutdatedCasks) {
 			[self.toolbar configureForMode:([selectedRows count] > 1 ?
 											BPToolbarModeUpdateMany : BPToolbarModeUpdateSingle)];
+		} else if (selectedSidebarRow == FormulaeSideBarItemAllCasks) {
+			// statusForFormula: is cask-aware, so this mirrors All Formulae.
+			BPFormula *cask = [self.formulaeDataSource formulaAtIndex:selectedIndex];
+			if ([[BPHomebrewManager sharedManager] statusForFormula:cask] == kBPFormulaNotInstalled) {
+				[self.toolbar configureForMode:BPToolbarModeInstall];
+			} else {
+				[self.toolbar configureForMode:BPToolbarModeUninstall];
+			}
 		} else {
 			[self.toolbar configureForMode:BPToolbarModeUninstall];
 		}
@@ -409,6 +418,10 @@ NSOpenSavePanelDelegate>
 
 			case FormulaeSideBarItemOutdatedCasks: // Outdated Casks
 				message = NSLocalizedString(@"Sidebar_Info_OutdatedCasks", nil);
+				break;
+
+			case FormulaeSideBarItemAllCasks: // All Casks
+				message = NSLocalizedString(@"Sidebar_Info_AllCasks", nil);
 				break;
 
 			case FormulaeSideBarItemDoctor: // Doctor
@@ -625,6 +638,10 @@ NSOpenSavePanelDelegate>
 
 		case FormulaeSideBarItemOutdatedCasks: // Outdated Casks
 			[self configureTableForListing:kBPListOutdatedCasks];
+			break;
+
+		case FormulaeSideBarItemAllCasks: // All Casks
+			[self configureTableForListing:kBPListAllCasks];
 			break;
 			
 		case FormulaeSideBarItemDoctor: // Doctor

@@ -53,6 +53,12 @@
 			return [BPMockHomebrewInterface casksFromFormulae:
 					@[ [BPFormula formulaWithName:@"mockchrome" version:@"120.0" andLatestVersion:@"121.0"] ]];
 
+		case kBPListAllCasks:
+			return [BPMockHomebrewInterface casksFromFormulae:
+					@[ [BPFormula formulaWithName:@"mockchrome"],
+					   [BPFormula formulaWithName:@"mockvscode"],
+					   [BPFormula formulaWithName:@"mockfirefox"] ]];
+
 		default:
 			return @[];
 	}
@@ -124,6 +130,11 @@
 }
 
 - (BOOL)upgradeCasks:(NSArray *)casks withReturnBlock:(void (^)(NSString *))block
+{
+	return YES;
+}
+
+- (BOOL)installCask:(NSString *)cask withReturnBlock:(void (^)(NSString *))block
 {
 	return YES;
 }
