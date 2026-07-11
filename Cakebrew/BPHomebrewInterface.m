@@ -224,14 +224,21 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 
 - (NSArray *)formatArguments:(NSArray *)extraArguments sendOutputId:(BOOL)sendOutputID
 {
-	NSString *command = nil;
-	if (sendOutputID) {
-		command = [NSString stringWithFormat:@"echo \"%@\";brew %@", cakebrewOutputIdentifier, [extraArguments componentsJoinedByString:@" "]];
-	} else {
-		command = [NSString stringWithFormat:@"brew %@", [extraArguments componentsJoinedByString:@" "]];
-	}
-	NSArray *arguments = @[@"-l", @"-c", command];
-	
+	// Pass brew's arguments as the shell's positional parameters ("$@") instead
+	// of interpolating them into the command string. The shell never re-parses
+	// them, so shell metacharacters in user-supplied input (e.g. a tap name)
+	// can't inject commands. A login shell (-l) is still used so brew finds its
+	// PATH/environment. The output marker is a compile-time constant, so it is
+	// safe to embed literally.
+	NSString *command = sendOutputID
+		? [NSString stringWithFormat:@"echo \"%@\";brew \"$@\"", cakebrewOutputIdentifier]
+		: @"brew \"$@\"";
+
+	// The operand after the command string is $0 (a conventional label); the
+	// real arguments follow as $1, $2, … and expand via "$@".
+	NSMutableArray *arguments = [NSMutableArray arrayWithArray:@[@"-l", @"-c", command, @"brew"]];
+	[arguments addObjectsFromArray:(extraArguments ?: @[])];
+
 	return arguments;
 }
 
