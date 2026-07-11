@@ -189,7 +189,7 @@
 "Services_Column_Name" = "Name";
 "Services_Column_Status" = "Status";
 "Services_Column_User" = "User";
-"Preferences_Title" = "Preferences";
+"Preferences_Title" = "Settings";
 "Preferences_Background_Check" = "Check for outdated packages in the background";
 "Preferences_Check_Interval" = "Check every:";
 "Preferences_Interval_Hourly" = "Hour";

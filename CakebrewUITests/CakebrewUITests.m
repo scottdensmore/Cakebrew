@@ -340,16 +340,18 @@
 }
 
 // Journey: Preferences opens from the app menu and shows the settings.
-- (void)testPreferencesWindowOpensFromMenu
+- (void)testSettingsWindowOpensFromMenu
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 
 	[self.app.menuBars.menuBarItems[@"Cakebrew"] click];
-	XCUIElement *prefsItem = self.app.menuItems[@"Preferences…"];
-	XCTAssertTrue([prefsItem waitForExistenceWithTimeout:10.0], @"the app menu should show Preferences…");
+	// AppKit auto-renames "Preferences…" to "Settings…" (macOS 13+), so the
+	// rendered item carries the new title on every supported OS.
+	XCUIElement *prefsItem = self.app.menuItems[@"Settings…"];
+	XCTAssertTrue([prefsItem waitForExistenceWithTimeout:10.0], @"the app menu should show Settings…");
 	[prefsItem click];
 
-	XCUIElement *prefsWindow = self.app.windows[@"Preferences"];
+	XCUIElement *prefsWindow = self.app.windows[@"Settings"];
 	BOOL appeared = [prefsWindow waitForExistenceWithTimeout:15.0];
 	if (!appeared) {
 		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
