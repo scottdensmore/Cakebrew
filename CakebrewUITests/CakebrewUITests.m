@@ -34,6 +34,17 @@
 	[self.app launch];
 	XCTAssertTrue([self.app.windows.firstMatch waitForExistenceWithTimeout:30.0],
 				  @"the main window should appear after launch");
+
+	// Under the mock, wait for the initial reload to settle before tests
+	// navigate: homebrewManagerFinishedUpdating reloads the sidebar and
+	// re-selects the last selection, which can clobber a click that lands
+	// mid-reload (the source of moving sidebar-navigation flakes on CI).
+	// The launch view is Installed, so mockwget rendering means the initial
+	// refresh cycle is done.
+	if ([arguments containsObject:@"-BPMockBrew"]) {
+		XCTAssertTrue([[self formulaCellWithName:@"mockwget"] waitForExistenceWithTimeout:30.0],
+					  @"the initial Installed list should render after launch");
+	}
 }
 
 - (XCUIElement *)sidebar
