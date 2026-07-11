@@ -1,0 +1,24 @@
+{
+  "cli_version": "0.8.42",
+  "checkpoint_id": "4f6e7c1424ed",
+  "strategy": "manual-commit",
+  "branch": "feat/tap-input-validation",
+  "checkpoints_count": 2,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/4f/6e7c1424ed/0/metadata.json",
+      "transcript": "/4f/6e7c1424ed/0/full.jsonl",
+      "compact_transcript": "/4f/6e7c1424ed/0/transcript.jsonl",
+      "content_hash": "/4f/6e7c1424ed/0/content_hash.txt",
+      "prompt": "/4f/6e7c1424ed/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 71043,
+    "cache_creation_tokens": 11919100,
+    "cache_read_tokens": 677378851,
+    "output_tokens": 1516043,
+    "api_call_count": 1423
+  }
+}
