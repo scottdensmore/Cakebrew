@@ -187,6 +187,14 @@
 "Sidebar_Info_Casks" = "These are the casks (applications) installed in your system.";
 "Sidebar_Info_OutdatedCasks" = "These are the casks with a newer version available. Auto-updating apps are not listed.";
 "Sidebar_Info_AllCasks" = "These are all the casks (applications) available for installation.";
+"Sidebar_Info_Services" = "Background services managed by Homebrew.";
+"Services_Title" = "Homebrew Services";
+"Services_Start" = "Start";
+"Services_Stop" = "Stop";
+"Services_Restart" = "Restart";
+"Services_Column_Name" = "Name";
+"Services_Column_Status" = "Status";
+"Services_Column_User" = "User";
 
 /* No comment provided by engineer. */
 "Sidebar_Info_SearchResults" = "Résultats de la recherche.";
@@ -206,6 +214,7 @@
 /* No comment provided by engineer. */
 "Sidebar_Item_Leaves" = "Feuilles";
 "Sidebar_Item_Pinned" = "Pinned";
+"Sidebar_Item_Services" = "Services";
 "Sidebar_Item_AllCasks" = "All Casks";
 
 /* No comment provided by engineer. */

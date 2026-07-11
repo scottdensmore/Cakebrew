@@ -57,6 +57,7 @@
 		1FE4FE6F148E4CDD008EDE8B /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FE4FE6D148E4CDD008EDE8B /* MainMenu.xib */; };
 		1FE4FE77148E4D43008EDE8B /* BPHomebrewInterface.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4FE76148E4D43008EDE8B /* BPHomebrewInterface.m */; };
 		4403EFA806C14981AAB4D830 /* BPService.m in Sources */ = {isa = PBXBuildFile; fileRef = AA67F6479F85E50C83706E3E /* BPService.m */; };
+		49CC41B5A77580D8BF6465A5 /* BPServicesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D88E53757CC27FC7F7734D0D /* BPServicesViewController.m */; };
 		7FE49B0EE97F41AC5F5513B9 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C155F549AE6671B51A3FCAD /* Cocoa.framework */; };
 		AB88EC9D48EC75643B93E566 /* CakebrewUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 37C4CCE578FE8963CDACE841 /* CakebrewUITests.m */; };
 		B72EA49F9D216CA6B623DDCF /* BPFormulaeDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = D2B3A3AF19B9D7FC00DE23B5 /* BPFormulaeDataSource.m */; };
@@ -249,6 +250,7 @@
 		3325CFB971454761839C850E /* BPMockHomebrewInterface.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPMockHomebrewInterface.h; sourceTree = "<group>"; };
 		37C4CCE578FE8963CDACE841 /* CakebrewUITests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = CakebrewUITests.m; sourceTree = "<group>"; };
 		65FAFC2DA348DF99A7B6D768 /* BPServiceTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPServiceTests.m; sourceTree = "<group>"; };
+		9ADAB3EC934CF76ABAA9C615 /* BPServicesViewController.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = BPServicesViewController.h; path = Controllers/BPServicesViewController.h; sourceTree = "<group>"; };
 		9C155F549AE6671B51A3FCAD /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
 		AA67F6479F85E50C83706E3E /* BPService.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPService.m; path = Models/BPService.m; sourceTree = "<group>"; };
 		B15AF968007B8829A04A4ECC /* BPMockHomebrewInterface.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPMockHomebrewInterface.m; sourceTree = "<group>"; };
@@ -290,6 +292,7 @@
 		D2CC8CA61B90F04C00F763DF /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		D2F732EF19190B75002B2512 /* NSString+URLValidation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+URLValidation.h"; sourceTree = "<group>"; };
 		D2F732F019190B75002B2512 /* NSString+URLValidation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+URLValidation.m"; sourceTree = "<group>"; };
+		D88E53757CC27FC7F7734D0D /* BPServicesViewController.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPServicesViewController.m; path = Controllers/BPServicesViewController.m; sourceTree = "<group>"; };
 		F752F54A1C79875400C0DEFE /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Loading.strings; sourceTree = "<group>"; };
 		F752F54B1C79875400C0DEFE /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/BPFormulaOptionsWindow.strings; sourceTree = "<group>"; };
 		F752F54C1C79875400C0DEFE /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/BPSelectedFormula.strings; sourceTree = "<group>"; };
@@ -388,6 +391,8 @@
 				150AEC4B1B3F999A00163767 /* BPUpdateViewController.m */,
 				15EC1B0A25CEE4C200C93861 /* BPMainWindowController.h */,
 				15EC1B0B25CEE4C200C93861 /* BPMainWindowController.m */,
+				9ADAB3EC934CF76ABAA9C615 /* BPServicesViewController.h */,
+				D88E53757CC27FC7F7734D0D /* BPServicesViewController.m */,
 			);
 			name = Controllers;
 			sourceTree = "<group>";
@@ -800,6 +805,7 @@
 				150AEC551B3F999A00163767 /* BPUpdateViewController.m in Sources */,
 				FC6F1F065021F6E3D4AAB378 /* BPMockHomebrewInterface.m in Sources */,
 				0E5E1AFEFC2EB5ACFC76A355 /* BPService.m in Sources */,
+				49CC41B5A77580D8BF6465A5 /* BPServicesViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

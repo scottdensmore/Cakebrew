@@ -580,6 +580,13 @@ CA
                                     <binding destination="547" name="enabled" keyPath="self.isHomebrewInstalled" id="HeO-ww-Vvq"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Services" tag="14" id="cbk-VwSvc-it">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="selectSideBarRowWithSenderTag:" target="SGP-Ky-0Th" id="cbk-VwSvc-ac"/>
+                                    <binding destination="547" name="enabled" keyPath="self.isHomebrewInstalled" id="cbk-VwSvc-en"/>
+                                </connections>
+                            </menuItem>
                         </items>
                     </menu>
                 </menuItem>
@@ -993,6 +1000,12 @@ CA
                         <tabViewItem label="Update" identifier="3" id="7YD-ZM-31m">
                             <view key="view" id="Mgy-Bl-dCA">
                                 <rect key="frame" x="0.0" y="0.0" width="826" height="419"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            </view>
+                        </tabViewItem>
+                        <tabViewItem label="Services" identifier="4" id="cbk-Svc-tab">
+                            <view key="view" id="cbk-Svc-tv">
+                                <rect key="frame" x="0.0" y="0.0" width="826" height="416"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             </view>
                         </tabViewItem>

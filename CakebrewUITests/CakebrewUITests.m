@@ -339,6 +339,35 @@
 	[self dismissConfirmationSheet];
 }
 
+// Journey: the Services tool lists brew services with status and offers
+// the start/stop/restart controls.
+- (void)testServicesToolListsServicesWithControls
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	[self.sidebar.staticTexts[@"Services"] click];
+
+	XCTAssertTrue([self.app.staticTexts[@"Homebrew Services"] waitForExistenceWithTimeout:15.0],
+				  @"selecting Services should show the Services view");
+
+	XCUIElement *postgres = [self formulaCellWithName:@"mockpostgres"];
+	BOOL appeared = [postgres waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"the services table should list mockpostgres");
+	XCTAssertTrue([self formulaCellWithName:@"mockredis"].exists, @"the services table should list mockredis");
+
+	XCTAssertTrue(self.app.buttons[@"Start"].exists, @"a Start button should be present");
+	XCTAssertTrue(self.app.buttons[@"Stop"].exists, @"a Stop button should be present");
+	XCTAssertTrue(self.app.buttons[@"Restart"].exists, @"a Restart button should be present");
+
+	// Selecting the running service enables Stop.
+	[postgres click];
+	XCTAssertTrue([self.app.buttons[@"Stop"] waitForExistenceWithTimeout:5.0]);
+	XCTAssertTrue(self.app.buttons[@"Stop"].isEnabled, @"Stop should enable for a started service");
+}
+
 // Journey: selecting a cask shows the detail pane populated from
 // `brew info --cask` (description parsed from the cask output shape).
 - (void)testSelectingCaskShowsCaskInfoInDetailPane
