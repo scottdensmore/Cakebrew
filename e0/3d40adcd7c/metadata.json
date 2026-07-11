@@ -1,0 +1,24 @@
+{
+  "cli_version": "0.8.42",
+  "checkpoint_id": "e03d40adcd7c",
+  "strategy": "manual-commit",
+  "branch": "fix/shell-command-injection",
+  "checkpoints_count": 2,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/e0/3d40adcd7c/0/metadata.json",
+      "transcript": "/e0/3d40adcd7c/0/full.jsonl",
+      "compact_transcript": "/e0/3d40adcd7c/0/transcript.jsonl",
+      "content_hash": "/e0/3d40adcd7c/0/content_hash.txt",
+      "prompt": "/e0/3d40adcd7c/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 70614,
+    "cache_creation_tokens": 11898167,
+    "cache_read_tokens": 656888611,
+    "output_tokens": 1498853,
+    "api_call_count": 1402
+  }
+}
