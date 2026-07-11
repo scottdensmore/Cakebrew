@@ -87,7 +87,8 @@
 // and shows them in the Required-by row. Runs on the caller's background queue.
 - (void)loadInstalledDependentsForFormula:(BPFormula *)formula
 {
-	if ([self.formulae count] != 1 || !formula)
+	// `brew uses` is formula-only; casks have no dependents. Leave "--".
+	if ([self.formulae count] != 1 || !formula || formula.cask)
 	{
 		return;
 	}

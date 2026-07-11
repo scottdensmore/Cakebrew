@@ -303,10 +303,8 @@ NSOpenSavePanelDelegate>
 			 || selectedSidebarRow == FormulaeSideBarItemOutdatedCasks
 			 || selectedSidebarRow == FormulaeSideBarItemAllCasks) // Casks
 	{
-		// The detail pane stays hidden: its `brew info` / `brew uses` fetches
-		// are formula-specific and would run without --cask. Operations work —
-		// the pipeline dispatches on the formula's cask flag.
-		showFormulaInfo = false;
+		// The detail pane and the operation pipeline both dispatch on the
+		// formula's cask flag (`brew info --cask`, `brew <op> --cask`).
 
 		if (selectedIndex == -1) {
 			[self.toolbar configureForMode:BPToolbarModeDefault];
@@ -726,6 +724,10 @@ NSOpenSavePanelDelegate>
 	if (!formula) {
 		return;
 	}
+	if (formula.cask) { // casks take no install options; run the plain install
+		[self installFormula:sender];
+		return;
+	}
 	self.formulaOptionsWindowController = [BPFormulaOptionsWindowController runFormula:formula withCompletionBlock:^(NSArray *options) {
 		self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationInstall
 																				 formulae:@[formula]
@@ -773,7 +775,7 @@ NSOpenSavePanelDelegate>
 - (IBAction)pinSelectedFormula:(id)sender
 {
 	BPFormula *formula = [self selectedFormula];
-	if (!formula) {
+	if (!formula || formula.cask) { // brew pin is formula-only
 		return;
 	}
 	// Pin is instant and non-destructive, so no confirmation sheet. The interface
@@ -784,7 +786,7 @@ NSOpenSavePanelDelegate>
 - (IBAction)unpinSelectedFormula:(id)sender
 {
 	BPFormula *formula = [self selectedFormula];
-	if (!formula) {
+	if (!formula || formula.cask) { // brew pin is formula-only
 		return;
 	}
 	[[BPHomebrewInterface sharedInterface] unpinFormula:formula.name withReturnBlock:nil];

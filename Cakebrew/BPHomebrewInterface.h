@@ -239,6 +239,15 @@ typedef NS_ENUM(NSInteger, BPListMode) {
 - (NSString *)informationForFormulaName:(NSString *)name;
 
 /**
+ *  Returns `brew info --cask` output for a cask token.
+ *
+ *  @param name The cask token.
+ *
+ *  @return The raw `brew info --cask` output.
+ */
+- (NSString *)informationForCaskName:(NSString *)name;
+
+/**
  *  Executes `brew uses` for parameter formula name.
  *
  *  @param name The name of the formula.

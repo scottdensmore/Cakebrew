@@ -339,6 +339,32 @@
 	[self dismissConfirmationSheet];
 }
 
+// Journey: selecting a cask shows the detail pane populated from
+// `brew info --cask` (description parsed from the cask output shape).
+- (void)testSelectingCaskShowsCaskInfoInDetailPane
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	XCUIElement *sidebar = self.sidebar;
+	XCUIElementQuery *installedRows = [sidebar.staticTexts matchingIdentifier:@"Installed"];
+	XCTAssertTrue([installedRows.firstMatch waitForExistenceWithTimeout:30.0], @"sidebar should load");
+	[[installedRows elementBoundByIndex:1] click];
+
+	XCUIElement *chrome = [self formulaCellWithName:@"mockchrome"];
+	XCTAssertTrue([chrome waitForExistenceWithTimeout:15.0], @"mockchrome should be listed");
+	[chrome click];
+
+	// The mock's cask-info fixture description, parsed through the cask branch.
+	NSPredicate *predicate = [NSPredicate predicateWithFormat:@"value CONTAINS %@",
+							  @"A mock cask used for Cakebrew UI tests."];
+	XCUIElement *description = [[self.app.staticTexts matchingPredicate:predicate] firstMatch];
+	BOOL appeared = [description waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"the detail pane should show the cask description");
+}
+
 // Journey: the All Casks section lists the catalog; a not-installed cask
 // offers Install with confirmation (dispatches to `install --cask`).
 - (void)testAllCasksOffersInstallWithConfirmation

@@ -118,6 +118,19 @@
 	return @"";
 }
 
+// Serve well-formed `brew info --cask` output (the real shape, with the ==>
+// header and Installed marker) so selecting a cask exercises the cask parser.
+- (NSString *)informationForCaskName:(NSString *)name
+{
+	return [NSString stringWithFormat:
+			@"==> %@ (Mock App): 1.0.0 (auto_updates)\n"
+			@"A mock cask used for Cakebrew UI tests.\n"
+			@"https://example.com/cask\n"
+			@"Installed (on request)\n"
+			@"/usr/local/Caskroom/%@/1.0.0 (10MB)\n"
+			@"From: https://example.com/%@.rb\n", name, name, name];
+}
+
 // Pin/unpin are no-ops under the mock so UI tests never shell out to real brew.
 - (BOOL)pinFormula:(NSString *)formula withReturnBlock:(void (^)(NSString *))block
 {
