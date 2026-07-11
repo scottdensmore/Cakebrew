@@ -114,6 +114,8 @@
 
 /* No comment provided by engineer. */
 "Message_BGTask_Body" = "对不起，后台任务已在运行。您不能同时执行两个任务。";
+"Message_Tap_Invalid_Title" = "Invalid tap name";
+"Message_Tap_Invalid_Body" = "Enter a tap as owner/repository, for example homebrew/cask-fonts.";
 
 /* No comment provided by engineer. */
 "Message_BGTask_Title" = "激活后台任务!";

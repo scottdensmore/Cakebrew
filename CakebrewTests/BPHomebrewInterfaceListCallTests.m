@@ -341,4 +341,34 @@
 	XCTAssertEqualObjects(argv, (@[ @"-l", @"-c", @"brew \"$@\"", @"brew" ]));
 }
 
+#pragma mark - isValidTapName: (tap input validation)
+
+- (void)testValidTapNamesAreAccepted
+{
+	for (NSString *name in @[ @"user/repo", @"charmbracelet/tap", @"homebrew/cask-fonts", @"entireio/tap", @"a.b/c.d" ]) {
+		XCTAssertTrue([BPHomebrewInterface isValidTapName:name], @"'%@' should be a valid tap name", name);
+	}
+}
+
+- (void)testTapNameMustBeOwnerSlashRepo
+{
+	for (NSString *name in @[ @"", @"foo", @"foo/bar/baz", @"foo/", @"/bar", @"foo//bar" ]) {
+		XCTAssertFalse([BPHomebrewInterface isValidTapName:name], @"'%@' is not owner/repo", name);
+	}
+}
+
+- (void)testTapNameRejectsShellMetacharactersAndWhitespace
+{
+	for (NSString *name in @[ @"foo; rm -rf ~", @"foo/bar&whoami", @"foo /bar", @"foo/bar baz",
+							  @"$(id)/x", @"foo/`id`", @"foo|bar/x", @"a\nb/c" /* interior newline */ ]) {
+		XCTAssertFalse([BPHomebrewInterface isValidTapName:name], @"'%@' must be rejected", name);
+	}
+}
+
+- (void)testTapNameValidationTrimsSurroundingWhitespace
+{
+	// A user pasting "  user/repo  " should still be accepted (trimmed).
+	XCTAssertTrue([BPHomebrewInterface isValidTapName:@"  user/repo  "]);
+}
+
 @end

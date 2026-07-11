@@ -880,8 +880,16 @@ NSOpenSavePanelDelegate>
 		if (returnCode != NSAlertFirstButtonReturn) {
 			return;
 		}
-		NSString *name = [input stringValue];
+		NSString *name = [[input stringValue] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 		if ([name length] <= 0) {
+			return;
+		}
+		if (![BPHomebrewInterface isValidTapName:name]) {
+			NSAlert *error = [[NSAlert alloc] init];
+			error.messageText = NSLocalizedString(@"Message_Tap_Invalid_Title", nil);
+			error.informativeText = NSLocalizedString(@"Message_Tap_Invalid_Body", nil);
+			[error addButtonWithTitle:NSLocalizedString(@"Generic_OK", nil)];
+			[error beginSheetModalForWindow:self->_appDelegate.window completionHandler:nil];
 			return;
 		}
 		BPFormula *lformula = [BPFormula formulaWithName:name];

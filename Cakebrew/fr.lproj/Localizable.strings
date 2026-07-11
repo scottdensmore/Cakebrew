@@ -114,6 +114,8 @@
 
 /* No comment provided by engineer. */
 "Message_BGTask_Body" = "Désolé, une tâche de fond est déjà en cours d'exécution. Vous ne pouvez pas exécuter deux tâches en même temps.";
+"Message_Tap_Invalid_Title" = "Invalid tap name";
+"Message_Tap_Invalid_Body" = "Enter a tap as owner/repository, for example homebrew/cask-fonts.";
 
 /* No comment provided by engineer. */
 "Message_BGTask_Title" = "Tâche de fond active !";
