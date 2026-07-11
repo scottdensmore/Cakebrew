@@ -57,6 +57,7 @@ unichar SPACE_CHARACTER = 0x0020;
 			
 		case kBPListInstalled:
 		case kBPListPinned:
+		case kBPListInstalledCasks:
 			titleWidth = (NSInteger)(totalWidth * 0.4);
 			[[self tableColumnWithIdentifier:kColumnIdentifierLatestVersion] setHidden:YES];
 			[[self tableColumnWithIdentifier:kColumnIdentifierStatus] setHidden:YES];

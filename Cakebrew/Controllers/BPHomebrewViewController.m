@@ -292,12 +292,20 @@ NSOpenSavePanelDelegate>
 
 		[self.toolbar configureForMode:BPToolbarModeTap];
 
-		
+
 		if (selectedIndex != -1) {
 			[self.toolbar configureForMode:BPToolbarModeUntap];
 		} else {
 			[self.toolbar configureForMode:BPToolbarModeTap];
 		}
+	}
+	else if (selectedSidebarRow == FormulaeSideBarItemInstalledCasks) // Installed Casks
+	{
+		// Casks are browse-only for now: the formula toolbar operations and the
+		// detail pane's `brew info` / `brew uses` fetches are formula-specific
+		// and would run without --cask, so keep both inert.
+		showFormulaInfo = false;
+		[self.toolbar configureForMode:BPToolbarModeDefault];
 	}
 	else if (selectedIndex == -1 || selectedSidebarRow > FormulaeSideBarItemToolsCategory)
 	{
@@ -385,7 +393,11 @@ NSOpenSavePanelDelegate>
 			case FormulaeSideBarItemRepositories: // Repositories
 				message = NSLocalizedString(@"Sidebar_Info_Repos", nil);
 				break;
-				
+
+			case FormulaeSideBarItemInstalledCasks: // Installed Casks
+				message = NSLocalizedString(@"Sidebar_Info_Casks", nil);
+				break;
+
 			case FormulaeSideBarItemDoctor: // Doctor
 				message = NSLocalizedString(@"Sidebar_Info_Doctor", nil);
 				break;
@@ -592,6 +604,10 @@ NSOpenSavePanelDelegate>
 
 		case FormulaeSideBarItemRepositories: // Repositories
 			[self configureTableForListing:kBPListRepositories];
+			break;
+
+		case FormulaeSideBarItemInstalledCasks: // Installed Casks
+			[self configureTableForListing:kBPListInstalledCasks];
 			break;
 			
 		case FormulaeSideBarItemDoctor: // Doctor

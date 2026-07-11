@@ -262,6 +262,30 @@
 				   @"unpinned formulae should not appear in the Pinned section");
 }
 
+// Journey: the Casks section lists installed casks (browse-only for now).
+- (void)testCasksSidebarSectionListsInstalledCasks
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	// The Casks group has its own "Installed" child; the sidebar shows two
+	// "Installed" rows (formulae + casks), so click the last match.
+	XCUIElement *sidebar = self.sidebar;
+	XCUIElementQuery *installedRows = [sidebar.staticTexts matchingIdentifier:@"Installed"];
+	XCTAssertTrue([installedRows.firstMatch waitForExistenceWithTimeout:30.0], @"sidebar should load");
+	XCTAssertEqual(installedRows.count, 2u, @"expected Installed under both Formulae and Casks");
+	[[installedRows elementBoundByIndex:1] click];
+
+	XCUIElement *chrome = [self formulaCellWithName:@"mockchrome"];
+	BOOL appeared = [chrome waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"the Casks section should list mockchrome");
+	XCTAssertTrue([self formulaCellWithName:@"mockvscode"].exists, @"the Casks section should list mockvscode");
+	XCTAssertFalse([self formulaCellWithName:@"mockwget"].exists,
+				   @"formulae should not appear in the Casks section");
+}
+
 // Journey: clicking Uninstall on an installed formula asks for confirmation.
 - (void)testUninstallPresentsConfirmationDialog
 {

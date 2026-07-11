@@ -164,6 +164,7 @@
 "Sidebar_Group_Formulae" = "Formule";
 
 /* No comment provided by engineer. */
+"Sidebar_Group_Casks" = "Casks";
 "Sidebar_Group_Tools" = "Strumenti";
 
 /* No comment provided by engineer. */
@@ -183,6 +184,7 @@
 
 /* No comment provided by engineer. */
 "Sidebar_Info_Repos" = "Repo aggiunti";
+"Sidebar_Info_Casks" = "These are the casks (applications) installed in your system.";
 
 /* No comment provided by engineer. */
 "Sidebar_Info_SearchResults" = "Risultati della ricerca";
