@@ -24,6 +24,7 @@ typedef NS_ENUM(NSUInteger, FormulaeSideBarItem)
 	FormulaeSideBarItemToolsCategory = 11,
 	FormulaeSideBarItemDoctor = 12,
 	FormulaeSideBarItemUpdate = 13,
+	FormulaeSideBarItemServices = 14,
 };
 
 @protocol BPSideBarControllerDelegate <NSObject>

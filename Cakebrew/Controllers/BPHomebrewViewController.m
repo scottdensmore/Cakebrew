@@ -27,6 +27,7 @@
 #import "BPInstallationWindowController.h"
 #import "BPUpdateViewController.h"
 #import "BPDoctorViewController.h"
+#import "BPServicesViewController.h"
 #import "BPFormulaeDataSource.h"
 #import "BPSelectedFormulaViewController.h"
 #import "BPToolbar.h"
@@ -42,7 +43,8 @@
 typedef NS_ENUM(NSUInteger, BPContentTab) {
 	kBPContentTabFormulae,
 	kBPContentTabDoctor,
-	kBPContentTabUpdate
+	kBPContentTabUpdate,
+	kBPContentTabServices
 };
 
 @interface BPHomebrewViewController () <NSTableViewDelegate,
@@ -66,6 +68,7 @@ NSOpenSavePanelDelegate>
 @property (strong, nonatomic) NSWindowController				*operationWindowController;
 @property (strong, nonatomic) BPUpdateViewController			*updateViewController;
 @property (strong, nonatomic) BPDoctorViewController			*doctorViewController;
+@property (strong, nonatomic) BPServicesViewController			*servicesViewController;
 @property (strong, nonatomic) BPFormulaPopoverViewController	*formulaPopoverViewController;
 @property (strong, nonatomic) BPSelectedFormulaViewController	*selectedFormulaeViewController;
 @property (strong, nonatomic) BPToolbar							*toolbar;
@@ -174,6 +177,14 @@ NSOpenSavePanelDelegate>
 	if ([[self.tabView tabViewItems] count] > kBPContentTabDoctor) {
 		NSTabViewItem *doctorTab = [self.tabView tabViewItemAtIndex:kBPContentTabDoctor];
 		[doctorTab setView:doctorView];
+	}
+
+	//Creating view for services tab
+	self.servicesViewController = [[BPServicesViewController alloc] initWithNibName:nil bundle:nil];
+	NSView *servicesView = [self.servicesViewController view];
+	if ([[self.tabView tabViewItems] count] > kBPContentTabServices) {
+		NSTabViewItem *servicesTab = [self.tabView tabViewItemAtIndex:kBPContentTabServices];
+		[servicesTab setView:servicesView];
 	}
 	
 	
@@ -429,6 +440,10 @@ NSOpenSavePanelDelegate>
 			case FormulaeSideBarItemUpdate: // Update Tool
 				message = NSLocalizedString(@"Sidebar_Info_Update", nil);
 				break;
+
+			case FormulaeSideBarItemServices: // Services Tool
+				message = NSLocalizedString(@"Sidebar_Info_Services", nil);
+				break;
 				
 			default:
 				break;
@@ -648,6 +663,11 @@ NSOpenSavePanelDelegate>
 			
 		case FormulaeSideBarItemUpdate: // Update Tool
 			tabIndex = kBPContentTabUpdate;
+			break;
+
+		case FormulaeSideBarItemServices: // Services Tool
+			tabIndex = kBPContentTabServices;
+			[self.servicesViewController refreshServices];
 			break;
 			
 		default:

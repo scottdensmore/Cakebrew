@@ -235,6 +235,12 @@
 	[item setBadgeValue:@(-1)];
 	[item setIcon:[self updateSidebarIconImage]];
 	[parent addChildItem:item];
+
+	item = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Services", nil)
+							 identifier:@"item"];
+	[item setBadgeValue:@(-1)];
+	[item setIcon:[self servicesSidebarIconImage]];
+	[parent addChildItem:item];
 }
 
 - (NSImage *)installedSidebarIconImage
@@ -271,6 +277,12 @@
 {
 	return [NSImage imageWithSystemSymbolName:@"macwindow"
 					 accessibilityDescription:NSLocalizedString(@"Sidebar_Group_Casks", nil)];
+}
+
+- (NSImage *)servicesSidebarIconImage
+{
+	return [NSImage imageWithSystemSymbolName:@"gearshape.2"
+					 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_Services", nil)];
 }
 
 - (NSImage *)repositoriesSidebarIconImage
