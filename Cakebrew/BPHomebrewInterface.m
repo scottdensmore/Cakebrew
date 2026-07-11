@@ -21,6 +21,7 @@
 
 #import "BPHomebrewInterface.h"
 #import "BPTask.h"
+#import "BPService.h"
 
 #define kDEBUG_WARNING @"\
 User Shell: %@\n\
@@ -414,6 +415,31 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 - (NSString *)informationForCaskName:(NSString *)name
 {
 	return [self performSyncBrewCommandWithArguments:@[@"info", @"--cask", name]];
+}
+
+#pragma mark - Services
+
+- (NSArray<BPService *> *)listServices
+{
+	NSString *output = [self performSyncBrewCommandWithArguments:@[@"services", @"list", @"--json"]];
+	return output ? [BPService servicesFromJSONString:output] : @[];
+}
+
+// Service operations do not post the formulae-updated reload: they don't
+// change formula/cask state, and the services UI refreshes its own list.
+- (BOOL)startService:(NSString *)name withReturnBlock:(void (^)(NSString *))block
+{
+	return [self performBrewCommandWithArguments:@[@"services", @"start", name] dataReturnBlock:block];
+}
+
+- (BOOL)stopService:(NSString *)name withReturnBlock:(void (^)(NSString *))block
+{
+	return [self performBrewCommandWithArguments:@[@"services", @"stop", name] dataReturnBlock:block];
+}
+
+- (BOOL)restartService:(NSString *)name withReturnBlock:(void (^)(NSString *))block
+{
+	return [self performBrewCommandWithArguments:@[@"services", @"restart", name] dataReturnBlock:block];
 }
 
 - (NSString *)dependantsForFormulaName:(NSString *)name onlyInstalled:(BOOL)onlyInstalled

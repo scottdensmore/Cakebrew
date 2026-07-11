@@ -21,6 +21,7 @@
 
 #import <Foundation/Foundation.h>
 #import "BPFormula.h"
+#import "BPService.h"
 
 @class BPHomebrewManager;
 
@@ -50,6 +51,7 @@ typedef NS_ENUM(NSInteger, BPFormulaStatus) {
 @property (strong) NSArray<BPFormula*> *installedCasks;
 @property (strong) NSArray<BPFormula*> *outdatedCasks;
 @property (strong) NSArray<BPFormula*> *allCasks;
+@property (strong) NSArray<BPService*> *services;
 
 @property (weak) id<BPHomebrewManagerDelegate> delegate;
 
