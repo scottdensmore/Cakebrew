@@ -1,0 +1,24 @@
+{
+  "cli_version": "0.8.42",
+  "checkpoint_id": "cf212089cf39",
+  "strategy": "manual-commit",
+  "branch": "feat/outdated-casks-upgrade",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/cf/212089cf39/0/metadata.json",
+      "transcript": "/cf/212089cf39/0/full.jsonl",
+      "compact_transcript": "/cf/212089cf39/0/transcript.jsonl",
+      "content_hash": "/cf/212089cf39/0/content_hash.txt",
+      "prompt": "/cf/212089cf39/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 59232,
+    "cache_creation_tokens": 9577922,
+    "cache_read_tokens": 554102145,
+    "output_tokens": 1358246,
+    "api_call_count": 1245
+  }
+}
