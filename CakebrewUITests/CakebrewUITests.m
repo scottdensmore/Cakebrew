@@ -62,9 +62,12 @@
 #pragma mark - Sidebar navigation journeys
 
 // Journey: the sidebar presents every navigation destination.
+// Runs with the mock: a real-brew launch spawns a full `brew` reload whose
+// subprocesses outlive the test when the app is terminated, and the orphaned
+// work has caused timeouts in whichever mock test runs next on CI.
 - (void)testSidebarShowsAllNavigationItems
 {
-	[self launchWithArguments:@[]];
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 	XCUIElement *sidebar = [self sidebar];
 	NSArray<NSString *> *items = @[ @"Installed", @"Outdated", @"All Formulae",
 									@"Leaves", @"Repositories", @"Doctor", @"Update" ];
@@ -75,9 +78,10 @@
 }
 
 // Journey: selecting a Tools item switches the content to that tool's view.
+// Mock-launched for the same reason as testSidebarShowsAllNavigationItems.
 - (void)testNavigatingToToolViewsFromSidebar
 {
-	[self launchWithArguments:@[]];
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 	XCUIElement *sidebar = [self sidebar];
 
 	XCUIElement *doctorItem = sidebar.staticTexts[@"Doctor"];
@@ -125,7 +129,11 @@
 
 	[sidebar.staticTexts[@"All Formulae"] click];
 	XCUIElement *htop = [self formulaCellWithName:@"mockhtop"];
-	XCTAssertTrue([htop waitForExistenceWithTimeout:30.0], @"mockhtop should be listed under All Formulae");
+	BOOL htopAppeared = [htop waitForExistenceWithTimeout:30.0];
+	if (!htopAppeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(htopAppeared, @"mockhtop should be listed under All Formulae");
 	[htop click];
 
 	XCUIElement *installButton = self.app.buttons[@"Install Formula"];
