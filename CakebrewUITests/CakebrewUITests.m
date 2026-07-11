@@ -34,6 +34,17 @@
 	[self.app launch];
 	XCTAssertTrue([self.app.windows.firstMatch waitForExistenceWithTimeout:30.0],
 				  @"the main window should appear after launch");
+
+	// Under the mock, wait for the initial reload to settle before tests
+	// navigate: homebrewManagerFinishedUpdating reloads the sidebar and
+	// re-selects the last selection, which can clobber a click that lands
+	// mid-reload (the source of moving sidebar-navigation flakes on CI).
+	// The launch view is Installed, so mockwget rendering means the initial
+	// refresh cycle is done.
+	if ([arguments containsObject:@"-BPMockBrew"]) {
+		XCTAssertTrue([[self formulaCellWithName:@"mockwget"] waitForExistenceWithTimeout:30.0],
+					  @"the initial Installed list should render after launch");
+	}
 }
 
 - (XCUIElement *)sidebar
@@ -62,9 +73,12 @@
 #pragma mark - Sidebar navigation journeys
 
 // Journey: the sidebar presents every navigation destination.
+// Runs with the mock: a real-brew launch spawns a full `brew` reload whose
+// subprocesses outlive the test when the app is terminated, and the orphaned
+// work has caused timeouts in whichever mock test runs next on CI.
 - (void)testSidebarShowsAllNavigationItems
 {
-	[self launchWithArguments:@[]];
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 	XCUIElement *sidebar = [self sidebar];
 	NSArray<NSString *> *items = @[ @"Installed", @"Outdated", @"All Formulae",
 									@"Leaves", @"Repositories", @"Doctor", @"Update" ];
@@ -75,9 +89,10 @@
 }
 
 // Journey: selecting a Tools item switches the content to that tool's view.
+// Mock-launched for the same reason as testSidebarShowsAllNavigationItems.
 - (void)testNavigatingToToolViewsFromSidebar
 {
-	[self launchWithArguments:@[]];
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 	XCUIElement *sidebar = [self sidebar];
 
 	XCUIElement *doctorItem = sidebar.staticTexts[@"Doctor"];
@@ -125,7 +140,11 @@
 
 	[sidebar.staticTexts[@"All Formulae"] click];
 	XCUIElement *htop = [self formulaCellWithName:@"mockhtop"];
-	XCTAssertTrue([htop waitForExistenceWithTimeout:30.0], @"mockhtop should be listed under All Formulae");
+	BOOL htopAppeared = [htop waitForExistenceWithTimeout:30.0];
+	if (!htopAppeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(htopAppeared, @"mockhtop should be listed under All Formulae");
 	[htop click];
 
 	XCUIElement *installButton = self.app.buttons[@"Install Formula"];
@@ -260,6 +279,30 @@
 	XCTAssertTrue(appeared, @"the Pinned section should list mockgit");
 	XCTAssertFalse([self formulaCellWithName:@"mockwget"].exists,
 				   @"unpinned formulae should not appear in the Pinned section");
+}
+
+// Journey: the Casks section lists installed casks (browse-only for now).
+- (void)testCasksSidebarSectionListsInstalledCasks
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	// The Casks group has its own "Installed" child; the sidebar shows two
+	// "Installed" rows (formulae + casks), so click the last match.
+	XCUIElement *sidebar = self.sidebar;
+	XCUIElementQuery *installedRows = [sidebar.staticTexts matchingIdentifier:@"Installed"];
+	XCTAssertTrue([installedRows.firstMatch waitForExistenceWithTimeout:30.0], @"sidebar should load");
+	XCTAssertEqual(installedRows.count, 2u, @"expected Installed under both Formulae and Casks");
+	[[installedRows elementBoundByIndex:1] click];
+
+	XCUIElement *chrome = [self formulaCellWithName:@"mockchrome"];
+	BOOL appeared = [chrome waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"the Casks section should list mockchrome");
+	XCTAssertTrue([self formulaCellWithName:@"mockvscode"].exists, @"the Casks section should list mockvscode");
+	XCTAssertFalse([self formulaCellWithName:@"mockwget"].exists,
+				   @"formulae should not appear in the Casks section");
 }
 
 // Journey: clicking Uninstall on an installed formula asks for confirmation.

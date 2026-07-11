@@ -145,6 +145,7 @@
 @property (strong, nonatomic) BPSidebarItem *leavesFormulaeSidebarItem;
 @property (strong, nonatomic) BPSidebarItem *pinnedFormulaeSidebarItem;
 @property (strong, nonatomic) BPSidebarItem *repositoriesFormulaeSidebarItem;
+@property (strong, nonatomic) BPSidebarItem *installedCasksSidebarItem;
 
 @end
 
@@ -198,6 +199,15 @@
 	_repositoriesFormulaeSidebarItem.icon = [self repositoriesSidebarIconImage];
 	[parent addChildItem:_repositoriesFormulaeSidebarItem];
 
+	parent = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Group_Casks", nil)
+							   identifier:@"group"];
+	[_rootSidebarCategory addChildItem:parent];
+
+	_installedCasksSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Installed", nil)
+											   identifier:@"item"];
+	_installedCasksSidebarItem.icon = [self casksSidebarIconImage];
+	[parent addChildItem:_installedCasksSidebarItem];
+
 	parent = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Group_Tools", nil)
 							   identifier:@"group"];
 	[_rootSidebarCategory addChildItem:parent];
@@ -245,6 +255,12 @@
 					 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_Pinned", nil)];
 }
 
+- (NSImage *)casksSidebarIconImage
+{
+	return [NSImage imageWithSystemSymbolName:@"macwindow"
+					 accessibilityDescription:NSLocalizedString(@"Sidebar_Group_Casks", nil)];
+}
+
 - (NSImage *)repositoriesSidebarIconImage
 {
 	return [NSImage imageWithSystemSymbolName:@"building.columns"
@@ -281,6 +297,7 @@
 	self.leavesFormulaeSidebarItem.badgeValue		= @([[[BPHomebrewManager sharedManager] leavesFormulae] count]);
 	self.pinnedFormulaeSidebarItem.badgeValue		= @([[[BPHomebrewManager sharedManager] pinnedFormulae] count]);
 	self.repositoriesFormulaeSidebarItem.badgeValue = @([[[BPHomebrewManager sharedManager] repositoriesFormulae] count]);
+	self.installedCasksSidebarItem.badgeValue		= @([[[BPHomebrewManager sharedManager] installedCasks] count]);
 }
 
 #pragma mark - NSOutlineView Data Source

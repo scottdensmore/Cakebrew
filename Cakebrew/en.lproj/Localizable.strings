@@ -71,6 +71,7 @@
 "Sidebar_Info_All" = "These are all the formulae available for installation with Homebrew.";
 "Sidebar_Info_Leaves" = "These formulae are not dependencies of any other formulae.";
 "Sidebar_Info_Repos" = "These are the repositories you have tapped.";
+"Sidebar_Info_Casks" = "These are the casks (applications) installed in your system.";
 "Sidebar_Info_Doctor" = "The doctor is a Homebrew feature that detects the most common causes of errors.";
 "Sidebar_Info_Update" = "Updating Homebrew means fetching the latest info about the available formulae.";
 "Sidebar_Info_SearchResults" = "These are the results of your search.";
@@ -90,6 +91,7 @@
 "Info_View_Formula_No_Description" = "No description provided.";
 
 "Sidebar_Group_Formulae" = "Formulae";
+"Sidebar_Group_Casks" = "Casks";
 "Sidebar_Group_Tools" = "Tools";
 
 "Sidebar_Item_Installed" = "Installed";
