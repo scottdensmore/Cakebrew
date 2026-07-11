@@ -37,6 +37,7 @@ extern NSString *const kBP_HOMEBREW_WEBSITE;
 + (NSURL*)urlForApplicationCachesFolder;
 
 - (IBAction)openWebsite:(id)sender;
+- (IBAction)openPreferences:(id)sender;
 
 - (void)displayBackgroundWarning;
 - (void)requestUserAttentionWithMessageTitle:(NSString*)title andDescription:(NSString*)desc;

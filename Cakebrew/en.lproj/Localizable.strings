@@ -82,6 +82,14 @@
 "Services_Column_Name" = "Name";
 "Services_Column_Status" = "Status";
 "Services_Column_User" = "User";
+"Preferences_Title" = "Settings";
+"Preferences_Background_Check" = "Check for outdated packages in the background";
+"Preferences_Check_Interval" = "Check every:";
+"Preferences_Interval_Hourly" = "Hour";
+"Preferences_Interval_Six_Hours" = "6 hours";
+"Preferences_Interval_Daily" = "Day";
+"Preferences_Greedy_Casks" = "Include auto-updating apps in outdated casks";
+"Preferences_Greedy_Casks_Note" = "Lists casks that update themselves (like browsers) as outdated, so Homebrew can manage their upgrades too. Takes effect on the next refresh.";
 "Sidebar_Info_Doctor" = "The doctor is a Homebrew feature that detects the most common causes of errors.";
 "Sidebar_Info_Update" = "Updating Homebrew means fetching the latest info about the available formulae.";
 "Sidebar_Info_SearchResults" = "These are the results of your search.";

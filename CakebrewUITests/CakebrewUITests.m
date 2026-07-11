@@ -339,6 +339,33 @@
 	[self dismissConfirmationSheet];
 }
 
+// Journey: Preferences opens from the app menu and shows the settings.
+- (void)testSettingsWindowOpensFromMenu
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	[self.app.menuBars.menuBarItems[@"Cakebrew"] click];
+	// AppKit auto-renames "Preferences…" to "Settings…" (macOS 13+), so the
+	// rendered item carries the new title on every supported OS.
+	XCUIElement *prefsItem = self.app.menuItems[@"Settings…"];
+	XCTAssertTrue([prefsItem waitForExistenceWithTimeout:10.0], @"the app menu should show Settings…");
+	[prefsItem click];
+
+	XCUIElement *prefsWindow = self.app.windows[@"Settings"];
+	BOOL appeared = [prefsWindow waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"the Preferences window should open");
+
+	XCTAssertTrue(prefsWindow.checkBoxes[@"Check for outdated packages in the background"].exists,
+				  @"the background-check toggle should be present");
+	XCTAssertTrue(prefsWindow.checkBoxes[@"Include auto-updating apps in outdated casks"].exists,
+				  @"the greedy-casks toggle should be present");
+
+	[prefsWindow.buttons[XCUIIdentifierCloseWindow] click];
+}
+
 // Journey: the Services tool lists brew services with status and offers
 // the start/stop/restart controls.
 - (void)testServicesToolListsServicesWithControls

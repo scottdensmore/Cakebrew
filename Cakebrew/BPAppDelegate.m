@@ -22,12 +22,15 @@
 #import "BPHomebrewManager.h"
 #import "DCOAboutWindowController.h"
 #import "BPAppDelegate.h"
+#import "BPPreferences.h"
+#import "BPPreferencesWindowController.h"
 #import <UserNotifications/UserNotifications.h>
 
 NSString *const kBP_HOMEBREW_WEBSITE = @"https://www.cakebrew.com";
 
 
 @interface BPAppDelegate () <UNUserNotificationCenterDelegate>
+@property (strong, nonatomic) BPPreferencesWindowController *preferencesWindowController;
 
 @property (nonatomic, strong) DCOAboutWindowController *aboutWindowController;
 
@@ -51,7 +54,8 @@ NSString *const kBP_HOMEBREW_WEBSITE = @"https://www.cakebrew.com";
 #pragma mark - NSApplicationDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
-{	
+{
+	[BPPreferences registerDefaults];
 	[self setupSignalHandler];
 	
 	[[BPHomebrewManager sharedManager] reloadFromInterfaceRebuildingCache:NO];
@@ -187,6 +191,17 @@ NSString *const kBP_HOMEBREW_WEBSITE = @"https://www.cakebrew.com";
 {
 	[self.aboutWindowController showWindow:sender];
 	[self.aboutWindowController.window becomeFirstResponder];
+}
+
+- (IBAction)openPreferences:(id)sender
+{
+	if (!self.preferencesWindowController)
+	{
+		self.preferencesWindowController = [[BPPreferencesWindowController alloc] init];
+		[self.preferencesWindowController.window center];
+	}
+	[self.preferencesWindowController showWindow:sender];
+	[NSApp activateIgnoringOtherApps:YES];
 }
 
 - (IBAction)openWebsite:(id)sender
