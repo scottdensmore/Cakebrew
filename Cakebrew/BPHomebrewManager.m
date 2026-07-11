@@ -85,6 +85,7 @@ NSString *const kBPCacheCasksDataKey = @"BPCacheCasksDataKey";
 		NSArray *pinnedFormulae = [[BPHomebrewInterface sharedInterface] listMode:kBPListPinned];
 		NSArray *installedCasks = [[BPHomebrewInterface sharedInterface] listMode:kBPListInstalledCasks];
 		NSArray *outdatedCasks = [[BPHomebrewInterface sharedInterface] listMode:kBPListOutdatedCasks];
+		NSArray *services = [[BPHomebrewInterface sharedInterface] listServices];
 		NSArray *allFormulae = nil;
 		NSArray *allCasks = nil;
 
@@ -111,6 +112,7 @@ NSString *const kBPCacheCasksDataKey = @"BPCacheCasksDataKey";
 			[self setPinnedFormulae:pinnedFormulae];
 			[self setInstalledCasks:installedCasks];
 			[self setOutdatedCasks:outdatedCasks];
+			[self setServices:services];
 
 			[self.delegate homebrewManagerFinishedUpdating:self];
 		});

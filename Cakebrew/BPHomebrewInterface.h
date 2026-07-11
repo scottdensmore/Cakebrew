@@ -20,6 +20,8 @@
 //
 
 #import <Foundation/Foundation.h>
+
+@class BPService;
 #import <Cocoa/Cocoa.h>
 #import "BPFormula.h"
 
@@ -246,6 +248,28 @@ typedef NS_ENUM(NSInteger, BPListMode) {
  *  @return The raw `brew info --cask` output.
  */
 - (NSString *)informationForCaskName:(NSString *)name;
+
+/**
+ *  Lists background services (`brew services list --json`), parsed.
+ *
+ *  @return The services, or an empty array when there are none / on error.
+ */
+- (NSArray<BPService *> *)listServices;
+
+/**
+ *  Starts a service (`brew services start`).
+ */
+- (BOOL)startService:(NSString*)name withReturnBlock:(void (^)(NSString*))block;
+
+/**
+ *  Stops a service (`brew services stop`).
+ */
+- (BOOL)stopService:(NSString*)name withReturnBlock:(void (^)(NSString*))block;
+
+/**
+ *  Restarts a service (`brew services restart`).
+ */
+- (BOOL)restartService:(NSString*)name withReturnBlock:(void (^)(NSString*))block;
 
 /**
  *  Executes `brew uses` for parameter formula name.

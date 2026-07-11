@@ -5,6 +5,7 @@
 
 #import "BPMockHomebrewInterface.h"
 #import "BPFormula.h"
+#import "BPService.h"
 
 @implementation BPMockHomebrewInterface
 
@@ -148,6 +149,29 @@
 }
 
 - (BOOL)installCask:(NSString *)cask withReturnBlock:(void (^)(NSString *))block
+{
+	return YES;
+}
+
+// Deterministic service fixtures: one running, one stopped.
+- (NSArray<BPService *> *)listServices
+{
+	return [BPService servicesFromJSONString:
+			@"[{\"name\":\"mockpostgres\",\"status\":\"started\",\"user\":\"mockuser\",\"pid\":123},"
+			@"{\"name\":\"mockredis\",\"status\":\"none\",\"user\":null,\"pid\":null}]"];
+}
+
+- (BOOL)startService:(NSString *)name withReturnBlock:(void (^)(NSString *))block
+{
+	return YES;
+}
+
+- (BOOL)stopService:(NSString *)name withReturnBlock:(void (^)(NSString *))block
+{
+	return YES;
+}
+
+- (BOOL)restartService:(NSString *)name withReturnBlock:(void (^)(NSString *))block
 {
 	return YES;
 }
