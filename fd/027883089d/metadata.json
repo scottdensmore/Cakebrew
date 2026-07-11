@@ -1,0 +1,24 @@
+{
+  "cli_version": "0.8.42",
+  "checkpoint_id": "fd027883089d",
+  "strategy": "manual-commit",
+  "branch": "chore/privacy-manifest-https",
+  "checkpoints_count": 2,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/fd/027883089d/0/metadata.json",
+      "transcript": "/fd/027883089d/0/full.jsonl",
+      "compact_transcript": "/fd/027883089d/0/transcript.jsonl",
+      "content_hash": "/fd/027883089d/0/content_hash.txt",
+      "prompt": "/fd/027883089d/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 70763,
+    "cache_creation_tokens": 11907426,
+    "cache_read_tokens": 666591923,
+    "output_tokens": 1505599,
+    "api_call_count": 1412
+  }
+}
