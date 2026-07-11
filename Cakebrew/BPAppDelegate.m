@@ -24,6 +24,7 @@
 #import "BPAppDelegate.h"
 #import "BPPreferences.h"
 #import "BPPreferencesWindowController.h"
+#import "BPBackgroundUpdater.h"
 #import <UserNotifications/UserNotifications.h>
 
 NSString *const kBP_HOMEBREW_WEBSITE = @"https://www.cakebrew.com";
@@ -31,6 +32,7 @@ NSString *const kBP_HOMEBREW_WEBSITE = @"https://www.cakebrew.com";
 
 @interface BPAppDelegate () <UNUserNotificationCenterDelegate>
 @property (strong, nonatomic) BPPreferencesWindowController *preferencesWindowController;
+@property (strong, nonatomic) BPBackgroundUpdater *backgroundUpdater;
 
 @property (nonatomic, strong) DCOAboutWindowController *aboutWindowController;
 
@@ -57,6 +59,9 @@ NSString *const kBP_HOMEBREW_WEBSITE = @"https://www.cakebrew.com";
 {
 	[BPPreferences registerDefaults];
 	[self setupSignalHandler];
+
+	self.backgroundUpdater = [[BPBackgroundUpdater alloc] init];
+	[self.backgroundUpdater start];
 	
 	[[BPHomebrewManager sharedManager] reloadFromInterfaceRebuildingCache:NO];
 	

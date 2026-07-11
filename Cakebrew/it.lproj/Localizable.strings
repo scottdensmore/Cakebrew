@@ -203,6 +203,8 @@
 "Preferences_Interval_Daily" = "Day";
 "Preferences_Greedy_Casks" = "Include auto-updating apps in outdated casks";
 "Preferences_Greedy_Casks_Note" = "Lists casks that update themselves (like browsers) as outdated, so Homebrew can manage their upgrades too. Takes effect on the next refresh.";
+"Background_Update_Notification_Title" = "Homebrew updates available";
+"Background_Update_Notification_Body" = "%lu packages have newer versions.";
 
 /* No comment provided by engineer. */
 "Sidebar_Info_SearchResults" = "Risultati della ricerca";
