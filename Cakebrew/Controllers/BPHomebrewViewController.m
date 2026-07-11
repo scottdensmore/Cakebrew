@@ -521,7 +521,7 @@ NSOpenSavePanelDelegate>
 		[alert setInformativeText:NSLocalizedString(@"Message_No_Homebrew_Body", nil)];
 		[alert.window setTitle:NSLocalizedString(@"Cakebrew", nil)];
 		
-		NSURL *brew_URL = [NSURL URLWithString:@"http://brew.sh"];
+		NSURL *brew_URL = [NSURL URLWithString:@"https://brew.sh"];
 
 		[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
 			if (returnCode == NSAlertFirstButtonReturn) {
