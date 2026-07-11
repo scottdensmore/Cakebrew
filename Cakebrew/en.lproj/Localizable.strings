@@ -72,6 +72,7 @@
 "Sidebar_Info_Leaves" = "These formulae are not dependencies of any other formulae.";
 "Sidebar_Info_Repos" = "These are the repositories you have tapped.";
 "Sidebar_Info_Casks" = "These are the casks (applications) installed in your system.";
+"Sidebar_Info_OutdatedCasks" = "These are the casks with a newer version available. Auto-updating apps are not listed.";
 "Sidebar_Info_Doctor" = "The doctor is a Homebrew feature that detects the most common causes of errors.";
 "Sidebar_Info_Update" = "Updating Homebrew means fetching the latest info about the available formulae.";
 "Sidebar_Info_SearchResults" = "These are the results of your search.";

@@ -189,6 +189,7 @@
 /* No comment provided by engineer. */
 "Sidebar_Info_Repos" = "Estes são os repositórios que você adicionou.";
 "Sidebar_Info_Casks" = "These are the casks (applications) installed in your system.";
+"Sidebar_Info_OutdatedCasks" = "These are the casks with a newer version available. Auto-updating apps are not listed.";
 
 /* No comment provided by engineer. */
 "Sidebar_Info_SearchResults" = "Estes são os resultados de sua busca.";

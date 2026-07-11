@@ -85,6 +85,10 @@
 		case kBPListInstalledCasks:
 			_formulaeArray = [[BPHomebrewManager sharedManager] installedCasks];
 			break;
+
+		case kBPListOutdatedCasks:
+			_formulaeArray = [[BPHomebrewManager sharedManager] outdatedCasks];
+			break;
 			
 		case kBPListOutdated:
 			_formulaeArray = [[BPHomebrewManager sharedManager] outdatedFormulae];

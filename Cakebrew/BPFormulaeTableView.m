@@ -75,6 +75,7 @@ unichar SPACE_CHARACTER = 0x0020;
 			break;
 			
 		case kBPListOutdated:
+		case kBPListOutdatedCasks:
 			titleWidth = (NSInteger)(totalWidth * 0.4);
 			[[self tableColumnWithIdentifier:kColumnIdentifierStatus] setHidden:YES];
 			[[self tableColumnWithIdentifier:kColumnIdentifierVersion] setHidden:NO];

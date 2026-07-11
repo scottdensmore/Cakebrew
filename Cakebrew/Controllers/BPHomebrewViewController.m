@@ -299,18 +299,21 @@ NSOpenSavePanelDelegate>
 			[self.toolbar configureForMode:BPToolbarModeTap];
 		}
 	}
-	else if (selectedSidebarRow == FormulaeSideBarItemInstalledCasks) // Installed Casks
+	else if (selectedSidebarRow == FormulaeSideBarItemInstalledCasks
+			 || selectedSidebarRow == FormulaeSideBarItemOutdatedCasks) // Casks
 	{
 		// The detail pane stays hidden: its `brew info` / `brew uses` fetches
-		// are formula-specific and would run without --cask (cask info comes
-		// with the outdated-casks phase). Uninstall works — the operation
-		// pipeline dispatches on the formula's cask flag.
+		// are formula-specific and would run without --cask. Operations work —
+		// the pipeline dispatches on the formula's cask flag.
 		showFormulaInfo = false;
 
-		if (selectedIndex != -1) {
-			[self.toolbar configureForMode:BPToolbarModeUninstall];
-		} else {
+		if (selectedIndex == -1) {
 			[self.toolbar configureForMode:BPToolbarModeDefault];
+		} else if (selectedSidebarRow == FormulaeSideBarItemOutdatedCasks) {
+			[self.toolbar configureForMode:([selectedRows count] > 1 ?
+											BPToolbarModeUpdateMany : BPToolbarModeUpdateSingle)];
+		} else {
+			[self.toolbar configureForMode:BPToolbarModeUninstall];
 		}
 	}
 	else if (selectedIndex == -1 || selectedSidebarRow > FormulaeSideBarItemToolsCategory)
@@ -402,6 +405,10 @@ NSOpenSavePanelDelegate>
 
 			case FormulaeSideBarItemInstalledCasks: // Installed Casks
 				message = NSLocalizedString(@"Sidebar_Info_Casks", nil);
+				break;
+
+			case FormulaeSideBarItemOutdatedCasks: // Outdated Casks
+				message = NSLocalizedString(@"Sidebar_Info_OutdatedCasks", nil);
 				break;
 
 			case FormulaeSideBarItemDoctor: // Doctor
@@ -614,6 +621,10 @@ NSOpenSavePanelDelegate>
 
 		case FormulaeSideBarItemInstalledCasks: // Installed Casks
 			[self configureTableForListing:kBPListInstalledCasks];
+			break;
+
+		case FormulaeSideBarItemOutdatedCasks: // Outdated Casks
+			[self configureTableForListing:kBPListOutdatedCasks];
 			break;
 			
 		case FormulaeSideBarItemDoctor: // Doctor
