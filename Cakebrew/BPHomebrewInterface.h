@@ -31,7 +31,8 @@ typedef NS_ENUM(NSInteger, BPListMode) {
 	kBPListSearch, /* Don't call -[BPHomebrewInterface listMode:] with this parameter. */
 	kBPListRepositories,
 	kBPListPinned,
-	kBPListInstalledCasks
+	kBPListInstalledCasks,
+	kBPListOutdatedCasks
 };
 
 @protocol BPHomebrewInterfaceDelegate <NSObject>
@@ -87,6 +88,16 @@ typedef NS_ENUM(NSInteger, BPListMode) {
  *  @return `YES` if successful.
  */
 - (BOOL)upgradeFormulae:(NSArray*)formulae withReturnBlock:(void (^)(NSString*))block;
+
+/**
+ *  Upgrades casks (runs `brew upgrade --cask`).
+ *
+ *  @param casks The cask tokens to be upgraded.
+ *  @param block Data callback block, called with new output while the process runs.
+ *
+ *  @return `YES` if successful.
+ */
+- (BOOL)upgradeCasks:(NSArray*)casks withReturnBlock:(void (^)(NSString*))block;
 
 /**
  *  Install formula with options.

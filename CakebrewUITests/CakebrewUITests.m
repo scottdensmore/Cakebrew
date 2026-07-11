@@ -305,6 +305,40 @@
 				   @"formulae should not appear in the Casks section");
 }
 
+// Journey: the Outdated casks section lists the outdated cask and offers
+// Update, which asks for confirmation (dispatches to `upgrade --cask`).
+- (void)testOutdatedCaskOffersUpdateWithConfirmation
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	// Two "Outdated" rows exist (Formulae + Casks); the casks one is second.
+	XCUIElement *sidebar = self.sidebar;
+	XCUIElementQuery *outdatedRows = [sidebar.staticTexts matchingIdentifier:@"Outdated"];
+	XCTAssertTrue([outdatedRows.firstMatch waitForExistenceWithTimeout:30.0], @"sidebar should load");
+	XCTAssertEqual(outdatedRows.count, 2u, @"expected Outdated under both Formulae and Casks");
+	[[outdatedRows elementBoundByIndex:1] click];
+
+	XCUIElement *chrome = [self formulaCellWithName:@"mockchrome"];
+	BOOL appeared = [chrome waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"the outdated cask should be listed");
+	[chrome click];
+
+	XCUIElement *updateButton = self.app.buttons[@"Update Formula"];
+	XCTAssertTrue([updateButton waitForExistenceWithTimeout:15.0],
+				  @"selecting an outdated cask should offer Update in the toolbar");
+	[updateButton click];
+
+	XCUIElement *yesButton = self.app.buttons[@"Yes"];
+	XCTAssertTrue([yesButton waitForExistenceWithTimeout:15.0],
+				  @"clicking Update on a cask should present a Yes/Cancel confirmation");
+
+	// Cancel so the test doesn't proceed into the operation.
+	[self dismissConfirmationSheet];
+}
+
 // Journey: selecting an installed cask offers Uninstall, which asks for
 // confirmation (the operation pipeline dispatches to `uninstall --cask`).
 - (void)testCaskOffersUninstallWithConfirmation

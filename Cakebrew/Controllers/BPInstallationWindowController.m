@@ -196,8 +196,18 @@
 			if (self.formulae)
 			{
 				NSArray *names = [self namesOfAllFormulae];
-				self.operationStatus = [homebrewInterface upgradeFormulae:names
-														  withReturnBlock:displayTerminalOutput];
+				// A selection is homogeneous (casks live in their own list),
+				// so the first entry decides the dispatch.
+				if ([(BPFormula *)[self.formulae firstObject] cask])
+				{
+					self.operationStatus = [homebrewInterface upgradeCasks:names
+														   withReturnBlock:displayTerminalOutput];
+				}
+				else
+				{
+					self.operationStatus = [homebrewInterface upgradeFormulae:names
+															  withReturnBlock:displayTerminalOutput];
+				}
 			}
 			else
 			{

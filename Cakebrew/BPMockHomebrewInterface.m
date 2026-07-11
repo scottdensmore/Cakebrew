@@ -45,12 +45,27 @@
 			return @[ [BPFormula formulaWithName:@"mockgit"] ];
 
 		case kBPListInstalledCasks:
-			return @[ [BPFormula formulaWithName:@"mockchrome" andVersion:@"120.0"],
-					  [BPFormula formulaWithName:@"mockvscode" andVersion:@"1.85.0"] ];
+			return [BPMockHomebrewInterface casksFromFormulae:
+					@[ [BPFormula formulaWithName:@"mockchrome" andVersion:@"120.0"],
+					   [BPFormula formulaWithName:@"mockvscode" andVersion:@"1.85.0"] ]];
+
+		case kBPListOutdatedCasks:
+			return [BPMockHomebrewInterface casksFromFormulae:
+					@[ [BPFormula formulaWithName:@"mockchrome" version:@"120.0" andLatestVersion:@"121.0"] ]];
 
 		default:
 			return @[];
 	}
+}
+
+// The real cask list parsers mark their results; the mock bypasses them, so
+// mark the fixtures here to keep operation dispatch (--cask) faithful.
++ (NSArray<BPFormula *> *)casksFromFormulae:(NSArray<BPFormula *> *)formulae
+{
+	for (BPFormula *formula in formulae) {
+		formula.cask = YES;
+	}
+	return formulae;
 }
 
 // Stream a fixed, recognizable doctor report instead of running `brew doctor`.
@@ -104,6 +119,11 @@
 }
 
 - (BOOL)uninstallCask:(NSString *)cask withReturnBlock:(void (^)(NSString *))block
+{
+	return YES;
+}
+
+- (BOOL)upgradeCasks:(NSArray *)casks withReturnBlock:(void (^)(NSString *))block
 {
 	return YES;
 }

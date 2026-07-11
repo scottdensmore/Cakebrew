@@ -553,14 +553,21 @@ CA
                                     <binding destination="547" name="enabled" keyPath="self.isHomebrewInstalled" id="cbk-VwCsk-en"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Outdated Casks" tag="9" id="cbk-VwOCsk-it">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="selectSideBarRowWithSenderTag:" target="SGP-Ky-0Th" id="cbk-VwOCsk-ac"/>
+                                    <binding destination="547" name="enabled" keyPath="self.isHomebrewInstalled" id="cbk-VwOCsk-en"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="kEe-QJ-gfj"/>
-                            <menuItem title="Doctor" tag="10" keyEquivalent="7" id="eI9-b4-Rmg">
+                            <menuItem title="Doctor" tag="11" keyEquivalent="7" id="eI9-b4-Rmg">
                                 <connections>
                                     <action selector="selectSideBarRowWithSenderTag:" target="SGP-Ky-0Th" id="DMG-th-yEC"/>
                                     <binding destination="547" name="enabled" keyPath="self.isHomebrewInstalled" id="xxS-YX-gBx"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Update" tag="11" keyEquivalent="8" id="8Vh-lk-gYe">
+                            <menuItem title="Update" tag="12" keyEquivalent="8" id="8Vh-lk-gYe">
                                 <connections>
                                     <action selector="selectSideBarRowWithSenderTag:" target="SGP-Ky-0Th" id="fUp-dE-WjG"/>
                                     <binding destination="547" name="enabled" keyPath="self.isHomebrewInstalled" id="HeO-ww-Vvq"/>

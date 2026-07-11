@@ -40,6 +40,10 @@
 - (instancetype)init;
 @end
 
+@interface BPHomebrewInterfaceListCallOutdatedCasks : BPHomebrewInterfaceListCallUpgradeable
+- (instancetype)init;
+@end
+
 @interface BPHomebrewInterfaceListCallTests : XCTestCase
 @end
 
@@ -204,6 +208,49 @@
 	BPHomebrewInterfaceListCallInstalled *call = [BPHomebrewInterfaceListCallInstalled new];
 	BPFormula *formula = [call parseFormulaItem:@"ffmpeg 2.7.2"];
 
+	XCTAssertFalse(formula.cask);
+}
+
+#pragma mark - outdated casks parser (`outdated --cask --verbose`)
+
+- (void)testOutdatedCasksCallUsesOutdatedCaskVerboseArguments
+{
+	BPHomebrewInterfaceListCallOutdatedCasks *call = [BPHomebrewInterfaceListCallOutdatedCasks new];
+	XCTAssertEqualObjects(call.arguments, (@[ @"outdated", @"--cask", @"--verbose" ]));
+}
+
+- (void)testOutdatedCasksParserParsesNotEqualComparator
+{
+	// Cask lines use `!=` (cask versions aren't ordered), not the `<` that
+	// formula lines use: "acorn (8.6) != 8.6.1".
+	BPHomebrewInterfaceListCallOutdatedCasks *call = [BPHomebrewInterfaceListCallOutdatedCasks new];
+	BPFormula *cask = [call parseFormulaItem:@"acorn (8.6) != 8.6.1"];
+
+	XCTAssertEqualObjects(cask.name, @"acorn");
+	XCTAssertEqualObjects(cask.version, @"8.6");
+	XCTAssertEqualObjects(cask.latestVersion, @"8.6.1");
+	XCTAssertTrue(cask.cask, @"outdated-cask results must carry the cask flag");
+}
+
+- (void)testOutdatedCasksParserHandlesCommaVersions
+{
+	BPHomebrewInterfaceListCallOutdatedCasks *call = [BPHomebrewInterfaceListCallOutdatedCasks new];
+	BPFormula *cask = [call parseFormulaItem:@"claude (1.14271.0,c8f4d811) != 1.20186.1,df1d8a33"];
+
+	XCTAssertEqualObjects(cask.name, @"claude");
+	XCTAssertEqualObjects(cask.version, @"1.14271.0,c8f4d811");
+	XCTAssertEqualObjects(cask.latestVersion, @"1.20186.1,df1d8a33");
+}
+
+- (void)testUpgradeableParserStillParsesFormulaComparator
+{
+	// Generalizing the comparator for casks must not regress formula lines.
+	BPHomebrewInterfaceListCallUpgradeable *call = [BPHomebrewInterfaceListCallUpgradeable new];
+	BPFormula *formula = [call parseFormulaItem:@"ffmpeg (2.7.1) < 2.7.2"];
+
+	XCTAssertEqualObjects(formula.name, @"ffmpeg");
+	XCTAssertEqualObjects(formula.version, @"2.7.1");
+	XCTAssertEqualObjects(formula.latestVersion, @"2.7.2");
 	XCTAssertFalse(formula.cask);
 }
 

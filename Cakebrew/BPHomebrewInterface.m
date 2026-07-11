@@ -62,6 +62,9 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 @interface BPHomebrewInterfaceListCallInstalledCasks : BPHomebrewInterfaceListCallInstalled
 @end
 
+@interface BPHomebrewInterfaceListCallOutdatedCasks : BPHomebrewInterfaceListCallUpgradeable
+@end
+
 @interface BPHomebrewInterface () <BPTaskCompleted>
 
 @property (strong) NSString *path_cellar;
@@ -376,6 +379,10 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 			listCall = [[BPHomebrewInterfaceListCallInstalledCasks alloc] init];
 			break;
 
+		case kBPListOutdatedCasks:
+			listCall = [[BPHomebrewInterfaceListCallOutdatedCasks alloc] init];
+			break;
+
 		default:
 			return nil;
 	}
@@ -436,6 +443,13 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 - (BOOL)upgradeFormulae:(NSArray*)formulae withReturnBlock:(void (^)(NSString*output))block
 {
 	BOOL val = [self performBrewCommandWithArguments:[@[@"upgrade"] arrayByAddingObjectsFromArray:formulae] dataReturnBlock:block];
+	[self sendDelegateFormulaeUpdatedCall];
+	return val;
+}
+
+- (BOOL)upgradeCasks:(NSArray*)casks withReturnBlock:(void (^)(NSString*output))block
+{
+	BOOL val = [self performBrewCommandWithArguments:[@[@"upgrade", @"--cask"] arrayByAddingObjectsFromArray:casks] dataReturnBlock:block];
 	[self sendDelegateFormulaeUpdatedCall];
 	return val;
 }
@@ -635,7 +649,10 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 
 - (BPFormula *)parseFormulaItem:(NSString *)item
 {
-	static NSString *regexString = @"(\\S+)\\s\\(((.*, )*(.*))\\) < (\\S+)";
+	// Formula lines compare with `<`; cask lines (OutdatedCasks subclass) with
+	// `!=` because cask versions aren't ordered. Non-capturing so group
+	// numbering is unchanged.
+	static NSString *regexString = @"(\\S+)\\s\\(((.*, )*(.*))\\) (?:<|!=) (\\S+)";
 	
 	BPFormula __block *formula = nil;
 	NSError *error = nil;
@@ -690,6 +707,24 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 - (instancetype)init
 {
 	return (BPHomebrewInterfaceListCallInstalledCasks *)[super initWithArguments:@[@"list", @"--cask", @"--versions"]];
+}
+
+- (BPFormula *)parseFormulaItem:(NSString *)item
+{
+	BPFormula *cask = [super parseFormulaItem:item];
+	cask.cask = YES;
+	return cask;
+}
+
+@end
+
+@implementation BPHomebrewInterfaceListCallOutdatedCasks
+
+// Same "(installed) != latest" line shape as the formula outdated list (the
+// shared regex accepts both comparators); only the arguments and flag differ.
+- (instancetype)init
+{
+	return (BPHomebrewInterfaceListCallOutdatedCasks *)[super initWithArguments:@[@"outdated", @"--cask", @"--verbose"]];
 }
 
 - (BPFormula *)parseFormulaItem:(NSString *)item
