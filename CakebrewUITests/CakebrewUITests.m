@@ -401,7 +401,8 @@
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 	XCUIElement *sidebar = [self sidebar];
 
-	[sidebar.staticTexts[@"Outdated"] click];
+	// Two "Outdated" rows exist (Formulae + Casks); the formulae one is first.
+	[[[sidebar.staticTexts matchingIdentifier:@"Outdated"] elementBoundByIndex:0] click];
 	XCUIElement *git = [self formulaCellWithName:@"mockgit"];
 	XCTAssertTrue([git waitForExistenceWithTimeout:30.0], @"mockgit should be in the Outdated list");
 	[git click];
@@ -420,7 +421,8 @@
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 	XCUIElement *sidebar = [self sidebar];
 
-	[sidebar.staticTexts[@"Outdated"] click];
+	// Two "Outdated" rows exist (Formulae + Casks); the formulae one is first.
+	[[[sidebar.staticTexts matchingIdentifier:@"Outdated"] elementBoundByIndex:0] click];
 	XCUIElement *git = [self formulaCellWithName:@"mockgit"];
 	XCTAssertTrue([git waitForExistenceWithTimeout:30.0], @"mockgit should be in the Outdated list");
 	[git click];
