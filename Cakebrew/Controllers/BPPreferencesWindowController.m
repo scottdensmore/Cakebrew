@@ -18,12 +18,15 @@
 
 #import "BPPreferencesWindowController.h"
 #import "BPPreferences.h"
+#import "BPHelperRegistration.h"
 
 @interface BPPreferencesWindowController ()
 
 @property (strong) NSButton *backgroundCheckCheckbox;
 @property (strong) NSPopUpButton *intervalPopUp;
 @property (strong) NSButton *greedyCheckbox;
+@property (strong) NSTextField *helperStatusLabel;
+@property (strong) NSButton *helperActionButton;
 
 @end
 
@@ -31,7 +34,7 @@
 
 - (instancetype)init
 {
-	NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 460, 190)
+	NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 460, 250)
 												   styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable)
 													 backing:NSBackingStoreBuffered
 													   defer:YES];
@@ -80,7 +83,15 @@
 	greedyNote.font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
 	greedyNote.textColor = [NSColor secondaryLabelColor];
 
-	for (NSView *view in @[ self.backgroundCheckCheckbox, intervalLabel, self.intervalPopUp, self.greedyCheckbox, greedyNote ]) {
+	NSTextField *helperLabel = [NSTextField labelWithString:NSLocalizedString(@"Preferences_Helper_Section", nil)];
+	self.helperStatusLabel = [NSTextField wrappingLabelWithString:@""];
+	self.helperStatusLabel.font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
+	self.helperStatusLabel.textColor = [NSColor secondaryLabelColor];
+	self.helperActionButton = [NSButton buttonWithTitle:@"" target:self action:@selector(helperAction:)];
+	self.helperActionButton.bezelStyle = NSBezelStyleRounded;
+
+	for (NSView *view in @[ self.backgroundCheckCheckbox, intervalLabel, self.intervalPopUp, self.greedyCheckbox, greedyNote,
+							helperLabel, self.helperStatusLabel, self.helperActionButton ]) {
 		view.translatesAutoresizingMaskIntoConstraints = NO;
 		[content addSubview:view];
 	}
@@ -100,9 +111,18 @@
 		[greedyNote.topAnchor constraintEqualToAnchor:self.greedyCheckbox.bottomAnchor constant:6],
 		[greedyNote.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:38],
 		[greedyNote.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-20],
+
+		[helperLabel.topAnchor constraintEqualToAnchor:greedyNote.bottomAnchor constant:18],
+		[helperLabel.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:20],
+		[self.helperStatusLabel.topAnchor constraintEqualToAnchor:helperLabel.bottomAnchor constant:4],
+		[self.helperStatusLabel.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:38],
+		[self.helperStatusLabel.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-20],
+		[self.helperActionButton.topAnchor constraintEqualToAnchor:self.helperStatusLabel.bottomAnchor constant:8],
+		[self.helperActionButton.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:36],
 	]];
 
 	[self updateIntervalEnabled];
+	[self refreshHelperStatus];
 }
 
 - (void)selectIntervalItemMatchingPreference
@@ -122,6 +142,41 @@
 	self.intervalPopUp.enabled = (self.backgroundCheckCheckbox.state == NSControlStateValueOn);
 }
 
+#pragma mark - Helper
+
+- (void)refreshHelperStatus
+{
+	BPHelperState state = [[BPHelperRegistration sharedRegistration] currentState];
+	self.helperStatusLabel.stringValue = [BPHelperRegistration localizedDescriptionForState:state];
+
+	// Only offer an action the user can actually act on.
+	BOOL offersLoginItems = [BPHelperRegistration stateOffersLoginItemsShortcut:state];
+	BOOL offersInstall = (state == kBPHelperStateNotRegistered);
+	self.helperActionButton.hidden = !(offersLoginItems || offersInstall);
+	self.helperActionButton.title = offersLoginItems
+		? NSLocalizedString(@"Helper_Action_Open_Login_Items", nil)
+		: NSLocalizedString(@"Helper_Action_Install", nil);
+}
+
+- (void)helperAction:(id)sender
+{
+	BPHelperState state = [[BPHelperRegistration sharedRegistration] currentState];
+
+	if ([BPHelperRegistration stateOffersLoginItemsShortcut:state])
+	{
+		[BPHelperRegistration openLoginItemsSettings];
+	}
+	else
+	{
+		NSError *error = nil;
+		if (![[BPHelperRegistration sharedRegistration] registerReturningError:&error])
+		{
+			NSLog(@"Cakebrew helper registration failed: %@", error.localizedDescription);
+		}
+	}
+	[self refreshHelperStatus];
+}
+
 #pragma mark - Actions
 
 - (void)toggleBackgroundCheck:(id)sender
@@ -136,6 +191,12 @@
 	if (interval) {
 		[BPPreferences setBackgroundCheckInterval:interval.doubleValue];
 	}
+}
+
+- (void)showWindow:(id)sender
+{
+	[super showWindow:sender];
+	[self refreshHelperStatus];
 }
 
 - (void)toggleGreedy:(id)sender
