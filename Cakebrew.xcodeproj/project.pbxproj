@@ -7,7 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0105688F4773C69A6295C387 /* BPHelperSecurity.m in Sources */ = {isa = PBXBuildFile; fileRef = 1227A6AF7A6E1F24A913015B /* BPHelperSecurity.m */; };
+		043485DC0F857D4D67DDA141 /* BPHelperSecurityTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D182C39AED5D9C54ED4D0B33 /* BPHelperSecurityTests.m */; };
 		0E5E1AFEFC2EB5ACFC76A355 /* BPService.m in Sources */ = {isa = PBXBuildFile; fileRef = AA67F6479F85E50C83706E3E /* BPService.m */; };
+		0F9F85DA2325D35621ECBEAE /* BPHelperSecurity.m in Sources */ = {isa = PBXBuildFile; fileRef = 1227A6AF7A6E1F24A913015B /* BPHelperSecurity.m */; };
 		150AEC4C1B3F999A00163767 /* BPDoctorViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC391B3F999A00163767 /* BPDoctorViewController.m */; };
 		150AEC4D1B3F999A00163767 /* BPFormulaOptionsWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC3B1B3F999A00163767 /* BPFormulaOptionsWindowController.m */; };
 		150AEC4E1B3F999A00163767 /* BPFormulaPopoverViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC3D1B3F999A00163767 /* BPFormulaPopoverViewController.m */; };
@@ -60,7 +63,10 @@
 		2D8AA669642BBFBEF248B016 /* BPPreferences.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D77DDA97C5A016EBA1AA607 /* BPPreferences.m */; };
 		4403EFA806C14981AAB4D830 /* BPService.m in Sources */ = {isa = PBXBuildFile; fileRef = AA67F6479F85E50C83706E3E /* BPService.m */; };
 		49CC41B5A77580D8BF6465A5 /* BPServicesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D88E53757CC27FC7F7734D0D /* BPServicesViewController.m */; };
+		55BE3020BDDC9FCA19C1ECBC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C155F549AE6671B51A3FCAD /* Cocoa.framework */; };
+		5F38898450E03D2D56291D29 /* BPHelperSecurity.m in Sources */ = {isa = PBXBuildFile; fileRef = 1227A6AF7A6E1F24A913015B /* BPHelperSecurity.m */; };
 		6F3A310A6C9E6A2AB30C921F /* BPPreferencesWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5850375D29AF045F95C584C5 /* BPPreferencesWindowController.m */; };
+		7669C2925B60205BE9933E88 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C54D3AB48EC548D5D013F394 /* main.m */; };
 		7A2E25BA37FDE2FAA5570909 /* BPBackgroundUpdater.m in Sources */ = {isa = PBXBuildFile; fileRef = EB895B70D040F129D2E3D779 /* BPBackgroundUpdater.m */; };
 		7FE49B0EE97F41AC5F5513B9 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C155F549AE6671B51A3FCAD /* Cocoa.framework */; };
 		840CE68EEE3622E970C28526 /* BPBackgroundUpdaterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 18EB9DD2D58391DD9AEC5AE5 /* BPBackgroundUpdaterTests.m */; };
@@ -131,7 +137,9 @@
 
 /* Begin PBXFileReference section */
 		0D42C8684E62ED50FB7A319A /* CakebrewUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CakebrewUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1227A6AF7A6E1F24A913015B /* BPHelperSecurity.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPHelperSecurity.m; sourceTree = "<group>"; };
 		133D2B42D25F6316C55C3FE2 /* BPService.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = BPService.h; path = Models/BPService.h; sourceTree = "<group>"; };
+		144F27849ACA00D8A7EDB084 /* BPHelperSecurity.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPHelperSecurity.h; sourceTree = "<group>"; };
 		150AEC381B3F999A00163767 /* BPDoctorViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPDoctorViewController.h; path = Controllers/BPDoctorViewController.h; sourceTree = "<group>"; };
 		150AEC391B3F999A00163767 /* BPDoctorViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPDoctorViewController.m; path = Controllers/BPDoctorViewController.m; sourceTree = "<group>"; };
 		150AEC3A1B3F999A00163767 /* BPFormulaOptionsWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPFormulaOptionsWindowController.h; path = Controllers/BPFormulaOptionsWindowController.h; sourceTree = "<group>"; };
@@ -244,6 +252,7 @@
 		15F313171C7A903500F22608 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Loading.strings"; sourceTree = "<group>"; };
 		15F313181C7A903500F22608 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		15F313191C7A903500F22608 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		1859443E5EF1534381AEF7D5 /* BPHelperProtocol.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPHelperProtocol.h; sourceTree = "<group>"; };
 		18EB9DD2D58391DD9AEC5AE5 /* BPBackgroundUpdaterTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPBackgroundUpdaterTests.m; sourceTree = "<group>"; };
 		1CB4C040D053923E70464C81 /* BPPreferencesWindowController.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = BPPreferencesWindowController.h; path = Controllers/BPPreferencesWindowController.h; sourceTree = "<group>"; };
 		1FE4FE54148E4CDD008EDE8B /* Cakebrew.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cakebrew.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -268,13 +277,16 @@
 		8FCA9F1166F22A35A435267E /* BPBackgroundUpdater.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPBackgroundUpdater.h; sourceTree = "<group>"; };
 		9ADAB3EC934CF76ABAA9C615 /* BPServicesViewController.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = BPServicesViewController.h; path = Controllers/BPServicesViewController.h; sourceTree = "<group>"; };
 		9C155F549AE6671B51A3FCAD /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
+		9E4730EAEC1D0DE6ACD3DCE4 /* CakebrewHelper */ = {isa = PBXFileReference; includeInIndex = 0; path = CakebrewHelper; sourceTree = BUILT_PRODUCTS_DIR; };
 		A8052362C08CE3FF3945ABAD /* BPPreferencesTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPPreferencesTests.m; sourceTree = "<group>"; };
 		AA67F6479F85E50C83706E3E /* BPService.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPService.m; path = Models/BPService.m; sourceTree = "<group>"; };
 		B15AF968007B8829A04A4ECC /* BPMockHomebrewInterface.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPMockHomebrewInterface.m; sourceTree = "<group>"; };
+		C54D3AB48EC548D5D013F394 /* main.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		CB7E57A001000001000000F1 /* BPHomebrewInterfaceListCallTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPHomebrewInterfaceListCallTests.m; sourceTree = "<group>"; };
 		CB7E57A001000001000000F3 /* BPHomebrewManagerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPHomebrewManagerTests.m; sourceTree = "<group>"; };
 		CB7E57A001000001000000F5 /* BPFormulaOptionTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPFormulaOptionTests.m; sourceTree = "<group>"; };
 		CB7E57A001000001000000F7 /* BPFormulaeDataSourceTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPFormulaeDataSourceTests.m; sourceTree = "<group>"; };
+		D182C39AED5D9C54ED4D0B33 /* BPHelperSecurityTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPHelperSecurityTests.m; sourceTree = "<group>"; };
 		D212A5871B853069003000ED /* BPFormulaTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPFormulaTests.m; sourceTree = "<group>"; };
 		D23620DF1B8B3094006D293D /* BPTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BPTask.h; sourceTree = "<group>"; };
 		D23620E01B8B3094006D293D /* BPTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPTask.m; sourceTree = "<group>"; };
@@ -345,6 +357,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4D95D709A7C7A9E5E52E2358 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				55BE3020BDDC9FCA19C1ECBC /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D261C9BD1B852FA300409803 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -356,6 +376,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0F9F64B5830726820404271A /* Helper */ = {
+			isa = PBXGroup;
+			children = (
+				144F27849ACA00D8A7EDB084 /* BPHelperSecurity.h */,
+				1227A6AF7A6E1F24A913015B /* BPHelperSecurity.m */,
+				1859443E5EF1534381AEF7D5 /* BPHelperProtocol.h */,
+				C54D3AB48EC548D5D013F394 /* main.m */,
+			);
+			name = Helper;
+			path = Helper;
+			sourceTree = "<group>";
+		};
 		1540FA3618ED099F00334A5C /* Views */ = {
 			isa = PBXGroup;
 			children = (
@@ -508,6 +540,7 @@
 				1FE4FE54148E4CDD008EDE8B /* Cakebrew.app */,
 				D261C9C01B852FA300409803 /* CakebrewTests.xctest */,
 				0D42C8684E62ED50FB7A319A /* CakebrewUITests.xctest */,
+				9E4730EAEC1D0DE6ACD3DCE4 /* CakebrewHelper */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -555,6 +588,7 @@
 				1540FA3618ED099F00334A5C /* Views */,
 				8FCA9F1166F22A35A435267E /* BPBackgroundUpdater.h */,
 				EB895B70D040F129D2E3D779 /* BPBackgroundUpdater.m */,
+				0F9F64B5830726820404271A /* Helper */,
 			);
 			path = Cakebrew;
 			sourceTree = "<group>";
@@ -614,6 +648,7 @@
 				65FAFC2DA348DF99A7B6D768 /* BPServiceTests.m */,
 				A8052362C08CE3FF3945ABAD /* BPPreferencesTests.m */,
 				18EB9DD2D58391DD9AEC5AE5 /* BPBackgroundUpdaterTests.m */,
+				D182C39AED5D9C54ED4D0B33 /* BPHelperSecurityTests.m */,
 			);
 			path = CakebrewTests;
 			sourceTree = "<group>";
@@ -676,6 +711,22 @@
 			productReference = 1FE4FE54148E4CDD008EDE8B /* Cakebrew.app */;
 			productType = "com.apple.product-type.application";
 		};
+		71FF4A45BE7831F94CDF04C5 /* CakebrewHelper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 98F24395BE011D68B307CCD6 /* Build configuration list for PBXNativeTarget "CakebrewHelper" */;
+			buildPhases = (
+				D8AF6C56657F84EEDE049500 /* Sources */,
+				4D95D709A7C7A9E5E52E2358 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CakebrewHelper;
+			productName = CakebrewHelper;
+			productReference = 9E4730EAEC1D0DE6ACD3DCE4 /* CakebrewHelper */;
+			productType = "com.apple.product-type.tool";
+		};
 		D261C9BF1B852FA300409803 /* CakebrewTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D261C9CA1B852FA300409803 /* Build configuration list for PBXNativeTarget "CakebrewTests" */;
@@ -734,6 +785,7 @@
 				1FE4FE53148E4CDD008EDE8B /* Cakebrew */,
 				D261C9BF1B852FA300409803 /* CakebrewTests */,
 				080D4B6D911CF19CB392F346 /* CakebrewUITests */,
+				71FF4A45BE7831F94CDF04C5 /* CakebrewHelper */,
 			);
 		};
 /* End PBXProject section */
@@ -837,6 +889,7 @@
 				2D8AA669642BBFBEF248B016 /* BPPreferences.m in Sources */,
 				BFE5ABAF8C68B6DD30115FB1 /* BPPreferencesWindowController.m in Sources */,
 				C1433FB06C201A61547E4B95 /* BPBackgroundUpdater.m in Sources */,
+				5F38898450E03D2D56291D29 /* BPHelperSecurity.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -874,6 +927,17 @@
 				6F3A310A6C9E6A2AB30C921F /* BPPreferencesWindowController.m in Sources */,
 				7A2E25BA37FDE2FAA5570909 /* BPBackgroundUpdater.m in Sources */,
 				840CE68EEE3622E970C28526 /* BPBackgroundUpdaterTests.m in Sources */,
+				0F9F85DA2325D35621ECBEAE /* BPHelperSecurity.m in Sources */,
+				043485DC0F857D4D67DDA141 /* BPHelperSecurityTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D8AF6C56657F84EEDE049500 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7669C2925B60205BE9933E88 /* main.m in Sources */,
+				0105688F4773C69A6295C387 /* BPHelperSecurity.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1079,6 +1143,36 @@
 			};
 			name = Debug;
 		};
+		1A281B4A3465A8FA9240C39C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = YES;
+				DEVELOPMENT_TEAM = 27ZDER873F;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/Cakebrew/Helper";
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.scottdensmore.Cakebrew.Helper;
+				PRODUCT_NAME = CakebrewHelper;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		1E13309AB63A9F561F3E2159 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = YES;
+				DEVELOPMENT_TEAM = 27ZDER873F;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/Cakebrew/Helper";
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.scottdensmore.Cakebrew.Helper;
+				PRODUCT_NAME = CakebrewHelper;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
 		1FE4FE70148E4CDD008EDE8B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1198,6 +1292,10 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Cakebrew/Cakebrew-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/Cakebrew/Helper",
+				);
 				INFOPLIST_FILE = "Cakebrew/Cakebrew-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1233,6 +1331,10 @@
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Cakebrew/Cakebrew-Prefix.pch";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/Cakebrew/Helper",
+				);
 				INFOPLIST_FILE = "Cakebrew/Cakebrew-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1287,6 +1389,10 @@
 				);
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/Cakebrew/Helper",
+				);
 				INFOPLIST_FILE = CakebrewTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1321,6 +1427,10 @@
 				GCC_PREFIX_HEADER = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/Cakebrew/Helper",
+				);
 				INFOPLIST_FILE = CakebrewTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1360,6 +1470,15 @@
 			buildConfigurations = (
 				24CA8BDCAD53D3646B424CFB /* Release */,
 				17B08E6F69071D4438CF2774 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		98F24395BE011D68B307CCD6 /* Build configuration list for PBXNativeTarget "CakebrewHelper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1A281B4A3465A8FA9240C39C /* Release */,
+				1E13309AB63A9F561F3E2159 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
