@@ -119,6 +119,35 @@ uploads crash logs from `~/Library/Logs/DiagnosticReports` on failure.
 - Icons are SF Symbols (`imageWithSystemSymbolName:`); no bundled image assets
   for UI chrome.
 
+## Distribution & sandboxing
+
+Cakebrew ships **Developer ID + hardened runtime + notarized**, and is
+**not** App-Sandboxed. `.github/workflows/release.yml` does the signing,
+notarization and stapling on a `v*` tag (see its header for the required
+secrets).
+
+The sandbox question was settled by measurement, not assumption — repeat these
+if you revisit it:
+
+| Configuration | Result |
+|---|---|
+| Plain `com.apple.security.app-sandbox` | `brew` cannot even be executed: `zsh:1: operation not permitted: brew` |
+| Sandbox + `temporary-exception.files.absolute-path.read-write` for the prefix | `brew --version` / `brew list` **work**; `/usr/local/Cellar`, `/usr/local/Caskroom`, `/Applications` are writable |
+| …but the home directory is redirected | `$HOME` becomes `~/Library/Containers/<id>/Data`, so `~/Library/Caches/Homebrew` and `~/Library/LaunchAgents` resolve **inside the container** |
+
+That last row is the blocker: brew's download cache would diverge from the
+user's real one (re-downloading, and disagreeing with `brew` in Terminal), and
+**`brew services` writes LaunchAgents to `~/Library/LaunchAgents`** — under the
+sandbox those land in the container where `launchd` never sees them, silently
+breaking the Services feature. Temporary-exception entitlements are also an
+App-Store-review mechanism (routinely rejected, and they hardcode a prefix that
+differs between `/usr/local` and `/opt/homebrew`), so they buy nothing for
+Developer ID distribution.
+
+**Therefore:** don't add `com.apple.security.app-sandbox`. Hardened runtime,
+no ATS weakening, a privacy manifest, and validated user input are the
+hardening this app can actually carry.
+
 ## OS support policy
 
 Minimum deployment target = **latest macOS minus one** (currently 15.0);
