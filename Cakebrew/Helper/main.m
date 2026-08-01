@@ -25,6 +25,7 @@
 #import <Foundation/Foundation.h>
 #import "BPHelperProtocol.h"
 #import "BPHelperSecurity.h"
+#import "BPHelperOutputRelay.h"
 
 @interface BPHelperService : NSObject <NSXPCListenerDelegate, BPHelperProtocol>
 @end
@@ -39,6 +40,8 @@
 	// main), so anything arriving here is a genuine, correctly signed Cakebrew.
 	connection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(BPHelperProtocol)];
 	connection.exportedObject = self;
+	// The app exports a sink so output can be streamed back mid-command.
+	connection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(BPHelperOutputSink)];
 	[connection resume];
 	return YES;
 }
@@ -78,21 +81,38 @@
 	task.standardOutput = pipe;
 	task.standardError = pipe;
 
+	// Stream chunks to the app as they arrive so the operation window stays
+	// live, and accumulate the whole output for the reply. The sink is the
+	// connection's exported object; synchronous callers simply export none.
+	id<BPHelperOutputSink> sink = [[NSXPCConnection currentConnection] remoteObjectProxy];
+	BPHelperOutputRelay *relay = [[BPHelperOutputRelay alloc] initWithSink:^(NSString *chunk) {
+		[sink helperDidProduceOutput:chunk];
+	}];
+
+	NSFileHandle *readHandle = [pipe fileHandleForReading];
+	readHandle.readabilityHandler = ^(NSFileHandle *handle) {
+		[relay appendData:[handle availableData]];
+	};
+
 	@try
 	{
 		[task launch];
 	}
 	@catch (NSException *exception)
 	{
+		readHandle.readabilityHandler = nil;
 		reply(-1, exception.reason ?: @"failed to launch brew");
 		return;
 	}
 
-	NSData *data = [[pipe fileHandleForReading] readDataToEndOfFile];
 	[task waitUntilExit];
 
-	NSString *output = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] ?: @"";
-	reply(task.terminationStatus, output);
+	// Detach the handler, then drain whatever landed between the last
+	// readability callback and the process exiting.
+	readHandle.readabilityHandler = nil;
+	[relay appendData:[readHandle readDataToEndOfFile]];
+
+	reply(task.terminationStatus, relay.accumulatedOutput);
 }
 
 - (void)helperVersionWithReply:(void (^)(NSString *version))reply
