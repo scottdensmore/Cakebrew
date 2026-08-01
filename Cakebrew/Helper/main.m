@@ -26,6 +26,7 @@
 #import "BPHelperProtocol.h"
 #import "BPHelperSecurity.h"
 #import "BPHelperOutputRelay.h"
+#import "BPHelperCommand.h"
 
 @interface BPHelperService : NSObject <NSXPCListenerDelegate, BPHelperProtocol>
 @end
@@ -49,8 +50,14 @@
 #pragma mark - BPHelperProtocol
 
 - (void)runBrewWithArguments:(NSArray<NSString *> *)arguments
+				outputMarker:(NSString *)marker
 					   reply:(void (^)(int status, NSString *output))reply
 {
+	if (marker != nil && ![marker isKindOfClass:[NSString class]])
+	{
+		reply(-1, @"invalid arguments");
+		return;
+	}
 	if (![arguments isKindOfClass:[NSArray class]])
 	{
 		reply(-1, @"invalid arguments");
@@ -67,15 +74,9 @@
 
 	NSString *shell = [[[NSProcessInfo processInfo] environment] objectForKey:@"SHELL"] ?: @"/bin/zsh";
 
-	// Same shape as the app's own command builder: a fixed command string with
-	// the real arguments as positional parameters, so the shell never re-parses
-	// user-supplied text. A login shell is used so brew finds its environment.
-	NSMutableArray *shellArguments = [NSMutableArray arrayWithArray:@[@"-l", @"-c", @"brew \"$@\"", @"brew"]];
-	[shellArguments addObjectsFromArray:arguments];
-
 	NSTask *task = [[NSTask alloc] init];
 	task.launchPath = shell;
-	task.arguments = shellArguments;
+	task.arguments = [BPHelperCommand shellArgumentsForBrewArguments:arguments outputMarker:marker];
 
 	NSPipe *pipe = [NSPipe pipe];
 	task.standardOutput = pipe;

@@ -23,6 +23,7 @@
 #import "BPTask.h"
 #import "BPService.h"
 #import "BPPreferences.h"
+#import "BPHelperClient.h"
 
 #define kDEBUG_WARNING @"\
 User Shell: %@\n\
@@ -115,6 +116,7 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 																				  -5);
 
 		_taskOperationsQueue = dispatch_queue_create("com.brunophilipe.Cakebrew.BPHomebrewInterface.Tasks", attributes);
+		_brewTransport = [BPHomebrewInterface defaultTransportWhenSandboxed:[BPHomebrewInterface isRunningSandboxed]];
 	}
 	return self;
 }
@@ -271,8 +273,17 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 									   queue:(dispatch_queue_t)queue
 							 dataReturnBlock:(void (^)(NSString*))block
 {
+	if (self.brewTransport == kBPBrewTransportHelper)
+	{
+		// The helper builds its own (identical) shell invocation, so it takes
+		// brew's raw arguments plus the marker the sync path trims on.
+		return [[BPHelperClient sharedClient] runBrewWithArguments:arguments
+													 outputMarker:(isSynchronous ? cakebrewOutputIdentifier : nil)
+													  outputBlock:block];
+	}
+
 	arguments = [self formatArguments:arguments sendOutputId:isSynchronous];
-	
+
 	if (!self.path_shell || !arguments)
 	{
 		return NO;
@@ -357,6 +368,19 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 }
 
 #pragma mark - Operations that return on finish
+
++ (BPBrewTransport)defaultTransportWhenSandboxed:(BOOL)sandboxed
+{
+	// A sandboxed process cannot exec brew at all ("operation not permitted"),
+	// so it must go through the helper; everything else runs it directly.
+	return sandboxed ? kBPBrewTransportHelper : kBPBrewTransportDirect;
+}
+
++ (BOOL)isRunningSandboxed
+{
+	// Set by the sandbox for every containerised process.
+	return [[NSProcessInfo processInfo] environment][@"APP_SANDBOX_CONTAINER_ID"] != nil;
+}
 
 + (BOOL)isValidTapName:(NSString *)name
 {

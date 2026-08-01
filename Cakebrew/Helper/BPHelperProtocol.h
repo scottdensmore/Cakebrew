@@ -52,6 +52,7 @@
 /// BPHelperOutputSink as it arrives, then replying with the exit status and
 /// the complete output (so synchronous callers need no sink at all).
 - (void)runBrewWithArguments:(NSArray<NSString *> *)arguments
+				outputMarker:(NSString *)marker
 					   reply:(void (^)(int status, NSString *output))reply;
 
 /// Helper build version, so the app can detect app/helper skew after an update.
