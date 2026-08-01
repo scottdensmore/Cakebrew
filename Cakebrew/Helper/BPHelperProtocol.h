@@ -19,6 +19,24 @@
 #import <Foundation/Foundation.h>
 
 /**
+ *  Exported by the *app* so the helper can stream output back while a command
+ *  runs. Without this the operation window could only show output after the
+ *  command finished, regressing the live terminal view.
+ */
+@protocol BPHelperOutputSink <NSObject>
+
+/// Called with each chunk of combined stdout/stderr as it is produced.
+///
+/// Implementations must return promptly and must not block: NSXPCConnection
+/// delivers these and the runBrew reply on the same queue, so blocking here
+/// (or in the reply block) stalls the rest of the stream. Measured: a client
+/// that slept inside its reply block saw only 28 KB of a 106 KB command;
+/// the same client with a non-blocking reply received all 106 KB in 26 chunks.
+- (void)helperDidProduceOutput:(NSString *)output;
+
+@end
+
+/**
  *  XPC surface of the helper. Deliberately ONE brew entry point: every
  *  operation in the app already funnels through
  *  -[BPHomebrewInterface performBrewCommandWithArguments:], so the sandbox
@@ -30,7 +48,9 @@
  */
 @protocol BPHelperProtocol <NSObject>
 
-/// Runs `brew <arguments>` and replies with its exit status and combined output.
+/// Runs `brew <arguments>`, streaming output to the connection's
+/// BPHelperOutputSink as it arrives, then replying with the exit status and
+/// the complete output (so synchronous callers need no sink at all).
 - (void)runBrewWithArguments:(NSArray<NSString *> *)arguments
 					   reply:(void (^)(int status, NSString *output))reply;
 

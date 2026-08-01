@@ -65,11 +65,13 @@
 		49CC41B5A77580D8BF6465A5 /* BPServicesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D88E53757CC27FC7F7734D0D /* BPServicesViewController.m */; };
 		55BE3020BDDC9FCA19C1ECBC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C155F549AE6671B51A3FCAD /* Cocoa.framework */; };
 		5F38898450E03D2D56291D29 /* BPHelperSecurity.m in Sources */ = {isa = PBXBuildFile; fileRef = 1227A6AF7A6E1F24A913015B /* BPHelperSecurity.m */; };
+		627F454983A4C2C93584B748 /* BPHelperOutputRelayTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 88BBB2337F47C685C807D566 /* BPHelperOutputRelayTests.m */; };
 		6F3A310A6C9E6A2AB30C921F /* BPPreferencesWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5850375D29AF045F95C584C5 /* BPPreferencesWindowController.m */; };
 		7669C2925B60205BE9933E88 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C54D3AB48EC548D5D013F394 /* main.m */; };
 		7A2E25BA37FDE2FAA5570909 /* BPBackgroundUpdater.m in Sources */ = {isa = PBXBuildFile; fileRef = EB895B70D040F129D2E3D779 /* BPBackgroundUpdater.m */; };
 		7FE49B0EE97F41AC5F5513B9 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C155F549AE6671B51A3FCAD /* Cocoa.framework */; };
 		840CE68EEE3622E970C28526 /* BPBackgroundUpdaterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 18EB9DD2D58391DD9AEC5AE5 /* BPBackgroundUpdaterTests.m */; };
+		90152CA4F24A432E30B1CA49 /* BPHelperOutputRelay.m in Sources */ = {isa = PBXBuildFile; fileRef = 2C5C049629179C0BA8601D4B /* BPHelperOutputRelay.m */; };
 		9D8CB0FDFCD1CC2E9148390C /* BPPreferencesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A8052362C08CE3FF3945ABAD /* BPPreferencesTests.m */; };
 		AB88EC9D48EC75643B93E566 /* CakebrewUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 37C4CCE578FE8963CDACE841 /* CakebrewUITests.m */; };
 		B72EA49F9D216CA6B623DDCF /* BPFormulaeDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = D2B3A3AF19B9D7FC00DE23B5 /* BPFormulaeDataSource.m */; };
@@ -110,6 +112,7 @@
 		D2CC8CA71B90F04C00F763DF /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2CC8CA61B90F04C00F763DF /* Security.framework */; };
 		D2F732F119190B75002B2512 /* NSString+URLValidation.m in Sources */ = {isa = PBXBuildFile; fileRef = D2F732F019190B75002B2512 /* NSString+URLValidation.m */; };
 		F686E7E93EA64727C5BD476A /* BPServiceTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 65FAFC2DA348DF99A7B6D768 /* BPServiceTests.m */; };
+		F98476A9F699040AA891FFC0 /* BPHelperOutputRelay.m in Sources */ = {isa = PBXBuildFile; fileRef = 2C5C049629179C0BA8601D4B /* BPHelperOutputRelay.m */; };
 		FC6F1F065021F6E3D4AAB378 /* BPMockHomebrewInterface.m in Sources */ = {isa = PBXBuildFile; fileRef = B15AF968007B8829A04A4ECC /* BPMockHomebrewInterface.m */; };
 /* End PBXBuildFile section */
 
@@ -267,6 +270,7 @@
 		1FE4FE6B148E4CDD008EDE8B /* BPAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BPAppDelegate.m; sourceTree = "<group>"; };
 		1FE4FE75148E4D43008EDE8B /* BPHomebrewInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BPHomebrewInterface.h; sourceTree = "<group>"; };
 		1FE4FE76148E4D43008EDE8B /* BPHomebrewInterface.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPHomebrewInterface.m; sourceTree = "<group>"; };
+		2C5C049629179C0BA8601D4B /* BPHelperOutputRelay.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPHelperOutputRelay.m; sourceTree = "<group>"; };
 		3325CFB971454761839C850E /* BPMockHomebrewInterface.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPMockHomebrewInterface.h; sourceTree = "<group>"; };
 		37C4CCE578FE8963CDACE841 /* CakebrewUITests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = CakebrewUITests.m; sourceTree = "<group>"; };
 		46BD61BF82D5E8C0C487BD7D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -274,12 +278,14 @@
 		5850375D29AF045F95C584C5 /* BPPreferencesWindowController.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPPreferencesWindowController.m; path = Controllers/BPPreferencesWindowController.m; sourceTree = "<group>"; };
 		65FAFC2DA348DF99A7B6D768 /* BPServiceTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPServiceTests.m; sourceTree = "<group>"; };
 		8451F8493C62A113AED576E9 /* BPPreferences.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = BPPreferences.h; path = Models/BPPreferences.h; sourceTree = "<group>"; };
+		88BBB2337F47C685C807D566 /* BPHelperOutputRelayTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPHelperOutputRelayTests.m; sourceTree = "<group>"; };
 		8FCA9F1166F22A35A435267E /* BPBackgroundUpdater.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPBackgroundUpdater.h; sourceTree = "<group>"; };
 		9ADAB3EC934CF76ABAA9C615 /* BPServicesViewController.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = BPServicesViewController.h; path = Controllers/BPServicesViewController.h; sourceTree = "<group>"; };
 		9C155F549AE6671B51A3FCAD /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
 		9E4730EAEC1D0DE6ACD3DCE4 /* CakebrewHelper */ = {isa = PBXFileReference; includeInIndex = 0; path = CakebrewHelper; sourceTree = BUILT_PRODUCTS_DIR; };
 		A8052362C08CE3FF3945ABAD /* BPPreferencesTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPPreferencesTests.m; sourceTree = "<group>"; };
 		AA67F6479F85E50C83706E3E /* BPService.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPService.m; path = Models/BPService.m; sourceTree = "<group>"; };
+		B040E2F0936D991B4511CE23 /* BPHelperOutputRelay.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPHelperOutputRelay.h; sourceTree = "<group>"; };
 		B15AF968007B8829A04A4ECC /* BPMockHomebrewInterface.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPMockHomebrewInterface.m; sourceTree = "<group>"; };
 		C54D3AB48EC548D5D013F394 /* main.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		CB7E57A001000001000000F1 /* BPHomebrewInterfaceListCallTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPHomebrewInterfaceListCallTests.m; sourceTree = "<group>"; };
@@ -383,6 +389,8 @@
 				1227A6AF7A6E1F24A913015B /* BPHelperSecurity.m */,
 				1859443E5EF1534381AEF7D5 /* BPHelperProtocol.h */,
 				C54D3AB48EC548D5D013F394 /* main.m */,
+				B040E2F0936D991B4511CE23 /* BPHelperOutputRelay.h */,
+				2C5C049629179C0BA8601D4B /* BPHelperOutputRelay.m */,
 			);
 			name = Helper;
 			path = Helper;
@@ -649,6 +657,7 @@
 				A8052362C08CE3FF3945ABAD /* BPPreferencesTests.m */,
 				18EB9DD2D58391DD9AEC5AE5 /* BPBackgroundUpdaterTests.m */,
 				D182C39AED5D9C54ED4D0B33 /* BPHelperSecurityTests.m */,
+				88BBB2337F47C685C807D566 /* BPHelperOutputRelayTests.m */,
 			);
 			path = CakebrewTests;
 			sourceTree = "<group>";
@@ -929,6 +938,8 @@
 				840CE68EEE3622E970C28526 /* BPBackgroundUpdaterTests.m in Sources */,
 				0F9F85DA2325D35621ECBEAE /* BPHelperSecurity.m in Sources */,
 				043485DC0F857D4D67DDA141 /* BPHelperSecurityTests.m in Sources */,
+				90152CA4F24A432E30B1CA49 /* BPHelperOutputRelay.m in Sources */,
+				627F454983A4C2C93584B748 /* BPHelperOutputRelayTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -938,6 +949,7 @@
 			files = (
 				7669C2925B60205BE9933E88 /* main.m in Sources */,
 				0105688F4773C69A6295C387 /* BPHelperSecurity.m in Sources */,
+				F98476A9F699040AA891FFC0 /* BPHelperOutputRelay.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
