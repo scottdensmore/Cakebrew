@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.9.0",
+  "checkpoint_id": "d817583c0784",
+  "strategy": "manual-commit",
+  "branch": "feat/xpc-helper-target",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "Cakebrew.xcodeproj/project.pbxproj"
+  ],
+  "sessions": [
+    {
+      "metadata": "/d8/17583c0784/0/metadata.json",
+      "transcript": "/d8/17583c0784/0/full.jsonl",
+      "compact_transcript": "/d8/17583c0784/0/transcript.jsonl",
+      "content_hash": "/d8/17583c0784/0/content_hash.txt",
+      "prompt": "/d8/17583c0784/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 71109,
+    "cache_creation_tokens": 12660032,
+    "cache_read_tokens": 704076384,
+    "output_tokens": 1572176,
+    "api_call_count": 1459
+  }
+}
