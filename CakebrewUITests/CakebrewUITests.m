@@ -363,6 +363,14 @@
 	XCTAssertTrue(prefsWindow.checkBoxes[@"Include auto-updating apps in outdated casks"].exists,
 				  @"the greedy-casks toggle should be present");
 
+	// Helper status row. Unsandboxed (the shipping configuration), so it must
+	// say the helper isn't needed rather than nagging for approval.
+	XCTAssertTrue(prefsWindow.staticTexts[@"Homebrew access:"].exists,
+				  @"the helper status row should be present");
+	NSPredicate *notRequired = [NSPredicate predicateWithFormat:@"value CONTAINS %@", @"Not required"];
+	XCTAssertTrue([[prefsWindow.staticTexts matchingPredicate:notRequired] firstMatch].exists,
+				  @"an unsandboxed build reports the helper as not required");
+
 	[prefsWindow.buttons[XCUIIdentifierCloseWindow] click];
 }
 

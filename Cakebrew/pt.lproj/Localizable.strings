@@ -209,6 +209,14 @@
 "Preferences_Interval_Daily" = "Day";
 "Preferences_Greedy_Casks" = "Include auto-updating apps in outdated casks";
 "Preferences_Greedy_Casks_Note" = "Lists casks that update themselves (like browsers) as outdated, so Homebrew can manage their upgrades too. Takes effect on the next refresh.";
+"Preferences_Helper_Section" = "Homebrew access:";
+"Helper_State_Not_Required" = "Not required — Cakebrew runs Homebrew directly.";
+"Helper_State_Ready" = "Helper installed and approved.";
+"Helper_State_Needs_Approval" = "Waiting for approval in Login Items.";
+"Helper_State_Not_Registered" = "Helper is not installed yet.";
+"Helper_State_Unavailable" = "Helper unavailable. Move Cakebrew to your Applications folder and reopen it.";
+"Helper_Action_Install" = "Install Helper";
+"Helper_Action_Open_Login_Items" = "Open Login Items…";
 "Background_Update_Notification_Title" = "Homebrew updates available";
 "Background_Update_Notification_Body" = "%lu packages have newer versions.";
 
