@@ -1,0 +1,168 @@
+name: Release
+
+# Builds, signs (Developer ID), notarizes and staples a distributable
+# Cakebrew.app, then attaches the zip to a GitHub release.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   MACOS_CERTIFICATE_P12    Developer ID Application cert + private key,
+#                            exported as .p12 then base64'd:
+#                              base64 -i DeveloperID.p12 | pbcopy
+#   MACOS_CERTIFICATE_PWD    password used when exporting that .p12
+#   KEYCHAIN_PASSWORD        any throwaway string (temp keychain on the runner)
+#   APPLE_TEAM_ID            10-character Team ID
+#   NOTARY_APPLE_ID          Apple ID used for notarization
+#   NOTARY_APP_PASSWORD      app-specific password for that Apple ID
+#                            (appleid.apple.com -> Sign-In and Security)
+#
+# Cakebrew is distributed with Developer ID + hardened runtime and is NOT
+# sandboxed — it drives the local `brew` CLI, which the App Sandbox blocks.
+# See AGENTS.md ("Distribution & sandboxing") for the measurements behind that.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build, sign & notarize
+    runs-on: macos-26
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          xcrun --sdk macosx --show-sdk-version
+
+      - name: Verify signing secrets are present
+        env:
+          CERT: ${{ secrets.MACOS_CERTIFICATE_P12 }}
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          NOTARY_USER: ${{ secrets.NOTARY_APPLE_ID }}
+        run: |
+          missing=""
+          [ -n "$CERT" ] || missing="$missing MACOS_CERTIFICATE_P12"
+          [ -n "$TEAM" ] || missing="$missing APPLE_TEAM_ID"
+          [ -n "$NOTARY_USER" ] || missing="$missing NOTARY_APPLE_ID"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing required secret(s):$missing — see the header of .github/workflows/release.yml"
+            exit 1
+          fi
+
+      - name: Import Developer ID certificate
+        env:
+          MACOS_CERTIFICATE_P12: ${{ secrets.MACOS_CERTIFICATE_P12 }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          CERT_PATH="$RUNNER_TEMP/certificate.p12"
+          KEYCHAIN="$RUNNER_TEMP/build.keychain-db"
+
+          echo -n "$MACOS_CERTIFICATE_P12" | base64 --decode -o "$CERT_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$CERT_PATH" -k "$KEYCHAIN" -P "$MACOS_CERTIFICATE_PWD" \
+            -T /usr/bin/codesign -T /usr/bin/security
+          # Let codesign use the key without an interactive prompt.
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" > /dev/null
+          security list-keychain -d user -s "$KEYCHAIN" login.keychain-db
+
+          rm -f "$CERT_PATH"
+          echo "Imported signing identities:"
+          security find-identity -v -p codesigning "$KEYCHAIN" | sed 's/([A-Z0-9]*)/(TEAMID)/'
+
+      - name: Archive
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          xcodebuild archive \
+            -workspace Cakebrew.xcworkspace \
+            -scheme Cakebrew \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            -archivePath "$RUNNER_TEMP/Cakebrew.xcarchive" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Developer ID Application"
+
+      - name: Export signed app
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/exportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>developer-id</string>
+            <key>teamID</key><string>$APPLE_TEAM_ID</string>
+            <key>signingStyle</key><string>manual</string>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Cakebrew.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/exportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export"
+
+      - name: Verify signature and hardened runtime
+        run: |
+          set -euo pipefail
+          APP="$RUNNER_TEMP/export/Cakebrew.app"
+          codesign --verify --strict --verbose=2 "$APP"
+          # 'runtime' in the CodeDirectory flags == hardened runtime enabled
+          codesign -d --verbose=2 "$APP" 2>&1 | grep -q "flags=.*runtime" \
+            && echo "hardened runtime: enabled" \
+            || { echo "::error::hardened runtime missing"; exit 1; }
+
+      - name: Notarize and staple
+        env:
+          NOTARY_APPLE_ID: ${{ secrets.NOTARY_APPLE_ID }}
+          NOTARY_APP_PASSWORD: ${{ secrets.NOTARY_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          APP="$RUNNER_TEMP/export/Cakebrew.app"
+          ZIP="$RUNNER_TEMP/Cakebrew.zip"
+
+          # ditto (not `zip`) preserves the bundle's symlinks and metadata.
+          /usr/bin/ditto -c -k --keepParent "$APP" "$ZIP"
+
+          xcrun notarytool submit "$ZIP" \
+            --apple-id "$NOTARY_APPLE_ID" \
+            --password "$NOTARY_APP_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait
+
+          xcrun stapler staple "$APP"
+          xcrun stapler validate "$APP"
+
+          # Gatekeeper's own verdict on the stapled app.
+          spctl --assess --type execute --verbose=2 "$APP"
+
+          # Re-zip *after* stapling so the artifact carries the ticket.
+          rm -f "$ZIP"
+          /usr/bin/ditto -c -k --keepParent "$APP" "$ZIP"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Cakebrew-notarized
+          path: ${{ runner.temp }}/Cakebrew.zip
+          if-no-files-found: error
+
+      - name: Attach to GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ runner.temp }}/Cakebrew.zip
+          generate_release_notes: true
