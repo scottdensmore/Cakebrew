@@ -25,6 +25,14 @@
 #import <Cocoa/Cocoa.h>
 #import "BPFormula.h"
 
+/// Where brew actually runs.
+typedef NS_ENUM(NSInteger, BPBrewTransport) {
+	/// In-process NSTask. The shipping (non-sandboxed) configuration.
+	kBPBrewTransportDirect = 0,
+	/// Through CakebrewHelper, which runs outside the app sandbox.
+	kBPBrewTransportHelper = 1,
+};
+
 typedef NS_ENUM(NSInteger, BPListMode) {
 	kBPListAll,
 	kBPListInstalled,
@@ -229,6 +237,15 @@ typedef NS_ENUM(NSInteger, BPListMode) {
  *
  *  @return List of BPFormula objects.
  */
+/// Selected automatically at startup; overridable for testing.
+@property (assign) BPBrewTransport brewTransport;
+
+/// The transport a build should use given whether it is sandboxed.
++ (BPBrewTransport)defaultTransportWhenSandboxed:(BOOL)sandboxed;
+
+/// Whether this process is running inside the App Sandbox.
++ (BOOL)isRunningSandboxed;
+
 - (NSArray*)listMode:(BPListMode)mode;
 
 /**
