@@ -934,6 +934,7 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
+				"$(CODESIGNING_FOLDER_PATH)",
 				"$(CODESIGNING_FOLDER_PATH)/Contents/MacOS/CakebrewHelper",
 			);
 			name = "Verify embedded helper signature";
@@ -943,7 +944,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# The app pins the helper's designated requirement at runtime. If the embedded\n# helper is signed with a different identifier or team, the app silently\n# refuses to talk to its own helper, so fail the build loudly instead.\n# Skipped for unsigned/ad-hoc builds (CI and plain xcodebuild runs).\nif [ \"${CODE_SIGNING_ALLOWED}\" = \"NO\" ] || [ -z \"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\" ] || [ \"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\" = \"-\" ]; then\n  echo \"note: skipping helper signature check (unsigned build)\"\n  exit 0\nfi\nHELPER=\"${CODESIGNING_FOLDER_PATH}/Contents/MacOS/CakebrewHelper\"\nif [ ! -f \"$HELPER\" ]; then\n  echo \"error: CakebrewHelper is missing from the app bundle\"\n  exit 1\nfi\nREQ=\"identifier \\\"com.scottdensmore.Cakebrew.Helper\\\" and anchor apple generic and certificate leaf[subject.OU] = \\\"${DEVELOPMENT_TEAM}\\\"\"\nif ! /usr/bin/codesign --verify -R=\"$REQ\" \"$HELPER\" 2>/dev/null; then\n  echo \"error: embedded CakebrewHelper does not satisfy the app's designated requirement (team ${DEVELOPMENT_TEAM}); the app would refuse to connect to it.\"\n  /usr/bin/codesign -dv \"$HELPER\" 2>&1 | sed 's/^/note: /'\n  exit 1\nfi\necho \"note: embedded helper satisfies the app's designated requirement\"\n";
+			shellScript = "# The app pins the helper's designated requirement at runtime. If the embedded\n# helper is signed with a different identifier or team, the app silently\n# refuses to talk to its own helper, so fail the build loudly instead.\n#\n# Only meaningful when really signing with a team: CI builds ad-hoc with an\n# empty DEVELOPMENT_TEAM, where the requirement cannot be satisfied by design.\nif [ \"${CODE_SIGNING_ALLOWED}\" = \"NO\" ] || [ -z \"${DEVELOPMENT_TEAM}\" ] || [ -z \"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\" ] || [ \"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\" = \"-\" ]; then\n  echo \"note: skipping helper signature check (unsigned or team-less build)\"\n  exit 0\nfi\nHELPER=\"${CODESIGNING_FOLDER_PATH}/Contents/MacOS/CakebrewHelper\"\nif [ ! -f \"$HELPER\" ]; then\n  echo \"error: CakebrewHelper is missing from the app bundle\"\n  exit 1\nfi\nREQ=\"identifier \\\"com.scottdensmore.Cakebrew.Helper\\\" and anchor apple generic and certificate leaf[subject.OU] = \\\"${DEVELOPMENT_TEAM}\\\"\"\nif ! /usr/bin/codesign --verify -R=\"$REQ\" \"$HELPER\" 2>/dev/null; then\n  echo \"error: embedded CakebrewHelper does not satisfy the app's designated requirement (team ${DEVELOPMENT_TEAM}); the app would refuse to connect to it.\"\n  /usr/bin/codesign -dv \"$HELPER\" 2>&1 | sed 's/^/note: /'\n  exit 1\nfi\necho \"note: embedded helper satisfies the app's designated requirement\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
