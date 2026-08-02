@@ -148,6 +148,34 @@ Developer ID distribution.
 no ATS weakening, a privacy manifest, and validated user input are the
 hardening this app can actually carry.
 
+## Signed local builds (helper testing)
+
+Day-to-day development needs nothing special: an Xcode build (Cmd-R) is signed
+with your Apple Development certificate, and that **already satisfies the
+helper's designated requirement** (it pins `anchor apple generic` plus the team
+OU, which development certs carry). So the debug build can drive the helper.
+
+To exercise helper registration and Login Items approval for real, the app has
+to be signed and living in `/Applications`:
+
+```sh
+scripts/install-signed.sh          # Release, or pass Debug
+```
+
+It builds into a temporary derived-data dir (so it can't leave a stale
+unsigned helper in your normal one), verifies both signatures, replaces
+`/Applications/Cakebrew.app`, and prints the next steps.
+
+A final build phase, **Verify embedded helper signature**, fails the build if
+the embedded helper wouldn't satisfy the app's requirement — otherwise the app
+silently refuses to talk to its own helper at runtime. It skips automatically
+for unsigned/ad-hoc builds (CI), and declares the helper as a script input
+because Xcode sandboxes script phases.
+
+**Distribution certificates:** notarized releases need a *Developer ID
+Application* certificate, which is separate from Apple Development. Until one
+exists in the account, `.github/workflows/release.yml` cannot run.
+
 ## OS support policy
 
 Minimum deployment target = **latest macOS minus one** (currently 15.0);

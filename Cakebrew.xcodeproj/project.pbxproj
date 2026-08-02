@@ -319,6 +319,7 @@
 		46BD61BF82D5E8C0C487BD7D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		49ADB54599429778C94517D8 /* BPHelperClient.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPHelperClient.m; sourceTree = "<group>"; };
 		4D77DDA97C5A016EBA1AA607 /* BPPreferences.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPPreferences.m; path = Models/BPPreferences.m; sourceTree = "<group>"; };
+		52A74D796C4772C04B326231 /* CakebrewHelper-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "CakebrewHelper-Info.plist"; sourceTree = "<group>"; };
 		5850375D29AF045F95C584C5 /* BPPreferencesWindowController.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPPreferencesWindowController.m; path = Controllers/BPPreferencesWindowController.m; sourceTree = "<group>"; };
 		65FAFC2DA348DF99A7B6D768 /* BPServiceTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPServiceTests.m; sourceTree = "<group>"; };
 		78768EFD53946A6C45F584F8 /* BPHelperCommand.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPHelperCommand.h; sourceTree = "<group>"; };
@@ -449,6 +450,7 @@
 				0ADE0B7BD1F6112D22A7BF17 /* BPHelperRegistration.h */,
 				1977F1333B98C72C02E9D6E7 /* BPHelperRegistration.m */,
 				D8582C4CE349B64B6DE6FF75 /* com.scottdensmore.Cakebrew.Helper.plist */,
+				52A74D796C4772C04B326231 /* CakebrewHelper-Info.plist */,
 			);
 			name = Helper;
 			path = Helper;
@@ -773,6 +775,7 @@
 				1570BA6018EF9B0F001C3C5C /* CopyFiles */,
 				E32451C1E3AED83C72D2A877 /* Embed Helper */,
 				FFFCAE7B04F963A524E08EAB /* Copy Helper LaunchAgent */,
+				5DC446C2DE01010F7D4EDAAA /* Verify embedded helper signature */,
 			);
 			buildRules = (
 			);
@@ -920,6 +923,29 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		5DC446C2DE01010F7D4EDAAA /* Verify embedded helper signature */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(CODESIGNING_FOLDER_PATH)/Contents/MacOS/CakebrewHelper",
+			);
+			name = "Verify embedded helper signature";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# The app pins the helper's designated requirement at runtime. If the embedded\n# helper is signed with a different identifier or team, the app silently\n# refuses to talk to its own helper, so fail the build loudly instead.\n# Skipped for unsigned/ad-hoc builds (CI and plain xcodebuild runs).\nif [ \"${CODE_SIGNING_ALLOWED}\" = \"NO\" ] || [ -z \"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\" ] || [ \"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\" = \"-\" ]; then\n  echo \"note: skipping helper signature check (unsigned build)\"\n  exit 0\nfi\nHELPER=\"${CODESIGNING_FOLDER_PATH}/Contents/MacOS/CakebrewHelper\"\nif [ ! -f \"$HELPER\" ]; then\n  echo \"error: CakebrewHelper is missing from the app bundle\"\n  exit 1\nfi\nREQ=\"identifier \\\"com.scottdensmore.Cakebrew.Helper\\\" and anchor apple generic and certificate leaf[subject.OU] = \\\"${DEVELOPMENT_TEAM}\\\"\"\nif ! /usr/bin/codesign --verify -R=\"$REQ\" \"$HELPER\" 2>/dev/null; then\n  echo \"error: embedded CakebrewHelper does not satisfy the app's designated requirement (team ${DEVELOPMENT_TEAM}); the app would refuse to connect to it.\"\n  /usr/bin/codesign -dv \"$HELPER\" 2>&1 | sed 's/^/note: /'\n  exit 1\nfi\necho \"note: embedded helper satisfies the app's designated requirement\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		1FE4FE50148E4CDD008EDE8B /* Sources */ = {
@@ -1239,10 +1265,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
 				DEVELOPMENT_TEAM = 27ZDER873F;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/Cakebrew/Helper";
+				INFOPLIST_FILE = "Cakebrew/Helper/CakebrewHelper-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scottdensmore.Cakebrew.Helper;
 				PRODUCT_NAME = CakebrewHelper;
@@ -1254,10 +1284,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
 				DEVELOPMENT_TEAM = 27ZDER873F;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/Cakebrew/Helper";
+				INFOPLIST_FILE = "Cakebrew/Helper/CakebrewHelper-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scottdensmore.Cakebrew.Helper;
 				PRODUCT_NAME = CakebrewHelper;
