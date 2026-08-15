@@ -24,12 +24,13 @@
 #import "BPHomebrewManager.h"
 #import "BPStyle.h"
 #import "BPAppDelegate.h"
+#import "BPAutoScrollTextView.h"
 
 @interface BPInstallationWindowController ()
 
 @property (weak) IBOutlet NSTextField *windowTitleLabel;
 @property (weak) IBOutlet NSTextField *formulaNameLabel;
-@property (unsafe_unretained) IBOutlet NSTextView *recordTextView; //NSTextView does not support weak in ARC at all (not just 10.7)
+@property (unsafe_unretained) IBOutlet BPAutoScrollTextView *recordTextView; //NSTextView does not support weak in ARC at all (not just 10.7)
 @property (weak) IBOutlet NSButton *okButton;
 @property (weak) IBOutlet NSProgressIndicator *progressIndicator;
 
@@ -152,21 +153,10 @@
 	[self.progressIndicator startAnimation:nil];
 	
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-		NSString __block *outputValue;
 		__weak BPInstallationWindowController *weakSelf = self;
-		
+
 		void (^displayTerminalOutput)(NSString *outputValue) = ^(NSString *output) {
-			if (outputValue)
-			{
-				outputValue = [outputValue stringByAppendingString:output];
-			}
-			else
-			{
-				outputValue = output;
-			}
-			[weakSelf.recordTextView performSelectorOnMainThread:@selector(setString:)
-													  withObject:outputValue
-												   waitUntilDone:YES];
+			[weakSelf.recordTextView appendOutput:output];
 		};
 		
 		BPHomebrewInterface *homebrewInterface = [BPHomebrewInterface sharedInterface];

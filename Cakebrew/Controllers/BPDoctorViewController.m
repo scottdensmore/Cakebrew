@@ -23,10 +23,11 @@
 #import "BPHomebrewInterface.h"
 #import "BPAppDelegate.h"
 #import "BPStyle.h"
+#import "BPAutoScrollTextView.h"
 
 @interface BPDoctorViewController ()
 
-@property (unsafe_unretained, nonatomic) IBOutlet NSTextView *doctorTextView;
+@property (unsafe_unretained, nonatomic) IBOutlet BPAutoScrollTextView *doctorTextView;
 @property (weak, nonatomic) IBOutlet NSProgressIndicator *progressIndicator;
 @property (assign) BOOL isPerformingDoctor;
 
@@ -54,17 +55,13 @@
 	}
 	[appDelegate setRunningBackgroundTask:YES];
 	
-	[self.doctorTextView setString:@""];
+	[self.doctorTextView clearOutput];
 	self.isPerformingDoctor = YES;
 	[self.progressIndicator startAnimation:sender];
 
-	NSString *previousString = [self.doctorTextView string];
-	
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
 		[[BPHomebrewInterface sharedInterface] runDoctorWithReturnBlock:^(NSString *output) {
-			[self.doctorTextView performSelectorOnMainThread:@selector(setString:)
-												  withObject:[previousString stringByAppendingString:output]
-											   waitUntilDone:YES];
+			[self.doctorTextView appendOutput:output];
 		}];
 		
 		dispatch_async(dispatch_get_main_queue(), ^{

@@ -32,6 +32,7 @@
 		15A89D3925F2F467003D33F5 /* NSLayoutConstraint+Shims.m in Sources */ = {isa = PBXBuildFile; fileRef = 15A89D3825F2F467003D33F5 /* NSLayoutConstraint+Shims.m */; };
 		15BBA18E1BD031C9002C0127 /* BPBackgroundView.m in Sources */ = {isa = PBXBuildFile; fileRef = 15BBA18D1BD031C9002C0127 /* BPBackgroundView.m */; };
 		15C34CBF19512DE100B92E36 /* BPAutoScrollTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = 15C34CBE19512DE100B92E36 /* BPAutoScrollTextView.m */; };
+		5E523D41E4EFAF010C1F604B /* BPAutoScrollTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = 15C34CBE19512DE100B92E36 /* BPAutoScrollTextView.m */; };
 		15CEFC631AB335B2005CF54A /* BPLoadingView.m in Sources */ = {isa = PBXBuildFile; fileRef = 15CEFC621AB335B2005CF54A /* BPLoadingView.m */; };
 		15D28A121AE1BD27005C8A3E /* BPTimedDispatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 15D28A111AE1BD27005C8A3E /* BPTimedDispatch.m */; };
 		15D28A141AE332DB005C8A3E /* DCOAboutWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 15D28A161AE332DB005C8A3E /* DCOAboutWindow.xib */; };
@@ -68,6 +69,7 @@
 		543AA5812EA7FF9BDE33DFA8 /* BPBrewTransportTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A3EFEDFD2D84875FD5E89BA1 /* BPBrewTransportTests.m */; };
 		19FEDE3C1439D7A1FD5F9B9F /* BPUpgradeArgumentsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 74CEBC2BDF5416D80F215920 /* BPUpgradeArgumentsTests.m */; };
 		540F41D2E1A242AB0379E601 /* BPTaskStreamingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F4FE8C424C9535BD69FAA413 /* BPTaskStreamingTests.m */; };
+		7A77BD02E23D9D883A0B130D /* BPAutoScrollTextViewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F5D28979AEC4AC99CA1D709F /* BPAutoScrollTextViewTests.m */; };
 		55BE3020BDDC9FCA19C1ECBC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C155F549AE6671B51A3FCAD /* Cocoa.framework */; };
 		5F38898450E03D2D56291D29 /* BPHelperSecurity.m in Sources */ = {isa = PBXBuildFile; fileRef = 1227A6AF7A6E1F24A913015B /* BPHelperSecurity.m */; };
 		627F454983A4C2C93584B748 /* BPHelperOutputRelayTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 88BBB2337F47C685C807D566 /* BPHelperOutputRelayTests.m */; };
@@ -337,6 +339,7 @@
 		A3EFEDFD2D84875FD5E89BA1 /* BPBrewTransportTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPBrewTransportTests.m; sourceTree = "<group>"; };
 		74CEBC2BDF5416D80F215920 /* BPUpgradeArgumentsTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPUpgradeArgumentsTests.m; sourceTree = "<group>"; };
 		F4FE8C424C9535BD69FAA413 /* BPTaskStreamingTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPTaskStreamingTests.m; sourceTree = "<group>"; };
+		F5D28979AEC4AC99CA1D709F /* BPAutoScrollTextViewTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPAutoScrollTextViewTests.m; sourceTree = "<group>"; };
 		A8052362C08CE3FF3945ABAD /* BPPreferencesTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPPreferencesTests.m; sourceTree = "<group>"; };
 		AA67F6479F85E50C83706E3E /* BPService.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPService.m; path = Models/BPService.m; sourceTree = "<group>"; };
 		B040E2F0936D991B4511CE23 /* BPHelperOutputRelay.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPHelperOutputRelay.h; sourceTree = "<group>"; };
@@ -727,6 +730,7 @@
 				A3EFEDFD2D84875FD5E89BA1 /* BPBrewTransportTests.m */,
 				74CEBC2BDF5416D80F215920 /* BPUpgradeArgumentsTests.m */,
 				F4FE8C424C9535BD69FAA413 /* BPTaskStreamingTests.m */,
+				F5D28979AEC4AC99CA1D709F /* BPAutoScrollTextViewTests.m */,
 				8F2D53C524FAE8B655FD3778 /* BPHelperRegistrationTests.m */,
 			);
 			path = CakebrewTests;
@@ -1048,6 +1052,8 @@
 				543AA5812EA7FF9BDE33DFA8 /* BPBrewTransportTests.m in Sources */,
 				19FEDE3C1439D7A1FD5F9B9F /* BPUpgradeArgumentsTests.m in Sources */,
 				540F41D2E1A242AB0379E601 /* BPTaskStreamingTests.m in Sources */,
+				7A77BD02E23D9D883A0B130D /* BPAutoScrollTextViewTests.m in Sources */,
+				5E523D41E4EFAF010C1F604B /* BPAutoScrollTextView.m in Sources */,
 				1ED78A300C6AD6B948573401 /* BPHelperRegistration.m in Sources */,
 				D5A4E97BA98E72BCC344B615 /* BPHelperRegistrationTests.m in Sources */,
 			);

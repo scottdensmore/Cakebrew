@@ -576,13 +576,17 @@
 	XCTAssertTrue([runButton waitForExistenceWithTimeout:15.0], @"the Run Doctor button should exist");
 	[runButton click];
 
-	NSPredicate *predicate = [NSPredicate predicateWithFormat:@"value CONTAINS %@", @"MOCK_DOCTOR_OK"];
+	// The mock streams three chunks. Requiring the first marker *and* the last
+	// in the same text view is the regression guard: the Doctor view used to
+	// replace its whole document per chunk, so only the final chunk survived.
+	NSPredicate *predicate = [NSPredicate predicateWithFormat:@"value CONTAINS %@ AND value CONTAINS %@",
+							  @"MOCK_DOCTOR_OK", @"MOCK_DOCTOR_DONE"];
 	XCUIElement *output = [[self.app.textViews matchingPredicate:predicate] firstMatch];
 	BOOL appeared = [output waitForExistenceWithTimeout:15.0];
 	if (!appeared) {
 		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
 	}
-	XCTAssertTrue(appeared, @"running Doctor should stream its report into the Doctor view");
+	XCTAssertTrue(appeared, @"Doctor should accumulate every chunk, not just the last one");
 }
 
 // Journey: the toolbar's Update Homebrew button switches to the Update view and
