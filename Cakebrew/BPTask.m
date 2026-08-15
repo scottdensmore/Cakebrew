@@ -20,6 +20,7 @@
 //
 
 #import "BPTask.h"
+#import "BPHelperOutputRelay.h"
 
 static BOOL systemHasAppNap;
 
@@ -31,14 +32,11 @@ NSString *const kDidEndBackgroundActivityNotification	= @"DidEndBackgroundActivi
 	id activity;
 	NSPipe *outputPipe;
 	NSPipe *errorPipe;
-	NSPipe *inputPipe;
 	NSFileHandle *outputFileHandle;
 	NSFileHandle *errorFileHandle;
-	NSMutableData *outputData;
-	NSMutableData *errorData;
-	NSObject *outputHandlerObserver;
-	NSObject *errorHandlerObserver;
-	void (^operationUpdateBlock)(NSString*);
+	BPHelperOutputRelay *outputRelay;
+	BPHelperOutputRelay *errorRelay;
+	dispatch_queue_t deliveryQueue;
 }
 
 @property (strong) NSTask *task;
@@ -60,11 +58,14 @@ NSString *const kDidEndBackgroundActivityNotification	= @"DidEndBackgroundActivi
 	if (self)
 	{
 		_task = [self taskWithPath:path arguments:arguments];
-		[[NSNotificationCenter defaultCenter] addObserver:self
-												 selector:@selector(taskDidTerminate:)
-													 name:NSTaskDidTerminateNotification object:_task];
-		outputData = [[NSMutableData alloc] init];
-		errorData = [[NSMutableData alloc] init];
+		_output = @"";
+		_error = @"";
+
+		// Chunks are handed to the update block here, one at a time and in
+		// order. -execute drains this queue before returning, because
+		// -performSyncBrewCommandWithArguments: reads the buffer its block
+		// filled the instant -execute comes back.
+		deliveryQueue = dispatch_queue_create("com.brunophilipe.Cakebrew.BPTask.Delivery", DISPATCH_QUEUE_SERIAL);
 	}
 	return self;
 }
@@ -75,160 +76,123 @@ NSString *const kDidEndBackgroundActivityNotification	= @"DidEndBackgroundActivi
 	{
 		return nil;
 	}
-	
+
 	NSTask *task = [[NSTask alloc] init];
 	[task setLaunchPath:path];
 	[task setArguments:arguments];
 	return task;
 }
 
-- (BOOL)shouldUsePartialUpdates
+#pragma mark - Reading
+
+/// A relay that accumulates the whole stream and forwards each decoded chunk.
+/// Shared with the helper transport, which needs exactly the same behaviour —
+/// including holding back the tail of a multi-byte character split across two
+/// reads, which brew produces constantly (✔ / ✘ / →).
+- (BPHelperOutputRelay *)relayForwardingToUpdateBlock
 {
-	return self.updateBlock != nil;
+	__weak BPTask *weakSelf = self;
+	dispatch_queue_t queue = deliveryQueue;
+
+	return [[BPHelperOutputRelay alloc] initWithSink:^(NSString *chunk) {
+		// Enqueue rather than call through: the sink runs on the pipe's
+		// readability queue, and blocking there stops the pipe draining.
+		dispatch_async(queue, ^{
+			BPTask *strongSelf = weakSelf;
+			void (^update)(NSString *) = strongSelf.updateBlock;
+			if (update && chunk.length > 0)
+			{
+				update(chunk);
+			}
+		});
+	}];
 }
 
-- (void)configureStandardOutput
+- (void)configurePipes
 {
 	outputPipe = [NSPipe pipe];
-	[self.task setStandardOutput:outputPipe];
-}
-
-- (void)configureStandardError
-{
 	errorPipe = [NSPipe pipe];
+	[self.task setStandardOutput:outputPipe];
 	[self.task setStandardError:errorPipe];
-}
 
-- (void)configureOutputFileHandle
-{
+	// Nothing ever writes to the child's stdin. Leaving the app's attached lets
+	// a child that reads it wait forever instead of seeing EOF.
+	[self.task setStandardInput:[NSFileHandle fileHandleWithNullDevice]];
+
 	outputFileHandle = [outputPipe fileHandleForReading];
-	if ([self shouldUsePartialUpdates])
-	{
-		[outputFileHandle waitForDataInBackgroundAndNotify];
-		outputHandlerObserver = [[NSNotificationCenter defaultCenter] addObserverForName:NSFileHandleDataAvailableNotification
-																				  object:outputFileHandle
-																				   queue:[NSOperationQueue currentQueue]
-																			  usingBlock:^(NSNotification *note) {
-																				  [self updatedFileHandle:note];
-																			  }];
-	}
-}
-
-- (void)configureErrorFileHandle
-{
 	errorFileHandle = [errorPipe fileHandleForReading];
-	if ([self shouldUsePartialUpdates] )
-	{
-		[errorFileHandle waitForDataInBackgroundAndNotify];
-		errorHandlerObserver = [[NSNotificationCenter defaultCenter] addObserverForName:NSFileHandleDataAvailableNotification
-																				 object:errorFileHandle
-																				  queue:[NSOperationQueue currentQueue]
-																			 usingBlock:^(NSNotification *note) {
-																				 [self updatedFileHandle:note];
-																			 }];
-	}
+
+	outputRelay = [self relayForwardingToUpdateBlock];
+	errorRelay = [self relayForwardingToUpdateBlock];
+
+	// Each pipe is drained on its own as data arrives. Reading one of them to
+	// end-of-file (which is what this class used to do) leaves the other
+	// filling up; once it hits the 64 KB buffer the child blocks on write and
+	// can never exit.
+	BPHelperOutputRelay *out = outputRelay;
+	outputFileHandle.readabilityHandler = ^(NSFileHandle *handle) {
+		[out appendData:[handle availableData]];
+	};
+
+	BPHelperOutputRelay *err = errorRelay;
+	errorFileHandle.readabilityHandler = ^(NSFileHandle *handle) {
+		[err appendData:[handle availableData]];
+	};
 }
 
-- (void)processStandardOutput
+/// Detaches the handlers and takes whatever landed between the last readability
+/// callback and the process exiting.
+- (void)finishReading
 {
-	if (![self shouldUsePartialUpdates]) {
-		NSData *data = [outputFileHandle readDataToEndOfFile];
-		if ([data length]) {
-			self.output = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-		}
-		
-	} else {
-		if ([outputData length]) {
-			self.output = [[NSString alloc] initWithData:outputData encoding:NSUTF8StringEncoding];
-		}
-	}
+	outputFileHandle.readabilityHandler = nil;
+	errorFileHandle.readabilityHandler = nil;
+
+	[outputRelay appendData:[outputFileHandle readDataToEndOfFile]];
+	[errorRelay appendData:[errorFileHandle readDataToEndOfFile]];
+
+	self.output = outputRelay.accumulatedOutput;
+	self.error = errorRelay.accumulatedOutput;
 }
 
-- (void)processStandardError
+/// Blocks until every queued chunk has been handed to the update block.
+- (void)deliverPendingChunks
 {
-	if(![self shouldUsePartialUpdates]) {
-		NSData *data = [errorFileHandle readDataToEndOfFile];
-		if ([data length]) {
-			self.error = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-		}
-	} else {
-		if ([errorData length]) {
-			self.error = [[NSString alloc] initWithData:errorData encoding:NSUTF8StringEncoding];
-		}
-	}
+	dispatch_sync(deliveryQueue, ^{});
 }
+
+#pragma mark - Running
 
 - (int)execute
 {
-	[self configureStandardOutput];
-	[self configureStandardError];
-	[self configureOutputFileHandle];
-	[self configureErrorFileHandle];
+	[self configurePipes];
 	[self beginActivity];
 	@try {
 		[self.task launch];
-		[self.task waitUntilExit]; //this makes sure that we stay in the same run loop (thread); needed for notifications
-		
-		return [self.task terminationStatus];
+		[self.task waitUntilExit];
+
+		[self finishReading];
+		[self deliverPendingChunks];
+
+		int status = [self.task terminationStatus];
+		[self taskDidFinish];
+
+		return status;
 	}
 	@catch (NSException *exception) {
 		NSLog(@"Exception: %@", exception);
 		[self cleanup];
-		
+
 		return -1;
 	}
 }
 
-- (void)updatedFileHandle:(NSNotification*)notification
+- (void)taskDidFinish
 {
-	NSFileHandle *fileHandle = [notification object];
-	NSData *data = [fileHandle readDataToEndOfFile];
-
-	if (fileHandle == outputFileHandle) {
-		[outputData appendData:data];
-	}
-
-	if (fileHandle == errorFileHandle) {
-		[errorData appendData:data];
-	}
-
-	[fileHandle waitForDataInBackgroundAndNotify];
-
-	if (data && data.length > 0) {
-		dispatch_queue_t queue = [self updateBlockQueue];
-
-		if (queue == nil) {
-			queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
-		}
-
-		dispatch_async(queue, ^{
-			if (self.updateBlock) {
-				self.updateBlock([[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
-			}
-		});
-	}
-}
-
-- (void)taskDidTerminate:(NSNotification *)notification
-{
-	[self processStandardOutput];
-	[self processStandardError];
-
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
-	[[NSNotificationCenter defaultCenter] removeObserver:outputHandlerObserver];
-	[[NSNotificationCenter defaultCenter] removeObserver:errorHandlerObserver];
-	
-	outputHandlerObserver = nil;
-	errorHandlerObserver = nil;
-	
 	[self endActivity];
-	
-	if (self.delegate)
+
+	if ([self.delegate respondsToSelector:@selector(task:didFinishWithOutput:error:)])
 	{
-		if ([self.delegate respondsToSelector:@selector(task:didFinishWithOutput:error:)])
-		{
-			[self.delegate task:self didFinishWithOutput:self.output error:self.error];
-		}
+		[self.delegate task:self didFinishWithOutput:self.output error:self.error];
 	}
 }
 
@@ -245,7 +209,7 @@ NSString *const kDidEndBackgroundActivityNotification	= @"DidEndBackgroundActivi
 
 - (void)endActivity
 {
-	if (systemHasAppNap)
+	if (systemHasAppNap && activity)
 	{
 		[[NSProcessInfo processInfo] endActivity:activity];
 		activity = nil;
@@ -256,19 +220,15 @@ NSString *const kDidEndBackgroundActivityNotification	= @"DidEndBackgroundActivi
 
 - (void)cleanup
 {
-	[self.task terminate];
+	outputFileHandle.readabilityHandler = nil;
+	errorFileHandle.readabilityHandler = nil;
+
+	if ([self.task isRunning])
+	{
+		[self.task terminate];
+	}
+
 	[self endActivity];
-	
-	outputData = nil;
-	errorData = nil;
-	outputFileHandle = nil;
-	errorFileHandle = nil;
-	
-	[[NSNotificationCenter defaultCenter] removeObserver:outputHandlerObserver];
-	[[NSNotificationCenter defaultCenter] removeObserver:errorHandlerObserver];
-	
-	outputHandlerObserver = nil;
-	errorHandlerObserver = nil;
 }
 
 - (void)dealloc

@@ -37,8 +37,11 @@ extern NSString * _Nonnull const kDidEndBackgroundActivityNotification;
 - (int)execute;
 - (void)cleanup;
 
+/**
+ *  Called with each chunk of output as it arrives, in order, on a private
+ *  serial queue. Every chunk has been delivered by the time -execute returns.
+ */
 @property (nonatomic, nullable, copy) void (^updateBlock)(NSString * _Nonnull);
-@property (nonatomic, nullable) dispatch_queue_t updateBlockQueue;
 @property (readonly, nonnull) NSString *output;
 @property (readonly, nonnull) NSString *error;
 @property (weak, nullable) id<BPTaskCompleted> delegate;
