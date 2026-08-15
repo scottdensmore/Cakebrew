@@ -118,4 +118,36 @@
 				  @"the pinned name cell must still start with the formula name");
 }
 
+#pragma mark - finding a row by name (restoring selection after a reload)
+
+- (void)testIndexOfFormulaNamedFindsTheRow
+{
+	BPHomebrewManager *manager = [BPHomebrewManager sharedManager];
+	manager.installedFormulae = @[ [BPFormula formulaWithName:@"wget"],
+								   [BPFormula formulaWithName:@"git"],
+								   [BPFormula formulaWithName:@"curl"] ];
+
+	BPFormulaeDataSource *dataSource = [[BPFormulaeDataSource alloc] initWithMode:kBPListInstalled];
+	[dataSource refreshBackingArray];
+
+	XCTAssertEqual([dataSource indexOfFormulaNamed:@"wget"], 0);
+	XCTAssertEqual([dataSource indexOfFormulaNamed:@"git"], 1);
+	XCTAssertEqual([dataSource indexOfFormulaNamed:@"curl"], 2);
+}
+
+- (void)testIndexOfFormulaNamedReturnsMinusOneWhenAbsent
+{
+	// After an uninstall the formula is gone from the list; the caller must be
+	// able to tell that apart from row 0.
+	BPHomebrewManager *manager = [BPHomebrewManager sharedManager];
+	manager.installedFormulae = @[ [BPFormula formulaWithName:@"wget"] ];
+
+	BPFormulaeDataSource *dataSource = [[BPFormulaeDataSource alloc] initWithMode:kBPListInstalled];
+	[dataSource refreshBackingArray];
+
+	XCTAssertEqual([dataSource indexOfFormulaNamed:@"git"], -1);
+	XCTAssertEqual([dataSource indexOfFormulaNamed:@""], -1);
+	XCTAssertEqual([dataSource indexOfFormulaNamed:nil], -1);
+}
+
 @end

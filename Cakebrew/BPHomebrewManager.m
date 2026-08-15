@@ -287,9 +287,11 @@ NSString *const kBPCacheCasksDataKey = @"BPCacheCasksDataKey";
 
 #pragma - Homebrew Interface Delegate
 
-- (void)homebrewInterfaceDidUpdateFormulae
+- (void)homebrewInterfaceDidUpdateFormulaeRebuildingCatalogs:(BOOL)shouldRebuildCatalogs
 {
-	[self reloadFromInterfaceRebuildingCache:YES];
+	// Only operations that change what exists pay for the catalog refetch;
+	// everything else is picked up by the cheap list calls.
+	[self reloadFromInterfaceRebuildingCache:shouldRebuildCatalogs];
 }
 
 - (void)homebrewInterfaceShouldDisplayNoBrewMessage:(BOOL)yesOrNo

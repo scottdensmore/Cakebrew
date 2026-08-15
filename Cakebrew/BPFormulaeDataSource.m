@@ -126,6 +126,20 @@
 	return nil;
 }
 
+- (NSInteger)indexOfFormulaNamed:(NSString *)name
+{
+	if (name.length == 0)
+	{
+		return -1;
+	}
+
+	NSUInteger index = [self.formulaeArray indexOfObjectPassingTest:^BOOL(BPFormula *formula, NSUInteger idx, BOOL *stop) {
+		return [formula.name isEqualToString:name];
+	}];
+
+	return (index == NSNotFound) ? -1 : (NSInteger)index;
+}
+
 - (NSArray *)formulasAtIndexSet:(NSIndexSet *)indexSet
 {
 	if (indexSet.count > 0 && [self.formulaeArray count] > indexSet.lastIndex) {

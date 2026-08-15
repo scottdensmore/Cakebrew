@@ -49,9 +49,14 @@ typedef NS_ENUM(NSInteger, BPListMode) {
 @protocol BPHomebrewInterfaceDelegate <NSObject>
 
 /**
- *  Caled when the formulae cache has been updated.
+ *  Called when an operation has changed brew's state and the lists need
+ *  refreshing.
+ *
+ *  @param shouldRebuildCatalogs `YES` only when the operation can change which
+ *  packages *exist* (see +brewCommandChangesCatalogMembership:). Refetching the
+ *  catalogs takes 80+ seconds cold, so an install or a pin must not ask for it.
  */
-- (void)homebrewInterfaceDidUpdateFormulae;
+- (void)homebrewInterfaceDidUpdateFormulaeRebuildingCatalogs:(BOOL)shouldRebuildCatalogs;
 
 /**
  *  Called if homebrew is not detected in the system.
@@ -113,6 +118,18 @@ typedef NS_ENUM(NSInteger, BPListMode) {
 
 /// As `argumentsForUpgradingFormulae:`, but for casks (adds `--cask`).
 + (NSArray<NSString *> *)argumentsForUpgradingCasks:(NSArray<NSString *> *)casks;
+
+/**
+ *  Whether a brew command can change which packages *exist* — as opposed to
+ *  which are installed.
+ *
+ *  Only these justify refetching the full catalogs (`brew formulae` and
+ *  `brew casks`), which AGENTS.md documents as 80+ seconds cold. Installing,
+ *  uninstalling, upgrading, pinning and Doctor all leave catalog membership
+ *  untouched. Unknown commands are treated as cheap, so a new operation that
+ *  forgets to opt in cannot silently reintroduce the stall.
+ */
++ (BOOL)brewCommandChangesCatalogMembership:(NSString *)command;
 
 /**
  *  Upgrades casks (runs `brew upgrade --cask`).

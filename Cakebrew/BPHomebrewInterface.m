@@ -516,7 +516,7 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 - (BOOL)updateWithReturnBlock:(void (^)(NSString*output))block
 {
 	BOOL val = [self performBrewCommandWithArguments:@[@"update"] dataReturnBlock:block];
-	[self sendDelegateFormulaeUpdatedCall];
+	[self sendDelegateFormulaeUpdatedCallForCommand:@"update"];
 	return val;
 }
 
@@ -550,14 +550,14 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 - (BOOL)upgradeFormulae:(NSArray*)formulae withReturnBlock:(void (^)(NSString*output))block
 {
 	BOOL val = [self performBrewCommandWithArguments:[BPHomebrewInterface argumentsForUpgradingFormulae:formulae] dataReturnBlock:block];
-	[self sendDelegateFormulaeUpdatedCall];
+	[self sendDelegateFormulaeUpdatedCallForCommand:@"upgrade"];
 	return val;
 }
 
 - (BOOL)upgradeCasks:(NSArray*)casks withReturnBlock:(void (^)(NSString*output))block
 {
 	BOOL val = [self performBrewCommandWithArguments:[BPHomebrewInterface argumentsForUpgradingCasks:casks] dataReturnBlock:block];
-	[self sendDelegateFormulaeUpdatedCall];
+	[self sendDelegateFormulaeUpdatedCallForCommand:@"upgrade"];
 	return val;
 }
 
@@ -568,56 +568,56 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 		params = [params arrayByAddingObjectsFromArray:options];
 	}
 	BOOL val = [self performBrewCommandWithArguments:params dataReturnBlock:block];
-	[self sendDelegateFormulaeUpdatedCall];
+	[self sendDelegateFormulaeUpdatedCallForCommand:@"install"];
 	return val;
 }
 
 - (BOOL)installCask:(NSString*)cask withReturnBlock:(void (^)(NSString*output))block
 {
 	BOOL val = [self performBrewCommandWithArguments:@[@"install", @"--cask", cask] dataReturnBlock:block];
-	[self sendDelegateFormulaeUpdatedCall];
+	[self sendDelegateFormulaeUpdatedCallForCommand:@"install"];
 	return val;
 }
 
 - (BOOL)uninstallFormula:(NSString*)formula withReturnBlock:(void (^)(NSString*output))block
 {
 	BOOL val = [self performBrewCommandWithArguments:@[@"uninstall", formula] dataReturnBlock:block];
-	[self sendDelegateFormulaeUpdatedCall];
+	[self sendDelegateFormulaeUpdatedCallForCommand:@"uninstall"];
 	return val;
 }
 
 - (BOOL)uninstallCask:(NSString*)cask withReturnBlock:(void (^)(NSString*output))block
 {
 	BOOL val = [self performBrewCommandWithArguments:@[@"uninstall", @"--cask", cask] dataReturnBlock:block];
-	[self sendDelegateFormulaeUpdatedCall];
+	[self sendDelegateFormulaeUpdatedCallForCommand:@"uninstall"];
 	return val;
 }
 
 - (BOOL)tapRepository:(NSString *)repository withReturnsBlock:(void (^)(NSString *))block
 {
 	BOOL val = [self performBrewCommandWithArguments:@[@"tap", repository] dataReturnBlock:block];
-	[self sendDelegateFormulaeUpdatedCall];
+	[self sendDelegateFormulaeUpdatedCallForCommand:@"tap"];
 	return val;
 }
 
 - (BOOL)untapRepository:(NSString *)repository withReturnsBlock:(void (^)(NSString *))block
 {
 	BOOL val = [self performBrewCommandWithArguments:@[@"untap", repository] dataReturnBlock:block];
-	[self sendDelegateFormulaeUpdatedCall];
+	[self sendDelegateFormulaeUpdatedCallForCommand:@"untap"];
 	return val;
 }
 
 - (BOOL)pinFormula:(NSString *)formula withReturnBlock:(void (^)(NSString *))block
 {
 	BOOL val = [self performBrewCommandWithArguments:@[@"pin", formula] dataReturnBlock:block];
-	[self sendDelegateFormulaeUpdatedCall];
+	[self sendDelegateFormulaeUpdatedCallForCommand:@"pin"];
 	return val;
 }
 
 - (BOOL)unpinFormula:(NSString *)formula withReturnBlock:(void (^)(NSString *))block
 {
 	BOOL val = [self performBrewCommandWithArguments:@[@"unpin", formula] dataReturnBlock:block];
-	[self sendDelegateFormulaeUpdatedCall];
+	[self sendDelegateFormulaeUpdatedCallForCommand:@"unpin"];
 	return val;
 }
 
@@ -629,7 +629,7 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 - (BOOL)runDoctorWithReturnBlock:(void (^)(NSString*output))block
 {
 	BOOL val = [self performBrewCommandWithArguments:@[@"doctor"] dataReturnBlock:block];
-	[self sendDelegateFormulaeUpdatedCall];
+	[self sendDelegateFormulaeUpdatedCallForCommand:@"doctor"];
 	return val;
 }
 
@@ -640,7 +640,7 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 																   @"--force",
 																   [NSString stringWithFormat:@"--file=%@", path]]];
 	
-	[self sendDelegateFormulaeUpdatedCall];
+	[self sendDelegateFormulaeUpdatedCallForCommand:@"export"];
 	
 	if ([output length] == 0)
 	{
@@ -668,17 +668,46 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 - (BOOL)runBrewImportToolWithPath:(NSString*)path withReturnsBlock:(void (^)(NSString *))block
 {
 	NSArray *arguments = @[@"bundle", [NSString stringWithFormat:@"--file=%@", path]];
-	[self sendDelegateFormulaeUpdatedCall];
-	return [self performBrewCommandWithArguments:arguments
-								 dataReturnBlock:block];
+
+	// The reload has to come *after* the import; posting it first made the
+	// refresh observe pre-import state, so nothing the Brewfile installed
+	// showed up until the next reload.
+	BOOL result = [self performBrewCommandWithArguments:arguments
+										dataReturnBlock:block];
+	[self sendDelegateFormulaeUpdatedCallForCommand:@"bundle"];
+
+	return result;
 }
 
-- (void)sendDelegateFormulaeUpdatedCall
++ (BOOL)brewCommandChangesCatalogMembership:(NSString *)command
 {
+	if (command.length == 0)
+	{
+		return NO;
+	}
+
+	// Only commands that change which packages brew can see. Everything else —
+	// install, uninstall, upgrade, pin, unpin, doctor, cleanup, export — moves
+	// packages between the installed lists, which the cheap list calls already
+	// pick up. Defaulting unknown commands to NO keeps a new operation from
+	// silently reintroducing the 80-second catalog refetch.
+	static NSSet<NSString *> *catalogChangingCommands = nil;
+	static dispatch_once_t once;
+	dispatch_once(&once, ^{
+		catalogChangingCommands = [NSSet setWithObjects:@"update", @"tap", @"untap", @"bundle", nil];
+	});
+
+	return [catalogChangingCommands containsObject:[command lowercaseString]];
+}
+
+- (void)sendDelegateFormulaeUpdatedCallForCommand:(NSString *)command
+{
+	BOOL rebuildCatalogs = [BPHomebrewInterface brewCommandChangesCatalogMembership:command];
+
 	if (self.delegate) {
 		id delegate = self.delegate;
 		dispatch_async(dispatch_get_main_queue(), ^{
-			[delegate homebrewInterfaceDidUpdateFormulae];
+			[delegate homebrewInterfaceDidUpdateFormulaeRebuildingCatalogs:rebuildCatalogs];
 		});
 	}
 }
