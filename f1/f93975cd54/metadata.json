@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.10.0",
+  "checkpoint_id": "f1f93975cd54",
+  "strategy": "manual-commit",
+  "branch": "fix/upgrade-all-empty-argument",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "Cakebrew/BPMockHomebrewInterface.m",
+    "Cakebrew/Controllers/BPInstallationWindowController.m"
+  ],
+  "sessions": [
+    {
+      "metadata": "/f1/f93975cd54/0/metadata.json",
+      "transcript": "/f1/f93975cd54/0/full.jsonl",
+      "compact_transcript": "/f1/f93975cd54/0/transcript.jsonl",
+      "content_hash": "/f1/f93975cd54/0/content_hash.txt",
+      "prompt": "/f1/f93975cd54/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 71217,
+    "cache_creation_tokens": 13631550,
+    "cache_read_tokens": 751860701,
+    "output_tokens": 1669379,
+    "api_call_count": 1517
+  }
+}
