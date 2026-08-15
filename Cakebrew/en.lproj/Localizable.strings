@@ -30,7 +30,7 @@
 "Message_Update_Formulae_Title" = "Updating Formulae";
 "Message_Update_Formulae_Body" = "Are you sure you want to update these formulae: '%@'?";
 "Message_Update_All_Outdated_Title" = "Updating all Outdated";
-"Message_Update_All_Outdated_Body" = "Are you sure you want to update all outdated formulae?";
+"Message_Update_All_Outdated_Body" = "Are you sure you want to upgrade all outdated formulae and casks?";
 
 "Confirmation_Install_Formula" = "Are you sure you want to install the formula '%@'?";
 "Confirmation_Uninstall_Formula" = "Are you sure you want to uninstall the formula '%@'?";

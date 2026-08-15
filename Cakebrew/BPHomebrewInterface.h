@@ -91,7 +91,8 @@ typedef NS_ENUM(NSInteger, BPListMode) {
 - (BOOL)updateWithReturnBlock:(void (^)(NSString*))block;
 
 /**
- *  Upgrade parameter formulae to the latest available version.
+ *  Upgrade parameter formulae to the latest available version. Pass `nil` (or
+ *  an empty array) to upgrade everything outdated.
  *
  *  @param formulae The list of formulae to be upgraded.
  *  @param block	Data callback block. This block will be called with new data to be diplayed while the process runs.
@@ -99,6 +100,19 @@ typedef NS_ENUM(NSInteger, BPListMode) {
  *  @return `YES` if successful.
  */
 - (BOOL)upgradeFormulae:(NSArray*)formulae withReturnBlock:(void (^)(NSString*))block;
+
+/**
+ *  The argv for upgrading `formulae`, or for upgrading everything when the
+ *  list is nil/empty.
+ *
+ *  Blank names are dropped rather than forwarded. Arguments reach brew as the
+ *  shell's positional parameters, so an empty operand survives all the way to
+ *  `brew upgrade ''`, which fails outright — see BPUpgradeArgumentsTests.
+ */
++ (NSArray<NSString *> *)argumentsForUpgradingFormulae:(NSArray<NSString *> *)formulae;
+
+/// As `argumentsForUpgradingFormulae:`, but for casks (adds `--cask`).
++ (NSArray<NSString *> *)argumentsForUpgradingCasks:(NSArray<NSString *> *)casks;
 
 /**
  *  Upgrades casks (runs `brew upgrade --cask`).

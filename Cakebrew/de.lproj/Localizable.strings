@@ -145,7 +145,7 @@
 "Message_Untap_Title" = "Repository wird ungetappt.";
 
 /* No comment provided by engineer. */
-"Message_Update_All_Outdated_Body" = "Sind Sie sicher, dass Sie alle veralteten Formeln aktualisieren möchten?";
+"Message_Update_All_Outdated_Body" = "Sind Sie sicher, dass Sie alle veralteten Formeln und Casks aktualisieren möchten?";
 
 /* No comment provided by engineer. */
 "Message_Update_All_Outdated_Title" = "Aktualisiere alle veralteten Formeln";

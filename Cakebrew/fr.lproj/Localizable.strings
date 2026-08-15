@@ -145,7 +145,7 @@
 "Message_Untap_Title" = "Suppression en cours du dépôt";
 
 /* No comment provided by engineer. */
-"Message_Update_All_Outdated_Body" = "Êtes-vous sûr de vouloir mettre à jour toutes les formules ?";
+"Message_Update_All_Outdated_Body" = "Êtes-vous sûr de vouloir mettre à jour toutes les formules et casks obsolètes ?";
 
 /* No comment provided by engineer. */
 "Message_Update_All_Outdated_Title" = "Mettre à jour toutes les formules";

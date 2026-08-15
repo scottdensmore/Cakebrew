@@ -145,7 +145,7 @@
 "Message_Untap_Title" = "Rimozione del repo in cordo";
 
 /* No comment provided by engineer. */
-"Message_Update_All_Outdated_Body" = "Sei sicuro di voler aggiornare tutte le formule?";
+"Message_Update_All_Outdated_Body" = "Sei sicuro di voler aggiornare tutte le formule e i casks non aggiornati?";
 
 /* No comment provided by engineer. */
 "Message_Update_All_Outdated_Title" = "Aggiornare tutte le formule";

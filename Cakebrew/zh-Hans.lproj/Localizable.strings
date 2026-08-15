@@ -145,7 +145,7 @@
 "Message_Untap_Title" = "Untapping Repository";
 
 /* No comment provided by engineer. */
-"Message_Update_All_Outdated_Body" = "你确定想更新所有过期的formulae?";
+"Message_Update_All_Outdated_Body" = "你确定想更新所有过期的 formulae 和 casks 吗?";
 
 /* No comment provided by engineer. */
 "Message_Update_All_Outdated_Title" = "更新所有过期的formulae";

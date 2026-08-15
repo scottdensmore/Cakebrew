@@ -521,16 +521,43 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 	return val;
 }
 
++ (NSArray<NSString *> *)upgradeArgumentsWithPrefix:(NSArray<NSString *> *)prefix names:(NSArray<NSString *> *)names
+{
+	// Operands go to brew as the shell's positional parameters, so a blank one
+	// is a real (empty) argv entry that brew rejects — it does not silently
+	// disappear the way it did when arguments were joined into the command
+	// string. Dropping blanks leaves a bare `brew upgrade`, which is exactly
+	// how you ask Homebrew to upgrade everything outdated.
+	NSMutableArray<NSString *> *arguments = [prefix mutableCopy];
+	for (NSString *name in names) {
+		NSString *trimmed = [name stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+		if (trimmed.length > 0) {
+			[arguments addObject:trimmed];
+		}
+	}
+	return arguments;
+}
+
++ (NSArray<NSString *> *)argumentsForUpgradingFormulae:(NSArray<NSString *> *)formulae
+{
+	return [self upgradeArgumentsWithPrefix:@[@"upgrade"] names:formulae];
+}
+
++ (NSArray<NSString *> *)argumentsForUpgradingCasks:(NSArray<NSString *> *)casks
+{
+	return [self upgradeArgumentsWithPrefix:@[@"upgrade", @"--cask"] names:casks];
+}
+
 - (BOOL)upgradeFormulae:(NSArray*)formulae withReturnBlock:(void (^)(NSString*output))block
 {
-	BOOL val = [self performBrewCommandWithArguments:[@[@"upgrade"] arrayByAddingObjectsFromArray:formulae] dataReturnBlock:block];
+	BOOL val = [self performBrewCommandWithArguments:[BPHomebrewInterface argumentsForUpgradingFormulae:formulae] dataReturnBlock:block];
 	[self sendDelegateFormulaeUpdatedCall];
 	return val;
 }
 
 - (BOOL)upgradeCasks:(NSArray*)casks withReturnBlock:(void (^)(NSString*output))block
 {
-	BOOL val = [self performBrewCommandWithArguments:[@[@"upgrade", @"--cask"] arrayByAddingObjectsFromArray:casks] dataReturnBlock:block];
+	BOOL val = [self performBrewCommandWithArguments:[BPHomebrewInterface argumentsForUpgradingCasks:casks] dataReturnBlock:block];
 	[self sendDelegateFormulaeUpdatedCall];
 	return val;
 }
