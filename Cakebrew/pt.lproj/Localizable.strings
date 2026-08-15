@@ -149,7 +149,7 @@
 "Message_Untap_Title" = "Untapping Repository";
 
 /* No comment provided by engineer. */
-"Message_Update_All_Outdated_Body" = "Tem certeza que deseja atualizar todas as fórmulas desatualizadas?";
+"Message_Update_All_Outdated_Body" = "Tem certeza que deseja atualizar todas as fórmulas e casks desatualizados?";
 
 /* No comment provided by engineer. */
 "Message_Update_All_Outdated_Title" = "Atualizando todas as Desatualizadas";

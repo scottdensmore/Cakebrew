@@ -219,8 +219,8 @@
 			}
 			else
 			{
-				//no parameter is necessary to upgrade all formulas; recycling API with empty string
-				self.operationStatus = [homebrewInterface upgradeFormulae:@[@""]
+				// No operands: bare `brew upgrade` upgrades everything outdated.
+				self.operationStatus = [homebrewInterface upgradeFormulae:nil
 														  withReturnBlock:displayTerminalOutput];
 			}
 		}

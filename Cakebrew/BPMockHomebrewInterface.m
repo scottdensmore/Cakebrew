@@ -143,6 +143,16 @@
 	return YES;
 }
 
+// Stream a fixed, recognizable upgrade report instead of running `brew upgrade`.
+// Covers both a named selection and the no-operand "upgrade everything" path.
+- (BOOL)upgradeFormulae:(NSArray *)formulae withReturnBlock:(void (^)(NSString *))block
+{
+	if (block) {
+		block(@"MOCK_UPGRADE_OK\nUpgraded 0 formulae.\n");
+	}
+	return YES;
+}
+
 - (BOOL)upgradeCasks:(NSArray *)casks withReturnBlock:(void (^)(NSString *))block
 {
 	return YES;
