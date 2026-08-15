@@ -1,0 +1,9 @@
+How can I give you the ability to run that osascript? I want you to be able to visualy inspect your changes
+
+---
+
+I refreshed the token, merge the PR
+
+---
+
+Ok lets do those in sequence

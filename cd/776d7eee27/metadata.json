@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.10.0",
+  "checkpoint_id": "cd776d7eee27",
+  "strategy": "manual-commit",
+  "branch": "fix/bptask-streaming",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "Cakebrew/BPHomebrewInterface.m",
+    "Cakebrew/BPTask.h",
+    "Cakebrew/BPTask.m",
+    "CakebrewTests/BPTaskStreamingTests.m"
+  ],
+  "sessions": [
+    {
+      "metadata": "/cd/776d7eee27/0/metadata.json",
+      "transcript": "/cd/776d7eee27/0/full.jsonl",
+      "compact_transcript": "/cd/776d7eee27/0/transcript.jsonl",
+      "content_hash": "/cd/776d7eee27/0/content_hash.txt",
+      "prompt": "/cd/776d7eee27/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 78,
+    "cache_creation_tokens": 189112,
+    "cache_read_tokens": 7771111,
+    "output_tokens": 40570,
+    "api_call_count": 42
+  }
+}
