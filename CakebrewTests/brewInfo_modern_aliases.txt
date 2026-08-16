@@ -1,0 +1,25 @@
+==> openssl@3: stable 3.6.3 (bottled)
+Cryptography and SSL/TLS Toolkit
+https://openssl-library.org
+Aliases: openssl, openssl@3.6
+Installed (as dependency)
+From: https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/o/openssl@3.rb
+License: Apache-2.0
+==> Installed Versions
+openssl@3 3.6.3 (7,633 files, 38.1MB) [Linked]
+==> Dependencies
+Required (1): ca-certificates
+Recursive Runtime (1): all installed ✔
+==> Caveats
+To add additional certificates, place .pem files in
+  /usr/local/etc/openssl@3/certs
+
+and run
+  /usr/local/opt/openssl@3/bin/c_rehash
+
+OpenSSL 3.6 is only supported until 2026-11-01 so the `openssl@3`
+formula will be downgraded to OpenSSL 3.5 (LTS) in a future update.
+==> Analytics
+install: 527,035 (30 days), 1,457,418 (90 days), 5,655,745 (365 days)
+install-on-request: 64,794 (30 days), 183,895 (90 days), 788,675 (365 days)
+build-error: 4,715 (30 days)

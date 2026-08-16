@@ -266,6 +266,81 @@ static BOOL BPLineLooksLikeWebsite(NSString *line)
 	return [lines componentsJoinedByString:@"\n"];
 }
 
+/**
+ *  What to show as the formula's installed location, starting from the line
+ *  after the description/homepage/conflicts block.
+ *
+ *  Two layouts have to work. The 2015 layout put a Cellar path right here
+ *  (`/usr/local/Cellar/mysql/5.6.21 (9621 files, 339M) *`). Current Homebrew
+ *  puts `Installed (on request)` or `Installed (as dependency)` instead, may
+ *  precede it with an `Aliases:` line, and reports the actual build under an
+ *  `==> Installed Versions` heading further down — there is no Cellar path in
+ *  `brew info` output any more.
+ *
+ *  @return the location/build line, or nil when the formula isn't installed.
+ */
++ (NSString *)installLocationFromLines:(NSArray<NSString *> *)lines startingAtIndex:(NSUInteger)startIndex
+{
+	static NSString *const kInstalledVersionsHeading = @"==> Installed Versions";
+
+	for (NSUInteger index = startIndex; index < lines.count; index++)
+	{
+		NSString *line = lines[index];
+
+		// Metadata that sits between the homepage and the install state.
+		if ([line hasPrefix:@"Aliases:"] || [line hasPrefix:@"From:"] || [line hasPrefix:@"License:"])
+		{
+			continue;
+		}
+
+		if ([line isEqualToString:@"Not installed"])
+		{
+			return nil;
+		}
+
+		// Modern: the marker line only says *that* it is installed, so the
+		// build itself comes from the Installed Versions section.
+		if ([line hasPrefix:@"Installed"])
+		{
+			for (NSUInteger versionIndex = index + 1; versionIndex < lines.count; versionIndex++)
+			{
+				if (![lines[versionIndex] isEqualToString:kInstalledVersionsHeading])
+				{
+					continue;
+				}
+
+				for (NSUInteger buildIndex = versionIndex + 1; buildIndex < lines.count; buildIndex++)
+				{
+					NSString *build = lines[buildIndex];
+					if (build.length > 0)
+					{
+						return [build hasPrefix:@"==>"] ? nil : build;
+					}
+				}
+				return nil;
+			}
+			return nil;
+		}
+
+		// A new section means we ran past the install state without finding one.
+		if ([line hasPrefix:@"==>"])
+		{
+			return nil;
+		}
+
+		// Legacy: a blank line here means keg-only, and the note follows it.
+		if (line.length == 0)
+		{
+			return (index + 1 < lines.count) ? lines[index + 1] : nil;
+		}
+
+		// Legacy: the Cellar (or Caskroom) path, verbatim.
+		return line;
+	}
+
+	return nil;
+}
+
 - (BOOL)getInformation
 {
 	NSString *line         = nil;
@@ -324,6 +399,16 @@ static BOOL BPLineLooksLikeWebsite(NSString *line)
 	}
 
 	lines = [output componentsSeparatedByString:@"\n"];
+
+	// Current Homebrew prefixes the header with "==> " ("==> wget: stable
+	// 1.25.0 …"); the 2015 format this parser was written against did not.
+	// Casks already had theirs stripped by preprocessedCaskInformation.
+	if (lines.count > 0 && [lines[0] hasPrefix:@"==> "])
+	{
+		NSMutableArray<NSString *> *stripped = [lines mutableCopy];
+		stripped[0] = [lines[0] substringFromIndex:4];
+		lines = stripped;
+	}
 
 	// `brew info` can return output that doesn't match the expected layout
 	// (errors, taps, new formats). The parser below indexes specific lines and
@@ -387,15 +472,7 @@ static BOOL BPLineLooksLikeWebsite(NSString *line)
 		}
 	}
 	
-	if (![line isEqualToString:@"Not installed"])
-	{
-		if ([line isEqualToString:@""]) { //keg-only formual has no path
-			lineIndex += 1;
-			[self setInstallPath:[lines objectAtIndex:lineIndex]];
-		} else {
-			[self setInstallPath:line];
-		}
-	}
+	[self setInstallPath:[BPFormula installLocationFromLines:lines startingAtIndex:lineIndex]];
 	
 	NSRange range_deps = [output rangeOfString:kBPIdentifierDependencies];
 	NSRange range_opts = [output rangeOfString:kBPIdentifierOptions];

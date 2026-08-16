@@ -1,0 +1,10 @@
+==> tree: stable 2.3.2 (bottled)
+Display directories as trees (with optional color/HTML output)
+https://oldmanprogrammer.net/source.php?dir=projects/tree
+Not installed
+From: https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/t/tree.rb
+License: GPL-2.0-or-later
+==> Analytics
+install: 20,281 (30 days), 66,962 (90 days), 397,566 (365 days)
+install-on-request: 18,309 (30 days), 61,032 (90 days), 359,310 (365 days)
+build-error: 0 (30 days)

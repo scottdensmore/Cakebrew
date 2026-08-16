@@ -1,0 +1,18 @@
+==> wget: stable 1.25.0 (bottled), HEAD
+Internet file retriever
+https://www.gnu.org/software/wget/
+Installed (on request)
+From: https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/w/wget.rb
+License: GPL-3.0-or-later
+==> Installed Versions
+wget 1.25.0 (92 files, 4.7MB) [Linked]
+==> Dependencies
+Required (5): libidn2, libpsl, openssl@3, gettext, libunistring
+Recursive Runtime (5): all installed ✔
+==> Options
+--HEAD
+	Install HEAD version
+==> Analytics
+install: 16,889 (30 days), 57,444 (90 days), 331,116 (365 days)
+install-on-request: 16,640 (30 days), 56,478 (90 days), 327,111 (365 days)
+build-error: 6 (30 days)
