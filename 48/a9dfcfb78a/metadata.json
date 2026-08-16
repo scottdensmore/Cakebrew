@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.10.0",
+  "checkpoint_id": "48a9dfcfb78a",
+  "strategy": "manual-commit",
+  "branch": "fix/modern-brew-info-parser",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".github/workflows/brew-compat.yml",
+    "Cakebrew/Models/BPFormula.m",
+    "CakebrewTests/BPBrewCompatibilityTests.m",
+    "CakebrewTests/BPFormulaModernInfoTests.m"
+  ],
+  "sessions": [
+    {
+      "metadata": "/48/a9dfcfb78a/0/metadata.json",
+      "transcript": "/48/a9dfcfb78a/0/full.jsonl",
+      "compact_transcript": "/48/a9dfcfb78a/0/transcript.jsonl",
+      "content_hash": "/48/a9dfcfb78a/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 80,
+    "cache_creation_tokens": 51830,
+    "cache_read_tokens": 13830408,
+    "output_tokens": 32343,
+    "api_call_count": 43
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "cli_version": "0.10.0",
+  "checkpoint_id": "48a9dfcfb78a",
+  "session_id": "f51f0060-00ed-4a2f-87de-5059b160e41e",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-16T00:09:42.096787Z",
+  "branch": "fix/modern-brew-info-parser",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "CakebrewTests/BPFormulaModernInfoTests.m",
+    "Cakebrew/Models/BPFormula.m",
+    "CakebrewTests/BPBrewCompatibilityTests.m",
+    ".github/workflows/brew-compat.yml"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-5",
+  "turn_id": "4497b456a218",
+  "checkpoint_transcript_start": 734,
+  "transcript_lines_at_start": 734,
+  "compact_transcript_start": 195,
+  "token_usage": {
+    "input_tokens": 80,
+    "cache_creation_tokens": 51830,
+    "cache_read_tokens": 13830408,
+    "output_tokens": 32343,
+    "api_call_count": 43
+  },
+  "session_metrics": {
+    "turn_count": 9
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-16T00:09:41.785359Z",
+    "agent_lines": 537,
+    "agent_removed": 9,
+    "human_added": 111,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 648,
+    "total_lines_changed": 668,
+    "agent_percentage": 81.73652694610777,
+    "metric_version": 2
+  }
+}
