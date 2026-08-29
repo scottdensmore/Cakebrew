@@ -76,10 +76,15 @@
 }
 
 // Stream a fixed, recognizable doctor report instead of running `brew doctor`.
+// Deliberately several chunks: the Doctor view used to replace its whole
+// document per chunk, so only the last one survived. The UI test asserts the
+// first and last markers are both present, which pins that regression.
 - (BOOL)runDoctorWithReturnBlock:(void (^)(NSString *))block
 {
 	if (block) {
-		block(@"MOCK_DOCTOR_OK\nYour system is ready to brew.\n");
+		block(@"MOCK_DOCTOR_OK\n");
+		block(@"Checking for common problems...\n");
+		block(@"MOCK_DOCTOR_DONE\nYour system is ready to brew.\n");
 	}
 	return YES;
 }

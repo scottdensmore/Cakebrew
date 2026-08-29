@@ -23,10 +23,11 @@
 #import "BPHomebrewInterface.h"
 #import "BPStyle.h"
 #import "BPAppDelegate.h"
+#import "BPAutoScrollTextView.h"
 
 @interface BPUpdateViewController ()
 
-@property (unsafe_unretained, nonatomic) IBOutlet NSTextView *updateTextView;
+@property (unsafe_unretained, nonatomic) IBOutlet BPAutoScrollTextView *updateTextView;
 @property (weak, nonatomic) IBOutlet NSProgressIndicator *progressIndicator;
 @property (assign) BOOL isPerformingUpdate;
 
@@ -54,15 +55,13 @@
 	}
 	[appDelegate setRunningBackgroundTask:YES];
 	
-	[self.updateTextView setString:@""];
+	[self.updateTextView clearOutput];
 	self.isPerformingUpdate = YES;
 	[self.progressIndicator startAnimation:sender];
-	
+
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
 		[[BPHomebrewInterface sharedInterface] updateWithReturnBlock:^(NSString *output) {
-			dispatch_async(dispatch_get_main_queue(), ^{
-				[self.updateTextView setString:[self.updateTextView.string stringByAppendingString:output]];
-			});
+			[self.updateTextView appendOutput:output];
 		}];
 
 		dispatch_async(dispatch_get_main_queue(), ^{
