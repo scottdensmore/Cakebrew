@@ -17,6 +17,12 @@
 - (instancetype)initWithMode:(BPListMode)aMode;
 - (BPFormula *)formulaAtIndex:(NSInteger)index;
 - (NSArray *)formulasAtIndexSet:(NSIndexSet *)indexSet;
+
+/**
+ *  Row of the formula with this name in the current list, or -1 if absent.
+ *  Used to put the user's selection back after a reload.
+ */
+- (NSInteger)indexOfFormulaNamed:(NSString *)name;
 - (void)refreshBackingArray;
 
 /**

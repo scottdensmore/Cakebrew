@@ -471,10 +471,12 @@ NSOpenSavePanelDelegate>
 	if (self.isHomebrewInstalled)
 	{
 		[[self.formulaeTableView menu] cancelTracking];
-		
-		self.currentFormula = nil;
-		self.selectedFormulaeViewController.formulae = nil;
-		
+
+		// Remember what the user had selected: a reload triggered by an
+		// operation (pin, install, …) shouldn't throw away their place in the
+		// list or blank the detail pane.
+		BPFormula *previouslySelectedFormula = self.currentFormula;
+
 		[self.mainWindowController setContentViewHidden:NO];
 		[self.label_information setHidden:NO];
 		
@@ -495,7 +497,28 @@ NSOpenSavePanelDelegate>
 		} else {
 			[self.sidebarController.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:(NSUInteger)_lastSelectedSidebarIndex] byExtendingSelection:NO];
 		}
+
+		[self restoreSelectedFormula:previouslySelectedFormula];
 	}
+}
+
+/// Puts the table selection back on `formula` after a reload rebuilt the list.
+/// Selecting the row drives -tableViewSelectionDidChange:, which repopulates
+/// currentFormula and the detail pane.
+- (void)restoreSelectedFormula:(BPFormula *)formula
+{
+	NSInteger row = formula ? [self.formulaeDataSource indexOfFormulaNamed:formula.name] : -1;
+
+	if (row < 0)
+	{
+		// Gone from this list (uninstalled, or the sidebar moved on).
+		self.currentFormula = nil;
+		self.selectedFormulaeViewController.formulae = nil;
+		return;
+	}
+
+	[self.formulaeTableView selectRowIndexes:[NSIndexSet indexSetWithIndex:(NSUInteger)row] byExtendingSelection:NO];
+	[self.formulaeTableView scrollRowToVisible:row];
 }
 
 - (void)homebrewManager:(BPHomebrewManager *)manager didUpdateSearchResults:(NSArray *)searchResults
