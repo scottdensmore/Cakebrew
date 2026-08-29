@@ -155,6 +155,17 @@ NSOpenSavePanelDelegate>
 
 	self.formulaeDataSource = [[BPFormulaeDataSource alloc] initWithMode:kBPListAll];
 	self.formulaeTableView.dataSource = self.formulaeDataSource;
+
+	// Restore the sort the user last chose, so the header indicator and the row
+	// order agree with each other on launch.
+	NSString *sortColumn = [BPPreferences sortColumnIdentifier];
+	if (sortColumn.length > 0)
+	{
+		NSSortDescriptor *restored = [NSSortDescriptor sortDescriptorWithKey:sortColumn
+																   ascending:[BPPreferences sortAscending]];
+		self.formulaeTableView.sortDescriptors = @[restored];
+		self.formulaeDataSource.sortDescriptors = @[restored];
+	}
 	self.formulaeTableView.delegate = self;
 	[self.formulaeTableView setAccessibilityLabel:NSLocalizedString(@"Formulae", nil)];
 	

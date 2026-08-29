@@ -46,6 +46,13 @@ extern NSString *const kBPGreedyCaskUpgradesKey;
 + (NSInteger)lastSelectedSidebarRow;
 + (void)setLastSelectedSidebarRow:(NSInteger)row;
 
+/// The column identifier the list is sorted by, or nil for the natural order
+/// brew returned. Paired with +sortAscending.
++ (NSString *)sortColumnIdentifier;
++ (void)setSortColumnIdentifier:(NSString *)identifier;
++ (BOOL)sortAscending;
++ (void)setSortAscending:(BOOL)ascending;
+
 + (BOOL)greedyCaskUpgrades;
 + (void)setGreedyCaskUpgrades:(BOOL)greedy;
 

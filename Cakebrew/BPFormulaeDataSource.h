@@ -23,6 +23,22 @@
  *  Used to put the user's selection back after a reload.
  */
 - (NSInteger)indexOfFormulaNamed:(NSString *)name;
+
+/**
+ *  `formulae` ordered by the table's sort descriptors.
+ *
+ *  Descriptor keys are the column identifiers. Name compares
+ *  case-insensitively, versions compare naturally (so 9.0 precedes 10.0), and
+ *  status compares by BPFormulaStatus rather than by the rendered string, which
+ *  is localized and would otherwise order differently per language. The sort is
+ *  stable, so equal keys keep their relative order instead of shuffling on
+ *  every re-sort.
+ */
++ (NSArray<BPFormula *> *)formulae:(NSArray<BPFormula *> *)formulae
+						  sortedBy:(NSArray<NSSortDescriptor *> *)descriptors;
+/// The table's current sort. Setting it re-sorts the backing array.
+@property (nonatomic, copy) NSArray<NSSortDescriptor *> *sortDescriptors;
+
 - (void)refreshBackingArray;
 
 /**

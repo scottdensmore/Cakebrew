@@ -124,4 +124,26 @@
 	}
 }
 
+
+#pragma mark - remembered sort
+
+- (void)testSortSelectionRoundTrips
+{
+	[BPPreferences setSortColumnIdentifier:@"Version"];
+	[BPPreferences setSortAscending:NO];
+
+	XCTAssertEqualObjects([BPPreferences sortColumnIdentifier], @"Version");
+	XCTAssertFalse([BPPreferences sortAscending]);
+}
+
+- (void)testClearingTheSortColumnRestoresBrewsNaturalOrder
+{
+	// Nil means "no sort applied", which is not the same as sorting by an empty
+	// key — the list should come back in the order brew returned.
+	[BPPreferences setSortColumnIdentifier:@"Name"];
+	[BPPreferences setSortColumnIdentifier:nil];
+
+	XCTAssertNil([BPPreferences sortColumnIdentifier]);
+}
+
 @end

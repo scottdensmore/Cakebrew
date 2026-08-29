@@ -22,6 +22,8 @@ NSString *const kBPBackgroundCheckEnabledKey = @"BPBackgroundCheckEnabled";
 NSString *const kBPBackgroundCheckIntervalKey = @"BPBackgroundCheckInterval";
 NSString *const kBPGreedyCaskUpgradesKey = @"BPGreedyCaskUpgrades";
 NSString *const kBPLastSelectedSidebarRowKey = @"BPLastSelectedSidebarRow";
+NSString *const kBPSortColumnIdentifierKey = @"BPSortColumnIdentifier";
+NSString *const kBPSortAscendingKey = @"BPSortAscending";
 
 @implementation BPPreferences
 
@@ -33,6 +35,7 @@ NSString *const kBPLastSelectedSidebarRowKey = @"BPLastSelectedSidebarRow";
 		kBPGreedyCaskUpgradesKey: @NO,
 		// 1 == FormulaeSideBarItemInstalled, where the app has always opened.
 		kBPLastSelectedSidebarRowKey: @1,
+		kBPSortAscendingKey: @YES,
 	}];
 }
 
@@ -64,6 +67,31 @@ NSString *const kBPLastSelectedSidebarRowKey = @"BPLastSelectedSidebarRow";
 + (void)setLastSelectedSidebarRow:(NSInteger)row
 {
 	[[NSUserDefaults standardUserDefaults] setInteger:row forKey:kBPLastSelectedSidebarRowKey];
+}
+
++ (NSString *)sortColumnIdentifier
+{
+	return [[NSUserDefaults standardUserDefaults] stringForKey:kBPSortColumnIdentifierKey];
+}
+
++ (void)setSortColumnIdentifier:(NSString *)identifier
+{
+	if (identifier.length == 0)
+	{
+		[[NSUserDefaults standardUserDefaults] removeObjectForKey:kBPSortColumnIdentifierKey];
+		return;
+	}
+	[[NSUserDefaults standardUserDefaults] setObject:identifier forKey:kBPSortColumnIdentifierKey];
+}
+
++ (BOOL)sortAscending
+{
+	return [[NSUserDefaults standardUserDefaults] boolForKey:kBPSortAscendingKey];
+}
+
++ (void)setSortAscending:(BOOL)ascending
+{
+	[[NSUserDefaults standardUserDefaults] setBool:ascending forKey:kBPSortAscendingKey];
 }
 
 + (BOOL)greedyCaskUpgrades
