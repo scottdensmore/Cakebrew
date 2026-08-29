@@ -122,4 +122,23 @@
 				   @"either wire customization fully or don't advertise it");
 }
 
+
+#pragma mark - Help that actually helps
+
+- (void)testHelpDoesNotSendShowHelpWithNoHelpBook
+{
+	// The app ships no help book (no CFBundleHelpBookFolder), so showHelp:
+	// only ever produced the system "Help isn't available" alert — on the one
+	// menu a confused user reaches for first.
+	XCTAssertEqual([self countOfPattern:@"selector=\"showHelp:\"" in:[self mainMenuXib]], 0u);
+}
+
+- (void)testHelpOpensTheDocumentation
+{
+	NSString *xib = [self mainMenuXib];
+	XCTAssertEqual([self countOfPattern:@"selector=\"openDocumentation:\"" in:xib], 1u);
+	XCTAssertEqual([self countOfPattern:@"title=\"Cakebrew Documentation\"" in:xib], 1u,
+				   @"the title should say what the item does, since it opens a web page");
+}
+
 @end

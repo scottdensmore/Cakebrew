@@ -28,6 +28,7 @@
 #import <UserNotifications/UserNotifications.h>
 
 NSString *const kBP_HOMEBREW_WEBSITE = @"https://www.cakebrew.com";
+NSString *const kBP_CAKEBREW_DOCUMENTATION = @"https://github.com/scottdensmore/Cakebrew#readme";
 
 
 @interface BPAppDelegate () <UNUserNotificationCenterDelegate>
@@ -212,6 +213,11 @@ NSString *const kBP_HOMEBREW_WEBSITE = @"https://www.cakebrew.com";
 - (IBAction)openWebsite:(id)sender
 {
 	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:kBP_HOMEBREW_WEBSITE]];
+}
+
+- (IBAction)openDocumentation:(id)sender
+{
+	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:kBP_CAKEBREW_DOCUMENTATION]];
 }
 
 #pragma mark - User Notification Center Delegate
