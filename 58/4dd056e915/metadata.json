@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "584dd056e915",
+  "strategy": "manual-commit",
+  "branch": "fix/localized-strings",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "Cakebrew/Controllers/BPDoctorViewController.m",
+    "Cakebrew/Controllers/BPInstallationWindowController.m",
+    "Cakebrew/Controllers/BPUpdateViewController.m"
+  ],
+  "sessions": [
+    {
+      "metadata": "/58/4dd056e915/0/metadata.json",
+      "transcript": "/58/4dd056e915/0/full.jsonl",
+      "compact_transcript": "/58/4dd056e915/0/transcript.jsonl",
+      "content_hash": "/58/4dd056e915/0/content_hash.txt",
+      "prompt": "/58/4dd056e915/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1001,
+    "cache_creation_tokens": 2271223,
+    "cache_read_tokens": 204191635,
+    "output_tokens": 377905,
+    "api_call_count": 516
+  }
+}
