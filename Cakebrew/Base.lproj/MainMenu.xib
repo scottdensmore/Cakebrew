@@ -465,9 +465,9 @@ CA
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Help" systemMenu="help" id="491">
                         <items>
-                            <menuItem title="Cakebrew Help" keyEquivalent="?" id="492">
+                            <menuItem title="Cakebrew Documentation" keyEquivalent="?" id="492">
                                 <connections>
-                                    <action selector="showHelp:" target="-1" id="493"/>
+                                    <action selector="openDocumentation:" target="494" id="493"/>
                                 </connections>
                             </menuItem>
                         </items>

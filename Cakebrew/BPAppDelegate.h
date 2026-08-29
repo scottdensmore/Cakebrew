@@ -26,6 +26,7 @@
 extern NSString *const kBP_HOMEBREW_PATH;
 extern NSString *const kBP_HOMEBREW_PATH_KEY;
 extern NSString *const kBP_HOMEBREW_WEBSITE;
+extern NSString *const kBP_CAKEBREW_DOCUMENTATION;
 
 @interface BPAppDelegate : NSObject <NSApplicationDelegate>
 
@@ -37,6 +38,11 @@ extern NSString *const kBP_HOMEBREW_WEBSITE;
 + (NSURL*)urlForApplicationCachesFolder;
 
 - (IBAction)openWebsite:(id)sender;
+
+/// Opens the online documentation. The Help menu item used to send showHelp:,
+/// but the app ships no help book, so it only ever produced the system
+/// "Help isn't available" alert.
+- (IBAction)openDocumentation:(id)sender;
 - (IBAction)openPreferences:(id)sender;
 
 - (void)displayBackgroundWarning;

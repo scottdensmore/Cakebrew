@@ -359,6 +359,35 @@
 	return NO;
 }
 
+// Journey: the About window credits only code the app actually ships.
+//
+// Sparkle was removed from Cakebrew but stayed in Credits.rtf for years —
+// shipping an attribution for code that isn't there is a licensing-accuracy
+// problem, not just a stale string.
+- (void)testAboutWindowCreditsOnlyShippedCode
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	[self.app.menuBars.menuBarItems[@"Cakebrew"] click];
+	XCUIElement *aboutItem = self.app.menuItems[@"About Cakebrew"];
+	XCTAssertTrue([aboutItem waitForExistenceWithTimeout:10.0], @"the app menu should offer About");
+	[aboutItem click];
+
+	NSPredicate *credits = [NSPredicate predicateWithFormat:@"value CONTAINS %@", @"DCOAboutWindowController"];
+	XCUIElement *creditsView = [[self.app.textViews matchingPredicate:credits] firstMatch];
+	BOOL appeared = [creditsView waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"the About window should render the credits");
+
+	NSString *shown = (NSString *)creditsView.value;
+	XCTAssertFalse([shown containsString:@"Sparkle"],
+				   @"Sparkle is not shipped and must not be credited");
+	XCTAssertFalse([shown containsString:@"PXSourceList"],
+				   @"PXSourceList is not shipped either");
+}
+
 // Journey: View ▸ Show/Hide Sidebar collapses the sidebar and restores it.
 // There was no way to hide the sidebar at all before — no menu item, no
 // shortcut, no toolbar button — despite the window using a collapsible
