@@ -324,6 +324,31 @@
 	}
 }
 
++ (NSString *)infoKeyForRow:(NSInteger)row
+{
+	switch ((FormulaeSideBarItem)row)
+	{
+		case FormulaeSideBarItemInstalled:      return @"Sidebar_Info_Installed";
+		case FormulaeSideBarItemOutdated:       return @"Sidebar_Info_Outdated";
+		case FormulaeSideBarItemAll:            return @"Sidebar_Info_All";
+		case FormulaeSideBarItemLeaves:         return @"Sidebar_Info_Leaves";
+		case FormulaeSideBarItemPinned:         return @"Sidebar_Info_Pinned";
+		case FormulaeSideBarItemRepositories:   return @"Sidebar_Info_Repos";
+		case FormulaeSideBarItemInstalledCasks: return @"Sidebar_Info_Casks";
+		case FormulaeSideBarItemOutdatedCasks:  return @"Sidebar_Info_OutdatedCasks";
+		case FormulaeSideBarItemAllCasks:       return @"Sidebar_Info_AllCasks";
+		case FormulaeSideBarItemDoctor:         return @"Sidebar_Info_Doctor";
+		case FormulaeSideBarItemUpdate:         return @"Sidebar_Info_Update";
+		case FormulaeSideBarItemServices:       return @"Sidebar_Info_Services";
+
+		case FormulaeSideBarItemFormulaeCategory:
+		case FormulaeSideBarItemCasksCategory:
+		case FormulaeSideBarItemToolsCategory:
+			return nil;
+	}
+	return nil;
+}
+
 - (void)configureSidebarSettings
 {
 	self.sidebar.floatsGroupRows = NO;

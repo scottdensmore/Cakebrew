@@ -69,6 +69,16 @@ typedef NS_ENUM(NSUInteger, FormulaeSideBarItem)
  */
 + (FormulaeSideBarItem)restorableRowFrom:(NSInteger)storedRow rowCount:(NSInteger)rowCount;
 
+/**
+ *  Localization key for the description shown under a sidebar row, or nil for
+ *  group headers and unknown rows.
+ *
+ *  Returning nil rather than omitting a case matters: the caller clears the
+ *  label, so an unmapped row shows nothing instead of whatever the previously
+ *  selected row left on screen.
+ */
++ (NSString *)infoKeyForRow:(NSInteger)row;
+
 @property (assign) IBOutlet NSOutlineView *sidebar;
 
 @property (weak) id <BPSideBarControllerDelegate>delegate;

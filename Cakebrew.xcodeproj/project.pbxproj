@@ -80,6 +80,7 @@
 		23F812376362D5499CF6581A /* BPStreamingLogSweepTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5F15F9880A3A7920C0D13142 /* BPStreamingLogSweepTests.m */; };
 		1289A07335EF43E126BFEFB5 /* BPBackgroundTaskGuardTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 888681A0D7E8D629A1DFF439 /* BPBackgroundTaskGuardTests.m */; };
 		2D630A95BC372F5BDE94E4E7 /* BPVersionStampingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 674FD1D9F871DDE01F853A88 /* BPVersionStampingTests.m */; };
+		2B599EC8322105ACA0893956 /* BPLocalizedStringsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 828B14661B644D554E964BFC /* BPLocalizedStringsTests.m */; };
 		55BE3020BDDC9FCA19C1ECBC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C155F549AE6671B51A3FCAD /* Cocoa.framework */; };
 		5F38898450E03D2D56291D29 /* BPHelperSecurity.m in Sources */ = {isa = PBXBuildFile; fileRef = 1227A6AF7A6E1F24A913015B /* BPHelperSecurity.m */; };
 		627F454983A4C2C93584B748 /* BPHelperOutputRelayTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 88BBB2337F47C685C807D566 /* BPHelperOutputRelayTests.m */; };
@@ -363,6 +364,7 @@
 		5F15F9880A3A7920C0D13142 /* BPStreamingLogSweepTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPStreamingLogSweepTests.m; sourceTree = "<group>"; };
 		888681A0D7E8D629A1DFF439 /* BPBackgroundTaskGuardTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPBackgroundTaskGuardTests.m; sourceTree = "<group>"; };
 		674FD1D9F871DDE01F853A88 /* BPVersionStampingTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPVersionStampingTests.m; sourceTree = "<group>"; };
+		828B14661B644D554E964BFC /* BPLocalizedStringsTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPLocalizedStringsTests.m; sourceTree = "<group>"; };
 		A8052362C08CE3FF3945ABAD /* BPPreferencesTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPPreferencesTests.m; sourceTree = "<group>"; };
 		AA67F6479F85E50C83706E3E /* BPService.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPService.m; path = Models/BPService.m; sourceTree = "<group>"; };
 		B040E2F0936D991B4511CE23 /* BPHelperOutputRelay.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPHelperOutputRelay.h; sourceTree = "<group>"; };
@@ -770,6 +772,7 @@
 				5F15F9880A3A7920C0D13142 /* BPStreamingLogSweepTests.m */,
 				888681A0D7E8D629A1DFF439 /* BPBackgroundTaskGuardTests.m */,
 				674FD1D9F871DDE01F853A88 /* BPVersionStampingTests.m */,
+				828B14661B644D554E964BFC /* BPLocalizedStringsTests.m */,
 				8F2D53C524FAE8B655FD3778 /* BPHelperRegistrationTests.m */,
 			);
 			path = CakebrewTests;
@@ -1104,6 +1107,7 @@
 				23F812376362D5499CF6581A /* BPStreamingLogSweepTests.m in Sources */,
 				1289A07335EF43E126BFEFB5 /* BPBackgroundTaskGuardTests.m in Sources */,
 				2D630A95BC372F5BDE94E4E7 /* BPVersionStampingTests.m in Sources */,
+				2B599EC8322105ACA0893956 /* BPLocalizedStringsTests.m in Sources */,
 				8DEE82E248857750CD9BDC4D /* BPSideBarController.m in Sources */,
 				59246886F867B7F80EBA72A9 /* BPMainWindowController.m in Sources */,
 				A3C29FE74D8478CD5ABE3908 /* BPToolbar.m in Sources */,

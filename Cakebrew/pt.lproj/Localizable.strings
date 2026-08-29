@@ -280,3 +280,16 @@
 /* No comment provided by engineer. */
 "Toolbar_Update_Selected" = "Atualizar Selecionadas";
 
+
+/* Added for the localized-strings pass; English until translated. */
+"Sidebar_Info_Pinned" = "These formulae are pinned and will not be upgraded.";
+"Services_Status_None" = "Not running";
+"Services_Status_Started" = "Running";
+"Services_Status_Stopped" = "Stopped";
+"Services_Status_Error" = "Error";
+"Services_Status_Scheduled" = "Scheduled";
+"Services_Status_Unknown" = "Unknown";
+"Panel_Export_Message" = "Export To:";
+"Panel_Export_Button" = "Export";
+"Panel_Import_Message" = "Import From:";
+"Panel_Import_Button" = "Import";

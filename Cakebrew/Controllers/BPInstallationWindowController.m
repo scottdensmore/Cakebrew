@@ -247,7 +247,7 @@
 		[self.progressIndicator stopAnimation:nil];
 		[self.okButton setEnabled:YES];
 		
-		NSString *title = [NSLocalizedString(@"Homebrew_Task_Finished", nil) capitalizedString];
+		NSString *title = NSLocalizedString(@"Homebrew_Task_Finished", nil);
 		NSString *desc = [NSString stringWithFormat:@"%@ %@",
 						  self.windowTitleLabel.stringValue,
 						  self.formulaNameLabel.stringValue];
