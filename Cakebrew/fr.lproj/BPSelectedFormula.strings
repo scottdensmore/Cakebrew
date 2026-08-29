@@ -10,8 +10,8 @@
 /* Class = "NSTextFieldCell"; title = "Selected Formula Information"; ObjectID = "F2k-Nm-vhK"; */
 "F2k-Nm-vhK.title" = "Informations de la formule sélectionnée";
 
-/* Class = "NSTextFieldCell"; title = "Location:"; ObjectID = "Vpa-gA-Haq"; */
-"Vpa-gA-Haq.title" = "Emplacement :";
+/* Class = "NSTextFieldCell"; title = "Installed:"; ObjectID = "Vpa-gA-Haq"; */
+"Vpa-gA-Haq.title" = "Installé :";
 
 /* Class = "NSTextFieldCell"; title = "None"; ObjectID = "hRD-g3-BCH"; */
 "hRD-g3-BCH.title" = "Aucun";

@@ -71,6 +71,8 @@
 		540F41D2E1A242AB0379E601 /* BPTaskStreamingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F4FE8C424C9535BD69FAA413 /* BPTaskStreamingTests.m */; };
 		7A77BD02E23D9D883A0B130D /* BPAutoScrollTextViewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F5D28979AEC4AC99CA1D709F /* BPAutoScrollTextViewTests.m */; };
 		6C906910D237DEBF889CF7E3 /* BPCatalogRefreshPolicyTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 637667CF454D1DFACCD169D1 /* BPCatalogRefreshPolicyTests.m */; };
+		B82155040A26FD8CACED3ACD /* BPFormulaModernInfoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6D86816AB46E437230B59378 /* BPFormulaModernInfoTests.m */; };
+		F0E714A1236CD2E2125FDD69 /* BPBrewCompatibilityTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2C69B479D5539097976F1928 /* BPBrewCompatibilityTests.m */; };
 		55BE3020BDDC9FCA19C1ECBC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C155F549AE6671B51A3FCAD /* Cocoa.framework */; };
 		5F38898450E03D2D56291D29 /* BPHelperSecurity.m in Sources */ = {isa = PBXBuildFile; fileRef = 1227A6AF7A6E1F24A913015B /* BPHelperSecurity.m */; };
 		627F454983A4C2C93584B748 /* BPHelperOutputRelayTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 88BBB2337F47C685C807D566 /* BPHelperOutputRelayTests.m */; };
@@ -114,6 +116,10 @@
 		D2BBAB691B87142F00F21332 /* brewInfo_bfg.txt in Resources */ = {isa = PBXBuildFile; fileRef = D2BBAB631B87142F00F21332 /* brewInfo_bfg.txt */; };
 		D2BBAB6A1B87142F00F21332 /* brewInfo_fakeformula.txt in Resources */ = {isa = PBXBuildFile; fileRef = D2BBAB641B87142F00F21332 /* brewInfo_fakeformula.txt */; };
 		D2BBAB6B1B87142F00F21332 /* brewInfo_ffmpeg.txt in Resources */ = {isa = PBXBuildFile; fileRef = D2BBAB651B87142F00F21332 /* brewInfo_ffmpeg.txt */; };
+		A6D93FA070583BC487D79935 /* brewInfo_modern_kegonly.txt in Resources */ = {isa = PBXBuildFile; fileRef = 5A58B1C9C1F6B6B757DDAD79 /* brewInfo_modern_kegonly.txt */; };
+		7A189AE1603A0005CFFA2216 /* brewInfo_modern_aliases.txt in Resources */ = {isa = PBXBuildFile; fileRef = 0C6C83096C8D6B8D6BE58366 /* brewInfo_modern_aliases.txt */; };
+		22616BD90BD55BD8081222ED /* brewInfo_modern_notinstalled.txt in Resources */ = {isa = PBXBuildFile; fileRef = 21856FE82C89016462465FB2 /* brewInfo_modern_notinstalled.txt */; };
+		298989A8E2AB63732E0EF773 /* brewInfo_modern_installed.txt in Resources */ = {isa = PBXBuildFile; fileRef = 033BC253AEDFD1C4DB32FD33 /* brewInfo_modern_installed.txt */; };
 		D2BBAB6C1B87142F00F21332 /* brewInfo_mysql.txt in Resources */ = {isa = PBXBuildFile; fileRef = D2BBAB661B87142F00F21332 /* brewInfo_mysql.txt */; };
 		D2BBAB6D1B87142F00F21332 /* brewInfo_percona-server.txt in Resources */ = {isa = PBXBuildFile; fileRef = D2BBAB671B87142F00F21332 /* brewInfo_percona-server.txt */; };
 		D2BBAB6F1B87290B00F21332 /* brewInfo_bison.txt in Resources */ = {isa = PBXBuildFile; fileRef = D2BBAB6E1B87290B00F21332 /* brewInfo_bison.txt */; };
@@ -342,6 +348,8 @@
 		F4FE8C424C9535BD69FAA413 /* BPTaskStreamingTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPTaskStreamingTests.m; sourceTree = "<group>"; };
 		F5D28979AEC4AC99CA1D709F /* BPAutoScrollTextViewTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPAutoScrollTextViewTests.m; sourceTree = "<group>"; };
 		637667CF454D1DFACCD169D1 /* BPCatalogRefreshPolicyTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPCatalogRefreshPolicyTests.m; sourceTree = "<group>"; };
+		6D86816AB46E437230B59378 /* BPFormulaModernInfoTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPFormulaModernInfoTests.m; sourceTree = "<group>"; };
+		2C69B479D5539097976F1928 /* BPBrewCompatibilityTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPBrewCompatibilityTests.m; sourceTree = "<group>"; };
 		A8052362C08CE3FF3945ABAD /* BPPreferencesTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPPreferencesTests.m; sourceTree = "<group>"; };
 		AA67F6479F85E50C83706E3E /* BPService.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPService.m; path = Models/BPService.m; sourceTree = "<group>"; };
 		B040E2F0936D991B4511CE23 /* BPHelperOutputRelay.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPHelperOutputRelay.h; sourceTree = "<group>"; };
@@ -371,6 +379,10 @@
 		D2BBAB631B87142F00F21332 /* brewInfo_bfg.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_bfg.txt; sourceTree = "<group>"; };
 		D2BBAB641B87142F00F21332 /* brewInfo_fakeformula.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_fakeformula.txt; sourceTree = "<group>"; };
 		D2BBAB651B87142F00F21332 /* brewInfo_ffmpeg.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_ffmpeg.txt; sourceTree = "<group>"; };
+		5A58B1C9C1F6B6B757DDAD79 /* brewInfo_modern_kegonly.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_modern_kegonly.txt; sourceTree = "<group>"; };
+		0C6C83096C8D6B8D6BE58366 /* brewInfo_modern_aliases.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_modern_aliases.txt; sourceTree = "<group>"; };
+		21856FE82C89016462465FB2 /* brewInfo_modern_notinstalled.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_modern_notinstalled.txt; sourceTree = "<group>"; };
+		033BC253AEDFD1C4DB32FD33 /* brewInfo_modern_installed.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_modern_installed.txt; sourceTree = "<group>"; };
 		D2BBAB661B87142F00F21332 /* brewInfo_mysql.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_mysql.txt; sourceTree = "<group>"; };
 		D2BBAB671B87142F00F21332 /* brewInfo_percona-server.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "brewInfo_percona-server.txt"; sourceTree = "<group>"; };
 		D2BBAB6E1B87290B00F21332 /* brewInfo_bison.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_bison.txt; sourceTree = "<group>"; };
@@ -719,6 +731,10 @@
 				D2BBAB631B87142F00F21332 /* brewInfo_bfg.txt */,
 				D2BBAB641B87142F00F21332 /* brewInfo_fakeformula.txt */,
 				D2BBAB651B87142F00F21332 /* brewInfo_ffmpeg.txt */,
+				5A58B1C9C1F6B6B757DDAD79 /* brewInfo_modern_kegonly.txt */,
+				0C6C83096C8D6B8D6BE58366 /* brewInfo_modern_aliases.txt */,
+				21856FE82C89016462465FB2 /* brewInfo_modern_notinstalled.txt */,
+				033BC253AEDFD1C4DB32FD33 /* brewInfo_modern_installed.txt */,
 				D2BBAB661B87142F00F21332 /* brewInfo_mysql.txt */,
 				D2BBAB671B87142F00F21332 /* brewInfo_percona-server.txt */,
 				158488491F0708F000BD2CD9 /* brewinfo_nmap.txt */,
@@ -734,6 +750,8 @@
 				F4FE8C424C9535BD69FAA413 /* BPTaskStreamingTests.m */,
 				F5D28979AEC4AC99CA1D709F /* BPAutoScrollTextViewTests.m */,
 				637667CF454D1DFACCD169D1 /* BPCatalogRefreshPolicyTests.m */,
+				6D86816AB46E437230B59378 /* BPFormulaModernInfoTests.m */,
+				2C69B479D5539097976F1928 /* BPBrewCompatibilityTests.m */,
 				8F2D53C524FAE8B655FD3778 /* BPHelperRegistrationTests.m */,
 			);
 			path = CakebrewTests;
@@ -919,6 +937,10 @@
 			files = (
 				D2BBAB691B87142F00F21332 /* brewInfo_bfg.txt in Resources */,
 				D2BBAB6B1B87142F00F21332 /* brewInfo_ffmpeg.txt in Resources */,
+				A6D93FA070583BC487D79935 /* brewInfo_modern_kegonly.txt in Resources */,
+				7A189AE1603A0005CFFA2216 /* brewInfo_modern_aliases.txt in Resources */,
+				22616BD90BD55BD8081222ED /* brewInfo_modern_notinstalled.txt in Resources */,
+				298989A8E2AB63732E0EF773 /* brewInfo_modern_installed.txt in Resources */,
 				D2BBAB6D1B87142F00F21332 /* brewInfo_percona-server.txt in Resources */,
 				D2BBAB681B87142F00F21332 /* brewInfo_acme.txt in Resources */,
 				D2BBAB6A1B87142F00F21332 /* brewInfo_fakeformula.txt in Resources */,
@@ -1057,6 +1079,8 @@
 				540F41D2E1A242AB0379E601 /* BPTaskStreamingTests.m in Sources */,
 				7A77BD02E23D9D883A0B130D /* BPAutoScrollTextViewTests.m in Sources */,
 				6C906910D237DEBF889CF7E3 /* BPCatalogRefreshPolicyTests.m in Sources */,
+				B82155040A26FD8CACED3ACD /* BPFormulaModernInfoTests.m in Sources */,
+				F0E714A1236CD2E2125FDD69 /* BPBrewCompatibilityTests.m in Sources */,
 				5E523D41E4EFAF010C1F604B /* BPAutoScrollTextView.m in Sources */,
 				1ED78A300C6AD6B948573401 /* BPHelperRegistration.m in Sources */,
 				D5A4E97BA98E72BCC344B615 /* BPHelperRegistrationTests.m in Sources */,

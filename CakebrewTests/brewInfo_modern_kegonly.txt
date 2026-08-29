@@ -1,0 +1,23 @@
+==> libffi: stable 3.8.0 (bottled), HEAD [keg-only]
+Portable Foreign Function Interface library
+https://sourceware.org/libffi/
+Installed (as dependency)
+From: https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/lib/libffi.rb
+License: MIT
+==> Installed Versions
+libffi 3.8.0 (18 files, 881.2KB)
+==> Options
+--HEAD
+	Install HEAD version
+==> Caveats
+libffi is keg-only, which means it was not symlinked into /usr/local,
+because macOS already provides this software and installing another version in
+parallel can cause all kinds of trouble.
+
+For compilers to find libffi you may need to set:
+  export LDFLAGS="-L/usr/local/opt/libffi/lib"
+  export CPPFLAGS="-I/usr/local/opt/libffi/include"
+==> Analytics
+install: 137,646 (30 days), 423,283 (90 days), 1,058,840 (365 days)
+install-on-request: 9,035 (30 days), 28,702 (90 days), 85,182 (365 days)
+build-error: 2 (30 days)

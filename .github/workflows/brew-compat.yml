@@ -1,0 +1,81 @@
+name: Brew Compatibility
+
+# Homebrew changes its output without warning — that is how `brew info` drifted
+# until the detail pane started showing "Installed (on request)" as a location.
+# Fixture tests cannot notice that, so this job pushes the *real* brew output
+# on the runner through the same parsers.
+#
+# Deliberately NOT on the pull_request path: upstream drift is not the fault of
+# whatever PR happens to be open, and it should surface as its own alert rather
+# than a mysteriously red PR.
+on:
+  schedule:
+    - cron: '17 6 * * 1'   # Mondays, 06:17 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: brew-compat
+  cancel-in-progress: false
+
+jobs:
+  brew-compat:
+    name: Parsers vs. real brew
+    runs-on: macos-26
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show versions
+        run: |
+          brew --version
+          xcodebuild -version
+
+      - name: Ensure the fixtures the tests expect
+        run: |
+          # An installed formula (for the info/installed-list assertions) and a
+          # known not-installed one. `|| true` so a preinstalled wget is fine.
+          brew install wget || true
+          brew uninstall --ignore-dependencies cowsay || true
+
+      - name: Run parsers against real brew
+        env:
+          # xcodebuild does not forward the shell environment to the test
+          # process; the TEST_RUNNER_ prefix is what actually reaches it. With
+          # the bare name the tests all skip and the job passes green, which
+          # would make this whole workflow worthless.
+          TEST_RUNNER_CAKEBREW_BREW_COMPAT: '1'
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -workspace Cakebrew.xcworkspace \
+            -scheme CakebrewTests \
+            -destination 'platform=macOS' \
+            -only-testing:CakebrewTests/BPBrewCompatibilityTests \
+            CODE_SIGNING_ALLOWED=NO | tee xcodebuild.log
+
+          # Guard against the above silently skipping: a skipped run is a
+          # broken job, not a pass.
+          if grep -q "tests skipped" xcodebuild.log; then
+            echo "::error::brew-compat tests were skipped - TEST_RUNNER_CAKEBREW_BREW_COMPAT did not reach the test process"
+            exit 1
+          fi
+
+      - name: Capture fresh brew output on failure
+        if: failure()
+        run: |
+          # The captured output is what a fixture refresh would be based on.
+          mkdir -p brew-output
+          for cmd in "info wget" "info cowsay" "list --versions" \
+                     "outdated --verbose" "list --cask --versions" \
+                     "services list --json"; do
+            name=$(echo "$cmd" | tr ' /-' '___')
+            brew $cmd > "brew-output/${name}.txt" 2>&1 || true
+          done
+          brew casks | head -50 > brew-output/casks_head.txt 2>&1 || true
+
+      - name: Upload brew output
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: brew-output
+          path: brew-output/
