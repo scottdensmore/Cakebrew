@@ -33,6 +33,7 @@
 #import "BPToolbar.h"
 #import "BPAppDelegate.h"
 #import "BPStyle.h"
+#import "BPPreferences.h"
 #import "BPLoadingView.h"
 #import "BPDisabledView.h"
 #import "BPBundleWindowController.h"
@@ -58,6 +59,7 @@ NSOpenSavePanelDelegate>
 @property (weak) BPAppDelegate *appDelegate;
 
 @property NSInteger lastSelectedSidebarIndex;
+@property BOOL hasAppliedDefaultDividerPosition;
 
 @property (getter=isSearching)			BOOL searching;
 @property (getter=isHomebrewInstalled)	BOOL homebrewInstalled;
@@ -156,6 +158,11 @@ NSOpenSavePanelDelegate>
 	self.formulaeTableView.delegate = self;
 	[self.formulaeTableView setAccessibilityLabel:NSLocalizedString(@"Formulae", nil)];
 	
+	// Autosave the divider so a dragged position survives relaunch. The window
+	// itself already autosaves its frame (MainMenu.xib), but nothing persisted
+	// inside it.
+	self.formulaeSplitView.autosaveName = @"BPFormulaeSplitView";
+
 	//link formulae tableview
 	NSView *formulaeView = self.formulaeSplitView;
 	if ([[self.tabView tabViewItems] count] > kBPContentTabFormulae) {
@@ -283,6 +290,42 @@ NSOpenSavePanelDelegate>
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
+/// Applies the default detail-pane height the first time the split view has a
+/// size, then leaves the divider alone — the user's drag is theirs to keep, and
+/// autosaveName restores it on the next launch.
+- (void)applyDefaultDividerPositionIfNeeded
+{
+	if (self.hasAppliedDefaultDividerPosition)
+	{
+		return;
+	}
+
+	CGFloat height = [self.formulaeSplitView bounds].size.height;
+	if (height <= 0)
+	{
+		return;
+	}
+
+	self.hasAppliedDefaultDividerPosition = YES;
+
+	// A restored autosave already positioned the divider; don't override it.
+	if (self.formulaeSplitView.autosaveName.length > 0 &&
+		[[NSUserDefaults standardUserDefaults] objectForKey:
+		 [NSString stringWithFormat:@"NSSplitView Subview Frames %@", self.formulaeSplitView.autosaveName]])
+	{
+		return;
+	}
+
+	static const CGFloat kDefaultDetailPaneHeight = 120.f;
+	[self.formulaeSplitView setPosition:height - kDefaultDetailPaneHeight ofDividerAtIndex:0];
+}
+
+- (void)viewDidLayout
+{
+	[super viewDidLayout];
+	[self applyDefaultDividerPositionIfNeeded];
+}
+
 - (void)updateInterfaceItems
 {
 	NSInteger selectedSidebarRow	= [self.sidebarController.sidebar selectedRow];
@@ -290,11 +333,10 @@ NSOpenSavePanelDelegate>
 	NSIndexSet *selectedRows		= [self.formulaeTableView selectedRowIndexes];
 	NSArray *selectedFormulae		= [self.formulaeDataSource formulasAtIndexSet:selectedRows];
 
-	CGFloat height = [self.formulaeSplitView bounds].size.height;
-	CGFloat preferedHeightOfSelectedFormulaView = 120.f;
-	[self.formulaeSplitView setPosition:height - preferedHeightOfSelectedFormulaView
-					   ofDividerAtIndex:0];
-
+	// The divider used to be forced to 120 pt here, which runs on every
+	// selection change — so dragging it and then clicking any row snapped it
+	// straight back. It is positioned once at first layout instead, and
+	// autosaved thereafter.
 	BOOL showFormulaInfo = YES;
 	
 	if (selectedSidebarRow == FormulaeSideBarItemRepositories) // Repositories (Taps) sidebaritem
@@ -636,6 +678,8 @@ NSOpenSavePanelDelegate>
 	
 	if (selectedSidebarRow >= 0) {
 		_lastSelectedSidebarIndex = selectedSidebarRow;
+		// Remembered across launches, so the app reopens where the user left it.
+		[BPPreferences setLastSelectedSidebarRow:selectedSidebarRow];
 	}
 	
 	[self.formulaeTableView deselectAll:nil];

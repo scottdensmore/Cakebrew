@@ -60,6 +60,15 @@ typedef NS_ENUM(NSUInteger, FormulaeSideBarItem)
 
 @interface BPSideBarController : NSObject <NSOutlineViewDataSource, NSOutlineViewDelegate>
 
+/**
+ *  The row to select for a stored value, falling back to Installed.
+ *
+ *  Sidebar rows are outline indices including group headers, so a stored row
+ *  can be stranded past the end when items change, and can point at a category
+ *  header, which is not a destination — restoring onto one shows nothing.
+ */
++ (FormulaeSideBarItem)restorableRowFrom:(NSInteger)storedRow rowCount:(NSInteger)rowCount;
+
 @property (assign) IBOutlet NSOutlineView *sidebar;
 
 @property (weak) id <BPSideBarControllerDelegate>delegate;

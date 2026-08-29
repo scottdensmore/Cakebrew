@@ -19,6 +19,7 @@
 		150AEC511B3F999A00163767 /* BPInstallationWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC431B3F999A00163767 /* BPInstallationWindowController.m */; };
 		150AEC531B3F999A00163767 /* BPSelectedFormulaViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC471B3F999A00163767 /* BPSelectedFormulaViewController.m */; };
 		150AEC541B3F999A00163767 /* BPSideBarController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC491B3F999A00163767 /* BPSideBarController.m */; };
+		8DEE82E248857750CD9BDC4D /* BPSideBarController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC491B3F999A00163767 /* BPSideBarController.m */; };
 		150AEC551B3F999A00163767 /* BPUpdateViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC4B1B3F999A00163767 /* BPUpdateViewController.m */; };
 		1536BFF718EBA92400B67C5C /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1536BFF618EBA92400B67C5C /* Images.xcassets */; };
 		1540FA3518ECF66B00334A5C /* download.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1540FA3418ECF66B00334A5C /* download.icns */; };
@@ -1095,6 +1096,7 @@
 				7E59E2B2D39ADA9B10562D44 /* BPXibAppearanceTests.m in Sources */,
 				9980133D7BE3566C9A124094 /* BPMainMenuTests.m in Sources */,
 				23F812376362D5499CF6581A /* BPStreamingLogSweepTests.m in Sources */,
+				8DEE82E248857750CD9BDC4D /* BPSideBarController.m in Sources */,
 				59246886F867B7F80EBA72A9 /* BPMainWindowController.m in Sources */,
 				A3C29FE74D8478CD5ABE3908 /* BPToolbar.m in Sources */,
 				5E523D41E4EFAF010C1F604B /* BPAutoScrollTextView.m in Sources */,

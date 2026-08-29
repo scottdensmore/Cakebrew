@@ -7,6 +7,7 @@
 //
 
 #import "BPSideBarController.h"
+#import "BPPreferences.h"
 #import "BPHomebrewManager.h"
 
 @interface BPSidebarItem ()
@@ -304,12 +305,34 @@
 }
 
 
++ (FormulaeSideBarItem)restorableRowFrom:(NSInteger)storedRow rowCount:(NSInteger)rowCount
+{
+	if (storedRow < 0 || storedRow >= rowCount)
+	{
+		return FormulaeSideBarItemInstalled;
+	}
+
+	switch ((FormulaeSideBarItem)storedRow)
+	{
+		case FormulaeSideBarItemFormulaeCategory:
+		case FormulaeSideBarItemCasksCategory:
+		case FormulaeSideBarItemToolsCategory:
+			// Group headers are labels, not destinations.
+			return FormulaeSideBarItemInstalled;
+		default:
+			return (FormulaeSideBarItem)storedRow;
+	}
+}
+
 - (void)configureSidebarSettings
 {
 	self.sidebar.floatsGroupRows = NO;
 	[self.sidebar reloadData];
 	[self.sidebar expandItem:nil expandChildren:YES];
-	[self.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:FormulaeSideBarItemInstalled] byExtendingSelection:NO];
+	// Reopen where the user left off rather than always on Installed.
+	FormulaeSideBarItem row = [BPSideBarController restorableRowFrom:[BPPreferences lastSelectedSidebarRow]
+															rowCount:[self.sidebar numberOfRows]];
+	[self.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
 	[self.sidebar setAccessibilityLabel:NSLocalizedString(@"Sidebar_VoiceOver_Tools", nil)];
 }
 

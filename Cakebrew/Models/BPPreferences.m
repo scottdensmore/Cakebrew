@@ -21,6 +21,7 @@
 NSString *const kBPBackgroundCheckEnabledKey = @"BPBackgroundCheckEnabled";
 NSString *const kBPBackgroundCheckIntervalKey = @"BPBackgroundCheckInterval";
 NSString *const kBPGreedyCaskUpgradesKey = @"BPGreedyCaskUpgrades";
+NSString *const kBPLastSelectedSidebarRowKey = @"BPLastSelectedSidebarRow";
 
 @implementation BPPreferences
 
@@ -30,6 +31,8 @@ NSString *const kBPGreedyCaskUpgradesKey = @"BPGreedyCaskUpgrades";
 		kBPBackgroundCheckEnabledKey: @YES,
 		kBPBackgroundCheckIntervalKey: @(21600.0), // 6 hours
 		kBPGreedyCaskUpgradesKey: @NO,
+		// 1 == FormulaeSideBarItemInstalled, where the app has always opened.
+		kBPLastSelectedSidebarRowKey: @1,
 	}];
 }
 
@@ -51,6 +54,16 @@ NSString *const kBPGreedyCaskUpgradesKey = @"BPGreedyCaskUpgrades";
 + (void)setBackgroundCheckInterval:(NSTimeInterval)interval
 {
 	[[NSUserDefaults standardUserDefaults] setDouble:interval forKey:kBPBackgroundCheckIntervalKey];
+}
+
++ (NSInteger)lastSelectedSidebarRow
+{
+	return [[NSUserDefaults standardUserDefaults] integerForKey:kBPLastSelectedSidebarRowKey];
+}
+
++ (void)setLastSelectedSidebarRow:(NSInteger)row
+{
+	[[NSUserDefaults standardUserDefaults] setInteger:row forKey:kBPLastSelectedSidebarRowKey];
 }
 
 + (BOOL)greedyCaskUpgrades
