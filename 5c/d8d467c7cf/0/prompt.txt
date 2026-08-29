@@ -1,0 +1,29 @@
+Ok what is next to work on?
+
+---
+
+How can I setup you driving things on this machine?
+
+---
+
+Ok Xcode is running with the project
+
+---
+
+Ok try it one more time and see that is going on
+
+---
+
+Yes do it
+
+---
+
+Do #73 and #77 next
+
+---
+
+yep it is dark. Although we still need the icon's to match light and darks mode
+
+---
+
+Ok lets do what you recommend. Don't forget to keep filing issues as you find them while working on the thin vertical slices
