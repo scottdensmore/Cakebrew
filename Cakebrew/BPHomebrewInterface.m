@@ -265,12 +265,11 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 
 - (BOOL)performBrewCommandWithArguments:(NSArray*)arguments dataReturnBlock:(void (^)(NSString*))block
 {
-	return [self performAsyncBrewCommandWithArguments:arguments wrapsSynchronousRequest:NO queue:nil dataReturnBlock:block];
+	return [self performAsyncBrewCommandWithArguments:arguments wrapsSynchronousRequest:NO dataReturnBlock:block];
 }
 
 - (BOOL)performAsyncBrewCommandWithArguments:(NSArray*)arguments
 					 wrapsSynchronousRequest:(BOOL)isSynchronous
-									   queue:(dispatch_queue_t)queue
 							 dataReturnBlock:(void (^)(NSString*))block
 {
 	if (self.brewTransport == kBPBrewTransportHelper)
@@ -292,7 +291,6 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 	BPTask *task = [[BPTask alloc] initWithPath:self.path_shell arguments:arguments];
 	task.delegate = self;
 	task.updateBlock = block;
-	task.updateBlockQueue = queue;
 
 	[self.tasks setObject:task forKey:[NSString stringWithFormat:@"%p", task]];
 
@@ -353,9 +351,10 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 	dispatch_sync(queue, ^{
 		NSMutableString *output = [NSMutableString new];
 
+		// BPTask guarantees every chunk has reached this block before -execute
+		// returns, so the buffer is complete by the time it is copied below.
 		[self performAsyncBrewCommandWithArguments:arguments
 						   wrapsSynchronousRequest:YES
-											 queue:queue
 								   dataReturnBlock:^(NSString *partialOutput)
 		 {
 			[output appendString:partialOutput];
