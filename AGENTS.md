@@ -80,6 +80,29 @@ uploads crash logs from `~/Library/Logs/DiagnosticReports` on failure.
   typing/keyboard focus is untestable; system file panels (NSSave/NSOpenPanel)
   are out-of-process and undrivable. Pattern: unit-test the logic, UI-test
   presence/navigation.
+- **Four ways a green local UI run lies.** Each of these has cost a red CI run
+  or a misdiagnosed failure:
+  1. **`isHittable` is meaningless on CI.** Hit testing needs a key window, so
+     it reports `false` there whatever is on screen. Assert with `exists` and
+     geometry (`frame.size`) instead.
+  2. **Anything persisted that changes the launch view makes the suite
+     order-dependent.** Each journey would inherit whatever the last one left
+     stored. Pin it in the shared launch helper through the argument domain,
+     which outranks stored defaults — `-BPLastSelectedSidebarRow 1`,
+     `-BPSortColumnIdentifier ""` — never by special-casing `-BPMockBrew` in
+     the app, so the feature itself stays exercised.
+  3. **Neither verify command compiles the UI test target.** `-scheme Cakebrew`
+     and `-scheme CakebrewTests` both skip `CakebrewUITests.m`, so a syntax
+     error there passes locally and fails on CI. After touching it, run
+     `xcodebuild build-for-testing -scheme CakebrewUITests …` — about two
+     seconds, versus ~7 minutes for the suite.
+  4. **A locked screen breaks the suite in ways that look like product bugs.**
+     XCUITest cannot drive a locked display: clicks resolve to infinite points
+     and elements never become interactable. Before believing a UI failure that
+     appeared without a related change, check
+     `ioreg -n Root -d 1 -r -k IOConsoleLocked`; `screencapture` failing with
+     "could not create image from window" is the same signal. A ~7 minute run
+     can also be killed part-way by display sleep.
 
 ## Architecture crib sheet
 
