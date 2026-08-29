@@ -1,0 +1,66 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "dd769104b70e",
+  "session_id": "f51f0060-00ed-4a2f-87de-5059b160e41e",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-29T22:57:27.281545Z",
+  "branch": "fix/sortable-columns",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    "Cakebrew/BPFormulaeDataSource.h",
+    "Cakebrew/BPFormulaeDataSource.m",
+    "CakebrewTests/BPFormulaeDataSourceTests.m"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-opus-5",
+  "turn_id": "141d2880a5e8",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 889,
+    "cache_creation_tokens": 2204145,
+    "cache_read_tokens": 165770346,
+    "output_tokens": 331057,
+    "api_call_count": 460
+  },
+  "skill_events_version": 1,
+  "skill_events": [
+    {
+      "id": "prompt-skill-claude-code-goal-2026-08-29T21:13:59.859772Z",
+      "event_type": "prompt_invocation",
+      "skill": {
+        "name": "goal"
+      },
+      "source": {
+        "agent": "claude-code",
+        "signal": "prompt_slash_command",
+        "confidence": "explicit"
+      },
+      "turn_id": "141d2880a5e8",
+      "timestamp": "2026-08-29T21:13:59.859772Z",
+      "native": {
+        "command": "/goal"
+      },
+      "collapse": {
+        "target": "user_message",
+        "label": "/goal",
+        "default_collapsed": true
+      }
+    }
+  ],
+  "session_metrics": {
+    "turn_count": 5
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-29T22:57:26.537483Z",
+    "agent_lines": 209,
+    "agent_removed": 0,
+    "human_added": 77,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 286,
+    "total_lines_changed": 287,
+    "agent_percentage": 72.82229965156795,
+    "metric_version": 2
+  }
+}

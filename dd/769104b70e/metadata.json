@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "dd769104b70e",
+  "strategy": "manual-commit",
+  "branch": "fix/sortable-columns",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "Cakebrew/BPFormulaeDataSource.h",
+    "Cakebrew/BPFormulaeDataSource.m",
+    "CakebrewTests/BPFormulaeDataSourceTests.m"
+  ],
+  "sessions": [
+    {
+      "metadata": "/dd/769104b70e/0/metadata.json",
+      "transcript": "/dd/769104b70e/0/full.jsonl",
+      "compact_transcript": "/dd/769104b70e/0/transcript.jsonl",
+      "content_hash": "/dd/769104b70e/0/content_hash.txt",
+      "prompt": "/dd/769104b70e/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 889,
+    "cache_creation_tokens": 2204145,
+    "cache_read_tokens": 165770346,
+    "output_tokens": 331057,
+    "api_call_count": 460
+  }
+}
