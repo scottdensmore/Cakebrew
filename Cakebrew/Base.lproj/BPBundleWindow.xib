@@ -155,7 +155,7 @@
                             <textView editable="NO" importsGraphics="NO" richText="NO" findStyle="bar" verticallyResizable="YES" allowsNonContiguousLayout="YES" spellingCorrection="YES" id="pen-1k-tKW" customClass="BPAutoScrollTextView">
                                 <rect key="frame" x="0.0" y="0.0" width="373" height="197"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 <size key="minSize" width="373" height="197"/>
                                 <size key="maxSize" width="463" height="10000000"/>
                                 <color key="insertionPointColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -166,7 +166,7 @@
                                 </userDefinedRuntimeAttributes>
                             </textView>
                         </subviews>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </clipView>
                     <scroller key="horizontalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="nCJ-0e-Fnn">
                         <rect key="frame" x="1" y="182" width="373" height="16"/>

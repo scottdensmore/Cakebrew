@@ -41,7 +41,7 @@
                                         </constraints>
                                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Uninstalling Formula:" id="P2p-fh-Ixz">
                                             <font key="font" metaFont="system" size="15"/>
-                                            <color key="textColor" white="0.34557481750000002" alpha="1" colorSpace="calibratedWhite"/>
+                                            <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
                                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                         </textFieldCell>
                                     </textField>
