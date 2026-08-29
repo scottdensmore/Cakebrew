@@ -40,13 +40,4 @@
 	self.toolbarStyle = NSWindowToolbarStyleUnified;
 }
 
-- (BOOL)validateMenuItem:(NSMenuItem *)menuItem
-{
-	if ([menuItem action] == @selector(runToolbarCustomizationPalette:)) {
-		return NO;
-	}
-
-	return [super validateMenuItem:menuItem];
-}
-
 @end

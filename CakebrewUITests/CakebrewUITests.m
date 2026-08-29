@@ -340,6 +340,42 @@
 }
 
 // Journey: Preferences opens from the app menu and shows the settings.
+// Journey: View ▸ Show/Hide Sidebar collapses the sidebar and restores it.
+// There was no way to hide the sidebar at all before — no menu item, no
+// shortcut, no toolbar button — despite the window using a collapsible
+// NSSplitViewItem.
+- (void)testShowHideSidebarCollapsesAndRestoresTheSidebar
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+	XCUIElement *sidebar = [self sidebar];
+	XCTAssertTrue(sidebar.isHittable, @"the sidebar starts visible");
+
+	// AppKit retitles the item to "Hide Sidebar" or "Show Sidebar" to match the
+	// current state, so match on the noun rather than a fixed title.
+	NSPredicate *sidebarItem = [NSPredicate predicateWithFormat:@"title ENDSWITH %@", @"Sidebar"];
+	[self.app.menuBars.menuBarItems[@"View"] click];
+	XCUIElement *toggleItem = [[self.app.menuItems matchingPredicate:sidebarItem] firstMatch];
+	XCTAssertTrue([toggleItem waitForExistenceWithTimeout:10.0], @"View should offer a sidebar toggle");
+	[toggleItem click];
+
+	NSPredicate *hidden = [NSPredicate predicateWithFormat:@"isHittable == false"];
+	XCTestExpectation *collapsed = [self expectationForPredicate:hidden evaluatedWithObject:sidebar handler:nil];
+	XCTWaiterResult collapseResult = [XCTWaiter waitForExpectations:@[collapsed] timeout:15.0];
+	if (collapseResult != XCTWaiterResultCompleted) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertEqual(collapseResult, XCTWaiterResultCompleted, @"the sidebar should collapse");
+
+	// And back again — it is a toggle, not a one-way hide.
+	[self.app.menuBars.menuBarItems[@"View"] click];
+	[[[self.app.menuItems matchingPredicate:sidebarItem] firstMatch] click];
+
+	NSPredicate *shown = [NSPredicate predicateWithFormat:@"isHittable == true"];
+	XCTestExpectation *restored = [self expectationForPredicate:shown evaluatedWithObject:sidebar handler:nil];
+	XCTAssertEqual([XCTWaiter waitForExpectations:@[restored] timeout:15.0], XCTWaiterResultCompleted,
+				   @"the sidebar should come back");
+}
+
 - (void)testSettingsWindowOpensFromMenu
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];

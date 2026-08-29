@@ -55,6 +55,7 @@
 		15D5BEF518EBB430001DDED7 /* search.icns in Resources */ = {isa = PBXBuildFile; fileRef = 15D5BEF418EBB430001DDED7 /* search.icns */; };
 		15EC1B0725CED52C00C93861 /* BPWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 15EC1B0625CED52C00C93861 /* BPWindow.m */; };
 		15EC1B0C25CEE4C200C93861 /* BPMainWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 15EC1B0B25CEE4C200C93861 /* BPMainWindowController.m */; };
+		59246886F867B7F80EBA72A9 /* BPMainWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 15EC1B0B25CEE4C200C93861 /* BPMainWindowController.m */; };
 		1ED78A300C6AD6B948573401 /* BPHelperRegistration.m in Sources */ = {isa = PBXBuildFile; fileRef = 1977F1333B98C72C02E9D6E7 /* BPHelperRegistration.m */; };
 		1FE4FE59148E4CDD008EDE8B /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FE4FE58148E4CDD008EDE8B /* Cocoa.framework */; };
 		1FE4FE63148E4CDD008EDE8B /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1FE4FE61148E4CDD008EDE8B /* InfoPlist.strings */; };
@@ -74,6 +75,7 @@
 		B82155040A26FD8CACED3ACD /* BPFormulaModernInfoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6D86816AB46E437230B59378 /* BPFormulaModernInfoTests.m */; };
 		F0E714A1236CD2E2125FDD69 /* BPBrewCompatibilityTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2C69B479D5539097976F1928 /* BPBrewCompatibilityTests.m */; };
 		7E59E2B2D39ADA9B10562D44 /* BPXibAppearanceTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F98B5A49785A8DBEC9095C8 /* BPXibAppearanceTests.m */; };
+		9980133D7BE3566C9A124094 /* BPMainMenuTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2CD5A875D0976E576284392E /* BPMainMenuTests.m */; };
 		55BE3020BDDC9FCA19C1ECBC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C155F549AE6671B51A3FCAD /* Cocoa.framework */; };
 		5F38898450E03D2D56291D29 /* BPHelperSecurity.m in Sources */ = {isa = PBXBuildFile; fileRef = 1227A6AF7A6E1F24A913015B /* BPHelperSecurity.m */; };
 		627F454983A4C2C93584B748 /* BPHelperOutputRelayTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 88BBB2337F47C685C807D566 /* BPHelperOutputRelayTests.m */; };
@@ -126,6 +128,7 @@
 		D2BBAB6F1B87290B00F21332 /* brewInfo_bison.txt in Resources */ = {isa = PBXBuildFile; fileRef = D2BBAB6E1B87290B00F21332 /* brewInfo_bison.txt */; };
 		D2BBAB711B87377D00F21332 /* brewInfo_sbtenv.txt in Resources */ = {isa = PBXBuildFile; fileRef = D2BBAB701B87377D00F21332 /* brewInfo_sbtenv.txt */; };
 		D2C1B1021B821A2A00FFC2CA /* BPToolbar.m in Sources */ = {isa = PBXBuildFile; fileRef = D2C1B1011B821A2A00FFC2CA /* BPToolbar.m */; };
+		A3C29FE74D8478CD5ABE3908 /* BPToolbar.m in Sources */ = {isa = PBXBuildFile; fileRef = D2C1B1011B821A2A00FFC2CA /* BPToolbar.m */; };
 		D2C3E02A1B8E15B2000D89BB /* Disabled.xib in Resources */ = {isa = PBXBuildFile; fileRef = D2C3E02C1B8E15B2000D89BB /* Disabled.xib */; };
 		D2C3E02D1B8E15D5000D89BB /* Loading.xib in Resources */ = {isa = PBXBuildFile; fileRef = D2C3E02F1B8E15D5000D89BB /* Loading.xib */; };
 		D2C4278B1B8E055B001C1F80 /* BPDisabledView.m in Sources */ = {isa = PBXBuildFile; fileRef = D2C427881B8E055B001C1F80 /* BPDisabledView.m */; };
@@ -352,6 +355,7 @@
 		6D86816AB46E437230B59378 /* BPFormulaModernInfoTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPFormulaModernInfoTests.m; sourceTree = "<group>"; };
 		2C69B479D5539097976F1928 /* BPBrewCompatibilityTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPBrewCompatibilityTests.m; sourceTree = "<group>"; };
 		3F98B5A49785A8DBEC9095C8 /* BPXibAppearanceTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPXibAppearanceTests.m; sourceTree = "<group>"; };
+		2CD5A875D0976E576284392E /* BPMainMenuTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPMainMenuTests.m; sourceTree = "<group>"; };
 		A8052362C08CE3FF3945ABAD /* BPPreferencesTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPPreferencesTests.m; sourceTree = "<group>"; };
 		AA67F6479F85E50C83706E3E /* BPService.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPService.m; path = Models/BPService.m; sourceTree = "<group>"; };
 		B040E2F0936D991B4511CE23 /* BPHelperOutputRelay.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPHelperOutputRelay.h; sourceTree = "<group>"; };
@@ -755,6 +759,7 @@
 				6D86816AB46E437230B59378 /* BPFormulaModernInfoTests.m */,
 				2C69B479D5539097976F1928 /* BPBrewCompatibilityTests.m */,
 				3F98B5A49785A8DBEC9095C8 /* BPXibAppearanceTests.m */,
+				2CD5A875D0976E576284392E /* BPMainMenuTests.m */,
 				8F2D53C524FAE8B655FD3778 /* BPHelperRegistrationTests.m */,
 			);
 			path = CakebrewTests;
@@ -1085,6 +1090,9 @@
 				B82155040A26FD8CACED3ACD /* BPFormulaModernInfoTests.m in Sources */,
 				F0E714A1236CD2E2125FDD69 /* BPBrewCompatibilityTests.m in Sources */,
 				7E59E2B2D39ADA9B10562D44 /* BPXibAppearanceTests.m in Sources */,
+				9980133D7BE3566C9A124094 /* BPMainMenuTests.m in Sources */,
+				59246886F867B7F80EBA72A9 /* BPMainWindowController.m in Sources */,
+				A3C29FE74D8478CD5ABE3908 /* BPToolbar.m in Sources */,
 				5E523D41E4EFAF010C1F604B /* BPAutoScrollTextView.m in Sources */,
 				1ED78A300C6AD6B948573401 /* BPHelperRegistration.m in Sources */,
 				D5A4E97BA98E72BCC344B615 /* BPHelperRegistrationTests.m in Sources */,
