@@ -35,7 +35,11 @@
 	// the argument domain (which outranks stored defaults) so every journey
 	// starts on Installed; testReopensOnTheLastUsedSidebarRow overrides it
 	// deliberately to exercise the restore.
-	NSArray<NSString *> *pinned = @[ @"-BPLastSelectedSidebarRow", @"1" ];
+	// Both of these change what the app shows at launch, so both are pinned
+	// through the argument domain rather than inherited from whatever the last
+	// run (or the developer's own session) left stored.
+	NSArray<NSString *> *pinned = @[ @"-BPLastSelectedSidebarRow", @"1",
+									 @"-BPSortColumnIdentifier", @"" ];
 	BOOL alreadyPinned = [arguments containsObject:@"-BPLastSelectedSidebarRow"];
 	self.app.launchArguments = alreadyPinned ? arguments : [arguments arrayByAddingObjectsFromArray:pinned];
 	[self.app launch];

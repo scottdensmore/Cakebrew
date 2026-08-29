@@ -10,6 +10,7 @@
 #import "BPFormulaeDataSource.h"
 #import "BPHomebrewManager.h"
 #import "BPFormulaeTableView.h"
+#import "BPPreferences.h"
 
 @interface BPFormulaeDataSource()
 @property (nonatomic, strong) NSArray *formulaeArray;
@@ -63,6 +64,24 @@
 	[self refreshBackingArray];
 }
 
+- (void)setSortDescriptors:(NSArray<NSSortDescriptor *> *)sortDescriptors
+{
+	_sortDescriptors = [sortDescriptors copy];
+	[self refreshBackingArray];
+}
+
+- (void)tableView:(NSTableView *)tableView sortDescriptorsDidChange:(NSArray<NSSortDescriptor *> *)oldDescriptors
+{
+	self.sortDescriptors = tableView.sortDescriptors;
+
+	// Remembered so the chosen sort survives relaunch.
+	NSSortDescriptor *descriptor = tableView.sortDescriptors.firstObject;
+	[BPPreferences setSortColumnIdentifier:descriptor.key];
+	[BPPreferences setSortAscending:descriptor ? descriptor.ascending : YES];
+
+	[tableView reloadData];
+}
+
 - (void)refreshBackingArray
 {
 	switch (self.mode) {
@@ -108,6 +127,11 @@
 		default:
 			break;
 	}
+
+	if (self.sortDescriptors.count > 0)
+	{
+		_formulaeArray = [BPFormulaeDataSource formulae:_formulaeArray sortedBy:self.sortDescriptors];
+	}
 }
 
 
@@ -138,6 +162,80 @@
 	}];
 
 	return (index == NSNotFound) ? -1 : (NSInteger)index;
+}
+
++ (NSComparisonResult)compareFormula:(BPFormula *)lhs
+						  toFormula:(BPFormula *)rhs
+							 forKey:(NSString *)key
+{
+	if ([key isEqualToString:kColumnIdentifierName])
+	{
+		return [lhs.name localizedCaseInsensitiveCompare:rhs.name];
+	}
+
+	if ([key isEqualToString:kColumnIdentifierStatus])
+	{
+		// Enum order, not the localized label: not installed < installed <
+		// outdated, the same in every language.
+		BPHomebrewManager *manager = [BPHomebrewManager sharedManager];
+		BPFormulaStatus left = [manager statusForFormula:lhs];
+		BPFormulaStatus right = [manager statusForFormula:rhs];
+		if (left == right) return NSOrderedSame;
+		return (left < right) ? NSOrderedAscending : NSOrderedDescending;
+	}
+
+	NSString *leftValue = [key isEqualToString:kColumnIdentifierLatestVersion] ? lhs.shortLatestVersion : lhs.version;
+	NSString *rightValue = [key isEqualToString:kColumnIdentifierLatestVersion] ? rhs.shortLatestVersion : rhs.version;
+
+	// An absent version (every row under All Formulae) sorts first rather than
+	// comparing arbitrarily against rows that have one.
+	if (leftValue.length == 0 && rightValue.length == 0) return NSOrderedSame;
+	if (leftValue.length == 0) return NSOrderedAscending;
+	if (rightValue.length == 0) return NSOrderedDescending;
+
+	// Natural ordering, so 9.0 precedes 10.0 instead of following it.
+	return [leftValue localizedStandardCompare:rightValue];
+}
+
++ (NSArray<BPFormula *> *)formulae:(NSArray<BPFormula *> *)formulae
+						  sortedBy:(NSArray<NSSortDescriptor *> *)descriptors
+{
+	NSSortDescriptor *descriptor = descriptors.firstObject;
+	if (!descriptor.key)
+	{
+		return formulae ?: @[];
+	}
+
+	// sortedArrayUsingComparator: is not guaranteed stable, so sort indices and
+	// break ties by original position.
+	NSArray<NSNumber *> *positions = [self indexesForCount:formulae.count];
+	NSArray<NSNumber *> *ordered = [positions sortedArrayUsingComparator:^NSComparisonResult(NSNumber *l, NSNumber *r) {
+		NSComparisonResult result = [self compareFormula:formulae[l.unsignedIntegerValue]
+											   toFormula:formulae[r.unsignedIntegerValue]
+												  forKey:descriptor.key];
+		if (result == NSOrderedSame)
+		{
+			return [l compare:r];
+		}
+		return descriptor.ascending ? result : (result == NSOrderedAscending ? NSOrderedDescending : NSOrderedAscending);
+	}];
+
+	NSMutableArray<BPFormula *> *sorted = [NSMutableArray arrayWithCapacity:formulae.count];
+	for (NSNumber *position in ordered)
+	{
+		[sorted addObject:formulae[position.unsignedIntegerValue]];
+	}
+	return sorted;
+}
+
++ (NSArray<NSNumber *> *)indexesForCount:(NSUInteger)count
+{
+	NSMutableArray<NSNumber *> *indexes = [NSMutableArray arrayWithCapacity:count];
+	for (NSUInteger i = 0; i < count; i++)
+	{
+		[indexes addObject:@(i)];
+	}
+	return indexes;
 }
 
 - (NSArray *)formulasAtIndexSet:(NSIndexSet *)indexSet

@@ -716,6 +716,7 @@ CA
                                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                 </textFieldCell>
+                                                <sortDescriptor key="sortDescriptorPrototype" selector="compare:" sortKey="Name" id="cbk-srt-nam"/>
                                                 <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
                                             </tableColumn>
                                             <tableColumn identifier="Version" editable="NO" width="115" minWidth="40" maxWidth="1000" id="h5d-xc-Jih">
@@ -728,6 +729,7 @@ CA
                                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                 </textFieldCell>
+                                                <sortDescriptor key="sortDescriptorPrototype" selector="compare:" sortKey="Version" id="cbk-srt-ver"/>
                                                 <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
                                             </tableColumn>
                                             <tableColumn identifier="LatestVersion" editable="NO" width="115" minWidth="40" maxWidth="1000" id="ba4-r8-kgo">
@@ -740,6 +742,7 @@ CA
                                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                 </textFieldCell>
+                                                <sortDescriptor key="sortDescriptorPrototype" selector="compare:" sortKey="LatestVersion" id="cbk-srt-lat"/>
                                                 <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
                                             </tableColumn>
                                             <tableColumn identifier="Status" editable="NO" width="115" minWidth="40" maxWidth="1000" id="JRi-Nr-5hA">
@@ -752,6 +755,7 @@ CA
                                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                 </textFieldCell>
+                                                <sortDescriptor key="sortDescriptorPrototype" selector="compare:" sortKey="Status" id="cbk-srt-sta"/>
                                                 <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
                                             </tableColumn>
                                         </tableColumns>
