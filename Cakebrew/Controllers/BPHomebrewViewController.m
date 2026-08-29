@@ -789,7 +789,7 @@ NSOpenSavePanelDelegate>
 
 - (IBAction)installFormula:(id)sender
 {
-	[self checkForBackgroundTask];
+	if ([self hasBlockingBackgroundTask]) return;
 	BPFormula *formula = [self selectedFormula];
 	if (!formula) {
 		return;
@@ -817,7 +817,7 @@ NSOpenSavePanelDelegate>
 
 - (IBAction)installFormulaWithOptions:(id)sender
 {
-	[self checkForBackgroundTask];
+	if ([self hasBlockingBackgroundTask]) return;
 	BPFormula *formula = [self selectedFormula];
 	if (!formula) {
 		return;
@@ -835,7 +835,7 @@ NSOpenSavePanelDelegate>
 
 - (IBAction)uninstallFormula:(id)sender
 {
-	[self checkForBackgroundTask];
+	if ([self hasBlockingBackgroundTask]) return;
 	BPFormula *formula = [self selectedFormula];
 	if (!formula) {
 		return;
@@ -892,7 +892,7 @@ NSOpenSavePanelDelegate>
 
 - (IBAction)upgradeSelectedFormulae:(id)sender
 {
-	[self checkForBackgroundTask];
+	if ([self hasBlockingBackgroundTask]) return;
 	NSArray *selectedFormulae = [self selectedFormulae];
 	if (![selectedFormulae count]) {
 		return;
@@ -920,7 +920,7 @@ NSOpenSavePanelDelegate>
 
 - (IBAction)upgradeAllOutdatedFormulae:(id)sender
 {
-	[self checkForBackgroundTask];
+	if ([self hasBlockingBackgroundTask]) return;
 
 	NSAlert *alert = [[NSAlert alloc] init];
 	[alert setMessageText:NSLocalizedString(@"Message_Update_All_Outdated_Title", nil)];
@@ -941,7 +941,7 @@ NSOpenSavePanelDelegate>
 
 - (IBAction)tapRepository:(id)sender
 {
-	[self checkForBackgroundTask];
+	if ([self hasBlockingBackgroundTask]) return;
 
 	NSAlert *alert = [[NSAlert alloc] init];
 	[alert setMessageText:NSLocalizedString(@"Message_Tap_Title", nil)];
@@ -979,7 +979,7 @@ NSOpenSavePanelDelegate>
 
 - (IBAction)untapRepository:(id)sender
 {
-	[self checkForBackgroundTask];
+	if ([self hasBlockingBackgroundTask]) return;
 	BPFormula *formula = [self selectedFormula];
 	
 	if (!formula)
@@ -1038,6 +1038,8 @@ NSOpenSavePanelDelegate>
 
 - (IBAction)runHomebrewCleanup:(id)sender
 {
+	if ([self hasBlockingBackgroundTask]) return;
+
 	self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationCleanup
 																			 formulae:nil
 																			  options:nil];
@@ -1087,13 +1089,20 @@ NSOpenSavePanelDelegate>
 	}];
 }
 
-- (void)checkForBackgroundTask
+/// Presents the warning and reports whether the caller must stop.
+///
+/// This used to return void, so its `return` only exited the guard: callers
+/// showed the warning and then carried straight on into their own confirmation
+/// sheet, and confirming started a second brew run.
+- (BOOL)hasBlockingBackgroundTask
 {
-	if (_appDelegate.isRunningBackgroundTask)
+	if (![BPAppDelegate shouldBlockOperationWhileRunningBackgroundTask:_appDelegate.isRunningBackgroundTask])
 	{
-		[_appDelegate displayBackgroundWarning];
-		return;
+		return NO;
 	}
+
+	[_appDelegate displayBackgroundWarning];
+	return YES;
 }
 
 - (BPFormula *)selectedFormula

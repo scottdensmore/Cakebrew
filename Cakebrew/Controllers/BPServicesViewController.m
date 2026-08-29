@@ -20,6 +20,7 @@
 #import "BPHomebrewInterface.h"
 #import "BPService.h"
 #import "BPStyle.h"
+#import "BPAppDelegate.h"
 
 static NSString * const kServiceColumnName   = @"Name";
 static NSString * const kServiceColumnStatus = @"Status";
@@ -146,6 +147,15 @@ static NSString * const kServiceColumnUser   = @"User";
 	NSInteger row = self.tableView.selectedRow;
 	if (self.operationInFlight || row < 0 || (NSUInteger)row >= self.services.count)
 	{
+		return;
+	}
+
+	// operationInFlight only tracks this view's own service operations; a brew
+	// run started elsewhere in the app takes Homebrew's lock just the same.
+	BPAppDelegate *appDelegate = BPAppDelegateRef;
+	if ([BPAppDelegate shouldBlockOperationWhileRunningBackgroundTask:appDelegate.isRunningBackgroundTask])
+	{
+		[appDelegate displayBackgroundWarning];
 		return;
 	}
 
