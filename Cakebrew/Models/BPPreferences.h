@@ -40,6 +40,12 @@ extern NSString *const kBPGreedyCaskUpgradesKey;
 + (void)setBackgroundCheckInterval:(NSTimeInterval)interval;
 
 /** Include auto-updating casks when listing outdated casks (default NO). */
+/// The sidebar row the user last had selected, so the app reopens where they
+/// left it. Stored raw; validate with +[BPSideBarController restorableRowFrom:rowCount:]
+/// before selecting, since rows are outline indices that can shift.
++ (NSInteger)lastSelectedSidebarRow;
++ (void)setLastSelectedSidebarRow:(NSInteger)row;
+
 + (BOOL)greedyCaskUpgrades;
 + (void)setGreedyCaskUpgrades:(BOOL)greedy;
 

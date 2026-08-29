@@ -30,10 +30,27 @@
 // Launch the app with the given arguments and wait for its main window.
 - (void)launchWithArguments:(NSArray<NSString *> *)arguments
 {
-	self.app.launchArguments = arguments;
+	// The app now reopens on the sidebar row the user last used, which makes a
+	// launch depend on whatever the previous test left behind. Pin it through
+	// the argument domain (which outranks stored defaults) so every journey
+	// starts on Installed; testReopensOnTheLastUsedSidebarRow overrides it
+	// deliberately to exercise the restore.
+	NSArray<NSString *> *pinned = @[ @"-BPLastSelectedSidebarRow", @"1" ];
+	BOOL alreadyPinned = [arguments containsObject:@"-BPLastSelectedSidebarRow"];
+	self.app.launchArguments = alreadyPinned ? arguments : [arguments arrayByAddingObjectsFromArray:pinned];
 	[self.app launch];
 	XCTAssertTrue([self.app.windows.firstMatch waitForExistenceWithTimeout:30.0],
 				  @"the main window should appear after launch");
+
+	// A test that pins a different starting row is not going to land on the
+	// Installed list, so the settle-wait below would never be satisfied.
+	NSUInteger rowIndex = [arguments indexOfObject:@"-BPLastSelectedSidebarRow"];
+	BOOL startsOnInstalled = (rowIndex == NSNotFound) ||
+							 (rowIndex + 1 >= arguments.count) ||
+							 [arguments[rowIndex + 1] isEqualToString:@"1"];
+	if (!startsOnInstalled) {
+		return;
+	}
 
 	// Under the mock, wait for the initial reload to settle before tests
 	// navigate: homebrewManagerFinishedUpdating reloads the sidebar and
@@ -386,6 +403,30 @@
 				   @"Sparkle is not shipped and must not be credited");
 	XCTAssertFalse([shown containsString:@"PXSourceList"],
 				   @"PXSourceList is not shipped either");
+}
+
+// Journey: the app reopens on the sidebar row last used, rather than always on
+// Installed. The stored row arrives through the argument domain here, which is
+// what -[BPPreferences lastSelectedSidebarRow] reads.
+- (void)testReopensOnTheLastUsedSidebarRow
+{
+	[self launchWithArguments:@[ @"-BPMockBrew", @"-BPLastSelectedSidebarRow", @"12" ]];
+
+	// Row 12 is Doctor, so its view should be showing without any navigation.
+	XCTAssertTrue([self.app.staticTexts[@"Homebrew Doctor"] waitForExistenceWithTimeout:30.0],
+				  @"the app should reopen on the row the user last selected");
+}
+
+// Journey: a stored row that no longer addresses a real destination falls back
+// to Installed rather than opening on nothing.
+- (void)testAnOutOfRangeStoredRowFallsBackToInstalled
+{
+	// Row 99 addresses nothing, so the app should land on Installed — which is
+	// exactly what the shared launch helper waits for.
+	[self launchWithArguments:@[ @"-BPMockBrew", @"-BPLastSelectedSidebarRow", @"99" ]];
+
+	XCTAssertTrue([[self formulaCellWithName:@"mockwget"] waitForExistenceWithTimeout:30.0],
+				  @"an unusable stored row should fall back to the Installed list");
 }
 
 // Journey: View ▸ Show/Hide Sidebar collapses the sidebar and restores it.
