@@ -17,7 +17,9 @@ already made.
    behavior-changing refactors. Only pure formatting/docs are exempt.
 3. **UI review.** If the change touches UI, verify it visually: launch the mock
    build (`-BPMockBrew`), look at it (screenshot if headless), confirm layout,
-   dark mode, and badges render correctly.
+   dark mode, and badges render correctly. For behaviour rather than looks, run
+   the `CakebrewUITests` scheme locally (it works — see environment quirks) and
+   add a journey; an assertion beats eyeballing a screenshot.
 4. **Verify.** Build with **zero warnings** and run the full unit suite
    (see commands below). Treat a new warning as a failure.
 5. **Pre-PR code review** over the full diff. Fix what you find, then re-verify.
@@ -188,9 +190,13 @@ macOS ships: bump the deployment target one, bump the CI runner, never pin
 
 - **`git push` hangs** on the Entire pre-push hook (session-log sync). Push
   with `git push --no-verify` — it skips only that hook, nothing code-related.
-- **Local XCUITest runs** often die at init with "Timed out while enabling
-  automation mode" (machine-level permission issue). Don't block on it: local
-  verification = build + unit suite + visual check; **CI is the authoritative
-  UI-test gate.**
+- **Local XCUITest works** (since 2026-08-15). It used to die at init with
+  "Timed out while enabling automation mode"; the cause was macOS developer
+  mode being off, fixed once with `sudo DevToolsSecurity -enable`. Being in the
+  `_developer` group is not sufficient on its own, and Accessibility permission
+  is *not* required. If that init timeout ever returns, check
+  `DevToolsSecurity -status` first. The full local run takes ~6 minutes (vs ~4s
+  for the unit suite), so it is a pre-PR step, not an inner-loop one. CI remains
+  the merge gate.
 - Commit signing is temporarily disabled (`git -c commit.gpgsign=false`) while
   the 1Password SSH agent is broken. Re-enable when fixed.
