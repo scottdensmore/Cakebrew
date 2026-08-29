@@ -38,6 +38,7 @@ typedef NS_ENUM(NSUInteger, BPWindowOperation) {
 
 @interface BPHomebrewViewController : NSViewController
 
+
 @property (weak) IBOutlet BPSideBarController      *sidebarController;
 @property (weak) IBOutlet BPFormulaeTableView      *formulaeTableView;
 @property (weak) IBOutlet NSScrollView             *scrollView_formulae;

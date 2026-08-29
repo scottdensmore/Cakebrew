@@ -37,6 +37,16 @@ extern NSString *const kBP_CAKEBREW_DOCUMENTATION;
 + (NSURL*)urlForApplicationSupportFolder;
 + (NSURL*)urlForApplicationCachesFolder;
 
+/**
+ *  Whether an operation must not start because a brew run is already in
+ *  flight. Homebrew takes its own lock, so a second run fails with a raw error
+ *  in the log — this stops it before the user is asked to confirm anything.
+ *
+ *  Pure so it is testable without a window; the caller pairs it with
+ *  -displayBackgroundWarning.
+ */
++ (BOOL)shouldBlockOperationWhileRunningBackgroundTask:(BOOL)isRunningBackgroundTask;
+
 - (IBAction)openWebsite:(id)sender;
 
 /// Opens the online documentation. The Help menu item used to send showHelp:,

@@ -210,6 +210,11 @@ NSString *const kBP_CAKEBREW_DOCUMENTATION = @"https://github.com/scottdensmore/
 	[NSApp activateIgnoringOtherApps:YES];
 }
 
++ (BOOL)shouldBlockOperationWhileRunningBackgroundTask:(BOOL)isRunningBackgroundTask
+{
+	return isRunningBackgroundTask;
+}
+
 - (IBAction)openWebsite:(id)sender
 {
 	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:kBP_HOMEBREW_WEBSITE]];
