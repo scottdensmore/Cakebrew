@@ -9,6 +9,7 @@
 #import "BPBundleWindowController.h"
 #import "BPAppDelegate.h"
 #import "BPHomebrewInterface.h"
+#import "BPAutoScrollTextView.h"
 
 @interface BPBundleWindowController ()
 
@@ -17,7 +18,7 @@
 @property (strong) IBOutlet NSView *viewExportProgress;
 @property (strong) IBOutlet NSView *viewImportProgress;
 
-@property (strong) IBOutlet NSTextView *textViewImport;
+@property (strong) IBOutlet BPAutoScrollTextView *textViewImport;
 @property (strong) IBOutlet NSTextField *progressLabelImport;
 @property (strong) IBOutlet NSImageView *statusViewExport;
 @property (strong) IBOutlet NSTextField *statusLabelExport;
@@ -29,7 +30,6 @@
 @property (nonatomic, copy) void (^windowLoadedBlock)(void);
 @property (nonatomic, copy) void (^operationBlock)(void);
 
-@property (strong) NSMutableString *importOutputString;
 
 @end
 
@@ -94,16 +94,13 @@
 
 - (void)runImportOperationWithFile:(NSURL*)fileURL
 {
-	self.importOutputString = [NSMutableString new];
+	[self.textViewImport clearOutput];
 	__weak BPBundleWindowController *weakSelf = self;
-	
+
 	[[BPHomebrewInterface sharedInterface] runBrewImportToolWithPath:[fileURL path]
 													withReturnsBlock:^(NSString *output)
 	{
-		[self.importOutputString appendString:output];
-		[weakSelf.textViewImport performSelectorOnMainThread:@selector(setString:)
-												  withObject:self.importOutputString
-											   waitUntilDone:YES];
+		[weakSelf.textViewImport appendOutput:output];
 	}];
 	
 	[self.progressLabelImport setHidden:YES];
