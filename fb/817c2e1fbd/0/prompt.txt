@@ -1,0 +1,13 @@
+Ok what is next to work on?
+
+---
+
+How can I setup you driving things on this machine?
+
+---
+
+Ok Xcode is running with the project
+
+---
+
+Ok try it one more time and see that is going on
