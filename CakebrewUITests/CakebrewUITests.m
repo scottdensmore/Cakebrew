@@ -340,6 +340,25 @@
 }
 
 // Journey: Preferences opens from the app menu and shows the settings.
+/// Waits for the sidebar to reach the collapsed (or expanded) state.
+///
+/// Measured by width rather than -isHittable: the CI runner's window is never
+/// key, so hit testing reports false regardless of whether the sidebar is
+/// showing. A collapsed NSSplitViewItem either drops out of the tree or reports
+/// zero width.
+- (BOOL)waitForSidebar:(XCUIElement *)sidebar collapsed:(BOOL)collapsed timeout:(NSTimeInterval)timeout
+{
+	NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:timeout];
+	while ([deadline timeIntervalSinceNow] > 0) {
+		BOOL isCollapsed = !sidebar.exists || sidebar.frame.size.width < 1.0;
+		if (isCollapsed == collapsed) {
+			return YES;
+		}
+		[NSThread sleepForTimeInterval:0.25];
+	}
+	return NO;
+}
+
 // Journey: View ▸ Show/Hide Sidebar collapses the sidebar and restores it.
 // There was no way to hide the sidebar at all before — no menu item, no
 // shortcut, no toolbar button — despite the window using a collapsible
@@ -348,7 +367,9 @@
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 	XCUIElement *sidebar = [self sidebar];
-	XCTAssertTrue(sidebar.isHittable, @"the sidebar starts visible");
+	// Width, not isHittable: the CI runner's window is never key, so hit
+	// testing reports false there even while the sidebar is plainly visible.
+	XCTAssertGreaterThan(sidebar.frame.size.width, 1.0, @"the sidebar starts visible");
 
 	// AppKit retitles the item to "Hide Sidebar" or "Show Sidebar" to match the
 	// current state, so match on the noun rather than a fixed title.
@@ -358,22 +379,18 @@
 	XCTAssertTrue([toggleItem waitForExistenceWithTimeout:10.0], @"View should offer a sidebar toggle");
 	[toggleItem click];
 
-	NSPredicate *hidden = [NSPredicate predicateWithFormat:@"isHittable == false"];
-	XCTestExpectation *collapsed = [self expectationForPredicate:hidden evaluatedWithObject:sidebar handler:nil];
-	XCTWaiterResult collapseResult = [XCTWaiter waitForExpectations:@[collapsed] timeout:15.0];
-	if (collapseResult != XCTWaiterResultCompleted) {
+	BOOL didCollapse = [self waitForSidebar:sidebar collapsed:YES timeout:15.0];
+	if (!didCollapse) {
 		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
 	}
-	XCTAssertEqual(collapseResult, XCTWaiterResultCompleted, @"the sidebar should collapse");
+	XCTAssertTrue(didCollapse, @"the sidebar should collapse");
 
 	// And back again — it is a toggle, not a one-way hide.
 	[self.app.menuBars.menuBarItems[@"View"] click];
 	[[[self.app.menuItems matchingPredicate:sidebarItem] firstMatch] click];
 
-	NSPredicate *shown = [NSPredicate predicateWithFormat:@"isHittable == true"];
-	XCTestExpectation *restored = [self expectationForPredicate:shown evaluatedWithObject:sidebar handler:nil];
-	XCTAssertEqual([XCTWaiter waitForExpectations:@[restored] timeout:15.0], XCTWaiterResultCompleted,
-				   @"the sidebar should come back");
+	XCTAssertTrue([self waitForSidebar:sidebar collapsed:NO timeout:15.0],
+				  @"the sidebar should come back");
 }
 
 - (void)testSettingsWindowOpensFromMenu
