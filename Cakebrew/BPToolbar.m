@@ -49,7 +49,9 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 		_currentMode = BPToolbarModeInitial;
 		[self configureForMode:BPToolbarModeDefault];
 		[self lockItems];
-		[self setAllowsUserCustomization:YES];
+		// Customization is deliberately not offered: there is no Customize
+		// Toolbar… item and nothing autosaves a configuration, so advertising
+		// it only produced a palette the window then refused to open.
 	}
 	return self;
 }
@@ -185,7 +187,8 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 
 - (NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar
 {
-	return @[NSToolbarFlexibleSpaceItemIdentifier,
+	return @[NSToolbarToggleSidebarItemIdentifier,
+			 NSToolbarFlexibleSpaceItemIdentifier,
 			 kToolbarItemHomebrewUpdateIdentifier,
 			 NSToolbarSidebarTrackingSeparatorItemIdentifier,
 			 NSToolbarFlexibleSpaceItemIdentifier,
@@ -198,7 +201,8 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 - (NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
 {
 	NSArray *systemToolbarItems = [self systemToolbarItems];
-	NSArray *customToolbarItems = @[kToolbarItemHomebrewUpdateIdentifier,
+	NSArray *customToolbarItems = @[NSToolbarToggleSidebarItemIdentifier,
+									kToolbarItemHomebrewUpdateIdentifier,
 									kToolbarItemInformationIdentifier,
 									kToolbarItemSearchIdentifier,
 									kToolbarItemMultiActionIdentifier

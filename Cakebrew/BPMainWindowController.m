@@ -17,6 +17,20 @@
 
 @implementation BPMainWindowController
 
+/**
+ *  Forwards the Show/Hide Sidebar action (menu item and toolbar button) to the
+ *  split view controller.
+ *
+ *  The split controller's *view* is a subview of the window's content view
+ *  rather than the window's contentViewController, so whether the action
+ *  reaches it through the responder chain depends on what currently has focus.
+ *  The window controller is always in that chain, so it forwards explicitly.
+ */
+- (void)toggleSidebar:(id)sender
+{
+	[self.splitViewController toggleSidebar:sender];
+}
+
 - (void)setUpViews
 {
 	_splitViewController = [[NSSplitViewController alloc] initWithNibName:nil bundle:nil];
