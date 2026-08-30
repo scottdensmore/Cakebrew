@@ -242,6 +242,7 @@ NSOpenSavePanelDelegate>
 	[self addLoadingView];
 	
 	_appDelegate = BPAppDelegateRef;
+	_appDelegate.dockActionTarget = self;
 }
 
 - (void)addToolbar
@@ -1028,6 +1029,12 @@ NSOpenSavePanelDelegate>
 {
 	[self.sidebarController.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:FormulaeSideBarItemUpdate] byExtendingSelection:NO];
 	[self.updateViewController runStopUpdate:nil];
+}
+
+- (IBAction)showOutdatedFormulae:(id)sender
+{
+	[self.sidebarController.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:FormulaeSideBarItemOutdated]
+								byExtendingSelection:NO];
 }
 
 - (IBAction)openSelectedFormulaWebsite:(id)sender

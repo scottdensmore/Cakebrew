@@ -24,6 +24,7 @@
 #import "BPFormulaeTableView.h"
 #import "BPFormulaPopoverViewController.h"
 #import "BPSideBarController.h"
+#import "BPDockMenu.h"
 
 typedef NS_ENUM(NSUInteger, BPWindowOperation) {
 	kBPWindowOperationInstall,
@@ -36,7 +37,7 @@ typedef NS_ENUM(NSUInteger, BPWindowOperation) {
 
 @class BPUpdateDoctorController;
 
-@interface BPHomebrewViewController : NSViewController
+@interface BPHomebrewViewController : NSViewController <BPDockMenuTarget>
 
 
 @property (weak) IBOutlet BPSideBarController      *sidebarController;
@@ -61,6 +62,9 @@ typedef NS_ENUM(NSUInteger, BPWindowOperation) {
 - (IBAction)upgradeSelectedFormulae:(id)sender;
 - (IBAction)upgradeAllOutdatedFormulae:(id)sender;
 - (IBAction)updateHomebrew:(id)sender;
+/// Jumps to the Outdated Formulae list. Named rather than tag-driven because
+/// the Dock menu fires it, and a Dock item carries its own tag.
+- (IBAction)showOutdatedFormulae:(id)sender;
 - (IBAction)openSelectedFormulaWebsite:(id)sender;
 - (IBAction)beginFormulaSearch:(id)sender;
 - (IBAction)runHomebrewCleanup:(id)sender;

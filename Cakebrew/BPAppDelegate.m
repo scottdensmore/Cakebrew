@@ -85,6 +85,41 @@ NSString *const kBP_CAKEBREW_DOCUMENTATION = @"https://github.com/scottdensmore/
 	return YES;
 }
 
+#pragma mark - Dock menu
+
+- (NSMenu *)applicationDockMenu:(NSApplication *)sender
+{
+	// The three things worth doing without switching to the app. Off when
+	// Homebrew is missing or a background reload is holding the app: the Dock
+	// menu appears with the app in the background, where the app's own
+	// explanation of either state is not visible.
+	id<BPDockMenuTarget> target = self.dockActionTarget;
+
+	BOOL enabled = target.isHomebrewInstalled
+		&& ![BPAppDelegate shouldBlockOperationWhileRunningBackgroundTask:self.isRunningBackgroundTask];
+
+	return [BPDockMenu dockMenuWithTarget:self enabled:enabled];
+}
+
+- (IBAction)performDockMenuAction:(id)sender
+{
+	SEL action = [BPDockMenu controllerActionForItem:(BPDockMenuItem)[sender tag]];
+	id<BPDockMenuTarget> target = self.dockActionTarget;
+
+	if (action == NULL || ![target respondsToSelector:action]) return;
+
+	// Two of the three put a sheet on the main window, and the Dock menu is
+	// used precisely when the app is not front — so come forward first, or the
+	// confirmation goes up where the user cannot see it.
+	[NSApp activate];
+	[self.window makeKeyAndOrderFront:self];
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+	[target performSelector:action withObject:sender];
+#pragma clang diagnostic pop
+}
+
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
 {
 	[[BPHomebrewManager sharedManager] cleanUp];
