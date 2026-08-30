@@ -463,6 +463,41 @@ static NSString *BPSpokenSeparator(void)
 	return identifiers;
 }
 
+- (BPSidebarItem *)itemForListMode:(BPListMode)mode
+{
+	switch (mode)
+	{
+		case kBPListInstalled:      return self.installedFormulaeSidebarItem;
+		case kBPListOutdated:       return self.outdatedFormulaeSidebarItem;
+		case kBPListAll:            return self.allFormulaeSidebarItem;
+		case kBPListLeaves:         return self.leavesFormulaeSidebarItem;
+		case kBPListPinned:         return self.pinnedFormulaeSidebarItem;
+		case kBPListRepositories:   return self.repositoriesFormulaeSidebarItem;
+		case kBPListInstalledCasks: return self.installedCasksSidebarItem;
+		case kBPListOutdatedCasks:  return self.outdatedCasksSidebarItem;
+		case kBPListAllCasks:       return self.allCasksSidebarItem;
+
+		case kBPListSearch:
+			// Search has no sidebar row of its own.
+			return nil;
+	}
+
+	return nil;
+}
+
+- (void)refreshBadgeForListMode:(BPListMode)mode
+{
+	BPSidebarItem *item = [self itemForListMode:mode];
+
+	if (!item)
+	{
+		return;
+	}
+
+	[self refreshSidebarBadges];
+	[self.sidebar reloadItem:item];
+}
+
 - (void)refreshSidebarBadges
 {
 	self.installedFormulaeSidebarItem.badgeValue		= @([[[BPHomebrewManager sharedManager] installedFormulae] count]);

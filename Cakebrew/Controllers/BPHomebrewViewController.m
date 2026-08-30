@@ -512,9 +512,10 @@ NSOpenSavePanelDelegate>
 		return;
 	}
 
-	// Badges are the app's main signal, and they are cheap to redraw.
-	[self.sidebarController refreshSidebarBadges];
-	[self.sidebarController.sidebar reloadData];
+	// Just this row. A whole-outline reloadData clears the selection, and this
+	// runs once per list — which is how the app lost the row the user had
+	// reopened on.
+	[self.sidebarController refreshBadgeForListMode:mode];
 
 	if (mode == kBPListOutdated)
 	{
@@ -555,12 +556,9 @@ NSOpenSavePanelDelegate>
 	[self.toolbar configureForMode:BPToolbarModeDefault];
 	[self.toolbar unlockItems];
 
-	if ([self.sidebarController.sidebar selectedRow] < 0)
-	{
-		[self.sidebarController.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:FormulaeSideBarItemInstalled]
-									byExtendingSelection:NO];
-	}
-
+	// No row selection here. -configureSidebarSettings has already restored the
+	// row the user left off on, and -homebrewManagerFinishedUpdating: owns the
+	// fallback when there is none.
 	[self.formulaeDataSource refreshBackingArray];
 	[self.formulaeTableView reloadData];
 	[self refreshEmptyState];

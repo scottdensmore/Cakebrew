@@ -16,6 +16,7 @@
 #import <XCTest/XCTest.h>
 #import "BPHomebrewManager.h"
 #import "BPHomebrewInterface.h"
+#import "BPSideBarController.h"
 #import "BPFormula.h"
 
 @interface BPIncrementalReloadRecorder : NSObject <BPHomebrewManagerDelegate>
@@ -166,6 +167,44 @@
 	XCTAssertNoThrow([self.manager publishList:@[]
 									   forMode:kBPListInstalled
 									generation:self.manager.currentReloadGeneration]);
+}
+
+#pragma mark - Which sidebar row a list belongs to
+
+// Publishing per list means refreshing one badge per list. The first attempt
+// called reloadData on the whole outline, which clears an NSOutlineView's
+// selection — so the app silently lost the row the user had reopened on, and
+// then persisted Installed over it. Redrawing a single row avoids that, and
+// this pins the mode -> row mapping it depends on.
+
+- (void)testEveryReloadedListMapsToItsOwnSidebarRow
+{
+	BPSideBarController *sidebar = [[BPSideBarController alloc] init];
+
+	NSArray<NSNumber *> *modes = @[ @(kBPListInstalled), @(kBPListOutdated), @(kBPListAll),
+									@(kBPListLeaves), @(kBPListPinned), @(kBPListRepositories),
+									@(kBPListInstalledCasks), @(kBPListOutdatedCasks), @(kBPListAllCasks) ];
+
+	NSMutableSet *seen = [NSMutableSet set];
+
+	for (NSNumber *mode in modes)
+	{
+		BPSidebarItem *item = [sidebar itemForListMode:(BPListMode)mode.integerValue];
+
+		XCTAssertNotNil(item, @"mode %@ has no sidebar row", mode);
+		XCTAssertFalse([seen containsObject:[NSValue valueWithNonretainedObject:item]],
+					   @"mode %@ shares a row with an earlier mode", mode);
+		[seen addObject:[NSValue valueWithNonretainedObject:item]];
+	}
+}
+
+/// Search results are shown in place and have no row of their own; asking for
+/// one must yield nil rather than some other list's row.
+- (void)testSearchHasNoSidebarRow
+{
+	BPSideBarController *sidebar = [[BPSideBarController alloc] init];
+
+	XCTAssertNil([sidebar itemForListMode:kBPListSearch]);
 }
 
 @end

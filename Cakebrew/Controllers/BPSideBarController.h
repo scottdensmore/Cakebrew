@@ -7,6 +7,7 @@
 //
 
 @import Cocoa;
+#import "BPHomebrewInterface.h"
 
 typedef NS_ENUM(NSUInteger, FormulaeSideBarItem)
 {
@@ -101,6 +102,15 @@ typedef NS_ENUM(NSUInteger, FormulaeSideBarItem)
 
 /// Every selectable row's accessibility identifier, in sidebar order.
 - (NSArray<NSString *> *)selectableRowAccessibilityIdentifiers;
+
+/// The sidebar row a reload's list belongs to, or nil for a mode with no row.
+- (BPSidebarItem *)itemForListMode:(BPListMode)mode;
+
+/// Updates one row's badge and redraws just that row.
+///
+/// Deliberately not a whole-outline reloadData: reloading an NSOutlineView
+/// clears its selection, and the incremental reload calls this once per list.
+- (void)refreshBadgeForListMode:(BPListMode)mode;
 
 - (void)refreshSidebarBadges;
 - (void)configureSidebarSettings;
