@@ -344,3 +344,16 @@
 "Confirmation_Import_Brewfile" = "Install everything listed in “%@”? Homebrew will install any formulae and casks it names that are not already installed.";
 "Brewfile_Not_Recognized_Title" = "Not a Brewfile";
 "Brewfile_Not_Recognized_Body" = "“%@” is not named Brewfile, so Cakebrew will not run brew bundle against it.";
+
+/* Loading overlay — which step of the reload is running */
+"Loading_Status_Default" = "Loading…";
+"Loading_Status_Installed" = "Reading installed formulae…";
+"Loading_Status_Outdated" = "Checking what is outdated…";
+"Loading_Status_Leaves" = "Finding leaves…";
+"Loading_Status_Pinned" = "Reading pinned formulae…";
+"Loading_Status_Repositories" = "Reading taps…";
+"Loading_Status_InstalledCasks" = "Reading installed casks…";
+"Loading_Status_OutdatedCasks" = "Checking which casks are outdated…";
+"Loading_Status_AllFormulae" = "Fetching the formula catalog — this can take a minute the first time…";
+"Loading_Status_AllCasks" = "Fetching the cask catalog — this can take a minute the first time…";
+"Loading_Cancel" = "Cancel";

@@ -21,6 +21,7 @@
 
 @interface BPIncrementalReloadRecorder : NSObject <BPHomebrewManagerDelegate>
 @property (strong) NSMutableArray<NSNumber *> *publishedModes;
+@property (strong) NSMutableArray<NSNumber *> *announcedSteps;
 @property (assign) NSUInteger finishedCount;
 @end
 
@@ -31,6 +32,7 @@
 	self = [super init];
 	if (self) {
 		_publishedModes = [NSMutableArray array];
+		_announcedSteps = [NSMutableArray array];
 	}
 	return self;
 }
@@ -38,6 +40,11 @@
 - (void)homebrewManager:(BPHomebrewManager *)manager didPublishListForMode:(BPListMode)mode
 {
 	[self.publishedModes addObject:@(mode)];
+}
+
+- (void)homebrewManager:(BPHomebrewManager *)manager didBeginStepForMode:(BPListMode)mode
+{
+	[self.announcedSteps addObject:@(mode)];
 }
 
 - (void)homebrewManagerFinishedUpdating:(BPHomebrewManager *)manager { self.finishedCount++; }
@@ -167,6 +174,38 @@
 	XCTAssertNoThrow([self.manager publishList:@[]
 									   forMode:kBPListInstalled
 									generation:self.manager.currentReloadGeneration]);
+}
+
+#pragma mark - Announcing a step
+
+// A reload after an operation — a pin, an install, the hourly timer — used to
+// be completely silent: the loading overlay is built once at setup and torn
+// down on the first published list, so nothing marked any reload after the
+// first. Announcing a step is what the footer shows.
+
+- (void)testAnnouncingAStepTellsTheDelegate
+{
+	[self.manager announceStepForMode:kBPListAllCasks generation:self.manager.currentReloadGeneration];
+
+	XCTAssertEqualObjects(self.recorder.announcedSteps, @[ @(kBPListAllCasks) ]);
+}
+
+/// Same hazard as publishing: a superseded reload still has calls in flight,
+/// and its steps must not talk over the newer reload's.
+- (void)testAStaleGenerationAnnouncesNothing
+{
+	[self.manager announceStepForMode:kBPListInstalled
+						   generation:self.manager.currentReloadGeneration - 1];
+
+	XCTAssertEqual(self.recorder.announcedSteps.count, 0u);
+}
+
+- (void)testAnnouncingWithoutADelegateIsHarmless
+{
+	self.manager.delegate = nil;
+
+	XCTAssertNoThrow([self.manager announceStepForMode:kBPListInstalled
+											generation:self.manager.currentReloadGeneration]);
 }
 
 #pragma mark - Which sidebar row a list belongs to

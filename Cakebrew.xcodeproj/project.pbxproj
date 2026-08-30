@@ -38,10 +38,12 @@
 		15C34CBF19512DE100B92E36 /* BPAutoScrollTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = 15C34CBE19512DE100B92E36 /* BPAutoScrollTextView.m */; };
 		28AF2A49333759232BC1F2C9 /* BPEmptyState.m in Sources */ = {isa = PBXBuildFile; fileRef = D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */; };
 		732C9ACF538674E726D8C265 /* BPEmptyStateView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5CF57BEC893DCBB1A2327D9F /* BPEmptyStateView.m */; };
+		A229FC61630E4BB5A0944950 /* BPLoadingStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 634272FBCBC84FA39A51C48C /* BPLoadingStatus.m */; };
 		EED7701B84E04E36839579E4 /* BPDockMenu.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F8AEAD65544A5D962073DF /* BPDockMenu.m */; };
 		5E523D41E4EFAF010C1F604B /* BPAutoScrollTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = 15C34CBE19512DE100B92E36 /* BPAutoScrollTextView.m */; };
 		EBF4B80911E34FB99DA1D410 /* BPEmptyState.m in Sources */ = {isa = PBXBuildFile; fileRef = D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */; };
 		89AA8E57EBC3AF2202896829 /* BPEmptyStateView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5CF57BEC893DCBB1A2327D9F /* BPEmptyStateView.m */; };
+		ED044649DFE741D4875885E6 /* BPLoadingStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 634272FBCBC84FA39A51C48C /* BPLoadingStatus.m */; };
 		14A490C109F54C69A7728156 /* BPDockMenu.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F8AEAD65544A5D962073DF /* BPDockMenu.m */; };
 		15CEFC631AB335B2005CF54A /* BPLoadingView.m in Sources */ = {isa = PBXBuildFile; fileRef = 15CEFC621AB335B2005CF54A /* BPLoadingView.m */; };
 		15D28A121AE1BD27005C8A3E /* BPTimedDispatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 15D28A111AE1BD27005C8A3E /* BPTimedDispatch.m */; };
@@ -94,6 +96,7 @@
 		2D630A95BC372F5BDE94E4E7 /* BPVersionStampingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 674FD1D9F871DDE01F853A88 /* BPVersionStampingTests.m */; };
 		2B599EC8322105ACA0893956 /* BPLocalizedStringsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 828B14661B644D554E964BFC /* BPLocalizedStringsTests.m */; };
 		6147CF053208BD77693EA689 /* BPMockFidelityTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 1DB1AF02EFFE124B9EC54578 /* BPMockFidelityTests.m */; };
+		7B66C47E7C214658AF58EC7F /* BPLoadingStatusTests.m in Sources */ = {isa = PBXBuildFile; fileRef = E48CA8FF562841CDABA511C8 /* BPLoadingStatusTests.m */; };
 		8653704673014814BB37485A /* BPIncrementalReloadTests.m in Sources */ = {isa = PBXBuildFile; fileRef = EDB6083CE52B414D96FA5C44 /* BPIncrementalReloadTests.m */; };
 		EFB108CC72CD4588B8DDB24D /* BPBrewfileTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 381B68AFC5AA44938DD0E22F /* BPBrewfileTests.m */; };
 		99E842CF72AF417A96F28F75 /* BPCleanupPreviewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3FD0481EC5974B78A7B905A2 /* BPCleanupPreviewTests.m */; };
@@ -300,10 +303,12 @@ B6830022477FCFE425D036B9 /* BPBrewError.h */ = {isa = PBXFileReference; includeI
 		15C34CBD19512DE100B92E36 /* BPAutoScrollTextView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPAutoScrollTextView.h; path = Views/BPAutoScrollTextView.h; sourceTree = "<group>"; };
 71BCC43BCCA34750C984859F /* BPEmptyState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPEmptyState.h; path = Views/BPEmptyState.h; sourceTree = "<group>"; };
 3A8175B38B3458DC22CD5632 /* BPEmptyStateView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPEmptyStateView.h; path = Views/BPEmptyStateView.h; sourceTree = "<group>"; };
+		E3D04E356E824E5FA43A9A25 /* BPLoadingStatus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPLoadingStatus.h; path = Views/BPLoadingStatus.h; sourceTree = "<group>"; };
 		9828B65FCD804D9EA7ECE7D4 /* BPDockMenu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPDockMenu.h; path = Views/BPDockMenu.h; sourceTree = "<group>"; };
 		15C34CBE19512DE100B92E36 /* BPAutoScrollTextView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPAutoScrollTextView.m; path = Views/BPAutoScrollTextView.m; sourceTree = "<group>"; };
 D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPEmptyState.m; path = Views/BPEmptyState.m; sourceTree = "<group>"; };
 5CF57BEC893DCBB1A2327D9F /* BPEmptyStateView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPEmptyStateView.m; path = Views/BPEmptyStateView.m; sourceTree = "<group>"; };
+		634272FBCBC84FA39A51C48C /* BPLoadingStatus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPLoadingStatus.m; path = Views/BPLoadingStatus.m; sourceTree = "<group>"; };
 		B5F8AEAD65544A5D962073DF /* BPDockMenu.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPDockMenu.m; path = Views/BPDockMenu.m; sourceTree = "<group>"; };
 		15CEFC611AB335B2005CF54A /* BPLoadingView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPLoadingView.h; path = Views/BPLoadingView.h; sourceTree = "<group>"; };
 		15CEFC621AB335B2005CF54A /* BPLoadingView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPLoadingView.m; path = Views/BPLoadingView.m; sourceTree = "<group>"; };
@@ -402,6 +407,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 		674FD1D9F871DDE01F853A88 /* BPVersionStampingTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPVersionStampingTests.m; sourceTree = "<group>"; };
 		828B14661B644D554E964BFC /* BPLocalizedStringsTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPLocalizedStringsTests.m; sourceTree = "<group>"; };
 		1DB1AF02EFFE124B9EC54578 /* BPMockFidelityTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPMockFidelityTests.m; sourceTree = "<group>"; };
+		E48CA8FF562841CDABA511C8 /* BPLoadingStatusTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPLoadingStatusTests.m; sourceTree = "<group>"; };
 		EDB6083CE52B414D96FA5C44 /* BPIncrementalReloadTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPIncrementalReloadTests.m; sourceTree = "<group>"; };
 		381B68AFC5AA44938DD0E22F /* BPBrewfileTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPBrewfileTests.m; sourceTree = "<group>"; };
 		3FD0481EC5974B78A7B905A2 /* BPCleanupPreviewTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPCleanupPreviewTests.m; sourceTree = "<group>"; };
@@ -554,10 +560,12 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				15C34CBD19512DE100B92E36 /* BPAutoScrollTextView.h */,
 				71BCC43BCCA34750C984859F /* BPEmptyState.h */,
 				3A8175B38B3458DC22CD5632 /* BPEmptyStateView.h */,
+				E3D04E356E824E5FA43A9A25 /* BPLoadingStatus.h */,
 				9828B65FCD804D9EA7ECE7D4 /* BPDockMenu.h */,
 				15C34CBE19512DE100B92E36 /* BPAutoScrollTextView.m */,
 				D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */,
 				5CF57BEC893DCBB1A2327D9F /* BPEmptyStateView.m */,
+				634272FBCBC84FA39A51C48C /* BPLoadingStatus.m */,
 				B5F8AEAD65544A5D962073DF /* BPDockMenu.m */,
 				15CEFC611AB335B2005CF54A /* BPLoadingView.h */,
 				15CEFC621AB335B2005CF54A /* BPLoadingView.m */,
@@ -837,6 +845,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				674FD1D9F871DDE01F853A88 /* BPVersionStampingTests.m */,
 				828B14661B644D554E964BFC /* BPLocalizedStringsTests.m */,
 				1DB1AF02EFFE124B9EC54578 /* BPMockFidelityTests.m */,
+				E48CA8FF562841CDABA511C8 /* BPLoadingStatusTests.m */,
 				EDB6083CE52B414D96FA5C44 /* BPIncrementalReloadTests.m */,
 				381B68AFC5AA44938DD0E22F /* BPBrewfileTests.m */,
 				3FD0481EC5974B78A7B905A2 /* BPCleanupPreviewTests.m */,
@@ -1105,6 +1114,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				15C34CBF19512DE100B92E36 /* BPAutoScrollTextView.m in Sources */,
 				28AF2A49333759232BC1F2C9 /* BPEmptyState.m in Sources */,
 				732C9ACF538674E726D8C265 /* BPEmptyStateView.m in Sources */,
+				A229FC61630E4BB5A0944950 /* BPLoadingStatus.m in Sources */,
 				EED7701B84E04E36839579E4 /* BPDockMenu.m in Sources */,
 				150AEC4F1B3F999A00163767 /* BPHomebrewViewController.m in Sources */,
 				D2B3A3B019B9D7FC00DE23B5 /* BPFormulaeDataSource.m in Sources */,
@@ -1191,6 +1201,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				2D630A95BC372F5BDE94E4E7 /* BPVersionStampingTests.m in Sources */,
 				2B599EC8322105ACA0893956 /* BPLocalizedStringsTests.m in Sources */,
 				6147CF053208BD77693EA689 /* BPMockFidelityTests.m in Sources */,
+				7B66C47E7C214658AF58EC7F /* BPLoadingStatusTests.m in Sources */,
 				8653704673014814BB37485A /* BPIncrementalReloadTests.m in Sources */,
 				EFB108CC72CD4588B8DDB24D /* BPBrewfileTests.m in Sources */,
 				99E842CF72AF417A96F28F75 /* BPCleanupPreviewTests.m in Sources */,
@@ -1208,6 +1219,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				5E523D41E4EFAF010C1F604B /* BPAutoScrollTextView.m in Sources */,
 				EBF4B80911E34FB99DA1D410 /* BPEmptyState.m in Sources */,
 				89AA8E57EBC3AF2202896829 /* BPEmptyStateView.m in Sources */,
+				ED044649DFE741D4875885E6 /* BPLoadingStatus.m in Sources */,
 				14A490C109F54C69A7728156 /* BPDockMenu.m in Sources */,
 				1ED78A300C6AD6B948573401 /* BPHelperRegistration.m in Sources */,
 				D5A4E97BA98E72BCC344B615 /* BPHelperRegistrationTests.m in Sources */,

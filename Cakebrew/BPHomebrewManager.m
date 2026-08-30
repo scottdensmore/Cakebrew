@@ -102,6 +102,27 @@ static const NSInteger kBPCacheVersion = 2;
 	}
 }
 
+- (void)announceStepForMode:(BPListMode)mode generation:(NSUInteger)generation
+{
+	if (![BPHomebrewManager shouldPublishReloadGeneration:generation current:self.currentReloadGeneration])
+	{
+		return;
+	}
+
+	if (![NSThread isMainThread])
+	{
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[self announceStepForMode:mode generation:generation];
+		});
+		return;
+	}
+
+	if ([self.delegate respondsToSelector:@selector(homebrewManager:didBeginStepForMode:)])
+	{
+		[self.delegate homebrewManager:self didBeginStepForMode:mode];
+	}
+}
+
 - (void)publishList:(NSArray *)list forMode:(BPListMode)mode generation:(NSUInteger)generation
 {
 	if (![BPHomebrewManager shouldPublishReloadGeneration:generation current:self.currentReloadGeneration])
@@ -186,6 +207,11 @@ static const NSInteger kBPCacheVersion = 2;
 				[self publishList:[interface listMode:MODE] forMode:MODE generation:generation]; \
 			});
 
+		// A reload after an operation used to be completely silent: the loading
+		// overlay is built once at setup and torn down on the first finish, so
+		// nothing marked the second one onwards.
+		[self announceStepForMode:kBPListInstalled generation:generation];
+
 		// The installed list is what the user is waiting to see, so it goes out
 		// at a higher QoS than the rest. Eight login shells and eight Ruby
 		// startups contending stretched it from ~0.9 s to over three; running
@@ -214,6 +240,9 @@ static const NSInteger kBPCacheVersion = 2;
 		// are fetched after the cheap lists so a cache hit skips them entirely.
 		if (![self loadAllFormulaeCaches] || previousCountOfAllFormulae <= 100 || self.allCasks == nil || shouldRebuildCache) {
 			didFetchCatalogs = YES;
+			// The one step worth naming: `brew casks` can take 80+ seconds cold,
+			// and silence for that long is indistinguishable from a hang.
+			[self announceStepForMode:kBPListAllCasks generation:generation];
 			BP_FETCH_LIST(kBPListAll)
 			BP_FETCH_LIST(kBPListAllCasks)
 			dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
@@ -250,6 +279,11 @@ static const NSInteger kBPCacheVersion = 2;
 				[self setServices:services];
 
 				[self.delegate homebrewManagerFinishedUpdating:self];
+
+				if ([self.delegate respondsToSelector:@selector(homebrewManagerFinishedStepping:)])
+				{
+					[self.delegate homebrewManagerFinishedStepping:self];
+				}
 			}
 
 			if (rerun)

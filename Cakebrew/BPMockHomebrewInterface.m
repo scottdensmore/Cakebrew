@@ -28,6 +28,15 @@
 // reproducibly.
 - (NSArray<BPFormula *> *)listMode:(BPListMode)mode
 {
+	// -BPMockSlowCatalog holds the two catalog fetches long enough for a
+	// journey to see the progress message they trigger. Real brew takes 80+
+	// seconds here cold; the mock is instant, which makes the message
+	// unobservable without this.
+	if ((mode == kBPListAll || mode == kBPListAllCasks)
+		&& [[[NSProcessInfo processInfo] arguments] containsObject:@"-BPMockSlowCatalog"]) {
+		[NSThread sleepForTimeInterval:4.0];
+	}
+
 	switch (mode) {
 		case kBPListInstalled:
 			return @[ [BPFormula formulaWithName:@"mockwget" andVersion:@"1.0.0"],
