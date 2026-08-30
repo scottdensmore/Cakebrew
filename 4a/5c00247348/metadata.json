@@ -1,0 +1,24 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "4a5c00247348",
+  "strategy": "manual-commit",
+  "branch": "feat/incremental-reload-publish",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/4a/5c00247348/0/metadata.json",
+      "transcript": "/4a/5c00247348/0/full.jsonl",
+      "compact_transcript": "/4a/5c00247348/0/transcript.jsonl",
+      "content_hash": "/4a/5c00247348/0/content_hash.txt",
+      "prompt": "/4a/5c00247348/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1745,
+    "cache_creation_tokens": 2848487,
+    "cache_read_tokens": 394568692,
+    "output_tokens": 738603,
+    "api_call_count": 888
+  }
+}
