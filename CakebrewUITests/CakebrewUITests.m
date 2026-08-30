@@ -493,12 +493,12 @@
 	XCTAssertTrue([installButton waitForExistenceWithTimeout:15.0]);
 	[installButton click];
 
-	// firstMatch, not the subscript: waiting for existence tolerates several
-	// matches but clicking does not, and more than one "Yes" is on screen once
-	// the sheet is up.
-	XCUIElement *yes = [self.app.buttons matchingIdentifier:@"Yes"].firstMatch;
-	XCTAssertTrue([yes waitForExistenceWithTimeout:15.0], @"the confirmation should appear");
-	[yes click];
+	// Scoped to the sheet, not the app. An alert's buttons are mirrored to the
+	// Touch Bar, so an app-wide query matches twice — and firstMatch can pick
+	// the Touch Bar element, which is not clickable.
+	XCUIElement *sheet = self.app.sheets.firstMatch;
+	XCTAssertTrue([sheet waitForExistenceWithTimeout:15.0], @"the confirmation should appear");
+	[sheet.buttons[@"Yes"] click];
 
 	// The marker proves the mock served this, not real brew.
 	NSPredicate *streamed = [NSPredicate predicateWithFormat:@"value CONTAINS %@", @"MOCK_INSTALL_OK"];
