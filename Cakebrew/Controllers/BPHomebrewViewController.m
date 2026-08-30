@@ -41,6 +41,8 @@
 #import "BPMainWindowController.h"
 #import "NSLayoutConstraint+Shims.h"
 #import "BPTimedDispatch.h"
+#import "BPEmptyState.h"
+#import "BPEmptyStateView.h"
 
 typedef NS_ENUM(NSUInteger, BPContentTab) {
 	kBPContentTabFormulae,
@@ -441,6 +443,25 @@ NSOpenSavePanelDelegate>
 	[self.formulaeTableView setMode:mode];
 	[self.formulaeTableView reloadData];
 	[self updateInterfaceItems];
+	[self refreshEmptyState];
+}
+
+/// Shows the right empty state over the table, or removes it. Without this a
+/// list with no rows was column headers over blank space, with no way to tell
+/// "nothing matched" from "still loading".
+- (void)refreshEmptyState
+{
+	NSInteger rows = [self.formulaeDataSource numberOfRowsInTableView:self.formulaeTableView];
+	BOOL loading = (self.loadingView != nil);
+
+	BPEmptyState *state = nil;
+	if ([BPEmptyState shouldShowForRowCount:rows loading:loading])
+	{
+		state = [BPEmptyState stateForSidebarRow:[self.sidebarController.sidebar selectedRow]
+									   searching:[self isSearching]];
+	}
+
+	[BPEmptyStateView presentState:state overView:self.scrollView_formulae];
 }
 
 
@@ -512,6 +533,7 @@ NSOpenSavePanelDelegate>
 		}
 
 		[self restoreSelectedFormula:previouslySelectedFormula];
+		[self refreshEmptyState];
 	}
 }
 

@@ -546,6 +546,26 @@
 	return -1;
 }
 
+// Journey: an empty list explains itself rather than showing column headers
+// over blank space.
+//
+// Outdated being empty is the happy path, and it used to look identical to a
+// list that had failed to load.
+- (void)testAnEmptyListShowsAnExplanation
+{
+	[self launchWithArguments:@[ @"-BPMockBrew", @"-BPMockEmptyOutdated" ]];
+	XCUIElement *sidebar = [self sidebar];
+
+	[[[sidebar.staticTexts matchingIdentifier:@"Outdated"] elementBoundByIndex:0] click];
+
+	XCUIElement *explanation = self.app.staticTexts[@"Everything Is Up to Date"];
+	BOOL appeared = [explanation waitForExistenceWithTimeout:20.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"an empty Outdated list should say so");
+}
+
 // Journey: View ▸ Show/Hide Sidebar collapses the sidebar and restores it.
 // There was no way to hide the sidebar at all before — no menu item, no
 // shortcut, no toolbar button — despite the window using a collapsible
