@@ -25,6 +25,7 @@
 #import "BPPreferences.h"
 #import "BPPreferencesWindowController.h"
 #import "BPBackgroundUpdater.h"
+#import "BPBrewfile.h"
 #import <UserNotifications/UserNotifications.h>
 
 NSString *const kBP_HOMEBREW_WEBSITE = @"https://www.cakebrew.com";
@@ -36,6 +37,9 @@ NSString *const kBP_CAKEBREW_DOCUMENTATION = @"https://github.com/scottdensmore/
 @property (strong, nonatomic) BPBackgroundUpdater *backgroundUpdater;
 
 @property (nonatomic, strong) DCOAboutWindowController *aboutWindowController;
+
+/// A Brewfile that arrived before there was a window to import it into.
+@property (strong) NSURL *pendingBrewfileURL;
 
 @end
 
@@ -83,6 +87,61 @@ NSString *const kBP_CAKEBREW_DOCUMENTATION = @"https://github.com/scottdensmore/
 	[self cleanupTaskAlerts];
 
 	return YES;
+}
+
+#pragma mark - Opening Brewfiles
+
+// Reached by double-clicking a Brewfile in Finder, "Open With", `open -a`, and
+// dropping one on the Dock icon — all of which arrive here rather than through
+// the app's own open panel.
+- (void)application:(NSApplication *)application openURLs:(NSArray<NSURL *> *)urls
+{
+	NSURL *brewfile = [BPBrewfile brewfileURLsFrom:urls].firstObject;
+	if (!brewfile)
+	{
+		// Launch Services can hand over anything the user forced open with this
+		// app. Saying so beats silently doing nothing.
+		[self displayBrewfileNotRecognizedForURLs:urls];
+		return;
+	}
+
+	// An open can arrive before the first window exists. The import target is
+	// set when the view controller comes up, so hold the file until then.
+	if (!self.brewfileImportTarget)
+	{
+		self.pendingBrewfileURL = brewfile;
+		return;
+	}
+
+	[self.brewfileImportTarget importBrewfileAtURL:brewfile];
+}
+
+- (void)setBrewfileImportTarget:(id<BPBrewfileImporting>)brewfileImportTarget
+{
+	_brewfileImportTarget = brewfileImportTarget;
+
+	NSURL *pending = self.pendingBrewfileURL;
+
+	if (brewfileImportTarget && pending)
+	{
+		self.pendingBrewfileURL = nil;
+		[brewfileImportTarget importBrewfileAtURL:pending];
+	}
+}
+
+- (void)displayBrewfileNotRecognizedForURLs:(NSArray<NSURL *> *)urls
+{
+	NSAlert *alert = [[NSAlert alloc] init];
+	[alert setMessageText:NSLocalizedString(@"Brewfile_Not_Recognized_Title", nil)];
+	[alert setInformativeText:[NSString localizedStringWithFormat:
+							   NSLocalizedString(@"Brewfile_Not_Recognized_Body", nil),
+							   urls.firstObject.lastPathComponent ?: @""]];
+	[alert addButtonWithTitle:NSLocalizedString(@"Generic_OK", nil)];
+
+	if (self.window)
+	{
+		[alert beginSheetModalForWindow:self.window completionHandler:nil];
+	}
 }
 
 #pragma mark - Dock menu

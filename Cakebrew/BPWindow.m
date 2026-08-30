@@ -7,6 +7,8 @@
 //
 
 #import "BPWindow.h"
+#import "BPBrewfile.h"
+#import "BPAppDelegate.h"
 
 @implementation BPWindow
 
@@ -38,6 +40,46 @@
 	// full-height sidebar's material show through the title bar area.
 	self.titlebarAppearsTransparent = YES;
 	self.toolbarStyle = NSWindowToolbarStyleUnified;
+
+	// Registered on the window rather than a view: the content view is
+	// reparented into a split view controller at setup, so a view-level drop
+	// target would cover only part of the window.
+	[self registerForDraggedTypes:@[NSPasteboardTypeFileURL]];
+}
+
+#pragma mark - Dropping a Brewfile
+
+- (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender
+{
+	return [self brewfileFromDrag:sender] ? NSDragOperationCopy : NSDragOperationNone;
+}
+
+- (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender
+{
+	return [self draggingEntered:sender];
+}
+
+- (BOOL)performDragOperation:(id<NSDraggingInfo>)sender
+{
+	NSURL *brewfile = [self brewfileFromDrag:sender];
+
+	if (!brewfile)
+	{
+		return NO;
+	}
+
+	[BPAppDelegateRef.brewfileImportTarget importBrewfileAtURL:brewfile];
+	return YES;
+}
+
+/// The first Brewfile in the drag, or nil. A drag can carry several files; the
+/// rest are ignored rather than the whole drop refused.
+- (NSURL *)brewfileFromDrag:(id<NSDraggingInfo>)sender
+{
+	NSArray<NSURL *> *urls = [sender.draggingPasteboard readObjectsForClasses:@[[NSURL class]]
+																	  options:@{ NSPasteboardURLReadingFileURLsOnlyKey: @YES }];
+
+	return [BPBrewfile brewfileURLsFrom:urls].firstObject;
 }
 
 @end

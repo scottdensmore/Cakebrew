@@ -333,3 +333,8 @@
 "Dock_Show_Outdated" = "Show Outdated Formulae";
 
 "Sidebar_VoiceOver_Separator" = ", ";
+
+/* Opening a Brewfile from Finder, or dropping one on the app */
+"Confirmation_Import_Brewfile" = "Install everything listed in “%@”? Homebrew will install any formulae and casks it names that are not already installed.";
+"Brewfile_Not_Recognized_Title" = "Not a Brewfile";
+"Brewfile_Not_Recognized_Body" = "“%@” is not named Brewfile, so Cakebrew will not run brew bundle against it.";
