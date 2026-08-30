@@ -183,3 +183,11 @@
 "Detail_VoiceOver_RequiredBy" = "Required by";
 "VoiceOver_Operation_Progress" = "Operation in progress";
 "VoiceOver_Operation_Finished" = "Operation finished";
+
+/* Cleanup preview — brew cleanup --dry-run before deleting anything */
+"Cleanup_Nothing_Title" = "Nothing to Clean Up";
+"Cleanup_Nothing_Body" = "Homebrew has no cached downloads or outdated versions to remove.";
+"Cleanup_Item_Count_One" = "1 item";
+"Cleanup_Item_Count_Other" = "%lu items";
+"Confirmation_Cleanup" = "Homebrew will permanently remove %1$@, freeing about %2$@. This cannot be undone.";
+"Confirmation_Cleanup_No_Size" = "Homebrew will permanently remove %@. This cannot be undone.";

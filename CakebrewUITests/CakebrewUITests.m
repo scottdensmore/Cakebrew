@@ -978,10 +978,9 @@
 
 #pragma mark - Tools journeys
 
-// Journey: Tools > Brew Cleanup runs cleanup and streams its output.
-- (void)testCleanupStreamsOutput
+// Opens Tools > Brew Cleanup and returns the confirmation sheet it presents.
+- (XCUIElement *)beginCleanupAndWaitForSheet
 {
-	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 	XCTAssertTrue([[self formulaCellWithName:@"mockwget"] waitForExistenceWithTimeout:30.0],
 				  @"the mock data should load");
 
@@ -990,13 +989,78 @@
 	XCTAssertTrue([cleanupItem waitForExistenceWithTimeout:10.0], @"Tools > Brew Cleanup should exist");
 	[cleanupItem click];
 
-	NSPredicate *predicate = [NSPredicate predicateWithFormat:@"value CONTAINS %@", @"MOCK_CLEANUP_OK"];
-	XCUIElement *output = [[self.app.textViews matchingPredicate:predicate] firstMatch];
-	BOOL appeared = [output waitForExistenceWithTimeout:15.0];
+	// Scoped to the sheet, not the app: an alert's buttons are mirrored to the
+	// Touch Bar, so an app-wide query matches twice and firstMatch can pick the
+	// mirror, which is not clickable.
+	XCUIElement *sheet = self.app.sheets.firstMatch;
+	BOOL appeared = [sheet waitForExistenceWithTimeout:20.0];
 	if (!appeared) {
 		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
 	}
-	XCTAssertTrue(appeared, @"running Cleanup should stream its output");
+	XCTAssertTrue(appeared, @"Cleanup should preview what it would remove before deleting anything");
+	return sheet;
+}
+
+// Journey: Tools > Brew Cleanup previews what it would remove, and only cleans
+// up once that is confirmed.
+- (void)testCleanupConfirmsThenStreamsOutput
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	XCUIElement *sheet = [self beginCleanupAndWaitForSheet];
+
+	// The preview has to name what will be lost. The mock's dry run reports
+	// three items totalling 49.2MB, so the sheet must say so — a confirmation
+	// that only says "are you sure" is the thing this replaced.
+	NSPredicate *summary = [NSPredicate predicateWithFormat:@"value CONTAINS %@ OR label CONTAINS %@",
+							@"3 items", @"3 items"];
+	XCTAssertTrue([sheet.staticTexts matchingPredicate:summary].count > 0,
+				  @"the sheet should say how much it would remove");
+
+	[sheet.buttons[@"Yes"] click];
+
+	NSPredicate *predicate = [NSPredicate predicateWithFormat:@"value CONTAINS %@", @"MOCK_CLEANUP_OK"];
+	XCUIElement *output = [[self.app.textViews matchingPredicate:predicate] firstMatch];
+	BOOL appeared = [output waitForExistenceWithTimeout:20.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"confirming should run the cleanup and stream its output");
+}
+
+// Journey: cancelling the preview deletes nothing.
+//
+// The point of the sheet is the escape hatch, so this asserts the operation
+// window never opens — the mock's cleanup marker must never appear.
+- (void)testCancellingCleanupRunsNothing
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+
+	XCUIElement *sheet = [self beginCleanupAndWaitForSheet];
+	[sheet.buttons[@"Cancel"] click];
+
+	NSPredicate *predicate = [NSPredicate predicateWithFormat:@"value CONTAINS %@", @"MOCK_CLEANUP_OK"];
+	XCUIElement *output = [[self.app.textViews matchingPredicate:predicate] firstMatch];
+
+	// Nothing to wait *for*, so wait for the window that would have opened and
+	// assert it never does.
+	XCTAssertFalse([output waitForExistenceWithTimeout:5.0],
+				   @"cancelling should not run a cleanup");
+}
+
+// Journey: with nothing to remove, Cleanup says so instead of running.
+- (void)testCleanupWithNothingToRemoveSaysSo
+{
+	[self launchWithArguments:@[ @"-BPMockBrew", @"-BPMockEmptyCleanup" ]];
+
+	XCUIElement *sheet = [self beginCleanupAndWaitForSheet];
+
+	XCTAssertTrue(sheet.buttons[@"OK"].exists,
+				  @"the nothing-to-do sheet should acknowledge, not confirm a deletion");
+	XCTAssertFalse(sheet.buttons[@"Yes"].exists,
+				   @"there is nothing to say yes to");
+
+	[sheet.buttons[@"OK"] click];
 }
 
 // Journey: the Tools menu exposes the Import / Export Brewfile actions.

@@ -20,6 +20,7 @@
 //
 
 #import "BPHomebrewInterface.h"
+#import "BPCleanupPreview.h"
 #import "BPTask.h"
 #import "BPService.h"
 #import "BPPreferences.h"
@@ -688,7 +689,18 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 
 - (BOOL)runCleanupWithReturnBlock:(void (^)(NSString*output))block
 {
-	return [self performBrewCommandWithArguments:@[@"cleanup"] dataReturnBlock:block];;
+	return [self performBrewCommandWithArguments:@[@"cleanup"] dataReturnBlock:block];
+}
+
++ (NSArray<NSString *> *)argumentsForCleanupDryRun
+{
+	return @[@"cleanup", @"--dry-run"];
+}
+
+- (BPCleanupPreview *)previewCleanup
+{
+	NSString *output = [self performSyncBrewCommandWithArguments:[BPHomebrewInterface argumentsForCleanupDryRun]];
+	return [BPCleanupPreview previewFromOutput:output];
 }
 
 - (BOOL)runDoctorWithReturnBlock:(void (^)(NSString*output))block

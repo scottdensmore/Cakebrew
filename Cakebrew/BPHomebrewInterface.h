@@ -21,6 +21,8 @@
 
 #import <Foundation/Foundation.h>
 
+@class BPCleanupPreview;
+
 @class BPService;
 #import <Cocoa/Cocoa.h>
 #import "BPFormula.h"
@@ -254,6 +256,19 @@ typedef NS_ENUM(NSInteger, BPListMode) {
  *  @return `YES` if successful.
  */
 - (BOOL)runCleanupWithReturnBlock:(void (^)(NSString*output))block;
+
+/// The arguments for the cleanup preview. `--dry-run` makes brew report what it
+/// would delete without deleting it.
++ (NSArray<NSString *> *)argumentsForCleanupDryRun;
+
+/**
+ *  Asks brew what a cleanup would remove, without removing anything.
+ *
+ *  Blocking — brew has to walk the cache and the Cellar — so call it off the
+ *  main thread. Never returns nil; a failed or unreadable run is an empty
+ *  preview, which reads as "nothing to clean" rather than inventing a number.
+ */
+- (BPCleanupPreview *)previewCleanup;
 
 /**
  *  Runs Homebrew doctor tool.
