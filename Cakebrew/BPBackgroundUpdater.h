@@ -32,6 +32,27 @@
 + (NSString *)badgeLabelForOutdatedCount:(NSUInteger)count;
 
 /** Whether a rise from previousCount to count warrants a notification. */
+/// Whether `count` is an increase over `previousCount`. The raw comparison;
+/// callers that can be seeing their first observation want the variant below.
 + (BOOL)shouldNotifyForCount:(NSUInteger)count previousCount:(NSUInteger)previousCount;
+
+/**
+ *  Whether an outdated count is news worth a banner.
+ *
+ *  `hasBaseline` is NO until a count has been observed at least once. The first
+ *  observation of a launch reflects what was already on disk, so it seeds the
+ *  baseline rather than notifying — otherwise every launch with outdated
+ *  packages banners for news the user already had.
+ */
++ (BOOL)shouldNotifyForCount:(NSUInteger)count
+			   previousCount:(NSUInteger)previousCount
+				 hasBaseline:(BOOL)hasBaseline;
+
+/// The last count we notified about, persisted so relaunching with the same
+/// outdated set is not treated as news either.
++ (NSUInteger)persistedOutdatedCount;
++ (void)setPersistedOutdatedCount:(NSUInteger)count;
++ (BOOL)hasPersistedOutdatedCount;
++ (void)clearPersistedOutdatedCount;
 
 @end

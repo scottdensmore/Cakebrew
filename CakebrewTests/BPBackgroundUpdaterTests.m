@@ -51,4 +51,52 @@
 				   @"partially upgrading should not notify");
 }
 
+
+#pragma mark - the first observation is a baseline, not news
+
+- (void)testTheFirstObservationSeedsTheBaselineAndDoesNotNotify
+{
+	// lastKnownOutdatedCount started at 0 in memory, and observers registered
+	// before the first reload — so the first callback compared the real count
+	// against 0 and banner-ed on every launch for news the user already had.
+	XCTAssertFalse([BPBackgroundUpdater shouldNotifyForCount:7 previousCount:0 hasBaseline:NO],
+				   @"the first observation of a launch is what is already on disk, not an increase");
+}
+
+- (void)testAnIncreaseAfterTheBaselineNotifies
+{
+	XCTAssertTrue([BPBackgroundUpdater shouldNotifyForCount:8 previousCount:7 hasBaseline:YES]);
+}
+
+- (void)testNoIncreaseAfterTheBaselineDoesNotNotify
+{
+	XCTAssertFalse([BPBackgroundUpdater shouldNotifyForCount:7 previousCount:7 hasBaseline:YES]);
+	XCTAssertFalse([BPBackgroundUpdater shouldNotifyForCount:3 previousCount:7 hasBaseline:YES]);
+}
+
+- (void)testAZeroCountNeverNotifiesEvenSeeded
+{
+	XCTAssertFalse([BPBackgroundUpdater shouldNotifyForCount:0 previousCount:0 hasBaseline:YES]);
+}
+
+- (void)testTheBaselineSurvivesRelaunch
+{
+	// Persisted, so quitting and reopening with the same outdated set is not
+	// treated as news either.
+	[BPBackgroundUpdater setPersistedOutdatedCount:5];
+	XCTAssertEqual([BPBackgroundUpdater persistedOutdatedCount], 5u);
+	XCTAssertTrue([BPBackgroundUpdater hasPersistedOutdatedCount]);
+
+	XCTAssertFalse([BPBackgroundUpdater shouldNotifyForCount:5
+											   previousCount:[BPBackgroundUpdater persistedOutdatedCount]
+												 hasBaseline:[BPBackgroundUpdater hasPersistedOutdatedCount]]);
+}
+
+- (void)testClearingTheBaselineRestoresTheUnseededState
+{
+	[BPBackgroundUpdater setPersistedOutdatedCount:5];
+	[BPBackgroundUpdater clearPersistedOutdatedCount];
+	XCTAssertFalse([BPBackgroundUpdater hasPersistedOutdatedCount]);
+}
+
 @end
