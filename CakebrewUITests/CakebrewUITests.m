@@ -443,7 +443,9 @@
 	// A cask: the box should be offered. Addressed by the stable identifier from
 	// #87 rather than by index — "Installed" appears under both groups, and
 	// which one is index 1 is not something a test should have to know.
-	[[[self.app.outlineRows matchingIdentifier:@"sidebar.casks.installed"] firstMatch] click];
+	// Any type: the identifier is on the cell view inside the row, not the row.
+	[[[[self.app descendantsMatchingType:XCUIElementTypeAny]
+	   matchingIdentifier:@"sidebar.casks.installed"] firstMatch] click];
 	XCUIElement *cask = [self formulaCellWithName:@"mockchrome"];
 	XCTAssertTrue([cask waitForExistenceWithTimeout:30.0], @"mockchrome should be an installed cask");
 	[cask click];
@@ -462,7 +464,8 @@
 	[self dismissConfirmationSheet];
 
 	// A formula: it should not be.
-	[[[self.app.outlineRows matchingIdentifier:@"sidebar.formulae.installed"] firstMatch] click];
+	[[[[self.app descendantsMatchingType:XCUIElementTypeAny]
+	   matchingIdentifier:@"sidebar.formulae.installed"] firstMatch] click];
 	XCUIElement *formula = [self formulaCellWithName:@"mockwget"];
 	XCTAssertTrue([formula waitForExistenceWithTimeout:30.0]);
 	[formula click];
