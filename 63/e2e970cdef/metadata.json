@@ -1,0 +1,24 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "63e2e970cdef",
+  "strategy": "manual-commit",
+  "branch": "docs/agents-lessons",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/63/e2e970cdef/0/metadata.json",
+      "transcript": "/63/e2e970cdef/0/full.jsonl",
+      "compact_transcript": "/63/e2e970cdef/0/transcript.jsonl",
+      "content_hash": "/63/e2e970cdef/0/content_hash.txt",
+      "prompt": "/63/e2e970cdef/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1785,
+    "cache_creation_tokens": 3181719,
+    "cache_read_tokens": 401339355,
+    "output_tokens": 750772,
+    "api_call_count": 908
+  }
+}
