@@ -1,48 +1,176 @@
 # Agent Guide — Cakebrew
 
-Cakebrew is a native macOS GUI for Homebrew (Objective-C / AppKit). This file
-is the working agreement for **any** coding agent (and human contributor)
-touching this repo. Follow it exactly; it encodes decisions the maintainer has
-already made.
+Cakebrew is a native macOS GUI for Homebrew (Objective-C / AppKit).
 
-## The required workflow (9 steps, no exceptions)
+**This file is the single source of truth** for how work happens in this repo —
+conventions, architecture decisions, and the delivery workflow. It is written
+for coding agents and human contributors alike. `CLAUDE.md` is a pointer to it.
+`CONTRIBUTING.md` is a short human-facing entry point that links here rather
+than restating anything. Do not add a second workflow, roadmap, or status
+document: issues are the live status, and a second instruction file drifts.
 
-1. **Branch off latest `main`.** Prefixes: `feat/`, `fix/`, `refactor/`,
-   `docs/`, `chore/`. Never commit to `main` directly.
-2. **TDD, red → green → refactor.** Write the smallest failing test first and
-   confirm it fails for the right reason (a compile error on a new API counts).
-   Then the minimum code to pass. The test and the code that satisfies it land
-   in the **same commit**, and the commit message names what the test covers.
-   Every behavior change ships with a test written first — bugs, features,
-   behavior-changing refactors. Only pure formatting/docs are exempt.
-3. **UI review.** If the change touches UI, verify it visually: launch the mock
-   build (`-BPMockBrew`), look at it (screenshot if headless), confirm layout,
-   dark mode, and badges render correctly. For behaviour rather than looks, run
-   the `CakebrewUITests` scheme locally (it works — see environment quirks) and
-   add a journey; an assertion beats eyeballing a screenshot.
-4. **Verify.** Build with **zero warnings** and run the full unit suite
-   (see commands below). Treat a new warning as a failure.
-5. **Pre-PR code review** over the full diff. Fix what you find, then re-verify.
-6. **Open a PR with the `gh` CLI** (never the web UI). Describe what changed,
-   why, and how it was tested.
-7. **Green CI is the merge gate.** Both jobs (Build & Test, UI Tests) must
-   pass. Never merge on pending or failing checks. If a UI test fails on CI,
-   read the failure and the `CAKEBREW_UI_TREE_*` dump in the job log before
-   assuming a flake — re-run once only when the evidence says infrastructure.
-8. **Address feedback as it lands.** Push fixes to the same branch; let CI
-   re-run.
-9. **Merge & clean up:** `gh pr merge <n> --squash --delete-branch` (squash is
-   the maintainer's explicit choice), then `git checkout main`,
-   `git pull --ff-only`, delete the local branch.
+Follow this exactly; it encodes decisions the maintainer has already made, and
+measurements that cost real time to obtain.
 
-**One PR per logical unit of work.** Unrelated changes go on separate branches.
+---
+
+## The workflow
+
+```mermaid
+flowchart TD
+    A[0. Plan, prototype, spike] --> B[1. Inspect & branch]
+    B --> C[2. Scope a thin vertical slice]
+    C --> D[3. TDD: red, green, refactor]
+    D --> E[4. Inspect the whole workspace diff]
+    E --> F{User-visible change?}
+    F -- Yes --> G[5. UI/UX review gate]
+    F -- No --> H[6. Verification gate]
+    G --> H
+    H --> I[7. Code review gate]
+    I -- Findings --> D
+    I -- Approved --> J[8. Atomic commit]
+    J --> K[9. Pull request]
+    K --> L[10. Gated merge, linear history]
+```
+
+### Phase 0 — Discovery
+
+**Spike before you commit to a design.** Build throwaway prototypes to test
+framework assumptions and find the edge cases, especially at integration
+boundaries — never assume a third-party API behaves as documented. Two examples
+from this repo's history: the App Sandbox question was settled by measuring
+what actually broke, and layered app-icon support was settled by feeding
+`actool` a probe entry and reading the warning. Both answers were the opposite
+of the documentation-level guess.
+
+Weigh alternatives on architectural fit, complexity, performance and
+maintenance burden. Then break the design into an ordered list of thin vertical
+slices, and **throw the prototype away** — production code is rebuilt under
+TDD, not promoted from a spike.
+
+### Phase 1 — Context and scoping
+
+**Inspect before mutating.** Read the repo state, branches, and working tree
+first. Preserve unrelated staged, unstaged and untracked changes — this machine
+routinely carries modifications under `.claude/`, `.codex/` and `.entire/` that
+are not yours to commit or discard. Stash them around a rebase; never
+`git checkout --` a file you did not write.
+
+**Branch off latest `main`.** Prefixes: `feat/`, `fix/`, `refactor/`, `docs/`,
+`chore/`, `test/`, `perf/`. Never commit to `main` directly.
+
+**Take one thin vertical slice** — the smallest cohesive end-to-end outcome
+that can be tested, reviewed and shipped on its own. One PR per logical unit of
+work; unrelated changes go on their own branch. A horizontal layer spanning the
+whole app is not a slice.
+
+### Phase 2 — Test-driven implementation
+
+**Red → green → refactor, and the red is not optional.** Write the smallest
+failing test first and confirm it fails *for the expected reason* — a compile
+error on a not-yet-existing API counts, a crash in the runner does not. Then
+the minimum code to pass. Then clean up with the suite green.
+
+The test and the code that satisfies it land in the **same commit**, and the
+commit message names what the test covers. Every behaviour change ships with a
+test written first: bugs, features, behaviour-changing refactors. Only pure
+formatting and documentation are exempt.
+
+If you write the test and the implementation together and never observe the
+red, you have not done TDD — **prove the test bites** by mutation instead:
+break the implementation deliberately, confirm the suite fails, and restore it.
+Say which of the two you did in the PR.
+
+**Then inspect the whole workspace diff**, including untracked files
+(`git status --untracked-files=all`). Remove scratch files, probes and
+debugging artifacts. Temporary instrumentation must not reach a commit.
+
+### Phase 3 — Quality gates
+
+Run these in order. **If any gate causes a code change, restart from the
+verification gate** — a fix invalidates every result that came before it.
+
+**UI/UX review** *(only if a user-facing surface changed)*. Verify it visually:
+launch the mock build (`-BPMockBrew`), look at it, confirm layout, dark mode,
+and badges. For behaviour rather than looks, add a `CakebrewUITests` journey —
+an assertion beats eyeballing a screenshot. Check accessibility and platform
+idioms, not just that it renders.
+
+**Verification.** Build **Debug and Release**, both warning-free — a new
+warning is a failure. Run the full unit suite. Compile the UI test target.
+Run the UI journeys before opening the PR.
+
+**Code review** over the full branch diff plus anything uncommitted. Language
+idioms, memory and concurrency safety, performance, architecture, edge cases.
+Fix what you find, then re-verify.
+
+### Phase 4 — Integration and delivery
+
+**Conventional Commits.** `<type>(<scope>): <imperative summary>`, where type
+is one of `feat` `fix` `refactor` `docs` `chore` `test` `perf` `build` `ci`
+and scope names the area (`sidebar`, `reload`, `toolbar`, `brewfile`, `l10n`,
+…). The body explains *why*, and names what the test covers. History before
+this convention was adopted is left alone; do not rewrite it.
+
+**Open a PR with the `gh` CLI**, never the web UI, and never a draft unless
+asked. Describe what changed, why, and how it was tested — including what you
+could *not* verify and the reason.
+
+**Green CI is the merge gate.** Both jobs (Build & Test, UI Tests) must pass.
+Never merge on pending or failing checks. If a UI test fails on CI, read the
+failure and the `CAKEBREW_UI_TREE_*` dump in the job log before assuming a
+flake — re-run once only when the evidence says infrastructure. If a reviewer
+is assigned, wait for approval; never bypass an assigned review.
+
+**Merge and clean up:** `gh pr merge <n> --squash --delete-branch` (squash is
+the maintainer's explicit choice, and keeps history linear and bisectable),
+then `git checkout main`, `git pull --ff-only`.
+
+> **Stacked PRs:** retarget a child branch's base to `main` *before* merging its
+> parent. Deleting a merged branch auto-closes any PR still based on it, and
+> GitHub will not reopen a PR whose base is gone.
+
+---
+
+## Principles for agents working here
+
+**Prototypes are disposable.** Spike code exists to answer a question. Once
+answered, delete it and rebuild under TDD. Do not promote a spike.
+
+**Separate the roles.** Planner, implementer, UI reviewer, verifier and code
+reviewer are different jobs with different biases. One prompt wearing all five
+hats reviews its own work and finds it good. Use separate agents or separate
+passes, and give the reviewer the diff rather than the intent.
+
+**Validate the instrument before believing its silence.** A probe that prints
+nothing has not proven anything — it may not have run, may have hit a stale
+binary, or may have been filtered out. Confirm the probe executed and observed
+what you think it did. Concretely, in this repo: `xcodebuild analyze` exits 0
+even with findings; `xcodebuild -scheme Cakebrew` never compiles the UI test
+target; `xcodebuild test` output has to be *grepped for the assertion*, not
+just for `TEST SUCCEEDED`; and a `log show` predicate that matches nothing
+looks exactly like a feature that did not fire.
+
+**Isolate shared state when working in parallel.** Agents on one machine
+contend for real singletons: the Xcode derived-data directory, the app's
+`NSUserDefaults` domain, `/Applications/Cakebrew.app`, the running app itself,
+and the display. Never mutate sources in a workspace while a verification or
+review pass is running against it; use a git worktree instead.
+
+**One source of truth.** This file. Pointer files may reference it; nothing may
+restate it.
+
+---
 
 ## Build & test commands
 
 ```sh
-# App build (must be warning-free)
+# App build, both configurations — both must be warning-free
 xcodebuild build -workspace Cakebrew.xcworkspace -scheme Cakebrew \
   -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO
+
+xcodebuild build -workspace Cakebrew.xcworkspace -scheme Cakebrew \
+  -configuration Release -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO
 
 # Unit tests (fast, hermetic — run these locally every time)
 xcodebuild test -workspace Cakebrew.xcworkspace -scheme CakebrewTests \
@@ -54,8 +182,20 @@ xcodebuild test -scheme CakebrewUITests -destination 'platform=macOS' \
   CODE_SIGNING_ALLOWED=YES DEVELOPMENT_TEAM="" PROVISIONING_PROFILE_SPECIFIER=""
 ```
 
-CI (`.github/workflows/ci.yml`) runs both jobs on `macos-26` (latest SDK) and
-uploads crash logs from `~/Library/Logs/DiagnosticReports` on failure.
+After touching `CakebrewUITests.m`, compile that target — neither command above
+does, so a syntax error there passes locally and fails on CI:
+
+```sh
+xcodebuild build-for-testing -scheme CakebrewUITests -destination 'platform=macOS' \
+  CODE_SIGN_IDENTITY="-" CODE_SIGN_STYLE=Manual CODE_SIGNING_REQUIRED=NO \
+  CODE_SIGNING_ALLOWED=YES DEVELOPMENT_TEAM="" PROVISIONING_PROFILE_SPECIFIER=""
+```
+
+CI (`.github/workflows/ci.yml`) runs both jobs on `macos-26` (latest SDK),
+builds Debug and Release, runs the static analyzer, and uploads crash logs from
+`~/Library/Logs/DiagnosticReports` on failure. A separate weekly
+`brew-compat.yml` pushes the runner's *real* brew output through the parsers,
+because fixture tests cannot notice upstream drift.
 
 ## Testing architecture
 
@@ -64,7 +204,11 @@ uploads crash logs from `~/Library/Logs/DiagnosticReports` on failure.
   `+sharedInterface`). The mock serves deterministic fixtures (`mockwget`,
   `mockgit` [pinned], `mockchrome`/`mockvscode` [casks], …) and stubs every
   operation as a no-op. **Any new interface method must get a mock override**
-  so UI tests never shell out to real brew.
+  so UI tests never shell out to real brew — `BPMockFidelityTests` fails if a
+  mutating selector lacks one. Opt-in launch flags shape it for a specific
+  journey: `-BPMockEmptyOutdated`, `-BPMockEmptyCleanup`, and
+  `-BPMockSlowCatalog` (holds the catalog calls so progress and cancel are
+  observable; the mock is otherwise instant, which makes both unobservable).
 - **Unit tests** (`CakebrewTests/`) cover parsers, model logic, and manager
   state. The `BPHomebrewInterfaceListCall*` parsers are the standard TDD seam:
   pure input → `BPFormula` output. Private classes are re-declared in the test
@@ -72,10 +216,11 @@ uploads crash logs from `~/Library/Logs/DiagnosticReports` on failure.
 - **UI tests** (`CakebrewUITests/`) are journey tests against the mock. The
   shared launch helper waits for the initial load to settle (mockwget rendered)
   before navigating — do not remove that; it closes a reselect race in
-  `homebrewManagerFinishedUpdating:`. Sidebar item names repeat across groups
-  (two "Installed", two "Outdated") — disambiguate with
-  `matchingIdentifier:` + `elementBoundByIndex:`, and match table cells with
-  `value BEGINSWITH` (pinned rows carry a pin glyph after the name).
+  `homebrewManagerFinishedUpdating:`. Sidebar item *names* repeat across groups
+  (two "Installed", two "Outdated"), so journeys address rows by their stable
+  unlocalized identifier — `[self sidebarRow:@"sidebar.casks.installed"]` —
+  never by index. Match table cells with `value BEGINSWITH` (pinned rows carry
+  a pin glyph after the name).
 - **CI environment limits:** the headless runner's window is never key, so
   typing/keyboard focus is untestable; system file panels (NSSave/NSOpenPanel)
   are out-of-process and undrivable. Pattern: unit-test the logic, UI-test
