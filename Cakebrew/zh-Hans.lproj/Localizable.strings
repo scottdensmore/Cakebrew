@@ -308,3 +308,13 @@
 "Empty_Leaves_Message" = "Leaves are formulae installed on their own, not as a dependency of something else.";
 "Empty_Generic_Title" = "Nothing Here";
 "Empty_Generic_Message" = "This list has no items.";
+"Sidebar_VoiceOver_Badge_Count" = "%@ items";
+"Sidebar_VoiceOver_Sidebar" = "Sidebar";
+"Detail_VoiceOver_Description" = "Description";
+"Detail_VoiceOver_Installed" = "Installed";
+"Detail_VoiceOver_Version" = "Version";
+"Detail_VoiceOver_Dependencies" = "Dependencies";
+"Detail_VoiceOver_Conflicts" = "Conflicts";
+"Detail_VoiceOver_RequiredBy" = "Required by";
+"VoiceOver_Operation_Progress" = "Operation in progress";
+"VoiceOver_Operation_Finished" = "Operation finished";

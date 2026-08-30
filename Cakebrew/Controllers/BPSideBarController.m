@@ -53,6 +53,19 @@
 
 #pragma mark -
 
+/// "42 items", or just "42" if the format string is unavailable. A missing key
+/// returns the key itself, and "Sidebar_VoiceOver_Badge_Count" is worse to hear
+/// than a bare number.
+static NSString *BPSpokenBadgeCount(NSNumber *badge)
+{
+	NSString *format = NSLocalizedString(@"Sidebar_VoiceOver_Badge_Count", nil);
+	if ([format containsString:@"%@"])
+	{
+		return [NSString stringWithFormat:format, badge];
+	}
+	return badge.stringValue;
+}
+
 @implementation BPSidebarBadgeView
 
 - (void)setBadgeValue:(NSUInteger)badgeValue
@@ -62,6 +75,25 @@
 		[self invalidateIntrinsicContentSize];
 		[self setNeedsDisplay:YES];
 	}
+}
+
+#pragma mark - Accessibility
+
+// The count is drawn with drawAtPoint:withAttributes:, so nothing about it
+// reaches the accessibility tree unless it is declared here.
+- (BOOL)isAccessibilityElement
+{
+	return YES;
+}
+
+- (NSAccessibilityRole)accessibilityRole
+{
+	return NSAccessibilityStaticTextRole;
+}
+
+- (id)accessibilityValue
+{
+	return BPSpokenBadgeCount(@(self.badgeValue));
 }
 
 - (void)setEmphasized:(BOOL)emphasized
@@ -358,7 +390,7 @@
 	FormulaeSideBarItem row = [BPSideBarController restorableRowFrom:[BPPreferences lastSelectedSidebarRow]
 															rowCount:[self.sidebar numberOfRows]];
 	[self.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
-	[self.sidebar setAccessibilityLabel:NSLocalizedString(@"Sidebar_VoiceOver_Tools", nil)];
+	[self.sidebar setAccessibilityLabel:NSLocalizedString(@"Sidebar_VoiceOver_Sidebar", nil)];
 }
 
 - (void)refreshSidebarBadges
@@ -416,6 +448,49 @@
 	return NO;
 }
 
+/// Title of the group a row belongs to, or nil for a top-level row.
+- (NSString *)groupTitleForItem:(BPSidebarItem *)item
+{
+	for (BPSidebarItem *group in [self.rootSidebarCategory children])
+	{
+		if ([[group children] containsObject:item])
+		{
+			return group.title;
+		}
+	}
+	return nil;
+}
+
+/// "Formulae, Installed, 42" — group first, so the two "Installed" rows are
+/// told apart, and the badge read as part of the row rather than separately.
++ (NSString *)accessibilityLabelForGroup:(NSString *)group title:(NSString *)title badge:(NSNumber *)badge
+{
+	NSMutableArray<NSString *> *parts = [NSMutableArray array];
+	if (group.length > 0) { [parts addObject:group]; }
+	if (title.length > 0) { [parts addObject:title]; }
+	if (badge.integerValue >= 0)
+	{
+		[parts addObject:BPSpokenBadgeCount(badge)];
+	}
+	return [parts componentsJoinedByString:@", "];
+}
+
+/// Stable and deliberately not localized: identifiers address a row, they are
+/// not read out, and a localized one would break tests per language.
++ (NSString *)accessibilityIdentifierForGroup:(NSString *)group title:(NSString *)title
+{
+	NSString *(^slug)(NSString *) = ^NSString *(NSString *value) {
+		NSString *lower = [value.lowercaseString stringByReplacingOccurrencesOfString:@" " withString:@"-"];
+		return lower ?: @"";
+	};
+
+	if (group.length == 0)
+	{
+		return [NSString stringWithFormat:@"sidebar.%@", slug(title)];
+	}
+	return [NSString stringWithFormat:@"sidebar.%@.%@", slug(group), slug(title)];
+}
+
 - (NSView *)outlineView:(NSOutlineView *)outlineView viewForTableColumn:(NSTableColumn *)tableColumn item:(id)item
 {
 	BPSidebarItem *sidebarItem = item;
@@ -443,6 +518,16 @@
 	if (sidebarItem.icon) {
 		[cellView.imageView setImage:sidebarItem.icon];
 	}
+
+	// "Installed" and "Outdated" each appear under both Formulae and Casks, so
+	// the row is ambiguous without its group — to VoiceOver and to the UI tests,
+	// which had to disambiguate by index.
+	NSString *group = [self groupTitleForItem:sidebarItem];
+	cellView.accessibilityLabel = [BPSideBarController accessibilityLabelForGroup:group
+																			title:sidebarItem.title
+																			badge:sidebarItem.badgeValue];
+	cellView.accessibilityIdentifier = [BPSideBarController accessibilityIdentifierForGroup:group
+																					  title:sidebarItem.title];
 
 	return cellView;
 }

@@ -35,7 +35,8 @@
 	// the list without selecting them.
 	NSMutableAttributedString *value = [[NSMutableAttributedString alloc] initWithString:[name stringByAppendingString:@" "]];
 
-	NSImage *pin = [NSImage imageWithSystemSymbolName:@"pin.fill" accessibilityDescription:@"Pinned"];
+	NSImage *pin = [NSImage imageWithSystemSymbolName:@"pin.fill"
+							   accessibilityDescription:NSLocalizedString(@"Sidebar_Item_Pinned", nil)];
 	if (pin)
 	{
 		NSImageSymbolConfiguration *config = [NSImageSymbolConfiguration configurationWithPointSize:[NSFont smallSystemFontSize]

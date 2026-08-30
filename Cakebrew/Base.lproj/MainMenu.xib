@@ -693,9 +693,9 @@ CA
                     <rect key="frame" x="0.0" y="0.0" width="396" height="264"/>
                     <autoresizingMask key="autoresizingMask"/>
                     <subviews>
-                        <scrollView focusRingType="none" borderType="none" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" horizontalScrollElasticity="none" scrollerKnobStyle="dark" translatesAutoresizingMaskIntoConstraints="NO" id="YpG-G5-bXX">
+                        <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" horizontalScrollElasticity="none" scrollerKnobStyle="dark" translatesAutoresizingMaskIntoConstraints="NO" id="YpG-G5-bXX">
                             <rect key="frame" x="0.0" y="0.0" width="396" height="264"/>
-                            <clipView key="contentView" focusRingType="none" copiesOnScroll="NO" id="6nf-zO-0ou">
+                            <clipView key="contentView" copiesOnScroll="NO" id="6nf-zO-0ou">
                                 <rect key="frame" x="0.0" y="0.0" width="396" height="247"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <subviews>

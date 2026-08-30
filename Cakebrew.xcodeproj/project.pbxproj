@@ -93,6 +93,7 @@
 		3E021E36A50DB14185D045EE /* BPCatalogCacheTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 014D9AB44189782A2AC5AD21 /* BPCatalogCacheTests.m */; };
 		1E5235A5561B3C95F6DCB8F5 /* BPLocalizationParityTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 27262EA7436B8D01A413E952 /* BPLocalizationParityTests.m */; };
 		4BE6F343BE3E20F49D1511AD /* BPEmptyStateTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A5DAEF683D47389E697A2F32 /* BPEmptyStateTests.m */; };
+		E3924FFC7583BF03BC886FB3 /* BPAccessibilityTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 31148877E4770D89A5642D93 /* BPAccessibilityTests.m */; };
 		55BE3020BDDC9FCA19C1ECBC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C155F549AE6671B51A3FCAD /* Cocoa.framework */; };
 		5F38898450E03D2D56291D29 /* BPHelperSecurity.m in Sources */ = {isa = PBXBuildFile; fileRef = 1227A6AF7A6E1F24A913015B /* BPHelperSecurity.m */; };
 		627F454983A4C2C93584B748 /* BPHelperOutputRelayTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 88BBB2337F47C685C807D566 /* BPHelperOutputRelayTests.m */; };
@@ -392,6 +393,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 		014D9AB44189782A2AC5AD21 /* BPCatalogCacheTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPCatalogCacheTests.m; sourceTree = "<group>"; };
 		27262EA7436B8D01A413E952 /* BPLocalizationParityTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPLocalizationParityTests.m; sourceTree = "<group>"; };
 		A5DAEF683D47389E697A2F32 /* BPEmptyStateTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPEmptyStateTests.m; sourceTree = "<group>"; };
+		31148877E4770D89A5642D93 /* BPAccessibilityTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPAccessibilityTests.m; sourceTree = "<group>"; };
 		A8052362C08CE3FF3945ABAD /* BPPreferencesTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPPreferencesTests.m; sourceTree = "<group>"; };
 		AA67F6479F85E50C83706E3E /* BPService.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPService.m; path = Models/BPService.m; sourceTree = "<group>"; };
 6F14AB39D9A4FA816D3A932C /* BPBrewError.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPBrewError.m; path = Models/BPBrewError.m; sourceTree = "<group>"; };
@@ -814,6 +816,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				014D9AB44189782A2AC5AD21 /* BPCatalogCacheTests.m */,
 				27262EA7436B8D01A413E952 /* BPLocalizationParityTests.m */,
 				A5DAEF683D47389E697A2F32 /* BPEmptyStateTests.m */,
+				31148877E4770D89A5642D93 /* BPAccessibilityTests.m */,
 				8F2D53C524FAE8B655FD3778 /* BPHelperRegistrationTests.m */,
 			);
 			path = CakebrewTests;
@@ -1158,6 +1161,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				3E021E36A50DB14185D045EE /* BPCatalogCacheTests.m in Sources */,
 				1E5235A5561B3C95F6DCB8F5 /* BPLocalizationParityTests.m in Sources */,
 				4BE6F343BE3E20F49D1511AD /* BPEmptyStateTests.m in Sources */,
+				E3924FFC7583BF03BC886FB3 /* BPAccessibilityTests.m in Sources */,
 				00D4E0159FF9B3D0D368E0AD /* BPMockHomebrewInterface.m in Sources */,
 				8DEE82E248857750CD9BDC4D /* BPSideBarController.m in Sources */,
 				59246886F867B7F80EBA72A9 /* BPMainWindowController.m in Sources */,

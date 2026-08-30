@@ -36,6 +36,7 @@
 @implementation BPDoctorViewController
 
 - (void)awakeFromNib {
+	self.progressIndicator.accessibilityLabel = NSLocalizedString(@"VoiceOver_Operation_Progress", nil);
 	NSFont *font = [BPStyle defaultFixedWidthFont];
 	[self.doctorTextView setFont:font];
 	self.isPerformingDoctor = NO;

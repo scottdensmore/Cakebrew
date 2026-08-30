@@ -79,6 +79,14 @@ typedef NS_ENUM(NSUInteger, FormulaeSideBarItem)
  */
 + (NSString *)infoKeyForRow:(NSInteger)row;
 
+/// "Formulae, Installed, 42". Group first, because "Installed" and "Outdated"
+/// each appear under both Formulae and Casks and are otherwise identical.
++ (NSString *)accessibilityLabelForGroup:(NSString *)group title:(NSString *)title badge:(NSNumber *)badge;
+
+/// A stable, deliberately unlocalized address for a row — identifiers are not
+/// read aloud, and a localized one would break tests per language.
++ (NSString *)accessibilityIdentifierForGroup:(NSString *)group title:(NSString *)title;
+
 @property (assign) IBOutlet NSOutlineView *sidebar;
 
 @property (weak) id <BPSideBarControllerDelegate>delegate;

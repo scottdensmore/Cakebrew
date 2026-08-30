@@ -76,6 +76,7 @@
 	NSFont *font = [BPStyle defaultFixedWidthFont];
 	
 	[self.recordTextView setFont:font];
+	self.progressIndicator.accessibilityLabel = NSLocalizedString(@"VoiceOver_Operation_Progress", nil);
 	self.windowTitleLabel.stringValue = messagesMap[@(self.windowOperation)] ?: @"";
 	
 	NSUInteger count = [self.formulae count];
@@ -276,6 +277,16 @@
 			   NSLocalizedString(@"Homebrew_Task_Failed", nil)];
 
 		[BPAppDelegateRef requestUserAttentionWithMessageTitle:title andDescription:desc];
+
+		// Nothing announced that the operation had ended, so a VoiceOver user
+		// had no signal the sheet was now dismissible. Move focus to the button
+		// that just became enabled and say so.
+		NSAccessibilityPostNotificationWithUserInfo(
+			NSApp,
+			NSAccessibilityAnnouncementRequestedNotification,
+			@{ NSAccessibilityAnnouncementKey: title,
+			   NSAccessibilityPriorityKey: @(NSAccessibilityPriorityHigh) });
+		[self.window makeFirstResponder:self.okButton];
 	});
 }
 
