@@ -493,7 +493,10 @@
 	XCTAssertTrue([installButton waitForExistenceWithTimeout:15.0]);
 	[installButton click];
 
-	XCUIElement *yes = self.app.buttons[@"Yes"];
+	// firstMatch, not the subscript: waiting for existence tolerates several
+	// matches but clicking does not, and more than one "Yes" is on screen once
+	// the sheet is up.
+	XCUIElement *yes = [self.app.buttons matchingIdentifier:@"Yes"].firstMatch;
 	XCTAssertTrue([yes waitForExistenceWithTimeout:15.0], @"the confirmation should appear");
 	[yes click];
 
