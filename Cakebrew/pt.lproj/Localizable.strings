@@ -332,3 +332,8 @@
 "Cleanup_Item_Count_Other" = "%lu items";
 "Confirmation_Cleanup" = "Homebrew will permanently remove %1$@, freeing about %2$@. This cannot be undone.";
 "Confirmation_Cleanup_No_Size" = "Homebrew will permanently remove %@. This cannot be undone.";
+
+/* Dock menu */
+"Dock_Check_For_Updates" = "Check for Updates";
+"Dock_Upgrade_All_Outdated" = "Upgrade All Outdated";
+"Dock_Show_Outdated" = "Show Outdated Formulae";

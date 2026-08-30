@@ -37,9 +37,11 @@
 		15C34CBF19512DE100B92E36 /* BPAutoScrollTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = 15C34CBE19512DE100B92E36 /* BPAutoScrollTextView.m */; };
 		28AF2A49333759232BC1F2C9 /* BPEmptyState.m in Sources */ = {isa = PBXBuildFile; fileRef = D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */; };
 		732C9ACF538674E726D8C265 /* BPEmptyStateView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5CF57BEC893DCBB1A2327D9F /* BPEmptyStateView.m */; };
+		EED7701B84E04E36839579E4 /* BPDockMenu.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F8AEAD65544A5D962073DF /* BPDockMenu.m */; };
 		5E523D41E4EFAF010C1F604B /* BPAutoScrollTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = 15C34CBE19512DE100B92E36 /* BPAutoScrollTextView.m */; };
 		EBF4B80911E34FB99DA1D410 /* BPEmptyState.m in Sources */ = {isa = PBXBuildFile; fileRef = D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */; };
 		89AA8E57EBC3AF2202896829 /* BPEmptyStateView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5CF57BEC893DCBB1A2327D9F /* BPEmptyStateView.m */; };
+		14A490C109F54C69A7728156 /* BPDockMenu.m in Sources */ = {isa = PBXBuildFile; fileRef = B5F8AEAD65544A5D962073DF /* BPDockMenu.m */; };
 		15CEFC631AB335B2005CF54A /* BPLoadingView.m in Sources */ = {isa = PBXBuildFile; fileRef = 15CEFC621AB335B2005CF54A /* BPLoadingView.m */; };
 		15D28A121AE1BD27005C8A3E /* BPTimedDispatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 15D28A111AE1BD27005C8A3E /* BPTimedDispatch.m */; };
 		15D28A141AE332DB005C8A3E /* DCOAboutWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 15D28A161AE332DB005C8A3E /* DCOAboutWindow.xib */; };
@@ -91,6 +93,7 @@
 		2B599EC8322105ACA0893956 /* BPLocalizedStringsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 828B14661B644D554E964BFC /* BPLocalizedStringsTests.m */; };
 		6147CF053208BD77693EA689 /* BPMockFidelityTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 1DB1AF02EFFE124B9EC54578 /* BPMockFidelityTests.m */; };
 		99E842CF72AF417A96F28F75 /* BPCleanupPreviewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3FD0481EC5974B78A7B905A2 /* BPCleanupPreviewTests.m */; };
+		26E7CAA9FDB240059E0AECD6 /* BPDockMenuTests.m in Sources */ = {isa = PBXBuildFile; fileRef = B61746363AD340B8A5BEBDF1 /* BPDockMenuTests.m */; };
 		C8B84A9EB0235B5FC6DC82C9 /* BPBrewErrorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 924FA3A9F0675252E8BF2440 /* BPBrewErrorTests.m */; };
 		5EC0381C3CE1B6F0EC072796 /* BPTaskCancelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7250D407F3415D9199117EE2 /* BPTaskCancelTests.m */; };
 		3E021E36A50DB14185D045EE /* BPCatalogCacheTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 014D9AB44189782A2AC5AD21 /* BPCatalogCacheTests.m */; };
@@ -292,9 +295,11 @@ B6830022477FCFE425D036B9 /* BPBrewError.h */ = {isa = PBXFileReference; includeI
 		15C34CBD19512DE100B92E36 /* BPAutoScrollTextView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPAutoScrollTextView.h; path = Views/BPAutoScrollTextView.h; sourceTree = "<group>"; };
 71BCC43BCCA34750C984859F /* BPEmptyState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPEmptyState.h; path = Views/BPEmptyState.h; sourceTree = "<group>"; };
 3A8175B38B3458DC22CD5632 /* BPEmptyStateView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPEmptyStateView.h; path = Views/BPEmptyStateView.h; sourceTree = "<group>"; };
+		9828B65FCD804D9EA7ECE7D4 /* BPDockMenu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPDockMenu.h; path = Views/BPDockMenu.h; sourceTree = "<group>"; };
 		15C34CBE19512DE100B92E36 /* BPAutoScrollTextView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPAutoScrollTextView.m; path = Views/BPAutoScrollTextView.m; sourceTree = "<group>"; };
 D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPEmptyState.m; path = Views/BPEmptyState.m; sourceTree = "<group>"; };
 5CF57BEC893DCBB1A2327D9F /* BPEmptyStateView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPEmptyStateView.m; path = Views/BPEmptyStateView.m; sourceTree = "<group>"; };
+		B5F8AEAD65544A5D962073DF /* BPDockMenu.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPDockMenu.m; path = Views/BPDockMenu.m; sourceTree = "<group>"; };
 		15CEFC611AB335B2005CF54A /* BPLoadingView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPLoadingView.h; path = Views/BPLoadingView.h; sourceTree = "<group>"; };
 		15CEFC621AB335B2005CF54A /* BPLoadingView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPLoadingView.m; path = Views/BPLoadingView.m; sourceTree = "<group>"; };
 		15D28A101AE1BD27005C8A3E /* BPTimedDispatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPTimedDispatch.h; path = BPTimedDispatch/BPTimedDispatch.h; sourceTree = "<group>"; };
@@ -393,6 +398,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 		828B14661B644D554E964BFC /* BPLocalizedStringsTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPLocalizedStringsTests.m; sourceTree = "<group>"; };
 		1DB1AF02EFFE124B9EC54578 /* BPMockFidelityTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPMockFidelityTests.m; sourceTree = "<group>"; };
 		3FD0481EC5974B78A7B905A2 /* BPCleanupPreviewTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPCleanupPreviewTests.m; sourceTree = "<group>"; };
+		B61746363AD340B8A5BEBDF1 /* BPDockMenuTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPDockMenuTests.m; sourceTree = "<group>"; };
 		924FA3A9F0675252E8BF2440 /* BPBrewErrorTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPBrewErrorTests.m; sourceTree = "<group>"; };
 		7250D407F3415D9199117EE2 /* BPTaskCancelTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPTaskCancelTests.m; sourceTree = "<group>"; };
 		014D9AB44189782A2AC5AD21 /* BPCatalogCacheTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPCatalogCacheTests.m; sourceTree = "<group>"; };
@@ -540,9 +546,11 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				15C34CBD19512DE100B92E36 /* BPAutoScrollTextView.h */,
 				71BCC43BCCA34750C984859F /* BPEmptyState.h */,
 				3A8175B38B3458DC22CD5632 /* BPEmptyStateView.h */,
+				9828B65FCD804D9EA7ECE7D4 /* BPDockMenu.h */,
 				15C34CBE19512DE100B92E36 /* BPAutoScrollTextView.m */,
 				D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */,
 				5CF57BEC893DCBB1A2327D9F /* BPEmptyStateView.m */,
+				B5F8AEAD65544A5D962073DF /* BPDockMenu.m */,
 				15CEFC611AB335B2005CF54A /* BPLoadingView.h */,
 				15CEFC621AB335B2005CF54A /* BPLoadingView.m */,
 				D2C427871B8E055B001C1F80 /* BPDisabledView.h */,
@@ -820,6 +828,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				828B14661B644D554E964BFC /* BPLocalizedStringsTests.m */,
 				1DB1AF02EFFE124B9EC54578 /* BPMockFidelityTests.m */,
 				3FD0481EC5974B78A7B905A2 /* BPCleanupPreviewTests.m */,
+				B61746363AD340B8A5BEBDF1 /* BPDockMenuTests.m */,
 				924FA3A9F0675252E8BF2440 /* BPBrewErrorTests.m */,
 				7250D407F3415D9199117EE2 /* BPTaskCancelTests.m */,
 				014D9AB44189782A2AC5AD21 /* BPCatalogCacheTests.m */,
@@ -1084,6 +1093,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				15C34CBF19512DE100B92E36 /* BPAutoScrollTextView.m in Sources */,
 				28AF2A49333759232BC1F2C9 /* BPEmptyState.m in Sources */,
 				732C9ACF538674E726D8C265 /* BPEmptyStateView.m in Sources */,
+				EED7701B84E04E36839579E4 /* BPDockMenu.m in Sources */,
 				150AEC4F1B3F999A00163767 /* BPHomebrewViewController.m in Sources */,
 				D2B3A3B019B9D7FC00DE23B5 /* BPFormulaeDataSource.m in Sources */,
 				15D2CFAB18F202B300B6D9F1 /* DCOAboutWindowController.m in Sources */,
@@ -1168,6 +1178,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				2B599EC8322105ACA0893956 /* BPLocalizedStringsTests.m in Sources */,
 				6147CF053208BD77693EA689 /* BPMockFidelityTests.m in Sources */,
 				99E842CF72AF417A96F28F75 /* BPCleanupPreviewTests.m in Sources */,
+				26E7CAA9FDB240059E0AECD6 /* BPDockMenuTests.m in Sources */,
 				C8B84A9EB0235B5FC6DC82C9 /* BPBrewErrorTests.m in Sources */,
 				5EC0381C3CE1B6F0EC072796 /* BPTaskCancelTests.m in Sources */,
 				3E021E36A50DB14185D045EE /* BPCatalogCacheTests.m in Sources */,
@@ -1181,6 +1192,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				5E523D41E4EFAF010C1F604B /* BPAutoScrollTextView.m in Sources */,
 				EBF4B80911E34FB99DA1D410 /* BPEmptyState.m in Sources */,
 				89AA8E57EBC3AF2202896829 /* BPEmptyStateView.m in Sources */,
+				14A490C109F54C69A7728156 /* BPDockMenu.m in Sources */,
 				1ED78A300C6AD6B948573401 /* BPHelperRegistration.m in Sources */,
 				D5A4E97BA98E72BCC344B615 /* BPHelperRegistrationTests.m in Sources */,
 			);

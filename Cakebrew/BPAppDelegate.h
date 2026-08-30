@@ -20,6 +20,7 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import "BPDockMenu.h"
 
 #define BPAppDelegateRef ((BPAppDelegate*)[[NSApplication sharedApplication] delegate])
 
@@ -31,6 +32,11 @@ extern NSString *const kBP_CAKEBREW_DOCUMENTATION;
 @interface BPAppDelegate : NSObject <NSApplicationDelegate>
 
 @property (assign) IBOutlet NSWindow *window;
+
+/// Who the Dock menu's actions are sent to. Set by BPHomebrewViewController
+/// when it comes up; weak, so a closed window leaves the menu inert rather
+/// than firing into a dead controller.
+@property (weak) id<BPDockMenuTarget> dockActionTarget;
 
 @property (getter=isRunningBackgroundTask) BOOL runningBackgroundTask;
 
