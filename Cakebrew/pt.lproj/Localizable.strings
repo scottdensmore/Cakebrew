@@ -357,3 +357,5 @@
 "Loading_Status_AllFormulae" = "Fetching the formula catalog — this can take a minute the first time…";
 "Loading_Status_AllCasks" = "Fetching the cask catalog — this can take a minute the first time…";
 "Loading_Cancel" = "Cancel";
+
+"Toolbar_Cancel_Reload" = "Stop Reloading";

@@ -96,6 +96,14 @@ typedef NS_ENUM(NSInteger, BPListMode) {
  */
 - (void)cancelCurrentOperation;
 
+/**
+ *  Cancels every brew call currently running.
+ *
+ *  -cancelCurrentOperation covers the single operation task; a reload fans out
+ *  ten concurrent list calls, and stopping it means stopping all of them.
+ */
+- (void)cancelAllRunningTasks;
+
 /// Whether there is an operation to cancel, for enabling the button.
 @property (readonly) BOOL hasCancellableOperation;
 

@@ -516,6 +516,11 @@ NSOpenSavePanelDelegate>
 /// silent.
 - (void)homebrewManager:(BPHomebrewManager *)manager didBeginStepForMode:(BPListMode)mode
 {
+	// Offered for the whole reload, unlike the loading overlay, which comes
+	// down on the first published list — about two seconds in, and well before
+	// the catalog fetch that is actually worth stopping.
+	[self.toolbar setShowsCancelReload:YES];
+
 	if ([self isSearching])
 	{
 		// The footer is showing the search's own description; do not talk over it.
@@ -527,6 +532,8 @@ NSOpenSavePanelDelegate>
 
 - (void)homebrewManagerFinishedStepping:(BPHomebrewManager *)manager
 {
+	[self.toolbar setShowsCancelReload:NO];
+
 	if ([self isSearching])
 	{
 		return;
@@ -534,6 +541,11 @@ NSOpenSavePanelDelegate>
 
 	// Back to the selected row's description.
 	[self updateInfoLabelWithSidebarSelection];
+}
+
+- (IBAction)cancelReload:(id)sender
+{
+	[[BPHomebrewManager sharedManager] cancelReload];
 }
 
 /// One list of a reload has landed. Fired per list rather than once at the end,

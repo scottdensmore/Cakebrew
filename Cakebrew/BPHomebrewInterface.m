@@ -137,6 +137,21 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 	}
 }
 
+- (void)cancelAllRunningTasks
+{
+	// Snapshot under the lock, then work outside it: -cancel terminates process
+	// trees and must not hold the lock while doing so.
+	NSArray<BPTask *> *tasks;
+	@synchronized (self.tasks) { tasks = [self.tasks allValues]; }
+
+	for (BPTask *task in tasks)
+	{
+		[task cancel];
+	}
+
+	[self.currentOperationTask cancel];
+}
+
 - (void)cancelCurrentOperation
 {
 	if (self.brewTransport == kBPBrewTransportHelper)

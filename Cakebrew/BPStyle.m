@@ -116,6 +116,16 @@
 	return image;
 }
 
++ (NSImage *)toolbarImageForCancel
+{
+	static NSImage *image;
+	if (!image) {
+		image = [self appropriateIconForToolbarWithName:@"cancel" orSymbol:@"stop.circle"];
+	}
+
+	return image;
+}
+
 + (NSImage *)appropriateIconForToolbarWithName:(NSString *)name orSymbol:(NSString *)symbol
 {
 	return [NSImage imageWithSystemSymbolName:symbol accessibilityDescription:name];

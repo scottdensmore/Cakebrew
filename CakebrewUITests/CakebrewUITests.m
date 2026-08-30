@@ -1027,6 +1027,36 @@
 				  @"the footer should go back to the row description when the reload ends");
 }
 
+// Journey: a running reload offers a way to stop it, and takes it away again.
+//
+// Deliberately not on the loading overlay: that comes down on the first
+// published list, about two seconds in, while the catalog fetch worth stopping
+// runs for the minute after. -BPMockSlowCatalog holds the mock's catalog calls
+// long enough for the control to be observable.
+- (void)testAReloadCanBeStopped
+{
+	[self launchWithArguments:@[ @"-BPMockBrew", @"-BPMockSlowCatalog" ]];
+
+	XCUIElement *stop = self.app.buttons[@"Stop Reloading"];
+	BOOL appeared = [stop waitForExistenceWithTimeout:30.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"a running reload should offer a way to stop it");
+
+	// Geometry rather than isHittable: hit testing needs a key window, which
+	// the CI runner never has.
+	XCTAssertTrue(stop.frame.size.width > 0 && stop.frame.size.height > 0,
+				  @"the Stop control should have been laid out: %@", NSStringFromRect(stop.frame));
+
+	[stop click];
+
+	// And it goes away, rather than sitting in the toolbar with nothing to stop.
+	NSPredicate *gone = [NSPredicate predicateWithFormat:@"exists == NO"];
+	[self expectationForPredicate:gone evaluatedWithObject:stop handler:nil];
+	[self waitForExpectationsWithTimeout:30.0 handler:nil];
+}
+
 // Journey: Tools > Brew Cleanup previews what it would remove, and only cleans
 // up once that is confirmed.
 - (void)testCleanupConfirmsThenStreamsOutput
