@@ -11,8 +11,21 @@
 #import "BPHomebrewManager.h"
 #import "BPFormula.h"
 
-@interface BPHomebrewManagerTests : XCTestCase
+/// The cask list parsers set this flag in production; fixtures set it directly.
+@interface BPMockCaskFlag : NSObject
++ (void)markAsCasks:(NSArray<BPFormula *> *)formulae;
+@end
+
+@implementation BPMockCaskFlag
++ (void)markAsCasks:(NSArray<BPFormula *> *)formulae
+{
+	for (BPFormula *formula in formulae) { formula.cask = YES; }
+}
+@end
+
+@interface BPHomebrewManagerTests : XCTestCase <BPHomebrewManagerDelegate>
 @property (strong) BPHomebrewManager *manager;
+@property (nonatomic, copy) void (^searchCompletion)(void);
 @end
 
 @implementation BPHomebrewManagerTests
@@ -24,6 +37,7 @@
 	// sets the lists it needs, and setUp/tearDown reset them so there is no
 	// state bleed between tests.
 	self.manager = [BPHomebrewManager sharedManager];
+	self.manager.delegate = self;
 	self.manager.installedFormulae = @[];
 	self.manager.outdatedFormulae = @[];
 	self.manager.allFormulae = @[];
@@ -46,6 +60,26 @@
 	[super tearDown];
 }
 
+/// Runs a search and waits for it to publish. The scan moved off the main
+/// thread (8.5k names per keystroke was blocking it), so results arrive on a
+/// later turn of the run loop rather than before the call returns.
+- (void)search:(NSString *)query
+{
+	[self.manager updateSearchWithName:query];
+
+	NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
+	__block BOOL published = NO;
+	// The delegate callback is the completion signal; polling searchFormulae
+	// cannot distinguish "not yet" from "no matches".
+	self.searchCompletion = ^{ published = YES; };
+	while (!published && [deadline timeIntervalSinceNow] > 0)
+	{
+		[[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+	}
+	self.searchCompletion = nil;
+	XCTAssertTrue(published, @"the search for '%@' never published", query);
+}
+
 - (void)testUpdateSearchFiltersAllFormulaeByName
 {
 	BPFormula *wget = [BPFormula formulaWithName:@"wget"];
@@ -53,7 +87,7 @@
 	BPFormula *wgetpaste = [BPFormula formulaWithName:@"wgetpaste"];
 	self.manager.allFormulae = @[ wget, git, wgetpaste ];
 
-	[self.manager updateSearchWithName:@"wget"];
+	[self search:@"wget"];
 
 	XCTAssertEqual(self.manager.searchFormulae.count, 2u, @"wget and wgetpaste contain 'wget'");
 	XCTAssertTrue([self.manager.searchFormulae containsObject:wget]);
@@ -66,7 +100,7 @@
 	BPFormula *node = [BPFormula formulaWithName:@"node"];
 	self.manager.allFormulae = @[ node ];
 
-	[self.manager updateSearchWithName:@"NODE"];
+	[self search:@"NODE"];
 
 	XCTAssertEqualObjects(self.manager.searchFormulae, @[ node ]);
 }
@@ -75,7 +109,7 @@
 {
 	self.manager.allFormulae = @[ [BPFormula formulaWithName:@"wget"] ];
 
-	[self.manager updateSearchWithName:@"zzznope"];
+	[self search:@"zzznope"];
 
 	XCTAssertEqual(self.manager.searchFormulae.count, 0u);
 }
@@ -180,5 +214,91 @@
 	self.manager.pinnedFormulae = @[ [BPFormula formulaWithName:@"homebrew/core/git"] ];
 	XCTAssertTrue([self.manager isFormulaPinned:[BPFormula formulaWithName:@"git"]]);
 }
+
+
+#pragma mark - search covers casks
+
+- (NSArray<NSString *> *)namesOf:(NSArray<BPFormula *> *)formulae
+{
+	return [formulae valueForKeyPath:@"@unionOfObjects.name"];
+}
+
+- (void)testSearchMatchesCasksAsWellAsFormulae
+{
+	// Typing "chrome" returned nothing even though the cask browse lists show
+	// it: the matcher only ever walked allFormulae.
+	NSArray *formulae = @[ [BPFormula formulaWithName:@"wget"] ];
+	NSArray *casks = @[ [BPFormula formulaWithName:@"mockchrome"] ];
+	[BPMockCaskFlag markAsCasks:casks];
+
+	NSArray *matches = [BPHomebrewManager formulae:formulae casks:casks matchingQuery:@"chrome"];
+
+	XCTAssertEqualObjects([self namesOf:matches], (@[ @"mockchrome" ]));
+}
+
+- (void)testAMatchedCaskStaysACask
+{
+	// statusForFormula:, the detail pane and operation dispatch all branch on
+	// this flag, so a search hit that loses it would be treated as a formula.
+	NSArray *casks = @[ [BPFormula formulaWithName:@"mockchrome"] ];
+	[BPMockCaskFlag markAsCasks:casks];
+
+	NSArray *matches = [BPHomebrewManager formulae:@[] casks:casks matchingQuery:@"chrome"];
+
+	XCTAssertEqual(matches.count, 1u);
+	XCTAssertTrue([(BPFormula *)matches.firstObject cask], @"a matched cask must still dispatch as --cask");
+}
+
+- (void)testSearchIsCaseInsensitiveAcrossBothNamespaces
+{
+	NSArray *formulae = @[ [BPFormula formulaWithName:@"WGet"] ];
+	NSArray *casks = @[ [BPFormula formulaWithName:@"MockChrome"] ];
+	[BPMockCaskFlag markAsCasks:casks];
+
+	XCTAssertEqual([BPHomebrewManager formulae:formulae casks:casks matchingQuery:@"wget"].count, 1u);
+	XCTAssertEqual([BPHomebrewManager formulae:formulae casks:casks matchingQuery:@"chrome"].count, 1u);
+}
+
+- (void)testFormulaeComeBeforeCasksSoTheNamespacesAreNotInterleaved
+{
+	NSArray *formulae = @[ [BPFormula formulaWithName:@"zzz-formula"] ];
+	NSArray *casks = @[ [BPFormula formulaWithName:@"aaa-cask"] ];
+	[BPMockCaskFlag markAsCasks:casks];
+
+	NSArray *matches = [BPHomebrewManager formulae:formulae casks:casks matchingQuery:@"a"];
+	XCTAssertEqualObjects([self namesOf:matches], (@[ @"zzz-formula", @"aaa-cask" ]));
+}
+
+- (void)testAnEmptyQueryMatchesNothing
+{
+	// Clearing the field ends the search; it should not dump the whole catalog.
+	NSArray *formulae = @[ [BPFormula formulaWithName:@"wget"] ];
+	XCTAssertEqual([BPHomebrewManager formulae:formulae casks:@[] matchingQuery:@""].count, 0u);
+	XCTAssertEqual([BPHomebrewManager formulae:formulae casks:@[] matchingQuery:nil].count, 0u);
+}
+
+#pragma mark - late results
+
+- (void)testResultsForASupersededQueryAreDiscarded
+{
+	// Scanning 8.5k names is slow enough that a slower earlier query can land
+	// after a faster later one and overwrite it.
+	XCTAssertTrue([BPHomebrewManager shouldPublishResultsForQuery:@"chrome" currentQuery:@"chrome"]);
+	XCTAssertFalse([BPHomebrewManager shouldPublishResultsForQuery:@"chr" currentQuery:@"chrome"],
+				   @"a result for an earlier keystroke must not replace the current one");
+	XCTAssertFalse([BPHomebrewManager shouldPublishResultsForQuery:@"chrome" currentQuery:nil],
+				   @"the search was cancelled while this was running");
+}
+
+
+#pragma mark - BPHomebrewManagerDelegate
+
+- (void)homebrewManager:(BPHomebrewManager *)manager didUpdateSearchResults:(NSArray *)searchResults
+{
+	if (self.searchCompletion) { self.searchCompletion(); }
+}
+
+- (void)homebrewManagerFinishedUpdating:(BPHomebrewManager *)manager {}
+- (void)homebrewManager:(BPHomebrewManager *)manager shouldDisplayNoBrewMessage:(BOOL)yesOrNo {}
 
 @end

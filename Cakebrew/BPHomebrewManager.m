@@ -31,7 +31,9 @@ NSString *const kBPCacheCasksDataKey = @"BPCacheCasksDataKey";
 #define kBP_SECONDS_IN_A_DAY 86400
 
 @interface BPHomebrewManager () <BPHomebrewInterfaceDelegate>
-
+{
+	NSString *_currentSearchQuery;
+}
 @end
 
 @implementation BPHomebrewManager
@@ -119,23 +121,62 @@ NSString *const kBPCacheCasksDataKey = @"BPCacheCasksDataKey";
 	});
 }
 
-- (void)updateSearchWithName:(NSString *)name
++ (NSArray<BPFormula *> *)formulae:(NSArray<BPFormula *> *)formulae
+							 casks:(NSArray<BPFormula *> *)casks
+					 matchingQuery:(NSString *)query
 {
-	NSMutableArray *matches = [NSMutableArray array];
-	NSRange range;
-	
-	for (BPFormula *formula in _allFormulae) {
-		range = [[formula name] rangeOfString:name options:NSCaseInsensitiveSearch];
-		if (range.location != NSNotFound) {
-			[matches addObject:formula];
+	if (query.length == 0)
+	{
+		return @[];
+	}
+
+	NSMutableArray<BPFormula *> *matches = [NSMutableArray array];
+	// Formulae first, then casks, so the two namespaces aren't interleaved.
+	for (NSArray<BPFormula *> *namespace in @[ formulae ?: @[], casks ?: @[] ])
+	{
+		for (BPFormula *entry in namespace)
+		{
+			if ([entry.name rangeOfString:query options:NSCaseInsensitiveSearch].location != NSNotFound)
+			{
+				[matches addObject:entry];
+			}
 		}
 	}
-	
-	_searchFormulae = matches;
+	return matches;
+}
 
-	dispatch_async(dispatch_get_main_queue(), ^{
-		[self.delegate homebrewManager:self didUpdateSearchResults:matches];
++ (BOOL)shouldPublishResultsForQuery:(NSString *)query currentQuery:(NSString *)currentQuery
+{
+	return currentQuery != nil && [query isEqualToString:currentQuery];
+}
+
+- (void)updateSearchWithName:(NSString *)name
+{
+	// Remembered so a slower earlier keystroke cannot overwrite a later one.
+	@synchronized (self) { _currentSearchQuery = [name copy]; }
+
+	dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+		NSArray<BPFormula *> *matches = [BPHomebrewManager formulae:self.allFormulae
+															  casks:self.allCasks
+													  matchingQuery:name];
+
+		dispatch_async(dispatch_get_main_queue(), ^{
+			NSString *current;
+			@synchronized (self) { current = self->_currentSearchQuery; }
+			if (![BPHomebrewManager shouldPublishResultsForQuery:name currentQuery:current])
+			{
+				return;
+			}
+
+			self->_searchFormulae = matches;
+			[self.delegate homebrewManager:self didUpdateSearchResults:matches];
+		});
 	});
+}
+
+- (void)cancelSearch
+{
+	@synchronized (self) { _currentSearchQuery = nil; }
 }
 
 /**
