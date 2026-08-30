@@ -142,12 +142,6 @@
 	return operationWindowController;
 }
 
-- (void)windowOperationSheetDidEnd:(NSWindow *)sheet returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo;
-{
-	[sheet orderOut:self];
-	[self cleanupAfterTask];
-}
-
 - (void)cleanupAfterTask
 {
 	[BPAppDelegateRef setRunningBackgroundTask:NO];
@@ -306,14 +300,7 @@
 	
 	NSWindow *mainWindow = [NSApp mainWindow];
 	
-	if ([mainWindow respondsToSelector:@selector(endSheet:)])
-	{
-		[mainWindow endSheet:self.window];
-	}
-	else
-	{
-		[[NSApplication sharedApplication] endSheet:self.window];
-	}
+	[mainWindow endSheet:self.window];
 }
 
 @end
