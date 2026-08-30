@@ -78,6 +78,15 @@
 // Dismiss a confirmation alert sheet with Escape. Avoids matching the ambiguous
 // "Cancel" button (the toolbar search field also exposes one) and leaves a clean
 // state for teardown.
+/// Addresses a sidebar row by its accessibility identifier. The rows carry
+/// stable, unlocalized identifiers precisely so journeys stop disambiguating
+/// duplicate titles by index — "Installed" and "Outdated" each appear under
+/// both Formulae and Casks.
+- (XCUIElement *)sidebarRow:(NSString *)identifier
+{
+	return [self sidebar].staticTexts[identifier];
+}
+
 - (void)dismissConfirmationSheet
 {
 	[self.app typeKey:XCUIKeyboardKeyEscape modifierFlags:XCUIKeyModifierNone];
@@ -101,11 +110,18 @@
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 	XCUIElement *sidebar = [self sidebar];
-	NSArray<NSString *> *items = @[ @"Installed", @"Outdated", @"All Formulae",
-									@"Leaves", @"Repositories", @"Doctor", @"Update" ];
+	// By identifier, so both "Installed" rows and both "Outdated" rows are
+	// asserted rather than one standing in for the other.
+	NSArray<NSString *> *items = @[ @"sidebar.formulae.installed", @"sidebar.formulae.outdated",
+									@"sidebar.formulae.all", @"sidebar.formulae.leaves",
+									@"sidebar.formulae.pinned", @"sidebar.formulae.repositories",
+									@"sidebar.casks.installed", @"sidebar.casks.outdated",
+									@"sidebar.casks.all",
+									@"sidebar.tools.doctor", @"sidebar.tools.update",
+									@"sidebar.tools.services" ];
 	for (NSString *item in items) {
 		XCTAssertTrue([sidebar.staticTexts[item] waitForExistenceWithTimeout:15.0],
-					  @"the sidebar should show the %@ item", item);
+					  @"the sidebar should show the %@ row", item);
 	}
 }
 
@@ -114,15 +130,14 @@
 - (void)testNavigatingToToolViewsFromSidebar
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
-	XCUIElement *sidebar = [self sidebar];
 
-	XCUIElement *doctorItem = sidebar.staticTexts[@"Doctor"];
+	XCUIElement *doctorItem = [self sidebarRow:@"sidebar.tools.doctor"];
 	XCTAssertTrue([doctorItem waitForExistenceWithTimeout:15.0], @"Doctor item should exist");
 	[doctorItem click];
 	XCTAssertTrue([self.app.staticTexts[@"Homebrew Doctor"] waitForExistenceWithTimeout:15.0],
 				  @"selecting Doctor should show the Homebrew Doctor view");
 
-	XCUIElement *updateItem = sidebar.staticTexts[@"Update"];
+	XCUIElement *updateItem = [self sidebarRow:@"sidebar.tools.update"];
 	XCTAssertTrue([updateItem waitForExistenceWithTimeout:15.0], @"Update item should exist");
 	[updateItem click];
 	XCTAssertTrue([self.app.staticTexts[@"Homebrew Updater"] waitForExistenceWithTimeout:15.0],
@@ -157,9 +172,8 @@
 - (void)testNotInstalledFormulaOffersInstall
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
-	XCUIElement *sidebar = [self sidebar];
 
-	[sidebar.staticTexts[@"All Formulae"] click];
+	[[self sidebarRow:@"sidebar.formulae.all"] click];
 	XCUIElement *htop = [self formulaCellWithName:@"mockhtop"];
 	BOOL htopAppeared = [htop waitForExistenceWithTimeout:30.0];
 	if (!htopAppeared) {
@@ -180,9 +194,8 @@
 - (void)testInstallPresentsConfirmationDialog
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
-	XCUIElement *sidebar = [self sidebar];
 
-	[sidebar.staticTexts[@"All Formulae"] click];
+	[[self sidebarRow:@"sidebar.formulae.all"] click];
 	XCUIElement *htop = [self formulaCellWithName:@"mockhtop"];
 	XCTAssertTrue([htop waitForExistenceWithTimeout:30.0], @"mockhtop should be listed under All Formulae");
 	[htop click];
@@ -290,7 +303,7 @@
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 
 	// The mock pins mockgit (its `brew list --pinned` fixture).
-	[self.sidebar.staticTexts[@"Pinned"] click];
+	[[self sidebarRow:@"sidebar.formulae.pinned"] click];
 
 	XCUIElement *git = [self formulaCellWithName:@"mockgit"];
 	BOOL appeared = [git waitForExistenceWithTimeout:15.0];
@@ -307,13 +320,9 @@
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 
-	// The Casks group has its own "Installed" child; the sidebar shows two
-	// "Installed" rows (formulae + casks), so click the last match.
-	XCUIElement *sidebar = self.sidebar;
-	XCUIElementQuery *installedRows = [sidebar.staticTexts matchingIdentifier:@"Installed"];
-	XCTAssertTrue([installedRows.firstMatch waitForExistenceWithTimeout:30.0], @"sidebar should load");
-	XCTAssertEqual(installedRows.count, 2u, @"expected Installed under both Formulae and Casks");
-	[[installedRows elementBoundByIndex:1] click];
+	XCUIElement *installedCasks = [self sidebarRow:@"sidebar.casks.installed"];
+	XCTAssertTrue([installedCasks waitForExistenceWithTimeout:30.0], @"sidebar should load");
+	[installedCasks click];
 
 	XCUIElement *chrome = [self formulaCellWithName:@"mockchrome"];
 	BOOL appeared = [chrome waitForExistenceWithTimeout:15.0];
@@ -332,12 +341,9 @@
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 
-	// Two "Outdated" rows exist (Formulae + Casks); the casks one is second.
-	XCUIElement *sidebar = self.sidebar;
-	XCUIElementQuery *outdatedRows = [sidebar.staticTexts matchingIdentifier:@"Outdated"];
-	XCTAssertTrue([outdatedRows.firstMatch waitForExistenceWithTimeout:30.0], @"sidebar should load");
-	XCTAssertEqual(outdatedRows.count, 2u, @"expected Outdated under both Formulae and Casks");
-	[[outdatedRows elementBoundByIndex:1] click];
+	XCUIElement *outdatedCasks = [self sidebarRow:@"sidebar.casks.outdated"];
+	XCTAssertTrue([outdatedCasks waitForExistenceWithTimeout:30.0], @"sidebar should load");
+	[outdatedCasks click];
 
 	XCUIElement *chrome = [self formulaCellWithName:@"mockchrome"];
 	BOOL appeared = [chrome waitForExistenceWithTimeout:15.0];
@@ -438,10 +444,9 @@
 - (void)testZapCheckboxAppearsForCasksOnly
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
-	XCUIElement *sidebar = [self sidebar];
 
 	// A cask: the box should be offered.
-	[[[sidebar.staticTexts matchingIdentifier:@"Installed"] elementBoundByIndex:1] click];
+	[[self sidebarRow:@"sidebar.casks.installed"] click];
 	XCUIElement *cask = [self formulaCellWithName:@"mockchrome"];
 	XCTAssertTrue([cask waitForExistenceWithTimeout:30.0], @"mockchrome should be an installed cask");
 	[cask click];
@@ -460,7 +465,7 @@
 	[self dismissConfirmationSheet];
 
 	// A formula: it should not be.
-	[[[sidebar.staticTexts matchingIdentifier:@"Installed"] elementBoundByIndex:0] click];
+	[[self sidebarRow:@"sidebar.formulae.installed"] click];
 	XCUIElement *formula = [self formulaCellWithName:@"mockwget"];
 	XCTAssertTrue([formula waitForExistenceWithTimeout:30.0]);
 	[formula click];
@@ -482,9 +487,8 @@
 - (void)testConfirmingAnInstallRunsAgainstTheMock
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
-	XCUIElement *sidebar = [self sidebar];
 
-	[sidebar.staticTexts[@"All Formulae"] click];
+	[[self sidebarRow:@"sidebar.formulae.all"] click];
 	XCUIElement *htop = [self formulaCellWithName:@"mockhtop"];
 	XCTAssertTrue([htop waitForExistenceWithTimeout:30.0], @"mockhtop should be listed under All Formulae");
 	[htop click];
@@ -521,7 +525,7 @@
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 	XCUIElement *sidebar = [self sidebar];
 
-	[sidebar.staticTexts[@"All Casks"] click];
+	[[self sidebarRow:@"sidebar.casks.all"] click];
 	XCTAssertTrue([[self formulaCellWithName:@"mockchrome"] waitForExistenceWithTimeout:30.0],
 				  @"All Casks should list the mock casks");
 	NSInteger rowBefore = [self selectedSidebarRow:sidebar];
@@ -554,9 +558,8 @@
 - (void)testAnEmptyListShowsAnExplanation
 {
 	[self launchWithArguments:@[ @"-BPMockBrew", @"-BPMockEmptyOutdated" ]];
-	XCUIElement *sidebar = [self sidebar];
 
-	[[[sidebar.staticTexts matchingIdentifier:@"Outdated"] elementBoundByIndex:0] click];
+	[[self sidebarRow:@"sidebar.formulae.outdated"] click];
 
 	XCUIElement *explanation = self.app.staticTexts[@"Everything Is Up to Date"];
 	BOOL appeared = [explanation waitForExistenceWithTimeout:20.0];
@@ -640,7 +643,7 @@
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 
-	[self.sidebar.staticTexts[@"Services"] click];
+	[[self sidebarRow:@"sidebar.tools.services"] click];
 
 	XCTAssertTrue([self.app.staticTexts[@"Homebrew Services"] waitForExistenceWithTimeout:15.0],
 				  @"selecting Services should show the Services view");
@@ -669,10 +672,9 @@
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 
-	XCUIElement *sidebar = self.sidebar;
-	XCUIElementQuery *installedRows = [sidebar.staticTexts matchingIdentifier:@"Installed"];
-	XCTAssertTrue([installedRows.firstMatch waitForExistenceWithTimeout:30.0], @"sidebar should load");
-	[[installedRows elementBoundByIndex:1] click];
+	XCUIElement *installedCasks = [self sidebarRow:@"sidebar.casks.installed"];
+	XCTAssertTrue([installedCasks waitForExistenceWithTimeout:30.0], @"sidebar should load");
+	[installedCasks click];
 
 	XCUIElement *chrome = [self formulaCellWithName:@"mockchrome"];
 	XCTAssertTrue([chrome waitForExistenceWithTimeout:15.0], @"mockchrome should be listed");
@@ -695,7 +697,7 @@
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 
-	[self.sidebar.staticTexts[@"All Casks"] click];
+	[[self sidebarRow:@"sidebar.casks.all"] click];
 
 	XCUIElement *firefox = [self formulaCellWithName:@"mockfirefox"];
 	BOOL appeared = [firefox waitForExistenceWithTimeout:15.0];
@@ -724,10 +726,9 @@
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
 
-	XCUIElement *sidebar = self.sidebar;
-	XCUIElementQuery *installedRows = [sidebar.staticTexts matchingIdentifier:@"Installed"];
-	XCTAssertTrue([installedRows.firstMatch waitForExistenceWithTimeout:30.0], @"sidebar should load");
-	[[installedRows elementBoundByIndex:1] click];
+	XCUIElement *installedCasks = [self sidebarRow:@"sidebar.casks.installed"];
+	XCTAssertTrue([installedCasks waitForExistenceWithTimeout:30.0], @"sidebar should load");
+	[installedCasks click];
 
 	XCUIElement *chrome = [self formulaCellWithName:@"mockchrome"];
 	XCTAssertTrue([chrome waitForExistenceWithTimeout:15.0], @"mockchrome should be listed");
@@ -778,10 +779,9 @@
 - (void)testOutdatedFormulaOffersUpdate
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
-	XCUIElement *sidebar = [self sidebar];
 
 	// Two "Outdated" rows exist (Formulae + Casks); the formulae one is first.
-	[[[sidebar.staticTexts matchingIdentifier:@"Outdated"] elementBoundByIndex:0] click];
+	[[self sidebarRow:@"sidebar.formulae.outdated"] click];
 	XCUIElement *git = [self formulaCellWithName:@"mockgit"];
 	XCTAssertTrue([git waitForExistenceWithTimeout:30.0], @"mockgit should be in the Outdated list");
 	[git click];
@@ -798,10 +798,9 @@
 - (void)testUpgradePresentsConfirmationDialog
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
-	XCUIElement *sidebar = [self sidebar];
 
 	// Two "Outdated" rows exist (Formulae + Casks); the formulae one is first.
-	[[[sidebar.staticTexts matchingIdentifier:@"Outdated"] elementBoundByIndex:0] click];
+	[[self sidebarRow:@"sidebar.formulae.outdated"] click];
 	XCUIElement *git = [self formulaCellWithName:@"mockgit"];
 	XCTAssertTrue([git waitForExistenceWithTimeout:30.0], @"mockgit should be in the Outdated list");
 	[git click];
@@ -826,9 +825,8 @@
 - (void)testRunningDoctorShowsOutput
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
-	XCUIElement *sidebar = [self sidebar];
 
-	[sidebar.staticTexts[@"Doctor"] click];
+	[[self sidebarRow:@"sidebar.tools.doctor"] click];
 	XCTAssertTrue([self.app.staticTexts[@"Homebrew Doctor"] waitForExistenceWithTimeout:15.0],
 				  @"the Doctor view should appear");
 
@@ -878,9 +876,8 @@
 - (void)testTapPresentsInputDialog
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
-	XCUIElement *sidebar = [self sidebar];
 
-	[sidebar.staticTexts[@"Repositories"] click];
+	[[self sidebarRow:@"sidebar.formulae.repositories"] click];
 
 	XCUIElement *tapButton = self.app.buttons[@"Tap Repository"];
 	XCTAssertTrue([tapButton waitForExistenceWithTimeout:15.0], @"Tap Repository should be offered");
@@ -901,9 +898,8 @@
 - (void)testUntapPresentsConfirmationDialog
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
-	XCUIElement *sidebar = [self sidebar];
 
-	[sidebar.staticTexts[@"Repositories"] click];
+	[[self sidebarRow:@"sidebar.formulae.repositories"] click];
 
 	XCUIElement *repo = [self formulaCellWithName:@"homebrew/core"];
 	BOOL repoListed = [repo waitForExistenceWithTimeout:30.0];

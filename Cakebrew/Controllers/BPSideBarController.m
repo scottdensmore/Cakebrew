@@ -12,6 +12,7 @@
 
 @interface BPSidebarItem ()
 @property (strong) NSMutableArray<BPSidebarItem *> *mutableChildren;
+@property (weak) BPSidebarItem *parentItem;
 @end
 
 @implementation BPSidebarItem
@@ -41,6 +42,9 @@
 
 - (void)addChildItem:(BPSidebarItem *)item
 {
+	// The group is what tells the two "Installed" rows apart, so a row has to
+	// know which one it landed under.
+	item.parentItem = self;
 	[self.mutableChildren addObject:item];
 }
 
@@ -64,6 +68,15 @@ static NSString *BPSpokenBadgeCount(NSNumber *badge)
 		return [NSString stringWithFormat:format, badge];
 	}
 	return badge.stringValue;
+}
+
+/// ", " between the spoken parts of a row. A missing key returns the key
+/// itself, and "Formulae Sidebar_VoiceOver_Separator Installed" is worse to
+/// hear than a plain comma — same guard as the badge count above.
+static NSString *BPSpokenSeparator(void)
+{
+	NSString *separator = NSLocalizedString(@"Sidebar_VoiceOver_Separator", nil);
+	return [separator isEqualToString:@"Sidebar_VoiceOver_Separator"] ? @", " : separator;
 }
 
 @implementation BPSidebarBadgeView
@@ -207,31 +220,37 @@ static NSString *BPSpokenBadgeCount(NSNumber *badge)
 	_installedFormulaeSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Installed", nil)
 													 identifier:@"item"];
 	_installedFormulaeSidebarItem.icon = [self installedSidebarIconImage];
+	_installedFormulaeSidebarItem.accessibilityIdentifier = @"sidebar.formulae.installed";
 	[parent addChildItem:_installedFormulaeSidebarItem];
 
 	_outdatedFormulaeSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Outdated", nil)
 													 identifier:@"item"];
 	_outdatedFormulaeSidebarItem.icon = [self outdatedSidebarIconImage];
+	_outdatedFormulaeSidebarItem.accessibilityIdentifier = @"sidebar.formulae.outdated";
 	[parent addChildItem:_outdatedFormulaeSidebarItem];
 
 	_allFormulaeSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_All", nil)
 												identifier:@"item"];
 	_allFormulaeSidebarItem.icon = [self allFormulaeSidebarIconImage];
+	_allFormulaeSidebarItem.accessibilityIdentifier = @"sidebar.formulae.all";
 	[parent addChildItem:_allFormulaeSidebarItem];
 
 	_leavesFormulaeSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Leaves", nil)
 												   identifier:@"item"];
 	_leavesFormulaeSidebarItem.icon = [self leavesSidebarIconImage];
+	_leavesFormulaeSidebarItem.accessibilityIdentifier = @"sidebar.formulae.leaves";
 	[parent addChildItem:_leavesFormulaeSidebarItem];
 
 	_pinnedFormulaeSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Pinned", nil)
 												   identifier:@"item"];
 	_pinnedFormulaeSidebarItem.icon = [self pinnedSidebarIconImage];
+	_pinnedFormulaeSidebarItem.accessibilityIdentifier = @"sidebar.formulae.pinned";
 	[parent addChildItem:_pinnedFormulaeSidebarItem];
 
 	_repositoriesFormulaeSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Repos", nil)
 														 identifier:@"item"];
 	_repositoriesFormulaeSidebarItem.icon = [self repositoriesSidebarIconImage];
+	_repositoriesFormulaeSidebarItem.accessibilityIdentifier = @"sidebar.formulae.repositories";
 	[parent addChildItem:_repositoriesFormulaeSidebarItem];
 
 	parent = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Group_Casks", nil)
@@ -241,16 +260,19 @@ static NSString *BPSpokenBadgeCount(NSNumber *badge)
 	_installedCasksSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Installed", nil)
 											   identifier:@"item"];
 	_installedCasksSidebarItem.icon = [self casksSidebarIconImage];
+	_installedCasksSidebarItem.accessibilityIdentifier = @"sidebar.casks.installed";
 	[parent addChildItem:_installedCasksSidebarItem];
 
 	_outdatedCasksSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Outdated", nil)
 											  identifier:@"item"];
 	_outdatedCasksSidebarItem.icon = [self outdatedSidebarIconImage];
+	_outdatedCasksSidebarItem.accessibilityIdentifier = @"sidebar.casks.outdated";
 	[parent addChildItem:_outdatedCasksSidebarItem];
 
 	_allCasksSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_AllCasks", nil)
 											 identifier:@"item"];
 	_allCasksSidebarItem.icon = [self allFormulaeSidebarIconImage];
+	_allCasksSidebarItem.accessibilityIdentifier = @"sidebar.casks.all";
 	[parent addChildItem:_allCasksSidebarItem];
 
 	parent = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Group_Tools", nil)
@@ -260,18 +282,21 @@ static NSString *BPSpokenBadgeCount(NSNumber *badge)
 	item = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Doctor", nil)
 							 identifier:@"item"];
 	[item setBadgeValue:@(-1)];
+	item.accessibilityIdentifier = @"sidebar.tools.doctor";
 	[item setIcon:[self doctorSidebarIconImage]];
 	[parent addChildItem:item];
 
 	item = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Update", nil)
 							 identifier:@"item"];
 	[item setBadgeValue:@(-1)];
+	item.accessibilityIdentifier = @"sidebar.tools.update";
 	[item setIcon:[self updateSidebarIconImage]];
 	[parent addChildItem:item];
 
 	item = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Services", nil)
 							 identifier:@"item"];
 	[item setBadgeValue:@(-1)];
+	item.accessibilityIdentifier = @"sidebar.tools.services";
 	[item setIcon:[self servicesSidebarIconImage]];
 	[parent addChildItem:item];
 }
@@ -393,6 +418,51 @@ static NSString *BPSpokenBadgeCount(NSNumber *badge)
 	[self.sidebar setAccessibilityLabel:NSLocalizedString(@"Sidebar_VoiceOver_Sidebar", nil)];
 }
 
++ (NSString *)accessibilityLabelForGroup:(NSString *)group
+								   title:(NSString *)title
+								   badge:(NSNumber *)badge
+{
+	NSMutableArray<NSString *> *parts = [NSMutableArray array];
+
+	if (group.length > 0)
+	{
+		[parts addObject:group];
+	}
+
+	if (title.length > 0)
+	{
+		[parts addObject:title];
+	}
+
+	// -1 is the sentinel for "this row has no badge" (the Tools rows), not a
+	// count. Zero is a real count and worth hearing: nothing outdated is the
+	// answer someone is listening for.
+	if (badge != nil && badge.integerValue >= 0)
+	{
+		[parts addObject:BPSpokenBadgeCount(badge)];
+	}
+
+	return [parts componentsJoinedByString:BPSpokenSeparator()];
+}
+
+- (NSArray<NSString *> *)selectableRowAccessibilityIdentifiers
+{
+	NSMutableArray<NSString *> *identifiers = [NSMutableArray array];
+
+	for (BPSidebarItem *group in self.rootSidebarCategory.children)
+	{
+		for (BPSidebarItem *row in group.children)
+		{
+			if (row.accessibilityIdentifier.length > 0)
+			{
+				[identifiers addObject:row.accessibilityIdentifier];
+			}
+		}
+	}
+
+	return identifiers;
+}
+
 - (void)refreshSidebarBadges
 {
 	self.installedFormulaeSidebarItem.badgeValue		= @([[[BPHomebrewManager sharedManager] installedFormulae] count]);
@@ -464,6 +534,15 @@ static NSString *BPSpokenBadgeCount(NSNumber *badge)
 
 	BPSidebarTableCellView *cellView = [outlineView makeViewWithIdentifier:@"MainCell" owner:self];
 	cellView.textField.stringValue = sidebarItem.title;
+
+	// Both of these go on the text field, not the cell view: an NSTableCellView
+	// is not itself an accessibility element, so anything set there reaches
+	// neither VoiceOver nor XCUITest.
+	cellView.textField.accessibilityIdentifier = sidebarItem.accessibilityIdentifier;
+	cellView.textField.accessibilityLabel =
+		[BPSideBarController accessibilityLabelForGroup:sidebarItem.parentItem.title
+												  title:sidebarItem.title
+												  badge:sidebarItem.badgeValue];
 
 	if (sidebarItem.badgeValue.integerValue >= 0) {
 		cellView.badgeView.badgeValue = (NSUInteger) sidebarItem.badgeValue.integerValue;
