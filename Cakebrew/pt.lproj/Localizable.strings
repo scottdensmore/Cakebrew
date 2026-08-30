@@ -37,8 +37,8 @@
 /* No comment provided by engineer. */
 "Formula_Popover_Title" = "Informações para Fórmula: %@";
 
-"Formula_Installed_Dependents_Title" = "Dependentes Instalados da Formula: %@";
-"Formula_All_Dependents_Title" = "Todos Dependentes da Formula: %@";
+"Formula_Installed_Dependents_Title" = "Fórmulas instaladas dependentes de: %@";
+"Formula_All_Dependents_Title" = "Todas as fórmulas dependentes de: %@";
 
 
 /* No comment provided by engineer. */
@@ -118,8 +118,8 @@
 
 /* No comment provided by engineer. */
 "Message_BGTask_Body" = "Desculpe, uma tarefa já está sendo executada em segundo plano. Você não pode executar mais de uma tarefa simultaneamente.";
-"Message_Tap_Invalid_Title" = "Invalid tap name";
-"Message_Tap_Invalid_Body" = "Enter a tap as owner/repository, for example homebrew/cask-fonts.";
+"Message_Tap_Invalid_Title" = "Nome de tap inválido";
+"Message_Tap_Invalid_Body" = "Introduza um tap como proprietário/repositório, por exemplo homebrew/cask-fonts.";
 
 /* No comment provided by engineer. */
 "Message_BGTask_Title" = "Tarefa em Segundo Plano!";
@@ -190,35 +190,35 @@
 
 /* No comment provided by engineer. */
 "Sidebar_Info_Repos" = "Estes são os repositórios que você adicionou.";
-"Sidebar_Info_Casks" = "These are the casks (applications) installed in your system.";
-"Sidebar_Info_OutdatedCasks" = "These are the casks with a newer version available. Auto-updating apps are not listed.";
-"Sidebar_Info_AllCasks" = "These are all the casks (applications) available for installation.";
-"Sidebar_Info_Services" = "Background services managed by Homebrew.";
-"Services_Title" = "Homebrew Services";
-"Services_Start" = "Start";
-"Services_Stop" = "Stop";
-"Services_Restart" = "Restart";
-"Services_Column_Name" = "Name";
-"Services_Column_Status" = "Status";
-"Services_Column_User" = "User";
-"Preferences_Title" = "Settings";
-"Preferences_Background_Check" = "Check for outdated packages in the background";
-"Preferences_Check_Interval" = "Check every:";
-"Preferences_Interval_Hourly" = "Hour";
-"Preferences_Interval_Six_Hours" = "6 hours";
-"Preferences_Interval_Daily" = "Day";
-"Preferences_Greedy_Casks" = "Include auto-updating apps in outdated casks";
-"Preferences_Greedy_Casks_Note" = "Lists casks that update themselves (like browsers) as outdated, so Homebrew can manage their upgrades too. Takes effect on the next refresh.";
-"Preferences_Helper_Section" = "Homebrew access:";
-"Helper_State_Not_Required" = "Not required — Cakebrew runs Homebrew directly.";
-"Helper_State_Ready" = "Helper installed and approved.";
-"Helper_State_Needs_Approval" = "Waiting for approval in Login Items.";
-"Helper_State_Not_Registered" = "Helper is not installed yet.";
-"Helper_State_Unavailable" = "Helper unavailable. Move Cakebrew to your Applications folder and reopen it.";
-"Helper_Action_Install" = "Install Helper";
-"Helper_Action_Open_Login_Items" = "Open Login Items…";
-"Background_Update_Notification_Title" = "Homebrew updates available";
-"Background_Update_Notification_Body" = "%lu packages have newer versions.";
+"Sidebar_Info_Casks" = "Estes são os casks (aplicações) instalados no seu sistema.";
+"Sidebar_Info_OutdatedCasks" = "Estes são os casks com uma versão mais recente disponível. As apps que se atualizam sozinhas não são listadas.";
+"Sidebar_Info_AllCasks" = "Estes são todos os casks (aplicações) disponíveis para instalação.";
+"Sidebar_Info_Services" = "Serviços em segundo plano geridos pelo Homebrew.";
+"Services_Title" = "Serviços do Homebrew";
+"Services_Start" = "Iniciar";
+"Services_Stop" = "Parar";
+"Services_Restart" = "Reiniciar";
+"Services_Column_Name" = "Nome";
+"Services_Column_Status" = "Estado";
+"Services_Column_User" = "Utilizador";
+"Preferences_Title" = "Definições";
+"Preferences_Background_Check" = "Procurar pacotes desatualizados em segundo plano";
+"Preferences_Check_Interval" = "Verificar a cada:";
+"Preferences_Interval_Hourly" = "Hora";
+"Preferences_Interval_Six_Hours" = "6 horas";
+"Preferences_Interval_Daily" = "Dia";
+"Preferences_Greedy_Casks" = "Incluir apps que se atualizam sozinhas nos casks desatualizados";
+"Preferences_Greedy_Casks_Note" = "Lista como desatualizados os casks que se atualizam sozinhos (como navegadores), para que o Homebrew possa gerir também as suas atualizações. Tem efeito na próxima atualização.";
+"Preferences_Helper_Section" = "Acesso ao Homebrew:";
+"Helper_State_Not_Required" = "Não necessário — o Cakebrew executa o Homebrew diretamente.";
+"Helper_State_Ready" = "Auxiliar instalado e aprovado.";
+"Helper_State_Needs_Approval" = "A aguardar aprovação nos itens de início de sessão.";
+"Helper_State_Not_Registered" = "O auxiliar ainda não está instalado.";
+"Helper_State_Unavailable" = "Auxiliar indisponível. Mova o Cakebrew para a pasta Aplicações e abra-o novamente.";
+"Helper_Action_Install" = "Instalar auxiliar";
+"Helper_Action_Open_Login_Items" = "Abrir itens de início de sessão…";
+"Background_Update_Notification_Title" = "Atualizações do Homebrew disponíveis";
+"Background_Update_Notification_Body" = "%lu pacotes têm versões mais recentes.";
 
 /* No comment provided by engineer. */
 "Sidebar_Info_SearchResults" = "Estes são os resultados de sua busca.";
@@ -237,8 +237,8 @@
 
 /* No comment provided by engineer. */
 "Sidebar_Item_Leaves" = "Folhas";
-"Sidebar_Item_Pinned" = "Pinned";
-"Sidebar_Item_Services" = "Services";
+"Sidebar_Item_Pinned" = "Fixadas";
+"Sidebar_Item_Services" = "Serviços";
 "Sidebar_Item_AllCasks" = "All Casks";
 
 /* No comment provided by engineer. */
@@ -282,19 +282,19 @@
 
 
 /* Added for the localized-strings pass; English until translated. */
-"Sidebar_Info_Pinned" = "These formulae are pinned and will not be upgraded.";
-"Services_Status_None" = "Not running";
-"Services_Status_Started" = "Running";
-"Services_Status_Stopped" = "Stopped";
-"Services_Status_Error" = "Error";
-"Services_Status_Scheduled" = "Scheduled";
-"Services_Status_Unknown" = "Unknown";
-"Panel_Export_Message" = "Export To:";
-"Panel_Export_Button" = "Export";
-"Panel_Import_Message" = "Import From:";
-"Panel_Import_Button" = "Import";
-"Confirmation_Uninstall_Cask_Zap" = "Also remove preferences and support files (zap)";
-"Homebrew_Task_Failed" = "Homebrew task failed";
-"Services_Operation_Failed_Title" = "Could not change the “%@” service";
-"Error_Brew_Failed_No_Output" = "Homebrew exited with status %d and produced no output.";
-"Installation_Window_Cancelled" = "Cancelled.";
+"Sidebar_Info_Pinned" = "Estas fórmulas estão fixadas e não serão atualizadas.";
+"Services_Status_None" = "Não está em execução";
+"Services_Status_Started" = "Em execução";
+"Services_Status_Stopped" = "Parado";
+"Services_Status_Error" = "Erro";
+"Services_Status_Scheduled" = "Agendado";
+"Services_Status_Unknown" = "Desconhecido";
+"Panel_Export_Message" = "Exportar para:";
+"Panel_Export_Button" = "Exportar";
+"Panel_Import_Message" = "Importar de:";
+"Panel_Import_Button" = "Importar";
+"Confirmation_Uninstall_Cask_Zap" = "Remover também preferências e ficheiros de suporte (zap)";
+"Homebrew_Task_Failed" = "A tarefa do Homebrew falhou";
+"Services_Operation_Failed_Title" = "Não foi possível alterar o serviço “%@”";
+"Error_Brew_Failed_No_Output" = "O Homebrew terminou com o estado %d e não produziu saída.";
+"Installation_Window_Cancelled" = "Cancelado.";

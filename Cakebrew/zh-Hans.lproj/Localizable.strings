@@ -114,8 +114,8 @@
 
 /* No comment provided by engineer. */
 "Message_BGTask_Body" = "对不起，后台任务已在运行。您不能同时执行两个任务。";
-"Message_Tap_Invalid_Title" = "Invalid tap name";
-"Message_Tap_Invalid_Body" = "Enter a tap as owner/repository, for example homebrew/cask-fonts.";
+"Message_Tap_Invalid_Title" = "tap 名称无效";
+"Message_Tap_Invalid_Body" = "请以 owner/repository 的形式输入 tap，例如 homebrew/cask-fonts。";
 
 /* No comment provided by engineer. */
 "Message_BGTask_Title" = "激活后台任务!";
@@ -180,35 +180,35 @@
 
 /* No comment provided by engineer. */
 "Sidebar_Info_Repos" = "These are the repositories you have tapped.";
-"Sidebar_Info_Casks" = "These are the casks (applications) installed in your system.";
-"Sidebar_Info_OutdatedCasks" = "These are the casks with a newer version available. Auto-updating apps are not listed.";
-"Sidebar_Info_AllCasks" = "These are all the casks (applications) available for installation.";
-"Sidebar_Info_Services" = "Background services managed by Homebrew.";
-"Services_Title" = "Homebrew Services";
-"Services_Start" = "Start";
-"Services_Stop" = "Stop";
-"Services_Restart" = "Restart";
-"Services_Column_Name" = "Name";
-"Services_Column_Status" = "Status";
-"Services_Column_User" = "User";
-"Preferences_Title" = "Settings";
-"Preferences_Background_Check" = "Check for outdated packages in the background";
-"Preferences_Check_Interval" = "Check every:";
-"Preferences_Interval_Hourly" = "Hour";
-"Preferences_Interval_Six_Hours" = "6 hours";
-"Preferences_Interval_Daily" = "Day";
-"Preferences_Greedy_Casks" = "Include auto-updating apps in outdated casks";
-"Preferences_Greedy_Casks_Note" = "Lists casks that update themselves (like browsers) as outdated, so Homebrew can manage their upgrades too. Takes effect on the next refresh.";
-"Preferences_Helper_Section" = "Homebrew access:";
-"Helper_State_Not_Required" = "Not required — Cakebrew runs Homebrew directly.";
-"Helper_State_Ready" = "Helper installed and approved.";
-"Helper_State_Needs_Approval" = "Waiting for approval in Login Items.";
-"Helper_State_Not_Registered" = "Helper is not installed yet.";
-"Helper_State_Unavailable" = "Helper unavailable. Move Cakebrew to your Applications folder and reopen it.";
-"Helper_Action_Install" = "Install Helper";
-"Helper_Action_Open_Login_Items" = "Open Login Items…";
-"Background_Update_Notification_Title" = "Homebrew updates available";
-"Background_Update_Notification_Body" = "%lu packages have newer versions.";
+"Sidebar_Info_Casks" = "这些是已安装在您系统中的 casks（应用程序）。";
+"Sidebar_Info_OutdatedCasks" = "这些 casks 有更新版本可用。自动更新的应用不会列出。";
+"Sidebar_Info_AllCasks" = "这些是所有可供安装的 casks（应用程序）。";
+"Sidebar_Info_Services" = "由 Homebrew 管理的后台服务。";
+"Services_Title" = "Homebrew 服务";
+"Services_Start" = "启动";
+"Services_Stop" = "停止";
+"Services_Restart" = "重新启动";
+"Services_Column_Name" = "名称";
+"Services_Column_Status" = "状态";
+"Services_Column_User" = "用户";
+"Preferences_Title" = "设置";
+"Preferences_Background_Check" = "在后台检查过期的包";
+"Preferences_Check_Interval" = "检查间隔：";
+"Preferences_Interval_Hourly" = "小时";
+"Preferences_Interval_Six_Hours" = "6 小时";
+"Preferences_Interval_Daily" = "天";
+"Preferences_Greedy_Casks" = "将自动更新的应用计入过期 casks";
+"Preferences_Greedy_Casks_Note" = "将会自我更新的 casks（例如浏览器）列为过期，以便 Homebrew 也能管理它们的升级。将在下次刷新时生效。";
+"Preferences_Helper_Section" = "Homebrew 访问方式：";
+"Helper_State_Not_Required" = "无需辅助工具 — Cakebrew 直接运行 Homebrew。";
+"Helper_State_Ready" = "辅助工具已安装并已批准。";
+"Helper_State_Needs_Approval" = "正在等待在登录项中批准。";
+"Helper_State_Not_Registered" = "辅助工具尚未安装。";
+"Helper_State_Unavailable" = "辅助工具不可用。请将 Cakebrew 移到“应用程序”文件夹后重新打开。";
+"Helper_Action_Install" = "安装辅助工具";
+"Helper_Action_Open_Login_Items" = "打开登录项…";
+"Background_Update_Notification_Title" = "Homebrew 有可用更新";
+"Background_Update_Notification_Body" = "%lu 个包有更新版本。";
 
 /* No comment provided by engineer. */
 "Sidebar_Info_SearchResults" = "下面是你搜索的结果";
@@ -227,8 +227,8 @@
 
 /* No comment provided by engineer. */
 "Sidebar_Item_Leaves" = "树叶";
-"Sidebar_Item_Pinned" = "Pinned";
-"Sidebar_Item_Services" = "Services";
+"Sidebar_Item_Pinned" = "已固定";
+"Sidebar_Item_Services" = "服务";
 "Sidebar_Item_AllCasks" = "All Casks";
 
 /* No comment provided by engineer. */
@@ -272,23 +272,23 @@
 
 
 /* Added for the localized-strings pass; English until translated. */
-"Sidebar_Info_Pinned" = "These formulae are pinned and will not be upgraded.";
-"Services_Status_None" = "Not running";
-"Services_Status_Started" = "Running";
-"Services_Status_Stopped" = "Stopped";
-"Services_Status_Error" = "Error";
-"Services_Status_Scheduled" = "Scheduled";
-"Services_Status_Unknown" = "Unknown";
-"Panel_Export_Message" = "Export To:";
-"Panel_Export_Button" = "Export";
-"Panel_Import_Message" = "Import From:";
-"Panel_Import_Button" = "Import";
+"Sidebar_Info_Pinned" = "这些 formulae 已固定，不会被升级。";
+"Services_Status_None" = "未运行";
+"Services_Status_Started" = "运行中";
+"Services_Status_Stopped" = "已停止";
+"Services_Status_Error" = "错误";
+"Services_Status_Scheduled" = "已计划";
+"Services_Status_Unknown" = "未知";
+"Panel_Export_Message" = "导出到：";
+"Panel_Export_Button" = "导出";
+"Panel_Import_Message" = "导入自：";
+"Panel_Import_Button" = "导入";
 "Notification_Doctor" = "Homebrew Doctor";
 "Notification_Update" = "Update Homebrew";
-"Formula_All_Dependents_Title" = "All Dependents of Formula: %@";
-"Formula_Installed_Dependents_Title" = "Installed Dependents of Formula: %@";
-"Confirmation_Uninstall_Cask_Zap" = "Also remove preferences and support files (zap)";
-"Homebrew_Task_Failed" = "Homebrew task failed";
-"Services_Operation_Failed_Title" = "Could not change the “%@” service";
-"Error_Brew_Failed_No_Output" = "Homebrew exited with status %d and produced no output.";
-"Installation_Window_Cancelled" = "Cancelled.";
+"Formula_All_Dependents_Title" = "依赖此 formula 的全部项：%@";
+"Formula_Installed_Dependents_Title" = "已安装的依赖此 formula 的项：%@";
+"Confirmation_Uninstall_Cask_Zap" = "同时移除偏好设置和支持文件 (zap)";
+"Homebrew_Task_Failed" = "Homebrew 任务失败";
+"Services_Operation_Failed_Title" = "无法更改服务“%@”";
+"Error_Brew_Failed_No_Output" = "Homebrew 以状态 %d 退出，且没有任何输出。";
+"Installation_Window_Cancelled" = "已取消。";
