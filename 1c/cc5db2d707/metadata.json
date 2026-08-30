@@ -1,0 +1,24 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "1ccc5db2d707",
+  "strategy": "manual-commit",
+  "branch": "feat/cancel-reload",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/1c/cc5db2d707/0/metadata.json",
+      "transcript": "/1c/cc5db2d707/0/full.jsonl",
+      "compact_transcript": "/1c/cc5db2d707/0/transcript.jsonl",
+      "content_hash": "/1c/cc5db2d707/0/content_hash.txt",
+      "prompt": "/1c/cc5db2d707/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1905,
+    "cache_creation_tokens": 3640525,
+    "cache_read_tokens": 425546640,
+    "output_tokens": 810344,
+    "api_call_count": 968
+  }
+}
