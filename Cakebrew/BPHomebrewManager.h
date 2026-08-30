@@ -47,6 +47,20 @@ typedef NS_ENUM(NSInteger, BPFormulaStatus) {
  */
 - (void)homebrewManager:(BPHomebrewManager *)manager didPublishListForMode:(BPListMode)mode;
 
+/**
+ *  A reload has started a step worth telling the user about.
+ *
+ *  Not fired per brew call: the lists fan out concurrently, so there is no
+ *  single "current step" to report. It fires twice — once when the reload
+ *  begins, and once when the slow catalog phase does, which is the one that
+ *  can take a minute. Sent on the main queue.
+ */
+- (void)homebrewManager:(BPHomebrewManager *)manager didBeginStepForMode:(BPListMode)mode;
+
+/// The reload has finished, whether or not anything changed. Paired with
+/// -homebrewManager:didBeginStepForMode: so a progress message can be cleared.
+- (void)homebrewManagerFinishedStepping:(BPHomebrewManager *)manager;
+
 @required
 - (void)homebrewManager:(BPHomebrewManager *)manager didUpdateSearchResults:(NSArray *)searchResults;
 - (void)homebrewManager:(BPHomebrewManager *)manager shouldDisplayNoBrewMessage:(BOOL)yesOrNo;
@@ -86,6 +100,10 @@ typedef NS_ENUM(NSInteger, BPFormulaStatus) {
  *  lists must not overwrite a newer reload's.
  */
 - (void)publishList:(NSArray *)list forMode:(BPListMode)mode generation:(NSUInteger)generation;
+
+/// Tells the delegate a reload has begun a step worth naming. Same generation
+/// guard as publishing: a superseded reload must not talk over the newer one.
+- (void)announceStepForMode:(BPListMode)mode generation:(NSUInteger)generation;
 
 - (void)reloadFromInterfaceRebuildingCache:(BOOL)shouldRebuildCache;
 

@@ -997,6 +997,36 @@
 	return sheet;
 }
 
+// Journey: a reload names the slow step in the footer rather than running silent.
+//
+// The loading overlay is built once at setup and comes down on the first
+// published list, so it cannot report the catalog fetch — which is the step
+// that takes 80+ seconds against real brew. -BPMockSlowCatalog holds the mock's
+// catalog calls long enough for the message to be observable.
+- (void)testTheCatalogFetchSaysWhatItIsDoing
+{
+	[self launchWithArguments:@[ @"-BPMockBrew", @"-BPMockSlowCatalog" ]];
+
+	NSPredicate *catalog = [NSPredicate predicateWithFormat:@"value CONTAINS %@ OR label CONTAINS %@",
+							@"cask catalog", @"cask catalog"];
+	XCUIElement *progress = [[self.app.staticTexts matchingPredicate:catalog] firstMatch];
+
+	BOOL appeared = [progress waitForExistenceWithTimeout:30.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"the slow catalog fetch should say so rather than running silent");
+
+	// And it gets out of the way: once the reload finishes the footer goes back
+	// to describing the selected row.
+	NSPredicate *description = [NSPredicate predicateWithFormat:@"value CONTAINS %@ OR label CONTAINS %@",
+								@"already installed", @"already installed"];
+	XCUIElement *restored = [[self.app.staticTexts matchingPredicate:description] firstMatch];
+
+	XCTAssertTrue([restored waitForExistenceWithTimeout:30.0],
+				  @"the footer should go back to the row description when the reload ends");
+}
+
 // Journey: Tools > Brew Cleanup previews what it would remove, and only cleans
 // up once that is confirmed.
 - (void)testCleanupConfirmsThenStreamsOutput

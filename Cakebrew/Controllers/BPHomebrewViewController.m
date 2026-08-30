@@ -25,6 +25,7 @@
 #import "BPHomebrewInterface.h"
 #import "BPCleanupPreview.h"
 #import "BPBrewfile.h"
+#import "BPLoadingStatus.h"
 #import "BPFormulaOptionsWindowController.h"
 #import "BPInstallationWindowController.h"
 #import "BPUpdateViewController.h"
@@ -506,6 +507,34 @@ NSOpenSavePanelDelegate>
 }
 
 #pragma mark - Homebrew Manager Delegate
+
+/// A reload has started a step worth naming.
+///
+/// Shown in the footer rather than the loading overlay: that overlay is built
+/// once at setup and comes down on the first published list, so every reload
+/// after the first — a pin, an install, the hourly timer — was completely
+/// silent.
+- (void)homebrewManager:(BPHomebrewManager *)manager didBeginStepForMode:(BPListMode)mode
+{
+	if ([self isSearching])
+	{
+		// The footer is showing the search's own description; do not talk over it.
+		return;
+	}
+
+	[self updateInfoLabelWithText:[BPLoadingStatus statusForListMode:mode]];
+}
+
+- (void)homebrewManagerFinishedStepping:(BPHomebrewManager *)manager
+{
+	if ([self isSearching])
+	{
+		return;
+	}
+
+	// Back to the selected row's description.
+	[self updateInfoLabelWithSidebarSelection];
+}
 
 /// One list of a reload has landed. Fired per list rather than once at the end,
 /// so the app is usable while the cask catalog is still fetching.
