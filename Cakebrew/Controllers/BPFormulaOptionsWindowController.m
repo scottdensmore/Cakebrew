@@ -104,17 +104,6 @@ static NSString * const kFormulaOptionsTitleColumnId = @"title";
 }
 
 
-- (void)windowOperationSheetDidEnd:(NSWindow *)sheet returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo {
-	[sheet orderOut:self];
-	
-	if(returnCode == NSModalResponseStop) {
-		NSArray *options = [self allSelectedOptions];
-		self.installWithOptionsBlock(options);
-	} else {
-		[BPAppDelegateRef setRunningBackgroundTask:NO];
-	}
-}
-
 /*
  * Return an array with formula options that user wants to use with formula
  */

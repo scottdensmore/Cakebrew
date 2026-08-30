@@ -132,12 +132,6 @@
 	[self.progressIndicator stopAnimation:nil];
 }
 
-- (void)windowOperationSheetDidEnd:(NSWindow *)sheet returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo;
-{
-	[sheet orderOut:self];
-	[BPAppDelegateRef setRunningBackgroundTask:NO];
-}
-
 - (void)embedView:(NSView*)view
 {
 	[view setTranslatesAutoresizingMaskIntoConstraints:NO];
@@ -161,14 +155,7 @@
 {
 	NSWindow *mainWindow = [NSApp mainWindow];
 	
-	if ([mainWindow respondsToSelector:@selector(endSheet:)])
-	{
-		[mainWindow endSheet:self.window];
-	}
-	else
-	{
-		[[NSApplication sharedApplication] endSheet:self.window];
-	}
+	[mainWindow endSheet:self.window];
 }
 
 @end

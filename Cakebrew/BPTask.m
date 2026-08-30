@@ -23,8 +23,6 @@
 #import "BPHelperOutputRelay.h"
 #import "BPProcessTree.h"
 
-static BOOL systemHasAppNap;
-
 NSString *const kDidBeginBackgroundActivityNotification	= @"DidBeginBackgroundActivityNotification";
 NSString *const kDidEndBackgroundActivityNotification	= @"DidEndBackgroundActivityNotification";
 
@@ -48,11 +46,6 @@ NSString *const kDidEndBackgroundActivityNotification	= @"DidEndBackgroundActivi
 @end
 
 @implementation BPTask
-
-+ (void)load
-{
-	systemHasAppNap = [[NSProcessInfo processInfo] respondsToSelector:@selector(beginActivityWithOptions:reason:)];
-}
 
 - (instancetype)initWithPath:(NSString *)path arguments:(NSArray *)arguments
 {
@@ -200,7 +193,6 @@ NSString *const kDidEndBackgroundActivityNotification	= @"DidEndBackgroundActivi
 
 - (void)beginActivity
 {
-	if (systemHasAppNap)
 	{
 		activity = [[NSProcessInfo processInfo] beginActivityWithOptions:NSActivityUserInitiated
 																  reason:NSLocalizedString(@"Homebrew_AppNap_Task_Reason", nil)];
@@ -211,7 +203,7 @@ NSString *const kDidEndBackgroundActivityNotification	= @"DidEndBackgroundActivi
 
 - (void)endActivity
 {
-	if (systemHasAppNap && activity)
+	if (activity)
 	{
 		[[NSProcessInfo processInfo] endActivity:activity];
 		activity = nil;

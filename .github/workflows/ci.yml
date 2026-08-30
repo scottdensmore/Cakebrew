@@ -22,7 +22,11 @@ jobs:
           xcodebuild -version
           xcrun --sdk macosx --show-sdk-version
 
-      - name: Build app
+      # AGENTS.md makes "zero warnings" a hard gate; nothing enforced it, so a
+      # build emitting fifty warnings passed identically to a clean one.
+      # Warnings-as-errors is passed on the command line rather than baked into
+      # the project, so local incremental work stays ergonomic.
+      - name: Build app (Debug)
         run: |
           set -o pipefail
           xcodebuild build \
@@ -30,7 +34,41 @@ jobs:
             -scheme Cakebrew \
             -configuration Debug \
             -destination 'platform=macOS' \
+            GCC_TREAT_WARNINGS_AS_ERRORS=YES \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+
+      # Release was only ever built by a v* tag, so a Release-only warning
+      # stayed invisible until a release was already being cut.
+      - name: Build app (Release)
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -workspace Cakebrew.xcworkspace \
+            -scheme Cakebrew \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            GCC_TREAT_WARNINGS_AS_ERRORS=YES \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+
+      # The analyzer's retain-count and null-dereference checks target exactly
+      # the bug class this codebase reaches users with: NSTask subprocesses,
+      # XPC connections and manual KVO teardown.
+      - name: Static analyzer
+        run: |
+          set -o pipefail
+          xcodebuild analyze \
+            -workspace Cakebrew.xcworkspace \
+            -scheme Cakebrew \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            CLANG_ANALYZER_OUTPUT=text \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee analyze.log
+
+          # xcodebuild analyze exits 0 even when it reports findings.
+          if grep -E "warning: .*\[clang-analyzer" analyze.log; then
+            echo "::error::the static analyzer reported findings"
+            exit 1
+          fi
 
       - name: Run unit tests
         run: |
