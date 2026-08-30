@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "28db442dedc7",
+  "strategy": "manual-commit",
+  "branch": "feat/cask-zap",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "Cakebrew/BPHomebrewInterface.h",
+    "Cakebrew/BPHomebrewInterface.m",
+    "Cakebrew/BPMockHomebrewInterface.m",
+    "CakebrewTests/BPUpgradeArgumentsTests.m"
+  ],
+  "sessions": [
+    {
+      "metadata": "/28/db442dedc7/0/metadata.json",
+      "transcript": "/28/db442dedc7/0/full.jsonl",
+      "compact_transcript": "/28/db442dedc7/0/transcript.jsonl",
+      "content_hash": "/28/db442dedc7/0/content_hash.txt",
+      "prompt": "/28/db442dedc7/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1051,
+    "cache_creation_tokens": 2314949,
+    "cache_read_tokens": 222652184,
+    "output_tokens": 402332,
+    "api_call_count": 541
+  }
+}
