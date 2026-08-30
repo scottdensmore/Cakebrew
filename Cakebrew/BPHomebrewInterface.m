@@ -125,9 +125,15 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 
 - (void)cleanup
 {
-	[self.tasks enumerateKeysAndObjectsWithOptions:NSEnumerationConcurrent usingBlock:^(NSString *key, BPTask *task, BOOL *stop){
+	// Snapshot under the lock, then work outside it: -cleanup terminates
+	// processes and must not hold the lock while doing so.
+	NSArray<BPTask *> *tasks;
+	@synchronized (self.tasks) { tasks = [self.tasks allValues]; }
+
+	for (BPTask *task in tasks)
+	{
 		[task cleanup];
-	}];
+	}
 }
 
 - (void)cancelCurrentOperation
@@ -284,7 +290,7 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 
 - (void)task:(BPTask *)task didFinishWithOutput:(NSString *)output error:(NSString *)error
 {
-	[self.tasks removeObjectForKey:[NSString stringWithFormat:@"%p",task]];
+	@synchronized (self.tasks) { [self.tasks removeObjectForKey:[NSString stringWithFormat:@"%p", task]]; }
 }
 
 - (BOOL)performBrewCommandWithArguments:(NSArray*)arguments dataReturnBlock:(void (^)(NSString*))block
@@ -324,7 +330,7 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 		self.currentOperationTask = task;
 	}
 
-	[self.tasks setObject:task forKey:[NSString stringWithFormat:@"%p", task]];
+	@synchronized (self.tasks) { [self.tasks setObject:task forKey:[NSString stringWithFormat:@"%p", task]]; }
 
 
 #ifdef DEBUG
@@ -369,7 +375,7 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 
 - (BOOL)isRunningBackgroundTask
 {
-	return [[self.tasks allKeys] count] > 0;
+	@synchronized (self.tasks) { return self.tasks.count > 0; }
 }
 
 /**

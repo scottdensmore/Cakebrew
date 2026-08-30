@@ -61,6 +61,15 @@ typedef NS_ENUM(NSInteger, BPFormulaStatus) {
 + (instancetype)new __attribute__((unavailable("new not available, call sharedManager instead")));
 
 - (void)reloadFromInterfaceRebuildingCache:(BOOL)shouldRebuildCache;
+
+/// Whether a request should start a pipeline. A request arriving while one runs
+/// coalesces into a single pending re-run instead.
++ (BOOL)shouldStartReloadWhenInFlight:(BOOL)inFlight;
+
+/// Whether a finished pipeline may publish. Only the newest may: results used
+/// to be published by whichever finished last, so a slower older snapshot could
+/// clobber a newer one.
++ (BOOL)shouldPublishReloadGeneration:(NSUInteger)generation current:(NSUInteger)current;
 - (void)updateSearchWithName:(NSString *)name;
 
 /**

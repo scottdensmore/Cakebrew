@@ -40,6 +40,10 @@ static const NSInteger kBPCacheVersion = 2;
 @interface BPHomebrewManager () <BPHomebrewInterfaceDelegate>
 {
 	NSString *_currentSearchQuery;
+	BOOL _reloadInFlight;
+	BOOL _reloadRequestedWhileRunning;
+	NSUInteger _reloadGeneration;
+	BOOL _pendingRebuildCache;
 }
 @end
 
@@ -80,55 +84,120 @@ static const NSInteger kBPCacheVersion = 2;
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
++ (BOOL)shouldStartReloadWhenInFlight:(BOOL)inFlight
+{
+	return !inFlight;
+}
+
++ (BOOL)shouldPublishReloadGeneration:(NSUInteger)generation current:(NSUInteger)current
+{
+	return generation == current;
+}
+
 - (void)reloadFromInterfaceRebuildingCache:(BOOL)shouldRebuildCache;
 {
+	NSUInteger generation;
+
+	@synchronized (self)
+	{
+		if (![BPHomebrewManager shouldStartReloadWhenInFlight:_reloadInFlight])
+		{
+			// Coalesce. Four callers can fire a reload and the background timer
+			// only checks whether a brew *operation* is running, not whether a
+			// reload already is.
+			_reloadRequestedWhileRunning = YES;
+			_pendingRebuildCache = _pendingRebuildCache || shouldRebuildCache;
+			return;
+		}
+
+		_reloadInFlight = YES;
+		generation = ++_reloadGeneration;
+	}
+
 	NSUInteger previousCountOfAllFormulae = [self allFormulae].count;
 
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
 		[[BPHomebrewInterface sharedInterface] setDelegate:self];
-		
-		NSArray *installedFormulae = [[BPHomebrewInterface sharedInterface] listMode:kBPListInstalled];
-		NSArray *leavesFormulae = [[BPHomebrewInterface sharedInterface] listMode:kBPListLeaves];
-		NSArray *outdatedFormulae = [[BPHomebrewInterface sharedInterface] listMode:kBPListOutdated];
-		NSArray *repositoriesFormulae = [[BPHomebrewInterface sharedInterface] listMode:kBPListRepositories];
-		NSArray *pinnedFormulae = [[BPHomebrewInterface sharedInterface] listMode:kBPListPinned];
-		NSArray *installedCasks = [[BPHomebrewInterface sharedInterface] listMode:kBPListInstalledCasks];
-		NSArray *outdatedCasks = [[BPHomebrewInterface sharedInterface] listMode:kBPListOutdatedCasks];
-		NSArray *services = [[BPHomebrewInterface sharedInterface] listServices];
-		NSArray *allFormulae = nil;
-		NSArray *allCasks = nil;
 
-		// The full catalogs (`brew formulae` / `brew casks`) are slow, so both
-		// ride the same 24h disk cache and refresh together. The allCasks nil
-		// check refreshes a warm cache written before casks were cached.
+		// Ten blocking brew calls, each spawning its own login shell and Ruby
+		// startup, ran back to back — about 7.8 s warm. Nothing here is
+		// CPU-bound and the calls are independent, so they go out together.
+		BPHomebrewInterface *interface = [BPHomebrewInterface sharedInterface];
+		dispatch_queue_t fanOut = dispatch_get_global_queue(QOS_CLASS_UTILITY, 0);
+		dispatch_group_t group = dispatch_group_create();
+
+		__block NSArray *installedFormulae, *leavesFormulae, *outdatedFormulae, *repositoriesFormulae;
+		__block NSArray *pinnedFormulae, *installedCasks, *outdatedCasks, *services;
+		__block NSArray *allFormulae = nil;
+		__block NSArray *allCasks = nil;
+
+		#define BP_FETCH(VAR, EXPR) \
+			dispatch_group_async(group, fanOut, ^{ VAR = (EXPR); });
+
+		BP_FETCH(installedFormulae,    [interface listMode:kBPListInstalled])
+		BP_FETCH(leavesFormulae,       [interface listMode:kBPListLeaves])
+		BP_FETCH(outdatedFormulae,     [interface listMode:kBPListOutdated])
+		BP_FETCH(repositoriesFormulae, [interface listMode:kBPListRepositories])
+		BP_FETCH(pinnedFormulae,       [interface listMode:kBPListPinned])
+		BP_FETCH(installedCasks,       [interface listMode:kBPListInstalledCasks])
+		BP_FETCH(outdatedCasks,        [interface listMode:kBPListOutdatedCasks])
+		BP_FETCH(services,             [interface listServices])
+
+		dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
+
+		// The full catalogs share a 24h disk cache and refresh together. They
+		// are fetched after the cheap lists so a cache hit skips them entirely.
 		if (![self loadAllFormulaeCaches] || previousCountOfAllFormulae <= 100 || self.allCasks == nil || shouldRebuildCache) {
-			allFormulae = [[BPHomebrewInterface sharedInterface] listMode:kBPListAll];
-			allCasks = [[BPHomebrewInterface sharedInterface] listMode:kBPListAllCasks];
+			BP_FETCH(allFormulae, [interface listMode:kBPListAll])
+			BP_FETCH(allCasks,    [interface listMode:kBPListAllCasks])
+			dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
 		}
 
+		#undef BP_FETCH
+
 		dispatch_async(dispatch_get_main_queue(), ^{
+			BOOL rerun = NO;
+			BOOL rerunRebuild = NO;
 
-			if (allFormulae != nil) {
-				[self setAllFormulae:allFormulae];
-				[self setAllCasks:allCasks];
-
-				// Archiving ~16k formulae was happening here, on the main
-				// queue, while the first frame was being drawn.
-				dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
-					[self storeAllFormulaeCaches];
-				});
+			@synchronized (self)
+			{
+				self->_reloadInFlight = NO;
+				rerun = self->_reloadRequestedWhileRunning;
+				rerunRebuild = self->_pendingRebuildCache;
+				self->_reloadRequestedWhileRunning = NO;
+				self->_pendingRebuildCache = NO;
 			}
 
-			[self setInstalledFormulae:installedFormulae];
-			[self setLeavesFormulae:leavesFormulae];
-			[self setOutdatedFormulae:outdatedFormulae];
-			[self setRepositoriesFormulae:repositoriesFormulae];
-			[self setPinnedFormulae:pinnedFormulae];
-			[self setInstalledCasks:installedCasks];
-			[self setOutdatedCasks:outdatedCasks];
-			[self setServices:services];
+			// Only the newest pipeline publishes.
+			if ([BPHomebrewManager shouldPublishReloadGeneration:generation current:self->_reloadGeneration])
+			{
+				if (allFormulae != nil) {
+					[self setAllFormulae:allFormulae];
+					[self setAllCasks:allCasks];
 
-			[self.delegate homebrewManagerFinishedUpdating:self];
+					// Archiving ~16k formulae was happening here, on the main
+					// queue, while the first frame was being drawn.
+					dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+						[self storeAllFormulaeCaches];
+					});
+				}
+
+				[self setInstalledFormulae:installedFormulae];
+				[self setLeavesFormulae:leavesFormulae];
+				[self setOutdatedFormulae:outdatedFormulae];
+				[self setRepositoriesFormulae:repositoriesFormulae];
+				[self setPinnedFormulae:pinnedFormulae];
+				[self setInstalledCasks:installedCasks];
+				[self setOutdatedCasks:outdatedCasks];
+				[self setServices:services];
+
+				[self.delegate homebrewManagerFinishedUpdating:self];
+			}
+
+			if (rerun)
+			{
+				[self reloadFromInterfaceRebuildingCache:rerunRebuild];
+			}
 		});
 	});
 }
