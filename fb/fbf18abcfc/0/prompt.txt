@@ -1,0 +1,60 @@
+Ok what is next to work on?
+
+---
+
+How can I setup you driving things on this machine?
+
+---
+
+Ok Xcode is running with the project
+
+---
+
+Ok try it one more time and see that is going on
+
+---
+
+Yes do it
+
+---
+
+Do #73 and #77 next
+
+---
+
+yep it is dark. Although we still need the icon's to match light and darks mode
+
+---
+
+Ok lets do what you recommend. Don't forget to keep filing issues as you find them while working on the thin vertical slices
+
+---
+
+/goal keep going until you have worked through the backlog. Stay focused on the thin slice you are on and file issues for things you find. You can squash merge when the pr is green. Work on as many issues in parallel as possible.
+
+---
+
+<task-notification>
+<task-id>bmnf84q3l</task-id>
+<summary>Monitor event: "CI results for PRs 135 and 136"</summary>
+<event>PR #135 Build &amp; Test: pass</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>bdjt97kys</task-id>
+<summary>Monitor event: "CI results for PRs 139 and 140"</summary>
+<event>PR #139 UI Tests: pass
+PR #140 UI Tests: pass</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+---
+
+Ok what else is left to do?
+
+---
+
+Yes. Lets do a deep analysis and file issues for what you find.  Also I want you to update the workflow we have as well based on the @workflow.md file. You can delete it once everything is updated. This follows the same system of one AGENTS.md file as the source of truth. If needed lets just delete everything that already exists and start over (that might be better than trying to keep everything around)

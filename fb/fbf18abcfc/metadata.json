@@ -1,0 +1,24 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "fbfbf18abcfc",
+  "strategy": "manual-commit",
+  "branch": "docs/workflow-single-source",
+  "checkpoints_count": 4,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/fb/fbf18abcfc/0/metadata.json",
+      "transcript": "/fb/fbf18abcfc/0/full.jsonl",
+      "compact_transcript": "/fb/fbf18abcfc/0/transcript.jsonl",
+      "content_hash": "/fb/fbf18abcfc/0/content_hash.txt",
+      "prompt": "/fb/fbf18abcfc/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1987,
+    "cache_creation_tokens": 4169699,
+    "cache_read_tokens": 445386629,
+    "output_tokens": 845823,
+    "api_call_count": 1009
+  }
+}
