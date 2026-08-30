@@ -452,66 +452,21 @@ NSOpenSavePanelDelegate>
 	}
 	else
 	{
-		switch (selectedSidebarRow)
-		{
-			case FormulaeSideBarItemInstalled: // Installed Formulae
-				message = NSLocalizedString(@"Sidebar_Info_Installed", nil);
-				break;
-				
-			case FormulaeSideBarItemOutdated: // Outdated Formulae
-				message = NSLocalizedString(@"Sidebar_Info_Outdated", nil);
-				break;
-				
-			case FormulaeSideBarItemAll: // All Formulae
-				message = NSLocalizedString(@"Sidebar_Info_All", nil);
-				break;
-				
-			case FormulaeSideBarItemLeaves:	// Leaves
-				message = NSLocalizedString(@"Sidebar_Info_Leaves", nil);
-				break;
-				
-			case FormulaeSideBarItemRepositories: // Repositories
-				message = NSLocalizedString(@"Sidebar_Info_Repos", nil);
-				break;
-
-			case FormulaeSideBarItemInstalledCasks: // Installed Casks
-				message = NSLocalizedString(@"Sidebar_Info_Casks", nil);
-				break;
-
-			case FormulaeSideBarItemOutdatedCasks: // Outdated Casks
-				message = NSLocalizedString(@"Sidebar_Info_OutdatedCasks", nil);
-				break;
-
-			case FormulaeSideBarItemAllCasks: // All Casks
-				message = NSLocalizedString(@"Sidebar_Info_AllCasks", nil);
-				break;
-
-			case FormulaeSideBarItemDoctor: // Doctor
-				message = NSLocalizedString(@"Sidebar_Info_Doctor", nil);
-				break;
-				
-			case FormulaeSideBarItemUpdate: // Update Tool
-				message = NSLocalizedString(@"Sidebar_Info_Update", nil);
-				break;
-
-			case FormulaeSideBarItemServices: // Services Tool
-				message = NSLocalizedString(@"Sidebar_Info_Services", nil);
-				break;
-				
-			default:
-				break;
-		}
+		// One mapping, so a row can't be silently absent — an unmapped row
+		// yields nil and the label is cleared rather than keeping the previously
+		// selected row's description.
+		NSString *key = [BPSideBarController infoKeyForRow:selectedSidebarRow];
+		message = key ? NSLocalizedString(key, nil) : nil;
 	}
-	
+
 	[self updateInfoLabelWithText:message];
 }
 
 - (void)updateInfoLabelWithText:(NSString*)message
 {
-	if (message)
-	{
-		[self.label_information setStringValue:message];
-	}
+	// Clear on nil. Silently keeping the old text is what made an unmapped row
+	// (Pinned) show the previously selected row's description.
+	[self.label_information setStringValue:message ?: @""];
 }
 
 #pragma mark - Homebrew Manager Delegate
@@ -1048,8 +1003,8 @@ NSOpenSavePanelDelegate>
 - (IBAction)runHomebrewExport:(id)sender
 {
 	NSSavePanel *savePanel = [NSSavePanel savePanel];
-	[savePanel setNameFieldLabel:@"Export To:"];
-	[savePanel setPrompt:@"Export"];
+	[savePanel setNameFieldLabel:NSLocalizedString(@"Panel_Export_Message", nil)];
+	[savePanel setPrompt:NSLocalizedString(@"Panel_Export_Button", nil)];
 	[savePanel setNameFieldStringValue:@"Brewfile"];
 	
 	[savePanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:^(NSInteger result) {
@@ -1068,8 +1023,8 @@ NSOpenSavePanelDelegate>
 - (IBAction)runHomebrewImport:(id)sender
 {
 	NSOpenPanel *openPanel = [NSOpenPanel openPanel];
-	[openPanel setNameFieldLabel:@"Import From:"];
-	[openPanel setPrompt:@"Import"];
+	[openPanel setNameFieldLabel:NSLocalizedString(@"Panel_Import_Message", nil)];
+	[openPanel setPrompt:NSLocalizedString(@"Panel_Import_Button", nil)];
 	[openPanel setNameFieldStringValue:@"Brewfile"];
 	[openPanel setAllowsMultipleSelection:NO];
 	[openPanel setCanChooseDirectories:NO];

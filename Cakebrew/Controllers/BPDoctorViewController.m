@@ -70,8 +70,8 @@
 			self.isPerformingDoctor = NO;
 			[appDelegate setRunningBackgroundTask:NO];
 			
-			NSString *title = [NSLocalizedString(@"Homebrew_Task_Finished", nil) capitalizedString];
-			NSString *desc = NSLocalizedString(@"Notification_Update", nil);
+			NSString *title = NSLocalizedString(@"Homebrew_Task_Finished", nil);
+			NSString *desc = NSLocalizedString(@"Notification_Doctor", nil);
 			[BPAppDelegateRef requestUserAttentionWithMessageTitle:title andDescription:desc];
 		});
 	});

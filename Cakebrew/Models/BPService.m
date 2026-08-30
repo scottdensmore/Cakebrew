@@ -75,6 +75,25 @@
 	return [value isKindOfClass:[NSString class]] ? value : nil;
 }
 
++ (NSString *)localizationKeyForStatus:(BPServiceStatus)status
+{
+	switch (status)
+	{
+		case kBPServiceStatusNone:      return @"Services_Status_None";
+		case kBPServiceStatusStarted:   return @"Services_Status_Started";
+		case kBPServiceStatusStopped:   return @"Services_Status_Stopped";
+		case kBPServiceStatusError:     return @"Services_Status_Error";
+		case kBPServiceStatusScheduled: return @"Services_Status_Scheduled";
+		case kBPServiceStatusUnknown:   break;
+	}
+	return @"Services_Status_Unknown";
+}
+
++ (NSString *)localizedNameForStatus:(BPServiceStatus)status
+{
+	return NSLocalizedString([self localizationKeyForStatus:status], nil);
+}
+
 + (BPServiceStatus)statusFromString:(NSString *)status
 {
 	static NSDictionary<NSString *, NSNumber *> *map;

@@ -69,7 +69,7 @@
 			self.isPerformingUpdate = NO;
 			[appDelegate setRunningBackgroundTask:NO];
 			
-			NSString *title = [NSLocalizedString(@"Homebrew_Task_Finished", nil) capitalizedString];
+			NSString *title = NSLocalizedString(@"Homebrew_Task_Finished", nil);
 			NSString *desc = NSLocalizedString(@"Notification_Update", nil);
 			[BPAppDelegateRef requestUserAttentionWithMessageTitle:title andDescription:desc];
 		});

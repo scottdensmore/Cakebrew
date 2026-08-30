@@ -208,7 +208,9 @@ static NSString * const kServiceColumnUser   = @"User";
 	}
 	if ([tableColumn.identifier isEqualToString:kServiceColumnStatus])
 	{
-		return service.statusString ?: @"--";
+		// The enum, not brew's raw JSON token — statusString is none/started/
+		// stopped/error/scheduled and reached the column verbatim.
+		return [BPService localizedNameForStatus:service.status];
 	}
 	if ([tableColumn.identifier isEqualToString:kServiceColumnUser])
 	{

@@ -33,6 +33,14 @@ typedef NS_ENUM(NSInteger, BPServiceStatus) {
  */
 @interface BPService : NSObject
 
+/// Localization key for a status. Never brew's raw JSON token, and never absent:
+/// an unrecognised value maps to Unknown so a new brew status cannot reach the
+/// UI as a bare string.
++ (NSString *)localizationKeyForStatus:(BPServiceStatus)status;
+
+/// The status as shown to the user.
++ (NSString *)localizedNameForStatus:(BPServiceStatus)status;
+
 @property (copy) NSString *name;
 @property (copy) NSString *user;         // nil when the service isn't running
 @property (strong) NSNumber *pid;        // nil when the service isn't running
