@@ -34,6 +34,7 @@
 + (NSImage *)toolbarImageForUpdate;
 + (NSImage *)toolbarImageForUpgrade;
 + (NSImage *)toolbarImageForMoreInformation;
++ (NSImage *)toolbarImageForCancel;
 
 //More info popover
 + (NSColor *)popoverTitleColor;

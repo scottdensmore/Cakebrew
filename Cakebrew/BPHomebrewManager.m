@@ -102,6 +102,27 @@ static const NSInteger kBPCacheVersion = 2;
 	}
 }
 
+- (void)cancelReload
+{
+	@synchronized (self)
+	{
+		// Superseding the generation is what makes the dying reload silent —
+		// the same guard every publish already checks.
+		_reloadGeneration++;
+		_reloadRequestedWhileRunning = NO;
+		_pendingRebuildCache = NO;
+	}
+
+	// A reload fans out ten concurrent brew calls, so -cancelCurrentOperation
+	// is not enough: that one covers the single operation task.
+	[[BPHomebrewInterface sharedInterface] cancelAllRunningTasks];
+
+	if ([self.delegate respondsToSelector:@selector(homebrewManagerFinishedStepping:)])
+	{
+		[self.delegate homebrewManagerFinishedStepping:self];
+	}
+}
+
 - (void)announceStepForMode:(BPListMode)mode generation:(NSUInteger)generation
 {
 	if (![BPHomebrewManager shouldPublishReloadGeneration:generation current:self.currentReloadGeneration])

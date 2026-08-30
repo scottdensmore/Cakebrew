@@ -30,6 +30,7 @@
 - (void)showFormulaInfo:(id)sender;
 - (void)tapRepository:(id)sender;
 - (void)untapRepository:(id)sender;
+- (void)cancelReload:(id)sender;
 - (void)installFormula:(id)sender;
 - (void)uninstallFormula:(id)sender;
 @end
@@ -50,6 +51,20 @@ typedef NS_ENUM(NSUInteger, BPToolbarMode) {
 @property (nonatomic, weak) id controller;
 
 - (void)configureForMode:(BPToolbarMode)mode;
+
+/// The identifier of the Cancel item shown while a reload runs.
++ (NSString *)cancelReloadItemIdentifier;
+
+/// Where that item sits in the default list. The toolbar inserts at this index,
+/// so it has to agree with the list or a later removal takes the wrong item.
++ (NSUInteger)cancelReloadItemIndex;
+
+/// The default toolbar contents, with or without the Cancel item.
++ (NSArray<NSString *> *)defaultItemIdentifiersShowingCancel:(BOOL)showingCancel;
+
+/// Shows or hides the Cancel item. Idempotent — a reload can be announced more
+/// than once, and a second insert would leave a duplicate behind.
+- (void)setShowsCancelReload:(BOOL)showsCancelReload;
 - (void)lockItems;
 - (void)unlockItems;
 - (void)makeSearchFieldFirstResponder;

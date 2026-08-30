@@ -34,7 +34,7 @@
 	// unobservable without this.
 	if ((mode == kBPListAll || mode == kBPListAllCasks)
 		&& [[[NSProcessInfo processInfo] arguments] containsObject:@"-BPMockSlowCatalog"]) {
-		[NSThread sleepForTimeInterval:4.0];
+		[NSThread sleepForTimeInterval:6.0];
 	}
 
 	switch (mode) {

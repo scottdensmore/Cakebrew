@@ -105,6 +105,16 @@ typedef NS_ENUM(NSInteger, BPFormulaStatus) {
 /// guard as publishing: a superseded reload must not talk over the newer one.
 - (void)announceStepForMode:(BPListMode)mode generation:(NSUInteger)generation;
 
+/**
+ *  Stops the running reload.
+ *
+ *  Bumps the generation so nothing still in flight publishes, and terminates
+ *  the brew calls it fanned out. Deliberately does not clear the in-flight
+ *  flag: the running pipeline clears that as it unwinds, and clearing it here
+ *  would let a new reload start alongside the dying one.
+ */
+- (void)cancelReload;
+
 - (void)reloadFromInterfaceRebuildingCache:(BOOL)shouldRebuildCache;
 
 /// Whether a request should start a pipeline. A request arriving while one runs

@@ -28,10 +28,12 @@ static NSString *kToolbarItemHomebrewUpdateIdentifier = @"toolbarItemHomebrewUpd
 static NSString *kToolbarItemInformationIdentifier = @"toolbarItemInformation";
 static NSString *kToolbarItemSearchIdentifier = @"toolbarItemSearch";
 static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
+static NSString *kToolbarItemCancelReloadIdentifier = @"toolbarItemCancelReload";
 
 @interface BPToolbar() <NSSearchFieldDelegate>
 
 @property (assign) BPToolbarMode currentMode;
+@property (assign, nonatomic) BOOL showsCancelReload;
 @property (strong) NSSearchField *searchField;
 
 @end
@@ -155,6 +157,15 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 {
 	NSDictionary *supportedItems = [self customToolbarItems];
 	[supportedItems enumerateKeysAndObjectsUsingBlock:^(id key, NSToolbarItem *object, BOOL *stop) {
+		if ([key isEqualToString:kToolbarItemCancelReloadIdentifier])
+		{
+			// Exempt from locking: the toolbar is locked precisely while a
+			// reload runs, which is the only time Cancel has anything to do.
+			[object setTarget:self.controller];
+			[object setEnabled:(self.controller != nil)];
+			return;
+		}
+
 		[object setTarget:target];
 		// Only enable items that actually have an action for the current mode, so
 		// the empty multi-action / info slots stay disabled instead of being
@@ -185,17 +196,78 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 	return supportedItems[itemIdentifier];
 }
 
++ (NSString *)cancelReloadItemIdentifier
+{
+	return kToolbarItemCancelReloadIdentifier;
+}
+
++ (NSUInteger)cancelReloadItemIndex
+{
+	// Content side, just before the per-formula actions — NOT the sidebar side.
+	// The region before the tracking separator is only as wide as the sidebar,
+	// and a third item there pushes the toolbar into overflow, which buries
+	// Cancel in the "more toolbar items" chevron exactly when it is needed.
+	return 5;
+}
+
++ (NSArray<NSString *> *)defaultItemIdentifiersShowingCancel:(BOOL)showingCancel
+{
+	NSMutableArray<NSString *> *identifiers =
+		[@[NSToolbarToggleSidebarItemIdentifier,
+		   NSToolbarFlexibleSpaceItemIdentifier,
+		   kToolbarItemHomebrewUpdateIdentifier,
+		   NSToolbarSidebarTrackingSeparatorItemIdentifier,
+		   NSToolbarFlexibleSpaceItemIdentifier,
+		   kToolbarItemMultiActionIdentifier,
+		   kToolbarItemInformationIdentifier,
+		   kToolbarItemSearchIdentifier] mutableCopy];
+
+	if (showingCancel)
+	{
+		[identifiers insertObject:kToolbarItemCancelReloadIdentifier atIndex:[self cancelReloadItemIndex]];
+	}
+
+	return [identifiers copy];
+}
+
 - (NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar
 {
-	return @[NSToolbarToggleSidebarItemIdentifier,
-			 NSToolbarFlexibleSpaceItemIdentifier,
-			 kToolbarItemHomebrewUpdateIdentifier,
-			 NSToolbarSidebarTrackingSeparatorItemIdentifier,
-			 NSToolbarFlexibleSpaceItemIdentifier,
-			 kToolbarItemMultiActionIdentifier,
-			 kToolbarItemInformationIdentifier,
-			 kToolbarItemSearchIdentifier,
-	];
+	return [BPToolbar defaultItemIdentifiersShowingCancel:self.showsCancelReload];
+}
+
+- (void)setShowsCancelReload:(BOOL)showsCancelReload
+{
+	if (_showsCancelReload == showsCancelReload)
+	{
+		// Idempotent: a reload announces its start more than once, and a second
+		// insert would leave a duplicate item behind.
+		return;
+	}
+
+	_showsCancelReload = showsCancelReload;
+
+	if (showsCancelReload)
+	{
+		[self insertItemWithItemIdentifier:kToolbarItemCancelReloadIdentifier
+								   atIndex:(NSInteger)[BPToolbar cancelReloadItemIndex]];
+	}
+	else
+	{
+		// Found by identifier rather than by the insertion index: the toolbar's
+		// live items are not guaranteed to line up with the default list, and
+		// trusting the index would either remove the wrong control or leave a
+		// Cancel item stuck in the toolbar after the reload ended.
+		NSUInteger index = [self.items indexOfObjectPassingTest:^BOOL(NSToolbarItem *item, NSUInteger idx, BOOL *stop) {
+			return [item.itemIdentifier isEqualToString:kToolbarItemCancelReloadIdentifier];
+		}];
+
+		if (index != NSNotFound)
+		{
+			[self removeItemAtIndex:(NSInteger)index];
+		}
+	}
+
+	[self validateVisibleItems];
 }
 
 - (NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
@@ -205,7 +277,8 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 									kToolbarItemHomebrewUpdateIdentifier,
 									kToolbarItemInformationIdentifier,
 									kToolbarItemSearchIdentifier,
-									kToolbarItemMultiActionIdentifier
+									kToolbarItemMultiActionIdentifier,
+									kToolbarItemCancelReloadIdentifier
 									];
 	return [systemToolbarItems arrayByAddingObjectsFromArray:customToolbarItems];
 }
@@ -233,7 +306,8 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 								kToolbarItemHomebrewUpdateIdentifier : [self toolbarItemHomebrewUpdate],
 								kToolbarItemInformationIdentifier : [self toolbarItemInformation],
 								kToolbarItemSearchIdentifier : [self toolbarItemSearch],
-								kToolbarItemMultiActionIdentifier : [self toolbarItemMultiAction]
+								kToolbarItemMultiActionIdentifier : [self toolbarItemMultiAction],
+								kToolbarItemCancelReloadIdentifier : [self toolbarItemCancelReload]
 								};
 	}
 	return customToolbarItems;
@@ -250,6 +324,19 @@ static NSString *kToolbarItemMultiActionIdentifier = @"toolbarItemMultiAction";
 															 action:@selector(updateHomebrew:)];
 	}
 	return toolbarItemHomebrewUpdate;
+}
+
+- (NSToolbarItem *)toolbarItemCancelReload
+{
+	static NSToolbarItem* toolbarItemCancelReload = nil;
+	if (!toolbarItemCancelReload)
+	{
+		toolbarItemCancelReload = [self toolbarItemWithIdentifier:kToolbarItemCancelReloadIdentifier
+															image:[BPStyle toolbarImageForCancel]
+															label:NSLocalizedString(@"Toolbar_Cancel_Reload", nil)
+														   action:@selector(cancelReload:)];
+	}
+	return toolbarItemCancelReload;
 }
 
 - (NSToolbarItem *)toolbarItemInformation
