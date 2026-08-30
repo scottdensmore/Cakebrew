@@ -132,7 +132,9 @@ NSString *const BPFormulaDidUpdateNotification = @"BPFormulaDidUpdateNotificatio
 		self.website			= [aDecoder decodeObjectOfClass:[NSURL class] forKey:kBP_ENCODE_FORMULA_WURL];
 		self.dependencies		= [aDecoder decodeObjectOfClass:[NSString class] forKey:kBP_ENCODE_FORMULA_DEPS];
 		self.conflicts			= [aDecoder decodeObjectOfClass:[NSString class] forKey:kBP_ENCODE_FORMULA_CNFL];
-		self.shortDescription	= [aDecoder decodeObjectOfClass:[NSString class] forKey:kBP_ENCODE_FORMULA_CNFL];
+		// Encoded under SDSC; decoding it from CNFL made a cached formula come
+		// back describing itself as its own conflicts list.
+		self.shortDescription	= [aDecoder decodeObjectOfClass:[NSString class] forKey:kBP_ENCODE_FORMULA_SDSC];
 		self.information		= [aDecoder decodeObjectOfClass:[NSString class] forKey:kBP_ENCODE_FORMULA_INFO];
 
 		NSSet *optionsClasses = [NSSet setWithArray:@[[NSArray class], [BPFormulaOption class]]];

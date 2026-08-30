@@ -86,6 +86,7 @@
 		6147CF053208BD77693EA689 /* BPMockFidelityTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 1DB1AF02EFFE124B9EC54578 /* BPMockFidelityTests.m */; };
 		C8B84A9EB0235B5FC6DC82C9 /* BPBrewErrorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 924FA3A9F0675252E8BF2440 /* BPBrewErrorTests.m */; };
 		5EC0381C3CE1B6F0EC072796 /* BPTaskCancelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7250D407F3415D9199117EE2 /* BPTaskCancelTests.m */; };
+		3E021E36A50DB14185D045EE /* BPCatalogCacheTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 014D9AB44189782A2AC5AD21 /* BPCatalogCacheTests.m */; };
 		55BE3020BDDC9FCA19C1ECBC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C155F549AE6671B51A3FCAD /* Cocoa.framework */; };
 		5F38898450E03D2D56291D29 /* BPHelperSecurity.m in Sources */ = {isa = PBXBuildFile; fileRef = 1227A6AF7A6E1F24A913015B /* BPHelperSecurity.m */; };
 		627F454983A4C2C93584B748 /* BPHelperOutputRelayTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 88BBB2337F47C685C807D566 /* BPHelperOutputRelayTests.m */; };
@@ -379,6 +380,7 @@ B6830022477FCFE425D036B9 /* BPBrewError.h */ = {isa = PBXFileReference; includeI
 		1DB1AF02EFFE124B9EC54578 /* BPMockFidelityTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPMockFidelityTests.m; sourceTree = "<group>"; };
 		924FA3A9F0675252E8BF2440 /* BPBrewErrorTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPBrewErrorTests.m; sourceTree = "<group>"; };
 		7250D407F3415D9199117EE2 /* BPTaskCancelTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPTaskCancelTests.m; sourceTree = "<group>"; };
+		014D9AB44189782A2AC5AD21 /* BPCatalogCacheTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPCatalogCacheTests.m; sourceTree = "<group>"; };
 		A8052362C08CE3FF3945ABAD /* BPPreferencesTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPPreferencesTests.m; sourceTree = "<group>"; };
 		AA67F6479F85E50C83706E3E /* BPService.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPService.m; path = Models/BPService.m; sourceTree = "<group>"; };
 6F14AB39D9A4FA816D3A932C /* BPBrewError.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPBrewError.m; path = Models/BPBrewError.m; sourceTree = "<group>"; };
@@ -796,6 +798,7 @@ B6830022477FCFE425D036B9 /* BPBrewError.h */ = {isa = PBXFileReference; includeI
 				1DB1AF02EFFE124B9EC54578 /* BPMockFidelityTests.m */,
 				924FA3A9F0675252E8BF2440 /* BPBrewErrorTests.m */,
 				7250D407F3415D9199117EE2 /* BPTaskCancelTests.m */,
+				014D9AB44189782A2AC5AD21 /* BPCatalogCacheTests.m */,
 				8F2D53C524FAE8B655FD3778 /* BPHelperRegistrationTests.m */,
 			);
 			path = CakebrewTests;
@@ -1138,6 +1141,7 @@ B6830022477FCFE425D036B9 /* BPBrewError.h */ = {isa = PBXFileReference; includeI
 				6147CF053208BD77693EA689 /* BPMockFidelityTests.m in Sources */,
 				C8B84A9EB0235B5FC6DC82C9 /* BPBrewErrorTests.m in Sources */,
 				5EC0381C3CE1B6F0EC072796 /* BPTaskCancelTests.m in Sources */,
+				3E021E36A50DB14185D045EE /* BPCatalogCacheTests.m in Sources */,
 				00D4E0159FF9B3D0D368E0AD /* BPMockHomebrewInterface.m in Sources */,
 				8DEE82E248857750CD9BDC4D /* BPSideBarController.m in Sources */,
 				59246886F867B7F80EBA72A9 /* BPMainWindowController.m in Sources */,

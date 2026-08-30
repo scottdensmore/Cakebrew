@@ -9,6 +9,7 @@
 #import <Cocoa/Cocoa.h>
 #import <XCTest/XCTest.h>
 #import "BPFormula.h"
+#import "BPFormulaOption.h"
 #import "BPHomebrewInterface.h"
 
 // getInformation is private to BPFormula.m (compiled into this test target);
@@ -517,6 +518,71 @@ static BPCustomFormula *nmapFormula;
 	XCTAssertEqualObjects([BPFormula namesFromListOutput:@"\n  \n"], @[]);
 }
 
+
+#pragma mark - coding round trip
+
+/// A formula with every field distinct, so a mismatched coding key shows up as
+/// one field carrying another's value rather than as a plausible-looking blank.
+- (BPFormula *)fullyPopulatedFormula
+{
+	BPFormula *formula = [BPFormula formulaWithName:@"mysql" version:@"5.6.21" andLatestVersion:@"8.0.0"];
+	[formula setValue:@"/usr/local/Cellar/mysql/5.6.21" forKey:@"installPath"];
+	[formula setValue:[NSURL URLWithString:@"https://example.com/mysql"] forKey:@"website"];
+	[formula setValue:@"openssl, zlib" forKey:@"dependencies"];
+	[formula setValue:@"mariadb, percona-server" forKey:@"conflicts"];
+	[formula setValue:@"Open source relational database" forKey:@"shortDescription"];
+	[formula setValue:@"the full brew info text" forKey:@"information"];
+	formula.cask = YES;
+	return formula;
+}
+
+- (void)assertFormula:(BPFormula *)copy matchesOriginal:(BPFormula *)original
+{
+	XCTAssertEqualObjects(copy.name, original.name);
+	XCTAssertEqualObjects(copy.version, original.version);
+	XCTAssertEqualObjects(copy.latestVersion, original.latestVersion);
+	XCTAssertEqualObjects(copy.installPath, original.installPath);
+	XCTAssertEqualObjects(copy.website, original.website);
+	XCTAssertEqualObjects(copy.dependencies, original.dependencies);
+	XCTAssertEqualObjects(copy.conflicts, original.conflicts);
+	XCTAssertEqualObjects(copy.information, original.information);
+	XCTAssertEqual(copy.cask, original.cask);
+
+	// The one that was wrong: shortDescription was decoded from the conflicts
+	// key, so a cached formula came back describing itself as its own
+	// conflicts list.
+	XCTAssertEqualObjects(copy.shortDescription, original.shortDescription,
+						  @"shortDescription must not come back as another field");
+	XCTAssertNotEqualObjects(copy.shortDescription, original.conflicts,
+							 @"shortDescription decoded from the conflicts key");
+}
+
+- (void)testASecureCodingRoundTripPreservesEveryField
+{
+	BPFormula *original = [self fullyPopulatedFormula];
+
+	// The same class set BPHomebrewManager uses to read the catalog cache.
+	NSSet *classes = [NSSet setWithArray:@[[NSDictionary class], [NSArray class], [NSMutableArray class],
+										   [BPFormula class], [NSString class], [NSURL class],
+										   [NSNumber class], [BPFormulaOption class]]];
+
+	NSError *error = nil;
+	NSData *data = [NSKeyedArchiver archivedDataWithRootObject:original requiringSecureCoding:YES error:&error];
+	XCTAssertNil(error);
+
+	BPFormula *decoded = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:&error];
+	XCTAssertNil(error);
+	XCTAssertNotNil(decoded);
+
+	[self assertFormula:decoded matchesOriginal:original];
+}
+
+- (void)testCopyingPreservesEveryField
+{
+	// -copyWithZone: handled this correctly all along, which is why nothing
+	// caught the decode bug.
+	BPFormula *original = [self fullyPopulatedFormula];
+	[self assertFormula:[original copy] matchesOriginal:original];
+}
+
 @end
-
-

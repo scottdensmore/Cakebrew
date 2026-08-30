@@ -27,6 +27,13 @@
 NSString *const kBPCacheLastUpdateKey = @"BPCacheLastUpdateKey";
 NSString *const kBPCacheDataKey	= @"BPCacheDataKey";
 NSString *const kBPCacheCasksDataKey = @"BPCacheCasksDataKey";
+NSString *const kBPCacheVersionKey = @"BPCacheVersionKey";
+NSString *const kBPCacheStoredDateKey = @"BPCacheStoredDateKey";
+
+/// Bumped whenever the archived shape changes, so a stale layout rebuilds
+/// instead of decoding into the wrong fields. Raised to 2 with the
+/// shortDescription coding-key fix.
+static const NSInteger kBPCacheVersion = 2;
 
 #define kBP_SECONDS_IN_A_DAY 86400
 
@@ -104,7 +111,12 @@ NSString *const kBPCacheCasksDataKey = @"BPCacheCasksDataKey";
 			if (allFormulae != nil) {
 				[self setAllFormulae:allFormulae];
 				[self setAllCasks:allCasks];
-				[self storeAllFormulaeCaches];
+
+				// Archiving ~16k formulae was happening here, on the main
+				// queue, while the first frame was being drawn.
+				dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+					[self storeAllFormulaeCaches];
+				});
 			}
 
 			[self setInstalledFormulae:installedFormulae];
@@ -186,93 +198,114 @@ NSString *const kBPCacheCasksDataKey = @"BPCacheCasksDataKey";
 {
 	NSURL *cachesFolder = [BPAppDelegate urlForApplicationCachesFolder];
 	NSURL *allFormulaeFile = [cachesFolder URLByAppendingPathComponent:@"allFormulae.cache.bin"];
-	BOOL shouldLoadCache = NO;
-	
-	if ([[NSUserDefaults standardUserDefaults] objectForKey:kBPCacheLastUpdateKey])
-	{
-		NSDate *storageDate = [NSDate dateWithTimeIntervalSince1970:[[NSUserDefaults standardUserDefaults]
-																	 integerForKey:kBPCacheLastUpdateKey]];
-		
-		if ([[NSDate date] timeIntervalSinceDate:storageDate] <= 3600*24)
-		{
-			shouldLoadCache = YES;
-		}
-	}
-	
-	if (shouldLoadCache && allFormulaeFile)
-	{
-		NSDictionary *cacheDict = nil;
-		
-		if ([[NSFileManager defaultManager] fileExistsAtPath:allFormulaeFile.relativePath])
-		{
-			NSData *data = [NSData dataWithContentsOfFile:allFormulaeFile.relativePath];
-			NSError *error = nil;
 
-			NSSet *classes = [NSSet setWithArray:@[[NSDictionary class], [NSArray class], [NSMutableArray class], [BPFormula class], [NSString class], [NSURL class], [NSNumber class], [BPFormulaOption class]]];
-			cacheDict = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:&error];
-			if (error) {
-				NSLog(@"Failed decoding data: %@", [error localizedDescription]);
-			}
-			self.allFormulae = [cacheDict objectForKey:kBPCacheDataKey];
-			self.allCasks = [cacheDict objectForKey:kBPCacheCasksDataKey];
-		}
-	}
-	else
+	if (!allFormulaeFile || ![[NSFileManager defaultManager] fileExistsAtPath:allFormulaeFile.relativePath])
 	{
-		// Delete all cache data
-		[[NSFileManager defaultManager] removeItemAtURL:allFormulaeFile error:nil];
-		[[NSUserDefaults standardUserDefaults] removeObjectForKey:kBPCacheLastUpdateKey];
+		return NO;
 	}
-	
-	return self.allFormulae != nil;
+
+	NSData *data = [NSData dataWithContentsOfURL:allFormulaeFile];
+	NSError *error = nil;
+	NSSet *classes = [NSSet setWithArray:@[[NSDictionary class], [NSArray class], [NSMutableArray class],
+										   [BPFormula class], [NSString class], [NSURL class],
+										   [NSNumber class], [NSDate class], [BPFormulaOption class]]];
+	NSDictionary *cacheDict = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:data error:&error];
+
+	if (error || !cacheDict)
+	{
+		NSLog(@"Discarding unreadable catalog cache: %@", error.localizedDescription);
+		[self discardCatalogCache];
+		return NO;
+	}
+
+	// A layout change must rebuild rather than decode into the wrong fields.
+	if ([cacheDict[kBPCacheVersionKey] integerValue] != kBPCacheVersion)
+	{
+		[self discardCatalogCache];
+		return NO;
+	}
+
+	// The timestamp lives in the archive, so validity and data cannot diverge —
+	// they used to be a defaults key and a file that could be deleted apart.
+	NSDate *storedDate = cacheDict[kBPCacheStoredDateKey];
+	if (![storedDate isKindOfClass:[NSDate class]] ||
+		[[NSDate date] timeIntervalSinceDate:storedDate] > kBP_SECONDS_IN_A_DAY)
+	{
+		[self discardCatalogCache];
+		return NO;
+	}
+
+	NSArray *formulae = cacheDict[kBPCacheDataKey];
+	if (![formulae isKindOfClass:[NSArray class]])
+	{
+		[self discardCatalogCache];
+		return NO;
+	}
+
+	self.allFormulae = formulae;
+	self.allCasks = cacheDict[kBPCacheCasksDataKey];
+
+	// Whether a *fresh file was read*, not whether memory happens to be
+	// populated. Returning the latter meant a long-running app saw its expired
+	// cache as valid and never refetched the catalog — while having just
+	// deleted the file, so the next launch started cold.
+	return YES;
+}
+
+- (void)discardCatalogCache
+{
+	NSURL *cachesFolder = [BPAppDelegate urlForApplicationCachesFolder];
+	NSURL *allFormulaeFile = [cachesFolder URLByAppendingPathComponent:@"allFormulae.cache.bin"];
+	if (allFormulaeFile)
+	{
+		[[NSFileManager defaultManager] removeItemAtURL:allFormulaeFile error:nil];
+	}
+	[[NSUserDefaults standardUserDefaults] removeObjectForKey:kBPCacheLastUpdateKey];
 }
 
 - (void)storeAllFormulaeCaches
 {
-	if (self.allFormulae)
+	if (!self.allFormulae)
 	{
-		NSURL *cachesFolder = [BPAppDelegate urlForApplicationCachesFolder];
-		if (cachesFolder)
-		{
-			NSURL *allFormulaeFile = [cachesFolder URLByAppendingPathComponent:@"allFormulae.cache.bin"];
-			NSDate *storageDate = [NSDate date];
-			
-			if ([[NSUserDefaults standardUserDefaults] objectForKey:kBPCacheLastUpdateKey])
-			{
-				storageDate = [NSDate dateWithTimeIntervalSince1970:[[NSUserDefaults standardUserDefaults]
-																	 integerForKey:kBPCacheLastUpdateKey]];
-			}
-			
-			NSDictionary *cacheDict = @{kBPCacheDataKey: self.allFormulae,
-										kBPCacheCasksDataKey: self.allCasks ?: @[]};
-			NSError *error = nil;
-			NSData *cacheData = [NSKeyedArchiver archivedDataWithRootObject:cacheDict
-														  requiringSecureCoding:YES
-																		  error:&error];
-
-			if (error || !cacheData) {
-				NSLog(@"Failed encoding data: %@", [error localizedDescription]);
-				return;
-			}
-
-			if ([[NSFileManager defaultManager] fileExistsAtPath:allFormulaeFile.relativePath])
-			{
-				[cacheData writeToURL:allFormulaeFile atomically:YES];
-			}
-			else
-			{
-				[[NSFileManager defaultManager] createFileAtPath:allFormulaeFile.relativePath
-														contents:cacheData attributes:nil];
-			}
-			
-			[[NSUserDefaults standardUserDefaults] setInteger:[storageDate timeIntervalSince1970]
-													   forKey:kBPCacheLastUpdateKey];
-		}
-		else
-		{
-			NSLog(@"Could not store cache file. BPAppDelegate function returned nil!");
-		}
+		return;
 	}
+
+	NSURL *cachesFolder = [BPAppDelegate urlForApplicationCachesFolder];
+	if (!cachesFolder)
+	{
+		NSLog(@"Could not store cache file. BPAppDelegate function returned nil!");
+		return;
+	}
+
+	NSURL *allFormulaeFile = [cachesFolder URLByAppendingPathComponent:@"allFormulae.cache.bin"];
+
+	// Always the current date. Reusing the stored one meant a forced rebuild
+	// stamped fresh data with the old date, so it expired immediately.
+	NSDictionary *cacheDict = @{ kBPCacheVersionKey: @(kBPCacheVersion),
+								 kBPCacheStoredDateKey: [NSDate date],
+								 kBPCacheDataKey: self.allFormulae,
+								 kBPCacheCasksDataKey: self.allCasks ?: @[] };
+
+	NSError *error = nil;
+	NSData *cacheData = [NSKeyedArchiver archivedDataWithRootObject:cacheDict
+											 requiringSecureCoding:YES
+															 error:&error];
+	if (error || !cacheData)
+	{
+		NSLog(@"Failed encoding data: %@", [error localizedDescription]);
+		return;
+	}
+
+	// Atomic in both cases. The create path was not, so a crash mid-write left
+	// a truncated archive to be unarchived next launch.
+	if (![cacheData writeToURL:allFormulaeFile options:NSDataWritingAtomic error:&error])
+	{
+		NSLog(@"Failed writing cache: %@", error.localizedDescription);
+		return;
+	}
+
+	[[NSUserDefaults standardUserDefaults] setInteger:(NSInteger)[[NSDate date] timeIntervalSince1970]
+											   forKey:kBPCacheLastUpdateKey];
 }
 
 - (NSInteger)searchForFormula:(BPFormula*)formula inArray:(NSArray*)array
