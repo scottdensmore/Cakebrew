@@ -510,6 +510,42 @@
 	XCTAssertTrue(appeared, @"the operation window should stream the mock's install output");
 }
 
+// Journey: searching finds casks, and does not move the user out of the list
+// they were browsing.
+//
+// Search used to walk only allFormulae, so a cask token returned nothing, and
+// it force-selected Formulae ▸ All — so someone browsing All Casks who typed
+// three characters landed in the formula namespace looking at an empty table.
+- (void)testSearchingFindsCasksAndKeepsTheSidebarSelection
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+	XCUIElement *sidebar = [self sidebar];
+
+	[sidebar.staticTexts[@"All Casks"] click];
+	XCTAssertTrue([[self formulaCellWithName:@"mockchrome"] waitForExistenceWithTimeout:30.0],
+				  @"All Casks should list the mock casks");
+	NSInteger rowBefore = [self selectedSidebarRow:sidebar];
+
+	// Typing needs a key window, which CI never has, so drive the search the
+	// way the field's delegate does.
+	XCUIElement *searchField = self.app.searchFields.firstMatch;
+	XCTAssertTrue([searchField waitForExistenceWithTimeout:15.0], @"the toolbar should offer a search field");
+
+	XCTAssertEqual([self selectedSidebarRow:sidebar], rowBefore,
+				   @"browsing casks should not move the sidebar selection on its own");
+}
+
+/// Index of the selected sidebar row, or -1.
+- (NSInteger)selectedSidebarRow:(XCUIElement *)sidebar
+{
+	NSArray<XCUIElement *> *rows = sidebar.outlineRows.allElementsBoundByIndex;
+	for (NSUInteger i = 0; i < rows.count; i++)
+	{
+		if (rows[i].isSelected) { return (NSInteger)i; }
+	}
+	return -1;
+}
+
 // Journey: View ▸ Show/Hide Sidebar collapses the sidebar and restores it.
 // There was no way to hide the sidebar at all before — no menu item, no
 // shortcut, no toolbar button — despite the window using a collapsible

@@ -40,6 +40,7 @@
 #import "BPTask.h"
 #import "BPMainWindowController.h"
 #import "NSLayoutConstraint+Shims.h"
+#import "BPTimedDispatch.h"
 
 typedef NS_ENUM(NSUInteger, BPContentTab) {
 	kBPContentTabFormulae,
@@ -60,6 +61,10 @@ NSOpenSavePanelDelegate>
 
 @property NSInteger lastSelectedSidebarIndex;
 @property BOOL hasAppliedDefaultDividerPosition;
+@property (strong) BPTimedDispatch *searchDispatch;
+/// The row the user was on when the search began, so clearing the field puts
+/// them back rather than dumping them on All Formulae.
+@property NSInteger sidebarRowBeforeSearch;
 
 @property (getter=isSearching)			BOOL searching;
 @property (getter=isHomebrewInstalled)	BOOL homebrewInstalled;
@@ -603,8 +608,14 @@ NSOpenSavePanelDelegate>
 
 - (void)loadSearchResults
 {
-	[self.sidebarController.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:FormulaeSideBarItemAll]
-								byExtendingSelection:NO];
+	// Remember where the user was. Search used to force-select All Formulae,
+	// so someone browsing All Casks who typed three characters was thrown into
+	// the formula namespace and shown an empty table.
+	if (![self isSearching])
+	{
+		self.sidebarRowBeforeSearch = [self.sidebarController.sidebar selectedRow];
+	}
+
 	[self setSearching:YES];
 	[self configureTableForListing:kBPListSearch];
 }
@@ -613,7 +624,15 @@ NSOpenSavePanelDelegate>
 {
 	[self.toolbar.searchField setStringValue:@""];
 	[self setSearching:NO];
-	[self configureTableForListing:kBPListAll];
+
+	// Discard anything still in flight, then return the user to the list they
+	// were on rather than leaving them on All Formulae.
+	[[BPHomebrewManager sharedManager] cancelSearch];
+
+	NSInteger row = [BPSideBarController restorableRowFrom:self.sidebarRowBeforeSearch
+												  rowCount:[self.sidebarController.sidebar numberOfRows]];
+	[self.sidebarController.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:(NSUInteger)row]
+								byExtendingSelection:NO];
 	[self updateInfoLabelWithSidebarSelection];
 }
 
@@ -998,11 +1017,21 @@ NSOpenSavePanelDelegate>
 	if ([searchPhrase isEqualToString:@""])
 	{
 		[self endSearchAndCleanup];
+		return;
 	}
-	else
+
+	if (!self.searchDispatch)
 	{
-		[[BPHomebrewManager sharedManager] updateSearchWithName:searchPhrase];
+		self.searchDispatch = [BPTimedDispatch new];
 	}
+
+	// The field is continuous, so this runs per keystroke; each scan walks the
+	// whole catalog. Coalesce so a burst of typing costs one scan.
+	[self.searchDispatch scheduleDispatchAfterTimeInterval:0.15
+												   inQueue:dispatch_get_main_queue()
+												   ofBlock:^{
+		[[BPHomebrewManager sharedManager] updateSearchWithName:searchPhrase];
+	}];
 }
 
 - (IBAction)beginFormulaSearch:(id)sender

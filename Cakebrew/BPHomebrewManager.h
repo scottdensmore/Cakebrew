@@ -63,8 +63,26 @@ typedef NS_ENUM(NSInteger, BPFormulaStatus) {
 - (void)reloadFromInterfaceRebuildingCache:(BOOL)shouldRebuildCache;
 - (void)updateSearchWithName:(NSString *)name;
 
+/**
+ *  Catalog entries whose name contains `query`, formulae first then casks.
+ *
+ *  Casks were never searched, so typing a cask token returned nothing even
+ *  though the browse lists showed it. Matches keep their `cask` flag, which is
+ *  what statusForFormula:, the detail pane and operation dispatch branch on.
+ */
++ (NSArray<BPFormula *> *)formulae:(NSArray<BPFormula *> *)formulae
+							 casks:(NSArray<BPFormula *> *)casks
+					 matchingQuery:(NSString *)query;
+
+/// Whether results computed for `query` are still wanted. Scanning 8.5k names
+/// is slow enough that an earlier keystroke can finish after a later one.
++ (BOOL)shouldPublishResultsForQuery:(NSString *)query currentQuery:(NSString *)currentQuery;
+
 - (BPFormulaStatus)statusForFormula:(BPFormula*)formula;
 - (BOOL)isFormulaPinned:(BPFormula*)formula;
+
+/// Forgets the current query, so results still in flight are discarded.
+- (void)cancelSearch;
 
 - (void)cleanUp;
 
