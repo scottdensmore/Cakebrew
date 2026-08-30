@@ -503,6 +503,67 @@ NSOpenSavePanelDelegate>
 
 #pragma mark - Homebrew Manager Delegate
 
+/// One list of a reload has landed. Fired per list rather than once at the end,
+/// so the app is usable while the cask catalog is still fetching.
+- (void)homebrewManager:(BPHomebrewManager *)manager didPublishListForMode:(BPListMode)mode
+{
+	if (!self.isHomebrewInstalled || [self isSearching])
+	{
+		return;
+	}
+
+	// Just this row. A whole-outline reloadData clears the selection, and this
+	// runs once per list — which is how the app lost the row the user had
+	// reopened on.
+	[self.sidebarController refreshBadgeForListMode:mode];
+
+	if (mode == kBPListOutdated)
+	{
+		[self setEnableUpgradeFormulasMenu:(manager.outdatedFormulae.count > 0)];
+	}
+
+	// The installed list is the app's front door and returns in well under a
+	// second. It used to sit behind the slowest call in the batch — a cold cask
+	// catalog, 80 seconds — with nothing on screen but an indeterminate spinner.
+	if (mode == kBPListInstalled && self.loadingView != nil)
+	{
+		[self revealContentForFirstPublishedList];
+	}
+
+	// Only redraw the table if what landed is what is on screen.
+	if (self.loadingView == nil && self.formulaeDataSource.mode == mode)
+	{
+		[self.formulaeDataSource refreshBackingArray];
+		[self.formulaeTableView reloadData];
+		[self refreshEmptyState];
+	}
+}
+
+/// Tears down the loading overlay and shows the list, on the first list to
+/// land rather than on the whole batch.
+///
+/// Deliberately does not restore the previously selected formula or reselect a
+/// row that is already selected: -homebrewManagerFinishedUpdating: still runs
+/// at the end of the reload and owns that.
+- (void)revealContentForFirstPublishedList
+{
+	[self.loadingView removeFromSuperview];
+	self.loadingView = nil;
+
+	[self.mainWindowController setContentViewHidden:NO];
+	[self.label_information setHidden:NO];
+
+	[self.toolbar configureForMode:BPToolbarModeDefault];
+	[self.toolbar unlockItems];
+
+	// No row selection here. -configureSidebarSettings has already restored the
+	// row the user left off on, and -homebrewManagerFinishedUpdating: owns the
+	// fallback when there is none.
+	[self.formulaeDataSource refreshBackingArray];
+	[self.formulaeTableView reloadData];
+	[self refreshEmptyState];
+}
+
 - (void)homebrewManagerFinishedUpdating:(BPHomebrewManager *)manager
 {
 	[self.loadingView removeFromSuperview];

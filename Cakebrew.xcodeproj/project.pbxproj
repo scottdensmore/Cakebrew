@@ -92,6 +92,7 @@
 		2D630A95BC372F5BDE94E4E7 /* BPVersionStampingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 674FD1D9F871DDE01F853A88 /* BPVersionStampingTests.m */; };
 		2B599EC8322105ACA0893956 /* BPLocalizedStringsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 828B14661B644D554E964BFC /* BPLocalizedStringsTests.m */; };
 		6147CF053208BD77693EA689 /* BPMockFidelityTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 1DB1AF02EFFE124B9EC54578 /* BPMockFidelityTests.m */; };
+		8653704673014814BB37485A /* BPIncrementalReloadTests.m in Sources */ = {isa = PBXBuildFile; fileRef = EDB6083CE52B414D96FA5C44 /* BPIncrementalReloadTests.m */; };
 		99E842CF72AF417A96F28F75 /* BPCleanupPreviewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3FD0481EC5974B78A7B905A2 /* BPCleanupPreviewTests.m */; };
 		26E7CAA9FDB240059E0AECD6 /* BPDockMenuTests.m in Sources */ = {isa = PBXBuildFile; fileRef = B61746363AD340B8A5BEBDF1 /* BPDockMenuTests.m */; };
 		C8B84A9EB0235B5FC6DC82C9 /* BPBrewErrorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 924FA3A9F0675252E8BF2440 /* BPBrewErrorTests.m */; };
@@ -397,6 +398,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 		674FD1D9F871DDE01F853A88 /* BPVersionStampingTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPVersionStampingTests.m; sourceTree = "<group>"; };
 		828B14661B644D554E964BFC /* BPLocalizedStringsTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPLocalizedStringsTests.m; sourceTree = "<group>"; };
 		1DB1AF02EFFE124B9EC54578 /* BPMockFidelityTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPMockFidelityTests.m; sourceTree = "<group>"; };
+		EDB6083CE52B414D96FA5C44 /* BPIncrementalReloadTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPIncrementalReloadTests.m; sourceTree = "<group>"; };
 		3FD0481EC5974B78A7B905A2 /* BPCleanupPreviewTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPCleanupPreviewTests.m; sourceTree = "<group>"; };
 		B61746363AD340B8A5BEBDF1 /* BPDockMenuTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPDockMenuTests.m; sourceTree = "<group>"; };
 		924FA3A9F0675252E8BF2440 /* BPBrewErrorTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPBrewErrorTests.m; sourceTree = "<group>"; };
@@ -827,6 +829,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				674FD1D9F871DDE01F853A88 /* BPVersionStampingTests.m */,
 				828B14661B644D554E964BFC /* BPLocalizedStringsTests.m */,
 				1DB1AF02EFFE124B9EC54578 /* BPMockFidelityTests.m */,
+				EDB6083CE52B414D96FA5C44 /* BPIncrementalReloadTests.m */,
 				3FD0481EC5974B78A7B905A2 /* BPCleanupPreviewTests.m */,
 				B61746363AD340B8A5BEBDF1 /* BPDockMenuTests.m */,
 				924FA3A9F0675252E8BF2440 /* BPBrewErrorTests.m */,
@@ -1177,6 +1180,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				2D630A95BC372F5BDE94E4E7 /* BPVersionStampingTests.m in Sources */,
 				2B599EC8322105ACA0893956 /* BPLocalizedStringsTests.m in Sources */,
 				6147CF053208BD77693EA689 /* BPMockFidelityTests.m in Sources */,
+				8653704673014814BB37485A /* BPIncrementalReloadTests.m in Sources */,
 				99E842CF72AF417A96F28F75 /* BPCleanupPreviewTests.m in Sources */,
 				26E7CAA9FDB240059E0AECD6 /* BPDockMenuTests.m in Sources */,
 				C8B84A9EB0235B5FC6DC82C9 /* BPBrewErrorTests.m in Sources */,
