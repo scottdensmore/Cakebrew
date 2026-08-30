@@ -21,6 +21,7 @@
 #import "BPService.h"
 #import "BPStyle.h"
 #import "BPAppDelegate.h"
+#import "BPBrewError.h"
 
 static NSString * const kServiceColumnName   = @"Name";
 static NSString * const kServiceColumnStatus = @"Status";
@@ -123,26 +124,26 @@ static NSString * const kServiceColumnUser   = @"User";
 
 - (void)startSelectedService:(id)sender
 {
-	[self runOperation:^BOOL(BPHomebrewInterface *interface, NSString *name) {
-		return [interface startService:name withReturnBlock:nil];
+	[self runOperation:^BOOL(BPHomebrewInterface *interface, NSString *name, void (^output)(NSString *)) {
+		return [interface startService:name withReturnBlock:output];
 	}];
 }
 
 - (void)stopSelectedService:(id)sender
 {
-	[self runOperation:^BOOL(BPHomebrewInterface *interface, NSString *name) {
-		return [interface stopService:name withReturnBlock:nil];
+	[self runOperation:^BOOL(BPHomebrewInterface *interface, NSString *name, void (^output)(NSString *)) {
+		return [interface stopService:name withReturnBlock:output];
 	}];
 }
 
 - (void)restartSelectedService:(id)sender
 {
-	[self runOperation:^BOOL(BPHomebrewInterface *interface, NSString *name) {
-		return [interface restartService:name withReturnBlock:nil];
+	[self runOperation:^BOOL(BPHomebrewInterface *interface, NSString *name, void (^output)(NSString *)) {
+		return [interface restartService:name withReturnBlock:output];
 	}];
 }
 
-- (void)runOperation:(BOOL (^)(BPHomebrewInterface *interface, NSString *name))operation
+- (void)runOperation:(BOOL (^)(BPHomebrewInterface *interface, NSString *name, void (^output)(NSString *)))operation
 {
 	NSInteger row = self.tableView.selectedRow;
 	if (self.operationInFlight || row < 0 || (NSUInteger)row >= self.services.count)
@@ -164,12 +165,39 @@ static NSString * const kServiceColumnUser   = @"User";
 	[self updateButtonStates];
 
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-		operation([BPHomebrewInterface sharedInterface], name);
+		// Both the exit status and brew's output used to be thrown away, so a
+		// failed start re-enabled the buttons, reloaded the table, and showed
+		// the unchanged old status with no explanation.
+		NSMutableString *output = [NSMutableString string];
+		BOOL succeeded = operation([BPHomebrewInterface sharedInterface], name, ^(NSString *chunk) {
+			@synchronized (output) { [output appendString:chunk ?: @""]; }
+		});
+
 		dispatch_async(dispatch_get_main_queue(), ^{
 			self.operationInFlight = NO;
 			[self refreshServices];
+
+			if (!succeeded)
+			{
+				NSString *transcript;
+				@synchronized (output) { transcript = [output copy]; }
+				[self presentServiceFailureForName:name output:transcript];
+			}
 		});
 	});
+}
+
+/// Shows brew's own words. Attached to the app window per the sheets-not-modals
+/// convention — self.view.window is nil under the split-view reparenting.
+- (void)presentServiceFailureForName:(NSString *)name output:(NSString *)output
+{
+	NSError *error = [BPBrewError errorForExitStatus:1 output:output];
+
+	NSAlert *alert = [[NSAlert alloc] init];
+	alert.messageText = [NSString stringWithFormat:NSLocalizedString(@"Services_Operation_Failed_Title", nil), name];
+	alert.informativeText = error.localizedDescription;
+	[alert addButtonWithTitle:NSLocalizedString(@"Generic_OK", nil)];
+	[alert beginSheetModalForWindow:BPAppDelegateRef.window completionHandler:nil];
 }
 
 #pragma mark - Button state

@@ -292,3 +292,6 @@
 "Formula_All_Dependents_Title" = "All Dependents of Formula: %@";
 "Formula_Installed_Dependents_Title" = "Installed Dependents of Formula: %@";
 "Confirmation_Uninstall_Cask_Zap" = "Also remove preferences and support files (zap)";
+"Homebrew_Task_Failed" = "Homebrew task failed";
+"Services_Operation_Failed_Title" = "Could not change the “%@” service";
+"Error_Brew_Failed_No_Output" = "Homebrew exited with status %d and produced no output.";

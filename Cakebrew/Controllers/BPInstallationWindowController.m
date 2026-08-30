@@ -262,11 +262,22 @@
 		[self.progressIndicator stopAnimation:nil];
 		[self.okButton setEnabled:YES];
 		
-		NSString *title = NSLocalizedString(@"Homebrew_Task_Finished", nil);
+		// operationStatus was written on every path and read by nobody, so a
+		// failed install announced itself exactly like a successful one.
+		BOOL succeeded = self.operationStatus;
+		NSString *title = succeeded
+			? NSLocalizedString(@"Homebrew_Task_Finished", nil)
+			: NSLocalizedString(@"Homebrew_Task_Failed", nil);
 		NSString *desc = [NSString stringWithFormat:@"%@ %@",
 						  self.windowTitleLabel.stringValue,
 						  self.formulaNameLabel.stringValue];
-		
+
+		self.windowTitleLabel.stringValue = succeeded
+			? self.windowTitleLabel.stringValue
+			: [NSString stringWithFormat:@"%@ — %@",
+			   self.windowTitleLabel.stringValue,
+			   NSLocalizedString(@"Homebrew_Task_Failed", nil)];
+
 		[BPAppDelegateRef requestUserAttentionWithMessageTitle:title andDescription:desc];
 	});
 }
