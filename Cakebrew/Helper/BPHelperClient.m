@@ -48,6 +48,10 @@
 
 @end
 
+@interface BPHelperClient ()
+@property (strong) NSXPCConnection *currentConnection;
+@end
+
 @implementation BPHelperClient
 
 + (instancetype)sharedClient
@@ -85,6 +89,9 @@
 	[connection setCodeSigningRequirement:[BPHelperSecurity helperCodeSigningRequirement]];
 	[connection resume];
 
+	// One connection per command, so the connection identifies what to cancel.
+	@synchronized (self) { self.currentConnection = connection; }
+
 	__block int status = -1;
 	__block NSString *fullOutput = nil;
 	dispatch_semaphore_t finished = dispatch_semaphore_create(0);
@@ -116,6 +123,21 @@
 
 	[connection invalidate];
 	return status == 0;
+}
+
+- (void)cancelCurrentCommand
+{
+	NSXPCConnection *connection;
+	@synchronized (self) { connection = self.currentConnection; }
+	if (!connection)
+	{
+		return;
+	}
+
+	// Fire and forget: the reply block exists so the helper can acknowledge,
+	// but the caller is already tearing the operation down.
+	id proxy = [connection remoteObjectProxyWithErrorHandler:^(NSError *error) {}];
+	[proxy cancelBrewWithReply:^{}];
 }
 
 @end

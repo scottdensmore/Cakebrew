@@ -32,6 +32,8 @@
 @property (weak) IBOutlet NSTextField *formulaNameLabel;
 @property (unsafe_unretained) IBOutlet BPAutoScrollTextView *recordTextView; //NSTextView does not support weak in ARC at all (not just 10.7)
 @property (weak) IBOutlet NSButton *okButton;
+@property (weak) IBOutlet NSButton *cancelButton;
+@property (nonatomic) BOOL wasCancelled;
 @property (weak) IBOutlet NSProgressIndicator *progressIndicator;
 
 @property (nonatomic) BPWindowOperation windowOperation;
@@ -261,10 +263,11 @@
 	dispatch_async(dispatch_get_main_queue(), ^(){
 		[self.progressIndicator stopAnimation:nil];
 		[self.okButton setEnabled:YES];
+		[self.cancelButton setEnabled:NO];
 		
 		// operationStatus was written on every path and read by nobody, so a
 		// failed install announced itself exactly like a successful one.
-		BOOL succeeded = self.operationStatus;
+		BOOL succeeded = self.operationStatus && !self.wasCancelled;
 		NSString *title = succeeded
 			? NSLocalizedString(@"Homebrew_Task_Finished", nil)
 			: NSLocalizedString(@"Homebrew_Task_Failed", nil);
@@ -280,6 +283,21 @@
 
 		[BPAppDelegateRef requestUserAttentionWithMessageTitle:title andDescription:desc];
 	});
+}
+
+- (IBAction)cancelAction:(id)sender
+{
+	// Terminal immediately: the user asked to stop, so the sheet becomes
+	// dismissible now rather than when brew gets around to dying. The log is
+	// left in place so they can see how far it got.
+	self.wasCancelled = YES;
+	[self.cancelButton setEnabled:NO];
+	[self.okButton setEnabled:YES];
+
+	[self.recordTextView appendOutput:[NSString stringWithFormat:@"\n%@\n",
+									   NSLocalizedString(@"Installation_Window_Cancelled", nil)]];
+
+	[[BPHomebrewInterface sharedInterface] cancelCurrentOperation];
 }
 
 - (IBAction)okAction:(id)sender

@@ -78,6 +78,7 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 @property (strong) NSString *path_shell;
 @property (strong) NSMutableDictionary *tasks;
 @property (strong) dispatch_queue_t taskOperationsQueue;
+@property (strong) BPTask *currentOperationTask;
 
 @end
 
@@ -127,6 +128,28 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 	[self.tasks enumerateKeysAndObjectsWithOptions:NSEnumerationConcurrent usingBlock:^(NSString *key, BPTask *task, BOOL *stop){
 		[task cleanup];
 	}];
+}
+
+- (void)cancelCurrentOperation
+{
+	if (self.brewTransport == kBPBrewTransportHelper)
+	{
+		[[BPHelperClient sharedClient] cancelCurrentCommand];
+		return;
+	}
+
+	[self.currentOperationTask cancel];
+}
+
+- (BOOL)hasCancellableOperation
+{
+	if (self.brewTransport == kBPBrewTransportHelper)
+	{
+		// The helper runs one command per connection; the app's own guard
+		// ensures at most one is in flight.
+		return YES;
+	}
+	return self.currentOperationTask != nil;
 }
 
 - (BOOL)checkForHomebrew
@@ -293,6 +316,14 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 	task.delegate = self;
 	task.updateBlock = block;
 
+	// Only the operation the user is watching. List refreshes go through the
+	// synchronous wrapper, so cancelling an install cannot abort a reload
+	// running beside it.
+	if (!isSynchronous)
+	{
+		self.currentOperationTask = task;
+	}
+
 	[self.tasks setObject:task forKey:[NSString stringWithFormat:@"%p", task]];
 
 
@@ -307,6 +338,11 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 #endif
 	
 	int status = [task execute];
+
+	if (self.currentOperationTask == task)
+	{
+		self.currentOperationTask = nil;
+	}
 	
 	NSString *taskDoneString = [NSString stringWithFormat:@"%@: (%d) %@ %@!",
 								NSLocalizedString(@"Homebrew_Task_Finished", nil),

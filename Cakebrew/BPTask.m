@@ -21,6 +21,7 @@
 
 #import "BPTask.h"
 #import "BPHelperOutputRelay.h"
+#import "BPProcessTree.h"
 
 static BOOL systemHasAppNap;
 
@@ -42,6 +43,7 @@ NSString *const kDidEndBackgroundActivityNotification	= @"DidEndBackgroundActivi
 @property (strong) NSTask *task;
 @property (readwrite) NSString *output;
 @property (readwrite) NSString *error;
+@property (readwrite) BOOL wasCancelled;
 
 @end
 
@@ -216,6 +218,24 @@ NSString *const kDidEndBackgroundActivityNotification	= @"DidEndBackgroundActivi
 
 		[[NSNotificationCenter defaultCenter] postNotificationName:kDidEndBackgroundActivityNotification object:self];
 	}
+}
+
+- (void)cancel
+{
+	self.wasCancelled = YES;
+
+	NSTask *task = self.task;
+	if (!task.isRunning)
+	{
+		return;
+	}
+
+	// Collect first: terminating the shell reparents its children to launchd,
+	// after which pgrep -P can no longer find them.
+	NSArray<NSNumber *> *descendants = [BPProcessTree descendantsOfProcess:task.processIdentifier];
+
+	[task terminate];
+	[BPProcessTree terminateProcesses:descendants];
 }
 
 - (void)cleanup
