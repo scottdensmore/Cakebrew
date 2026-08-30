@@ -1,0 +1,24 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "86387c6c1a47",
+  "strategy": "manual-commit",
+  "branch": "docs/touch-bar-mirroring",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/86/387c6c1a47/0/metadata.json",
+      "transcript": "/86/387c6c1a47/0/full.jsonl",
+      "compact_transcript": "/86/387c6c1a47/0/transcript.jsonl",
+      "content_hash": "/86/387c6c1a47/0/content_hash.txt",
+      "prompt": "/86/387c6c1a47/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1239,
+    "cache_creation_tokens": 2465787,
+    "cache_read_tokens": 301234654,
+    "output_tokens": 511279,
+    "api_call_count": 635
+  }
+}
