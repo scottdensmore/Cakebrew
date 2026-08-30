@@ -80,7 +80,7 @@ uploads crash logs from `~/Library/Logs/DiagnosticReports` on failure.
   typing/keyboard focus is untestable; system file panels (NSSave/NSOpenPanel)
   are out-of-process and undrivable. Pattern: unit-test the logic, UI-test
   presence/navigation.
-- **Four ways a green local UI run lies.** Each of these has cost a red CI run
+- **Five ways a green local UI run lies.** Each of these has cost a red CI run
   or a misdiagnosed failure:
   1. **`isHittable` is meaningless on CI.** Hit testing needs a key window, so
      it reports `false` there whatever is on screen. Assert with `exists` and
@@ -96,7 +96,13 @@ uploads crash logs from `~/Library/Logs/DiagnosticReports` on failure.
      error there passes locally and fails on CI. After touching it, run
      `xcodebuild build-for-testing -scheme CakebrewUITests …` — about two
      seconds, versus ~7 minutes for the suite.
-  4. **A locked screen breaks the suite in ways that look like product bugs.**
+  4. **An alert's buttons are mirrored to the Touch Bar.** `self.app.buttons[@"Yes"]`
+     therefore matches twice, and `firstMatch` can resolve to the mirror, which
+     is not clickable ("cannot be called with Touch Bar elements"). Scope to the
+     sheet: `self.app.sheets.firstMatch.buttons[@"Yes"]`. Note that
+     `waitForExistenceWithTimeout:` tolerates a multi-match query, so an
+     existing assertion passing is not evidence that clicking will work.
+  5. **A locked screen breaks the suite in ways that look like product bugs.**
      XCUITest cannot drive a locked display: clicks resolve to infinite points
      and elements never become interactable. Before believing a UI failure that
      appeared without a related change, check
