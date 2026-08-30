@@ -34,6 +34,13 @@
 					  [BPFormula formulaWithName:@"mockcurl" andVersion:@"8.0.0"] ];
 
 		case kBPListOutdated:
+			// -BPMockEmptyOutdated gives journeys a genuinely empty list to
+			// assert an empty state against; every fixture list is otherwise
+			// populated, and a no-result *search* needs typing, which CI's
+			// never-key window cannot do.
+			if ([[[NSProcessInfo processInfo] arguments] containsObject:@"-BPMockEmptyOutdated"]) {
+				return @[];
+			}
 			return @[ [BPFormula formulaWithName:@"mockgit" version:@"2.39.0" andLatestVersion:@"2.40.0"] ];
 
 		case kBPListLeaves:

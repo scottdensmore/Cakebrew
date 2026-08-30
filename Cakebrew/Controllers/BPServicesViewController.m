@@ -22,6 +22,9 @@
 #import "BPStyle.h"
 #import "BPAppDelegate.h"
 #import "BPBrewError.h"
+#import "BPEmptyState.h"
+#import "BPEmptyStateView.h"
+#import "BPSideBarController.h"
 
 static NSString * const kServiceColumnName   = @"Name";
 static NSString * const kServiceColumnStatus = @"Status";
@@ -116,6 +119,7 @@ static NSString * const kServiceColumnUser   = @"User";
 			self.services = services;
 			[self.tableView reloadData];
 			[self updateButtonStates];
+			[self refreshEmptyState];
 		});
 	});
 }
@@ -201,6 +205,17 @@ static NSString * const kServiceColumnUser   = @"User";
 }
 
 #pragma mark - Button state
+
+/// Services with none installed showed headers over blank space too.
+- (void)refreshEmptyState
+{
+	BPEmptyState *state = nil;
+	if ([BPEmptyState shouldShowForRowCount:(NSInteger)self.services.count loading:NO])
+	{
+		state = [BPEmptyState stateForSidebarRow:FormulaeSideBarItemServices searching:NO];
+	}
+	[BPEmptyStateView presentState:state overView:self.tableView.enclosingScrollView];
+}
 
 - (void)updateButtonStates
 {
