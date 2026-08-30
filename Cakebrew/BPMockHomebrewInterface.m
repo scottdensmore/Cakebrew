@@ -6,6 +6,7 @@
 #import "BPMockHomebrewInterface.h"
 #import "BPFormula.h"
 #import "BPService.h"
+#import "BPCleanupPreview.h"
 
 // Debug only. The mock must live inside the app binary — XCUITest drives the
 // app out of process and cannot inject a class, so +sharedInterface finds it
@@ -119,6 +120,22 @@
 		block(@"MOCK_CLEANUP_OK\nFreed 0 bytes.\n");
 	}
 	return YES;
+}
+
+// A deterministic dry run, so the confirmation sheet has real numbers to show
+// without walking the user's actual cache. -BPMockEmptyCleanup gives journeys
+// the nothing-to-clean branch, which is otherwise unreachable under the mock.
+- (BPCleanupPreview *)previewCleanup
+{
+	if ([[[NSProcessInfo processInfo] arguments] containsObject:@"-BPMockEmptyCleanup"]) {
+		return [BPCleanupPreview previewFromOutput:@""];
+	}
+
+	return [BPCleanupPreview previewFromOutput:
+			@"Would remove: /Users/mock/Library/Caches/Homebrew/mockwget--1.0.0.tar.gz (1.5MB)\n"
+			@"Would remove: /opt/homebrew/Cellar/mockgit/2.38.0 (1,234 files, 45.6MB)\n"
+			@"Would remove: /Users/mock/Library/Caches/Homebrew/mockcurl--7.9.0.tar.gz (2.1MB)\n"
+			@"==> This operation would free approximately 49.2MB of disk space.\n"];
 }
 
 // Serve well-formed `brew info` output so selecting a formula doesn't shell out

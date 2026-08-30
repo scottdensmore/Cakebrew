@@ -23,6 +23,7 @@
 #import "BPFormula.h"
 #import "BPHomebrewManager.h"
 #import "BPHomebrewInterface.h"
+#import "BPCleanupPreview.h"
 #import "BPFormulaOptionsWindowController.h"
 #import "BPInstallationWindowController.h"
 #import "BPUpdateViewController.h"
@@ -67,6 +68,10 @@ NSOpenSavePanelDelegate>
 /// The row the user was on when the search began, so clearing the field puts
 /// them back rather than dumping them on All Formulae.
 @property NSInteger sidebarRowBeforeSearch;
+
+/// A cleanup dry run is in flight. It takes long enough to invite a second
+/// click, and two dry runs would stack two confirmation sheets.
+@property BOOL cleanupPreviewInFlight;
 
 @property (getter=isSearching)			BOOL searching;
 @property (getter=isHomebrewInstalled)	BOOL homebrewInstalled;
@@ -1064,10 +1069,82 @@ NSOpenSavePanelDelegate>
 - (IBAction)runHomebrewCleanup:(id)sender
 {
 	if ([self hasBlockingBackgroundTask]) return;
+	if (self.cleanupPreviewInFlight) return;
 
-	self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationCleanup
-																			 formulae:nil
-																			  options:nil];
+	// Cleanup permanently deletes cached downloads and old installed versions.
+	// It is the app's only destructive one-click action, so ask brew what it
+	// would remove before removing it. The dry run walks the cache and the
+	// Cellar, so it runs off the main thread.
+	self.cleanupPreviewInFlight = YES;
+
+	dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+		BPCleanupPreview *preview = [[BPHomebrewInterface sharedInterface] previewCleanup];
+
+		dispatch_async(dispatch_get_main_queue(), ^{
+			self.cleanupPreviewInFlight = NO;
+			[self presentCleanupConfirmationForPreview:preview];
+		});
+	});
+}
+
+- (void)presentCleanupConfirmationForPreview:(BPCleanupPreview *)preview
+{
+	// A second click while the dry run was in flight, or a background reload
+	// that started meanwhile — the sheet would confirm a cleanup that cannot run.
+	if ([self hasBlockingBackgroundTask]) return;
+
+	NSAlert *alert = [[NSAlert alloc] init];
+
+	if (preview.isEmpty)
+	{
+		[alert setMessageText:NSLocalizedString(@"Cleanup_Nothing_Title", nil)];
+		[alert setInformativeText:NSLocalizedString(@"Cleanup_Nothing_Body", nil)];
+		[alert addButtonWithTitle:NSLocalizedString(@"Generic_OK", nil)];
+
+		[alert beginSheetModalForWindow:_appDelegate.window completionHandler:nil];
+		return;
+	}
+
+	[alert setMessageText:NSLocalizedString(@"Generic_Attention", nil)];
+	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Yes", nil)];
+	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Cancel", nil)];
+	[alert setInformativeText:[self cleanupConfirmationBodyForPreview:preview]];
+
+	// Sheet, not runModal: keeps the app responsive and the flow UI-testable.
+	// Attached to the app's window like every other sheet here.
+	[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
+		if (returnCode != NSAlertFirstButtonReturn) return;
+
+		self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationCleanup
+																				 formulae:nil
+																				  options:nil];
+	}];
+}
+
+- (NSString *)cleanupConfirmationBodyForPreview:(BPCleanupPreview *)preview
+{
+	NSString *items = preview.itemCount == 1 ?
+		NSLocalizedString(@"Cleanup_Item_Count_One", nil) :
+		[NSString localizedStringWithFormat:NSLocalizedString(@"Cleanup_Item_Count_Other", nil),
+		 (unsigned long)preview.itemCount];
+
+	if (preview.reclaimableBytes == 0)
+	{
+		// brew found things to remove but could not size them. Say only what is
+		// known rather than printing "0 bytes", which reads as "nothing to do".
+		return [NSString localizedStringWithFormat:
+				NSLocalizedString(@"Confirmation_Cleanup_No_Size", nil), items];
+	}
+
+	// Binary style, because brew's own "MB" is 1024-based — a decimal formatter
+	// here would print a smaller-looking number than brew just reported.
+	NSByteCountFormatter *formatter = [[NSByteCountFormatter alloc] init];
+	formatter.countStyle = NSByteCountFormatterCountStyleBinary;
+
+	NSString *size = [formatter stringFromByteCount:(long long)preview.reclaimableBytes];
+
+	return [NSString localizedStringWithFormat:
+			NSLocalizedString(@"Confirmation_Cleanup", nil), items, size];
 }
 
 - (IBAction)runHomebrewExport:(id)sender
