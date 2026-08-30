@@ -183,6 +183,19 @@ typedef NS_ENUM(NSInteger, BPListMode) {
 - (BOOL)uninstallCask:(NSString*)cask withReturnBlock:(void (^)(NSString*))block;
 
 /**
+ *  Uninstalls a cask, optionally running its zap stanza.
+ *
+ *  A plain uninstall removes the app bundle and deliberately leaves
+ *  preferences, application support directories, launch agents and caches
+ *  behind; `--zap` is Homebrew's answer to that.
+ */
+- (BOOL)uninstallCask:(NSString*)cask zap:(BOOL)zap withReturnBlock:(void (^)(NSString*))block;
+
+/// The argv for uninstalling a cask. Blank tokens are dropped, for the same
+/// reason as +argumentsForUpgradingFormulae:.
++ (NSArray<NSString *> *)argumentsForUninstallingCask:(NSString *)cask zap:(BOOL)zap;
+
+/**
  *  Taps a repo.
  *
  *  @param repository The repo to be tapped.

@@ -433,6 +433,47 @@
 				  @"an unusable stored row should fall back to the Installed list");
 }
 
+// Journey: uninstalling a cask offers to remove its support files too, and
+// uninstalling a formula does not — formulae have no zap stanza.
+- (void)testZapCheckboxAppearsForCasksOnly
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+	XCUIElement *sidebar = [self sidebar];
+
+	// A cask: the box should be offered.
+	[[[sidebar.staticTexts matchingIdentifier:@"Installed"] elementBoundByIndex:1] click];
+	XCUIElement *cask = [self formulaCellWithName:@"mockchrome"];
+	XCTAssertTrue([cask waitForExistenceWithTimeout:30.0], @"mockchrome should be an installed cask");
+	[cask click];
+
+	XCUIElement *uninstall = self.app.buttons[@"Uninstall Formula"];
+	XCTAssertTrue([uninstall waitForExistenceWithTimeout:15.0]);
+	[uninstall click];
+
+	NSPredicate *zap = [NSPredicate predicateWithFormat:@"title CONTAINS %@", @"zap"];
+	XCUIElement *zapBox = [[self.app.checkBoxes matchingPredicate:zap] firstMatch];
+	BOOL offered = [zapBox waitForExistenceWithTimeout:15.0];
+	if (!offered) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(offered, @"a cask uninstall should offer to remove support files");
+	[self dismissConfirmationSheet];
+
+	// A formula: it should not be.
+	[[[sidebar.staticTexts matchingIdentifier:@"Installed"] elementBoundByIndex:0] click];
+	XCUIElement *formula = [self formulaCellWithName:@"mockwget"];
+	XCTAssertTrue([formula waitForExistenceWithTimeout:30.0]);
+	[formula click];
+
+	XCUIElement *uninstallFormula = self.app.buttons[@"Uninstall Formula"];
+	XCTAssertTrue([uninstallFormula waitForExistenceWithTimeout:15.0]);
+	[uninstallFormula click];
+	XCTAssertTrue([self.app.buttons[@"Yes"] waitForExistenceWithTimeout:15.0], @"the confirmation should appear");
+	XCTAssertFalse([[self.app.checkBoxes matchingPredicate:zap] firstMatch].exists,
+				   @"formulae have no zap stanza, so the box must not be offered");
+	[self dismissConfirmationSheet];
+}
+
 // Journey: View ▸ Show/Hide Sidebar collapses the sidebar and restores it.
 // There was no way to hide the sidebar at all before — no menu item, no
 // shortcut, no toolbar button — despite the window using a collapsible

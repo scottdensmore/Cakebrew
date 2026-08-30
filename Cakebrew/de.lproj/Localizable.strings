@@ -291,3 +291,4 @@
 "Panel_Import_Button" = "Import";
 "Formula_All_Dependents_Title" = "All Dependents of Formula: %@";
 "Formula_Installed_Dependents_Title" = "Installed Dependents of Formula: %@";
+"Confirmation_Uninstall_Cask_Zap" = "Also remove preferences and support files (zap)";

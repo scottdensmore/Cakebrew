@@ -26,6 +26,13 @@
 
 - (void)executeInstallation;
 
+/// As above, but asks Homebrew to run a cask's zap stanza as well. Ignored for
+/// formulae, which have no such stanza.
++ (BPInstallationWindowController *)runWithOperation:(BPWindowOperation)windowOperation
+                                            formulae:(NSArray *)formulae
+                                             options:(NSArray *)options
+                                                 zap:(BOOL)zap;
+
 + (BPInstallationWindowController *)runWithOperation:(BPWindowOperation)windowOperation
                                             formulae:(NSArray *)formulae
                                              options:(NSArray *)options;

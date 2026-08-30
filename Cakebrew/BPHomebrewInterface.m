@@ -586,9 +586,31 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 	return val;
 }
 
++ (NSArray<NSString *> *)argumentsForUninstallingCask:(NSString *)cask zap:(BOOL)zap
+{
+	NSMutableArray<NSString *> *arguments = [@[@"uninstall", @"--cask"] mutableCopy];
+	if (zap)
+	{
+		[arguments addObject:@"--zap"];
+	}
+
+	NSString *token = [cask stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	if (token.length > 0)
+	{
+		[arguments addObject:token];
+	}
+	return arguments;
+}
+
 - (BOOL)uninstallCask:(NSString*)cask withReturnBlock:(void (^)(NSString*output))block
 {
-	BOOL val = [self performBrewCommandWithArguments:@[@"uninstall", @"--cask", cask] dataReturnBlock:block];
+	return [self uninstallCask:cask zap:NO withReturnBlock:block];
+}
+
+- (BOOL)uninstallCask:(NSString*)cask zap:(BOOL)zap withReturnBlock:(void (^)(NSString*output))block
+{
+	BOOL val = [self performBrewCommandWithArguments:[BPHomebrewInterface argumentsForUninstallingCask:cask zap:zap]
+									 dataReturnBlock:block];
 	[self sendDelegateFormulaeUpdatedCallForCommand:@"uninstall"];
 	return val;
 }

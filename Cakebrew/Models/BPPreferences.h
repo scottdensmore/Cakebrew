@@ -53,6 +53,11 @@ extern NSString *const kBPGreedyCaskUpgradesKey;
 + (BOOL)sortAscending;
 + (void)setSortAscending:(BOOL)ascending;
 
+/// Whether the cask uninstall sheet's "also remove preferences and support
+/// files" box is ticked. Off by default — zap deletes more than the app.
++ (BOOL)zapCasksOnUninstall;
++ (void)setZapCasksOnUninstall:(BOOL)zap;
+
 + (BOOL)greedyCaskUpgrades;
 + (void)setGreedyCaskUpgrades:(BOOL)greedy;
 

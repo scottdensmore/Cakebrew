@@ -145,6 +145,11 @@
 
 - (BOOL)uninstallCask:(NSString *)cask withReturnBlock:(void (^)(NSString *))block
 {
+	return [self uninstallCask:cask zap:NO withReturnBlock:block];
+}
+
+- (BOOL)uninstallCask:(NSString *)cask zap:(BOOL)zap withReturnBlock:(void (^)(NSString *))block
+{
 	return YES;
 }
 
