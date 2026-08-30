@@ -94,6 +94,55 @@ static const NSInteger kBPCacheVersion = 2;
 	return generation == current;
 }
 
+- (NSUInteger)currentReloadGeneration
+{
+	@synchronized (self)
+	{
+		return _reloadGeneration;
+	}
+}
+
+- (void)publishList:(NSArray *)list forMode:(BPListMode)mode generation:(NSUInteger)generation
+{
+	if (![BPHomebrewManager shouldPublishReloadGeneration:generation current:self.currentReloadGeneration])
+	{
+		// A superseded reload still has calls in flight. Publishing all at once
+		// needed one check at the end; publishing per list needs one per list.
+		return;
+	}
+
+	if (![NSThread isMainThread])
+	{
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[self publishList:list forMode:mode generation:generation];
+		});
+		return;
+	}
+
+	switch (mode)
+	{
+		case kBPListInstalled:      self.installedFormulae = list;      break;
+		case kBPListLeaves:         self.leavesFormulae = list;         break;
+		case kBPListOutdated:       self.outdatedFormulae = list;       break;
+		case kBPListRepositories:   self.repositoriesFormulae = list;   break;
+		case kBPListPinned:         self.pinnedFormulae = list;         break;
+		case kBPListInstalledCasks: self.installedCasks = list;         break;
+		case kBPListOutdatedCasks:  self.outdatedCasks = list;          break;
+		case kBPListAll:            self.allFormulae = list;            break;
+		case kBPListAllCasks:       self.allCasks = list;               break;
+
+		case kBPListSearch:
+			// Search results have their own delegate callback and never come
+			// from a reload.
+			return;
+	}
+
+	if ([self.delegate respondsToSelector:@selector(homebrewManager:didPublishListForMode:)])
+	{
+		[self.delegate homebrewManager:self didPublishListForMode:mode];
+	}
+}
+
 - (void)reloadFromInterfaceRebuildingCache:(BOOL)shouldRebuildCache;
 {
 	NSUInteger generation;
@@ -126,34 +175,51 @@ static const NSInteger kBPCacheVersion = 2;
 		dispatch_queue_t fanOut = dispatch_get_global_queue(QOS_CLASS_UTILITY, 0);
 		dispatch_group_t group = dispatch_group_create();
 
-		__block NSArray *installedFormulae, *leavesFormulae, *outdatedFormulae, *repositoriesFormulae;
-		__block NSArray *pinnedFormulae, *installedCasks, *outdatedCasks, *services;
-		__block NSArray *allFormulae = nil;
-		__block NSArray *allCasks = nil;
+		__block NSArray *services = nil;
+		__block BOOL didFetchCatalogs = NO;
 
-		#define BP_FETCH(VAR, EXPR) \
-			dispatch_group_async(group, fanOut, ^{ VAR = (EXPR); });
+		// Each list publishes as it returns instead of waiting for the batch.
+		// The installed list comes back in well under a second; it used to sit
+		// behind a cold cask catalog, which can take 80.
+		#define BP_FETCH_LIST(MODE) \
+			dispatch_group_async(group, fanOut, ^{ \
+				[self publishList:[interface listMode:MODE] forMode:MODE generation:generation]; \
+			});
 
-		BP_FETCH(installedFormulae,    [interface listMode:kBPListInstalled])
-		BP_FETCH(leavesFormulae,       [interface listMode:kBPListLeaves])
-		BP_FETCH(outdatedFormulae,     [interface listMode:kBPListOutdated])
-		BP_FETCH(repositoriesFormulae, [interface listMode:kBPListRepositories])
-		BP_FETCH(pinnedFormulae,       [interface listMode:kBPListPinned])
-		BP_FETCH(installedCasks,       [interface listMode:kBPListInstalledCasks])
-		BP_FETCH(outdatedCasks,        [interface listMode:kBPListOutdatedCasks])
-		BP_FETCH(services,             [interface listServices])
+		// The installed list is what the user is waiting to see, so it goes out
+		// at a higher QoS than the rest. Eight login shells and eight Ruby
+		// startups contending stretched it from ~0.9 s to over three; running
+		// it ahead of the others recovers most of that without serialising the
+		// batch, which is what pushed the *total* reload a second longer.
+		dispatch_group_async(group, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+			[self publishList:[interface listMode:kBPListInstalled]
+					  forMode:kBPListInstalled
+				   generation:generation];
+		});
+
+		BP_FETCH_LIST(kBPListLeaves)
+		BP_FETCH_LIST(kBPListOutdated)
+		BP_FETCH_LIST(kBPListRepositories)
+		BP_FETCH_LIST(kBPListPinned)
+		BP_FETCH_LIST(kBPListInstalledCasks)
+		BP_FETCH_LIST(kBPListOutdatedCasks)
+
+		// Services has no list mode and no sidebar badge, so it stays with the
+		// final publish.
+		dispatch_group_async(group, fanOut, ^{ services = [interface listServices]; });
 
 		dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
 
 		// The full catalogs share a 24h disk cache and refresh together. They
 		// are fetched after the cheap lists so a cache hit skips them entirely.
 		if (![self loadAllFormulaeCaches] || previousCountOfAllFormulae <= 100 || self.allCasks == nil || shouldRebuildCache) {
-			BP_FETCH(allFormulae, [interface listMode:kBPListAll])
-			BP_FETCH(allCasks,    [interface listMode:kBPListAllCasks])
+			didFetchCatalogs = YES;
+			BP_FETCH_LIST(kBPListAll)
+			BP_FETCH_LIST(kBPListAllCasks)
 			dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
 		}
 
-		#undef BP_FETCH
+		#undef BP_FETCH_LIST
 
 		dispatch_async(dispatch_get_main_queue(), ^{
 			BOOL rerun = NO;
@@ -168,13 +234,12 @@ static const NSInteger kBPCacheVersion = 2;
 				self->_pendingRebuildCache = NO;
 			}
 
-			// Only the newest pipeline publishes.
+			// Only the newest pipeline publishes. Every list has already gone
+			// out through -publishList:forMode:generation:, which makes the
+			// same check per list; this covers what is left.
 			if ([BPHomebrewManager shouldPublishReloadGeneration:generation current:self->_reloadGeneration])
 			{
-				if (allFormulae != nil) {
-					[self setAllFormulae:allFormulae];
-					[self setAllCasks:allCasks];
-
+				if (didFetchCatalogs) {
 					// Archiving ~16k formulae was happening here, on the main
 					// queue, while the first frame was being drawn.
 					dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
@@ -182,13 +247,6 @@ static const NSInteger kBPCacheVersion = 2;
 					});
 				}
 
-				[self setInstalledFormulae:installedFormulae];
-				[self setLeavesFormulae:leavesFormulae];
-				[self setOutdatedFormulae:outdatedFormulae];
-				[self setRepositoriesFormulae:repositoriesFormulae];
-				[self setPinnedFormulae:pinnedFormulae];
-				[self setInstalledCasks:installedCasks];
-				[self setOutdatedCasks:outdatedCasks];
 				[self setServices:services];
 
 				[self.delegate homebrewManagerFinishedUpdating:self];

@@ -22,6 +22,7 @@
 #import <Foundation/Foundation.h>
 #import "BPFormula.h"
 #import "BPService.h"
+#import "BPHomebrewInterface.h"
 
 @class BPHomebrewManager;
 
@@ -34,12 +35,29 @@ typedef NS_ENUM(NSInteger, BPFormulaStatus) {
 @protocol BPHomebrewManagerDelegate <NSObject>
 
 - (void)homebrewManagerFinishedUpdating:(BPHomebrewManager*)manager;
+
+@optional
+/**
+ *  One list of a reload has landed and its property is set.
+ *
+ *  Fired as each brew call returns rather than once at the end, so the fast
+ *  lists are on screen while the cask catalog is still fetching. Sent on the
+ *  main queue. Optional: a delegate that only wants the final state can ignore
+ *  it.
+ */
+- (void)homebrewManager:(BPHomebrewManager *)manager didPublishListForMode:(BPListMode)mode;
+
+@required
 - (void)homebrewManager:(BPHomebrewManager *)manager didUpdateSearchResults:(NSArray *)searchResults;
 - (void)homebrewManager:(BPHomebrewManager *)manager shouldDisplayNoBrewMessage:(BOOL)yesOrNo;
 
 @end
 
 @interface BPHomebrewManager : NSObject
+
+/// The reload currently allowed to publish. A reload carries the generation it
+/// started with; anything older has been superseded and must stay silent.
+@property (readonly) NSUInteger currentReloadGeneration;
 
 @property (strong) NSArray<BPFormula*> *installedFormulae;
 @property (strong) NSArray<BPFormula*> *outdatedFormulae;
@@ -59,6 +77,15 @@ typedef NS_ENUM(NSInteger, BPFormulaStatus) {
 + (instancetype)alloc __attribute__((unavailable("alloc not available, call sharedManager instead")));
 - (instancetype)init __attribute__((unavailable("init not available, call sharedManager instead")));
 + (instancetype)new __attribute__((unavailable("new not available, call sharedManager instead")));
+
+/**
+ *  Sets the property for one list and tells the delegate, on the main queue.
+ *
+ *  Does nothing if `generation` has been superseded: incremental publishing
+ *  means a cancelled reload can still have brew calls in flight, and its stale
+ *  lists must not overwrite a newer reload's.
+ */
+- (void)publishList:(NSArray *)list forMode:(BPListMode)mode generation:(NSUInteger)generation;
 
 - (void)reloadFromInterfaceRebuildingCache:(BOOL)shouldRebuildCache;
 
