@@ -85,6 +85,7 @@
 		2B599EC8322105ACA0893956 /* BPLocalizedStringsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 828B14661B644D554E964BFC /* BPLocalizedStringsTests.m */; };
 		6147CF053208BD77693EA689 /* BPMockFidelityTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 1DB1AF02EFFE124B9EC54578 /* BPMockFidelityTests.m */; };
 		C8B84A9EB0235B5FC6DC82C9 /* BPBrewErrorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 924FA3A9F0675252E8BF2440 /* BPBrewErrorTests.m */; };
+		5EC0381C3CE1B6F0EC072796 /* BPTaskCancelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7250D407F3415D9199117EE2 /* BPTaskCancelTests.m */; };
 		55BE3020BDDC9FCA19C1ECBC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C155F549AE6671B51A3FCAD /* Cocoa.framework */; };
 		5F38898450E03D2D56291D29 /* BPHelperSecurity.m in Sources */ = {isa = PBXBuildFile; fileRef = 1227A6AF7A6E1F24A913015B /* BPHelperSecurity.m */; };
 		627F454983A4C2C93584B748 /* BPHelperOutputRelayTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 88BBB2337F47C685C807D566 /* BPHelperOutputRelayTests.m */; };
@@ -95,7 +96,9 @@
 		8212A9710CD0AE77282CA213 /* BPHelperCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = 9D8EA27AF0F8A9B5A44AC3C1 /* BPHelperCommand.m */; };
 		840CE68EEE3622E970C28526 /* BPBackgroundUpdaterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 18EB9DD2D58391DD9AEC5AE5 /* BPBackgroundUpdaterTests.m */; };
 		90152CA4F24A432E30B1CA49 /* BPHelperOutputRelay.m in Sources */ = {isa = PBXBuildFile; fileRef = 2C5C049629179C0BA8601D4B /* BPHelperOutputRelay.m */; };
+		8650DDA4AC9B42E193DC1725 /* BPProcessTree.m in Sources */ = {isa = PBXBuildFile; fileRef = 87165C9D1BFDBFE992FFE092 /* BPProcessTree.m */; };
 		BD463DE076580891B6516268 /* BPHelperOutputRelay.m in Sources */ = {isa = PBXBuildFile; fileRef = 2C5C049629179C0BA8601D4B /* BPHelperOutputRelay.m */; };
+		23E9996EE1B9366B38DAFD70 /* BPProcessTree.m in Sources */ = {isa = PBXBuildFile; fileRef = 87165C9D1BFDBFE992FFE092 /* BPProcessTree.m */; };
 		9D8CB0FDFCD1CC2E9148390C /* BPPreferencesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A8052362C08CE3FF3945ABAD /* BPPreferencesTests.m */; };
 		9FC400563CE4E1C7E5DE0AFB /* BPHelperCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = 9D8EA27AF0F8A9B5A44AC3C1 /* BPHelperCommand.m */; };
 		A13730A6BEFE5C0FB6AE5042 /* CakebrewHelper in Embed Helper */ = {isa = PBXBuildFile; fileRef = 9E4730EAEC1D0DE6ACD3DCE4 /* CakebrewHelper */; };
@@ -150,6 +153,7 @@
 		DF66A03B194078BCC5A96FCB /* BPHelperClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 49ADB54599429778C94517D8 /* BPHelperClient.m */; };
 		F686E7E93EA64727C5BD476A /* BPServiceTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 65FAFC2DA348DF99A7B6D768 /* BPServiceTests.m */; };
 		F98476A9F699040AA891FFC0 /* BPHelperOutputRelay.m in Sources */ = {isa = PBXBuildFile; fileRef = 2C5C049629179C0BA8601D4B /* BPHelperOutputRelay.m */; };
+		E3D4044AEF034F4ACEB0667F /* BPProcessTree.m in Sources */ = {isa = PBXBuildFile; fileRef = 87165C9D1BFDBFE992FFE092 /* BPProcessTree.m */; };
 		FC6F1F065021F6E3D4AAB378 /* BPMockHomebrewInterface.m in Sources */ = {isa = PBXBuildFile; fileRef = B15AF968007B8829A04A4ECC /* BPMockHomebrewInterface.m */; };
 		00D4E0159FF9B3D0D368E0AD /* BPMockHomebrewInterface.m in Sources */ = {isa = PBXBuildFile; fileRef = B15AF968007B8829A04A4ECC /* BPMockHomebrewInterface.m */; };
 /* End PBXBuildFile section */
@@ -341,6 +345,7 @@ B6830022477FCFE425D036B9 /* BPBrewError.h */ = {isa = PBXFileReference; includeI
 		1FE4FE75148E4D43008EDE8B /* BPHomebrewInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BPHomebrewInterface.h; sourceTree = "<group>"; };
 		1FE4FE76148E4D43008EDE8B /* BPHomebrewInterface.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPHomebrewInterface.m; sourceTree = "<group>"; };
 		2C5C049629179C0BA8601D4B /* BPHelperOutputRelay.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPHelperOutputRelay.m; sourceTree = "<group>"; };
+87165C9D1BFDBFE992FFE092 /* BPProcessTree.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPProcessTree.m; sourceTree = "<group>"; };
 		3325CFB971454761839C850E /* BPMockHomebrewInterface.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPMockHomebrewInterface.h; sourceTree = "<group>"; };
 		37C4CCE578FE8963CDACE841 /* CakebrewUITests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = CakebrewUITests.m; sourceTree = "<group>"; };
 		46BD61BF82D5E8C0C487BD7D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -373,10 +378,12 @@ B6830022477FCFE425D036B9 /* BPBrewError.h */ = {isa = PBXFileReference; includeI
 		828B14661B644D554E964BFC /* BPLocalizedStringsTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPLocalizedStringsTests.m; sourceTree = "<group>"; };
 		1DB1AF02EFFE124B9EC54578 /* BPMockFidelityTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPMockFidelityTests.m; sourceTree = "<group>"; };
 		924FA3A9F0675252E8BF2440 /* BPBrewErrorTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPBrewErrorTests.m; sourceTree = "<group>"; };
+		7250D407F3415D9199117EE2 /* BPTaskCancelTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPTaskCancelTests.m; sourceTree = "<group>"; };
 		A8052362C08CE3FF3945ABAD /* BPPreferencesTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPPreferencesTests.m; sourceTree = "<group>"; };
 		AA67F6479F85E50C83706E3E /* BPService.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPService.m; path = Models/BPService.m; sourceTree = "<group>"; };
 6F14AB39D9A4FA816D3A932C /* BPBrewError.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPBrewError.m; path = Models/BPBrewError.m; sourceTree = "<group>"; };
 		B040E2F0936D991B4511CE23 /* BPHelperOutputRelay.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPHelperOutputRelay.h; sourceTree = "<group>"; };
+0ED88915D7AF8D09BE78E143 /* BPProcessTree.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPProcessTree.h; sourceTree = "<group>"; };
 		B15AF968007B8829A04A4ECC /* BPMockHomebrewInterface.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPMockHomebrewInterface.m; sourceTree = "<group>"; };
 		B1F0C40DBB035A181E3860BE /* BPHelperCommandTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPHelperCommandTests.m; sourceTree = "<group>"; };
 		C54D3AB48EC548D5D013F394 /* main.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -488,7 +495,9 @@ B6830022477FCFE425D036B9 /* BPBrewError.h */ = {isa = PBXFileReference; includeI
 				1859443E5EF1534381AEF7D5 /* BPHelperProtocol.h */,
 				C54D3AB48EC548D5D013F394 /* main.m */,
 				B040E2F0936D991B4511CE23 /* BPHelperOutputRelay.h */,
+				0ED88915D7AF8D09BE78E143 /* BPProcessTree.h */,
 				2C5C049629179C0BA8601D4B /* BPHelperOutputRelay.m */,
+				87165C9D1BFDBFE992FFE092 /* BPProcessTree.m */,
 				78768EFD53946A6C45F584F8 /* BPHelperCommand.h */,
 				9D8EA27AF0F8A9B5A44AC3C1 /* BPHelperCommand.m */,
 				C9C1BB036D8B8B3CF51D285B /* BPHelperClient.h */,
@@ -786,6 +795,7 @@ B6830022477FCFE425D036B9 /* BPBrewError.h */ = {isa = PBXFileReference; includeI
 				828B14661B644D554E964BFC /* BPLocalizedStringsTests.m */,
 				1DB1AF02EFFE124B9EC54578 /* BPMockFidelityTests.m */,
 				924FA3A9F0675252E8BF2440 /* BPBrewErrorTests.m */,
+				7250D407F3415D9199117EE2 /* BPTaskCancelTests.m */,
 				8F2D53C524FAE8B655FD3778 /* BPHelperRegistrationTests.m */,
 			);
 			path = CakebrewTests;
@@ -1024,6 +1034,7 @@ B6830022477FCFE425D036B9 /* BPBrewError.h */ = {isa = PBXFileReference; includeI
 			buildActionMask = 2147483647;
 			files = (
 				BD463DE076580891B6516268 /* BPHelperOutputRelay.m in Sources */,
+				23E9996EE1B9366B38DAFD70 /* BPProcessTree.m in Sources */,
 				15BBA18E1BD031C9002C0127 /* BPBackgroundView.m in Sources */,
 				15D28A121AE1BD27005C8A3E /* BPTimedDispatch.m in Sources */,
 				150AEC4D1B3F999A00163767 /* BPFormulaOptionsWindowController.m in Sources */,
@@ -1106,6 +1117,7 @@ B6830022477FCFE425D036B9 /* BPBrewError.h */ = {isa = PBXFileReference; includeI
 				0F9F85DA2325D35621ECBEAE /* BPHelperSecurity.m in Sources */,
 				043485DC0F857D4D67DDA141 /* BPHelperSecurityTests.m in Sources */,
 				90152CA4F24A432E30B1CA49 /* BPHelperOutputRelay.m in Sources */,
+				8650DDA4AC9B42E193DC1725 /* BPProcessTree.m in Sources */,
 				627F454983A4C2C93584B748 /* BPHelperOutputRelayTests.m in Sources */,
 				B4653E2A1E484D0702BA394B /* BPHelperCommand.m in Sources */,
 				DF66A03B194078BCC5A96FCB /* BPHelperClient.m in Sources */,
@@ -1125,6 +1137,7 @@ B6830022477FCFE425D036B9 /* BPBrewError.h */ = {isa = PBXFileReference; includeI
 				2B599EC8322105ACA0893956 /* BPLocalizedStringsTests.m in Sources */,
 				6147CF053208BD77693EA689 /* BPMockFidelityTests.m in Sources */,
 				C8B84A9EB0235B5FC6DC82C9 /* BPBrewErrorTests.m in Sources */,
+				5EC0381C3CE1B6F0EC072796 /* BPTaskCancelTests.m in Sources */,
 				00D4E0159FF9B3D0D368E0AD /* BPMockHomebrewInterface.m in Sources */,
 				8DEE82E248857750CD9BDC4D /* BPSideBarController.m in Sources */,
 				59246886F867B7F80EBA72A9 /* BPMainWindowController.m in Sources */,
@@ -1142,6 +1155,7 @@ B6830022477FCFE425D036B9 /* BPBrewError.h */ = {isa = PBXFileReference; includeI
 				7669C2925B60205BE9933E88 /* main.m in Sources */,
 				0105688F4773C69A6295C387 /* BPHelperSecurity.m in Sources */,
 				F98476A9F699040AA891FFC0 /* BPHelperOutputRelay.m in Sources */,
+				E3D4044AEF034F4ACEB0667F /* BPProcessTree.m in Sources */,
 				9FC400563CE4E1C7E5DE0AFB /* BPHelperCommand.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

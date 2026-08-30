@@ -26,12 +26,18 @@
 #import "BPHelperProtocol.h"
 #import "BPHelperSecurity.h"
 #import "BPHelperOutputRelay.h"
+#import "BPProcessTree.h"
 #import "BPHelperCommand.h"
 
 @interface BPHelperService : NSObject <NSXPCListenerDelegate, BPHelperProtocol>
 @end
 
 @implementation BPHelperService
+{
+	// The command currently running for this connection; one at a time, since
+	// the app serialises operations behind its own guard.
+	NSTask *_runningTask;
+}
 
 #pragma mark - NSXPCListenerDelegate
 
@@ -95,6 +101,8 @@
 		[relay appendData:[handle availableData]];
 	};
 
+	@synchronized (self) { _runningTask = task; }
+
 	@try
 	{
 		[task launch];
@@ -113,7 +121,26 @@
 	readHandle.readabilityHandler = nil;
 	[relay appendData:[readHandle readDataToEndOfFile]];
 
+	@synchronized (self) { _runningTask = nil; }
+
 	reply(task.terminationStatus, relay.accumulatedOutput);
+}
+
+- (void)cancelBrewWithReply:(void (^)(void))reply
+{
+	NSTask *task;
+	@synchronized (self) { task = _runningTask; }
+
+	if (task.isRunning)
+	{
+		// Collect before terminating: killing the shell reparents brew's
+		// children to launchd, out of reach of the walk.
+		NSArray<NSNumber *> *descendants = [BPProcessTree descendantsOfProcess:task.processIdentifier];
+		[task terminate];
+		[BPProcessTree terminateProcesses:descendants];
+	}
+
+	reply();
 }
 
 - (void)helperVersionWithReply:(void (^)(NSString *version))reply

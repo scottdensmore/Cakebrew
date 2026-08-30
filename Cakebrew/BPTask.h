@@ -38,6 +38,19 @@ extern NSString * _Nonnull const kDidEndBackgroundActivityNotification;
 - (void)cleanup;
 
 /**
+ *  Ends the run: terminates the task and the processes it spawned.
+ *
+ *  Killing the NSTask alone is not enough. The task is a login shell running
+ *  brew, and brew spawns its own children — curl, git, compilers — so
+ *  terminating only the shell leaves a "cancelled" download still running.
+ */
+- (void)cancel;
+
+/// Whether -cancel ended this run, so callers can tell cancellation from a
+/// brew failure. Both are non-zero exits.
+@property (readonly) BOOL wasCancelled;
+
+/**
  *  Called with each chunk of output as it arrives, in order, on a private
  *  serial queue. Every chunk has been delivered by the time -execute returns.
  */

@@ -9,6 +9,7 @@
         <customObject id="-2" userLabel="File's Owner" customClass="BPInstallationWindowController">
             <connections>
                 <outlet property="formulaNameLabel" destination="357-7Y-dv7" id="3sl-x0-Xya"/>
+                <outlet property="cancelButton" destination="cbk-Cnl-btn" id="cbk-Cnl-out"/>
                 <outlet property="okButton" destination="peQ-d6-b4t" id="wUc-PY-t6P"/>
                 <outlet property="progressIndicator" destination="Z86-NA-teS" id="Qos-6v-XTN"/>
                 <outlet property="recordTextView" destination="coD-Fc-WwQ" id="dxv-TH-J7q"/>
@@ -107,6 +108,19 @@
                                     <customView horizontalHuggingPriority="249" verticalHuggingPriority="249" horizontalCompressionResistancePriority="249" verticalCompressionResistancePriority="249" translatesAutoresizingMaskIntoConstraints="NO" id="NIX-yt-uXs">
                                         <rect key="frame" x="24" y="0.0" width="258" height="20"/>
                                     </customView>
+                                    <button horizontalHuggingPriority="252" verticalHuggingPriority="750" horizontalCompressionResistancePriority="751" translatesAutoresizingMaskIntoConstraints="NO" id="cbk-Cnl-btn">
+                                        <rect key="frame" x="199" y="-7" width="80" height="32"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="56" id="cbk-Cnl-wid"/>
+                                        </constraints>
+                                        <buttonCell key="cell" type="push" title="Cancel" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="cbk-Cnl-cel">
+                                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                            <font key="font" metaFont="system"/>
+                                        </buttonCell>
+                                        <connections>
+                                            <action selector="cancelAction:" target="-2" id="cbk-Cnl-act"/>
+                                        </connections>
+                                    </button>
                                     <button horizontalHuggingPriority="252" verticalHuggingPriority="750" horizontalCompressionResistancePriority="751" translatesAutoresizingMaskIntoConstraints="NO" id="peQ-d6-b4t">
                                         <rect key="frame" x="283" y="-7" width="70" height="32"/>
                                         <constraints>

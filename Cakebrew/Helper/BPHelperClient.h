@@ -32,6 +32,9 @@
  *  @param block receives output chunks as they stream in; may be nil.
  *  @return YES when brew exited 0.
  */
+/// Ends the command currently running over this client, if any.
+- (void)cancelCurrentCommand;
+
 - (BOOL)runBrewWithArguments:(NSArray<NSString *> *)arguments
 				outputMarker:(NSString *)marker
 				 outputBlock:(void (^)(NSString *output))block;

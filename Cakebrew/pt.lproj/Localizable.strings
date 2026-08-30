@@ -297,3 +297,4 @@
 "Homebrew_Task_Failed" = "Homebrew task failed";
 "Services_Operation_Failed_Title" = "Could not change the “%@” service";
 "Error_Brew_Failed_No_Output" = "Homebrew exited with status %d and produced no output.";
+"Installation_Window_Cancelled" = "Cancelled.";

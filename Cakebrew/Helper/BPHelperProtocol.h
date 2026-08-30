@@ -55,6 +55,15 @@
 				outputMarker:(NSString *)marker
 					   reply:(void (^)(int status, NSString *output))reply;
 
+/**
+ *  Ends the command this connection is running, and the processes it spawned.
+ *
+ *  One connection per command, so this needs no identifier: the connection is
+ *  the identity. Without it a helper-routed operation would be uncancellable
+ *  even though the direct transport is not.
+ */
+- (void)cancelBrewWithReply:(void (^)(void))reply;
+
 /// Helper build version, so the app can detect app/helper skew after an update.
 - (void)helperVersionWithReply:(void (^)(NSString *version))reply;
 

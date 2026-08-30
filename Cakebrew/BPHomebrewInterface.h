@@ -87,6 +87,17 @@ typedef NS_ENUM(NSInteger, BPListMode) {
 - (void)cleanup;
 
 /**
+ *  Ends the operation the user is watching, over whichever transport is in use.
+ *
+ *  Only foreground operations are cancellable; list refreshes are not tracked,
+ *  so cancelling an install cannot also abort a reload running beside it.
+ */
+- (void)cancelCurrentOperation;
+
+/// Whether there is an operation to cancel, for enabling the button.
+@property (readonly) BOOL hasCancellableOperation;
+
+/**
  *  Update Homebrew.
  *
  *  @param block Data callback block. This block will be called with new data to be diplayed while the process runs.
