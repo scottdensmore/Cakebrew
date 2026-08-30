@@ -474,6 +474,42 @@
 	[self dismissConfirmationSheet];
 }
 
+// Journey: confirming an install actually runs it against the mock.
+//
+// Every other mutating journey stops at Cancel, which is why the missing mock
+// overrides went unnoticed — the operations they guarded were never reached.
+// This one goes through, so it fails if the mock ever stops covering install.
+- (void)testConfirmingAnInstallRunsAgainstTheMock
+{
+	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+	XCUIElement *sidebar = [self sidebar];
+
+	[sidebar.staticTexts[@"All Formulae"] click];
+	XCUIElement *htop = [self formulaCellWithName:@"mockhtop"];
+	XCTAssertTrue([htop waitForExistenceWithTimeout:30.0], @"mockhtop should be listed under All Formulae");
+	[htop click];
+
+	XCUIElement *installButton = self.app.buttons[@"Install Formula"];
+	XCTAssertTrue([installButton waitForExistenceWithTimeout:15.0]);
+	[installButton click];
+
+	// Scoped to the sheet, not the app. An alert's buttons are mirrored to the
+	// Touch Bar, so an app-wide query matches twice — and firstMatch can pick
+	// the Touch Bar element, which is not clickable.
+	XCUIElement *sheet = self.app.sheets.firstMatch;
+	XCTAssertTrue([sheet waitForExistenceWithTimeout:15.0], @"the confirmation should appear");
+	[sheet.buttons[@"Yes"] click];
+
+	// The marker proves the mock served this, not real brew.
+	NSPredicate *streamed = [NSPredicate predicateWithFormat:@"value CONTAINS %@", @"MOCK_INSTALL_OK"];
+	XCUIElement *output = [[self.app.textViews matchingPredicate:streamed] firstMatch];
+	BOOL appeared = [output waitForExistenceWithTimeout:20.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"the operation window should stream the mock's install output");
+}
+
 // Journey: View ▸ Show/Hide Sidebar collapses the sidebar and restores it.
 // There was no way to hide the sidebar at all before — no menu item, no
 // shortcut, no toolbar button — despite the window using a collapsible
