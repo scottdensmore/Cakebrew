@@ -114,8 +114,8 @@
 
 /* No comment provided by engineer. */
 "Message_BGTask_Body" = "Entschuldigung, es läuft bereits ein Prozess im Hintergrund. Sie können deshalb keinen zweiten Hintergrundprozess starten.";
-"Message_Tap_Invalid_Title" = "Invalid tap name";
-"Message_Tap_Invalid_Body" = "Enter a tap as owner/repository, for example homebrew/cask-fonts.";
+"Message_Tap_Invalid_Title" = "Ungültiger Tap-Name";
+"Message_Tap_Invalid_Body" = "Geben Sie einen Tap als owner/repository an, zum Beispiel homebrew/cask-fonts.";
 
 /* No comment provided by engineer. */
 "Message_BGTask_Title" = "Hintergrundprozess aktiv!";
@@ -186,35 +186,35 @@
 
 /* No comment provided by engineer. */
 "Sidebar_Info_Repos" = "Dieses Repositorys sind getappt.";
-"Sidebar_Info_Casks" = "These are the casks (applications) installed in your system.";
-"Sidebar_Info_OutdatedCasks" = "These are the casks with a newer version available. Auto-updating apps are not listed.";
-"Sidebar_Info_AllCasks" = "These are all the casks (applications) available for installation.";
-"Sidebar_Info_Services" = "Background services managed by Homebrew.";
-"Services_Title" = "Homebrew Services";
-"Services_Start" = "Start";
-"Services_Stop" = "Stop";
-"Services_Restart" = "Restart";
+"Sidebar_Info_Casks" = "Dies sind die auf Ihrem System installierten Casks (Programme).";
+"Sidebar_Info_OutdatedCasks" = "Dies sind die Casks, für die eine neuere Version verfügbar ist. Selbst aktualisierende Programme werden nicht aufgeführt.";
+"Sidebar_Info_AllCasks" = "Dies sind alle Casks (Programme), die zur Installation verfügbar sind.";
+"Sidebar_Info_Services" = "Von Homebrew verwaltete Hintergrunddienste.";
+"Services_Title" = "Homebrew-Dienste";
+"Services_Start" = "Starten";
+"Services_Stop" = "Stoppen";
+"Services_Restart" = "Neu starten";
 "Services_Column_Name" = "Name";
 "Services_Column_Status" = "Status";
-"Services_Column_User" = "User";
-"Preferences_Title" = "Settings";
-"Preferences_Background_Check" = "Check for outdated packages in the background";
-"Preferences_Check_Interval" = "Check every:";
-"Preferences_Interval_Hourly" = "Hour";
-"Preferences_Interval_Six_Hours" = "6 hours";
-"Preferences_Interval_Daily" = "Day";
-"Preferences_Greedy_Casks" = "Include auto-updating apps in outdated casks";
-"Preferences_Greedy_Casks_Note" = "Lists casks that update themselves (like browsers) as outdated, so Homebrew can manage their upgrades too. Takes effect on the next refresh.";
-"Preferences_Helper_Section" = "Homebrew access:";
-"Helper_State_Not_Required" = "Not required — Cakebrew runs Homebrew directly.";
-"Helper_State_Ready" = "Helper installed and approved.";
-"Helper_State_Needs_Approval" = "Waiting for approval in Login Items.";
-"Helper_State_Not_Registered" = "Helper is not installed yet.";
-"Helper_State_Unavailable" = "Helper unavailable. Move Cakebrew to your Applications folder and reopen it.";
-"Helper_Action_Install" = "Install Helper";
-"Helper_Action_Open_Login_Items" = "Open Login Items…";
-"Background_Update_Notification_Title" = "Homebrew updates available";
-"Background_Update_Notification_Body" = "%lu packages have newer versions.";
+"Services_Column_User" = "Benutzer";
+"Preferences_Title" = "Einstellungen";
+"Preferences_Background_Check" = "Im Hintergrund nach veralteten Paketen suchen";
+"Preferences_Check_Interval" = "Prüfen alle:";
+"Preferences_Interval_Hourly" = "Stunde";
+"Preferences_Interval_Six_Hours" = "6 Stunden";
+"Preferences_Interval_Daily" = "Tag";
+"Preferences_Greedy_Casks" = "Selbst aktualisierende Programme bei veralteten Casks einbeziehen";
+"Preferences_Greedy_Casks_Note" = "Listet Casks, die sich selbst aktualisieren (etwa Browser), als veraltet auf, damit Homebrew deren Aktualisierungen ebenfalls verwalten kann. Wird bei der nächsten Aktualisierung wirksam.";
+"Preferences_Helper_Section" = "Homebrew-Zugriff:";
+"Helper_State_Not_Required" = "Nicht erforderlich — Cakebrew führt Homebrew direkt aus.";
+"Helper_State_Ready" = "Hilfsprogramm installiert und bestätigt.";
+"Helper_State_Needs_Approval" = "Wartet auf Bestätigung in den Anmeldeobjekten.";
+"Helper_State_Not_Registered" = "Hilfsprogramm ist noch nicht installiert.";
+"Helper_State_Unavailable" = "Hilfsprogramm nicht verfügbar. Bewegen Sie Cakebrew in den Programme-Ordner und öffnen Sie es erneut.";
+"Helper_Action_Install" = "Hilfsprogramm installieren";
+"Helper_Action_Open_Login_Items" = "Anmeldeobjekte öffnen…";
+"Background_Update_Notification_Title" = "Homebrew-Aktualisierungen verfügbar";
+"Background_Update_Notification_Body" = "%lu Pakete haben neuere Versionen.";
 
 /* No comment provided by engineer. */
 "Sidebar_Info_SearchResults" = "Ihre Suchergebnisse.";
@@ -233,8 +233,8 @@
 
 /* No comment provided by engineer. */
 "Sidebar_Item_Leaves" = "Blätter";
-"Sidebar_Item_Pinned" = "Pinned";
-"Sidebar_Item_Services" = "Services";
+"Sidebar_Item_Pinned" = "Fixiert";
+"Sidebar_Item_Services" = "Dienste";
 "Sidebar_Item_AllCasks" = "All Casks";
 
 /* No comment provided by engineer. */
@@ -278,21 +278,21 @@
 
 
 /* Added for the localized-strings pass; English until translated. */
-"Sidebar_Info_Pinned" = "These formulae are pinned and will not be upgraded.";
-"Services_Status_None" = "Not running";
-"Services_Status_Started" = "Running";
-"Services_Status_Stopped" = "Stopped";
-"Services_Status_Error" = "Error";
-"Services_Status_Scheduled" = "Scheduled";
-"Services_Status_Unknown" = "Unknown";
-"Panel_Export_Message" = "Export To:";
-"Panel_Export_Button" = "Export";
-"Panel_Import_Message" = "Import From:";
-"Panel_Import_Button" = "Import";
-"Formula_All_Dependents_Title" = "All Dependents of Formula: %@";
-"Formula_Installed_Dependents_Title" = "Installed Dependents of Formula: %@";
-"Confirmation_Uninstall_Cask_Zap" = "Also remove preferences and support files (zap)";
-"Homebrew_Task_Failed" = "Homebrew task failed";
-"Services_Operation_Failed_Title" = "Could not change the “%@” service";
-"Error_Brew_Failed_No_Output" = "Homebrew exited with status %d and produced no output.";
-"Installation_Window_Cancelled" = "Cancelled.";
+"Sidebar_Info_Pinned" = "Diese Formeln sind fixiert und werden nicht aktualisiert.";
+"Services_Status_None" = "Läuft nicht";
+"Services_Status_Started" = "Läuft";
+"Services_Status_Stopped" = "Gestoppt";
+"Services_Status_Error" = "Fehler";
+"Services_Status_Scheduled" = "Geplant";
+"Services_Status_Unknown" = "Unbekannt";
+"Panel_Export_Message" = "Exportieren nach:";
+"Panel_Export_Button" = "Exportieren";
+"Panel_Import_Message" = "Importieren von:";
+"Panel_Import_Button" = "Importieren";
+"Formula_All_Dependents_Title" = "Alle abhängigen Formeln von: %@";
+"Formula_Installed_Dependents_Title" = "Installierte abhängige Formeln von: %@";
+"Confirmation_Uninstall_Cask_Zap" = "Auch Einstellungen und Hilfsdateien entfernen (zap)";
+"Homebrew_Task_Failed" = "Homebrew-Aufgabe fehlgeschlagen";
+"Services_Operation_Failed_Title" = "Dienst „%@“ konnte nicht geändert werden";
+"Error_Brew_Failed_No_Output" = "Homebrew wurde mit Status %d beendet und lieferte keine Ausgabe.";
+"Installation_Window_Cancelled" = "Abgebrochen.";
