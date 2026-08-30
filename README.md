@@ -8,7 +8,9 @@ Cakebrew gives Homebrew a Mac interface: browse what is installed, see what is
 out of date, install and remove packages, and manage the services brew runs in
 the background — without remembering a command for each of them.
 
-![Cakebrew](docs/screenshots/main-window-dark.png)
+| Light | Dark |
+|---|---|
+| ![Cakebrew in light mode](docs/screenshots/main-window-light.png) | ![Cakebrew in dark mode](docs/screenshots/main-window-dark.png) |
 
 ## What it does
 
