@@ -1,55 +1,103 @@
 # Cakebrew
 
-The Homebrew GUI App for OS X
+A native macOS app for [Homebrew](https://brew.sh).
 
-[![Build Status](https://travis-ci.org/brunophilipe/Cakebrew.svg?branch=dev)](https://travis-ci.org/brunophilipe/Cakebrew)
+[![CI](https://github.com/scottdensmore/Cakebrew/actions/workflows/ci.yml/badge.svg)](https://github.com/scottdensmore/Cakebrew/actions/workflows/ci.yml)
 
-## About
+Cakebrew gives Homebrew a Mac interface: browse what is installed, see what is
+out of date, install and remove packages, and manage the services brew runs in
+the background — without remembering a command for each of them.
 
-Cakebrew is the most convenient way to use Homebrew for your daily tasks! It does for [Homebrew](http://brew.sh) what Synaptics does to Linux package managers. From the Cakebrew UI, you can:
+![Cakebrew](docs/screenshots/main-window-dark.png)
 
-* Search for formulae
-* Install, uninstall and upgrade formulae
-* Tap and untap repos
-* Update Homebrew
-* Run the brew cleanup tool
+## What it does
 
-Cakebrew was based on a project by [vincentsaluzzo](https://github.com/vincentsaluzzo/Homebrew-GUI). Although most of the original code has already been modified, his project was the kickstart for what would become Cakebrew, and his commits are still in the working tree.
+**Formulae**
+* Browse installed, outdated, leaves, pinned and the full catalog
+* Install, uninstall and upgrade, individually or everything at once
+* Pin a formula to hold it at its installed version, with a badge in the list
+* Read a formula's description, version, dependencies, conflicts and dependents
 
-## Screenshots
+**Casks**
+* Browse installed, outdated and all available casks
+* Install, uninstall and upgrade, optionally running a cask's `zap` stanza to
+  remove its preferences and support files too
 
-![Screenshot](https://www.cakebrew.com/assets/img/app-bg.png)
+**Tools**
+* Services — start, stop and restart the background services brew manages
+* Doctor — run `brew doctor` and read its report
+* Update — run `brew update`
+* Cleanup — reclaim disk space
+* Import and export a Brewfile
 
-## Download
+**Around the edges**
+* Optional background checking, with a Dock badge and a notification when
+  something new goes out of date
+* Search across formulae and casks
+* Six localizations: English, German, French, Italian, Portuguese and
+  Simplified Chinese
 
-[Download Now](https://www.cakebrew.com/#download)
+## Requirements
 
-Alternatively, [it can be installed via homebrew cask](https://github.com/brunophilipe/Cakebrew/issues/148), with `brew install cakebrew --cask`.
+macOS 15 or later. Homebrew must already be installed — Cakebrew drives the
+`brew` you have, it does not bundle its own.
 
-## Problems using ZSH?
+Works with both Homebrew prefixes (`/usr/local` on Intel, `/opt/homebrew` on
+Apple silicon).
 
-Please visit [this page](https://github.com/brunophilipe/Cakebrew/wiki#using-zsh-shell).
+## Installing
 
-## Localizations
+Download the latest build from
+[Releases](https://github.com/scottdensmore/Cakebrew/releases). Builds are
+signed with a Developer ID certificate, notarized and stapled, so they open
+without a Gatekeeper warning.
 
-From version 1.1, Cakebrew supports localizations!
-As of now, the following languages are supported:
+## Building
 
-* English
-* Portuguese
-* German
-* Chinese (Simplified)
+```sh
+git clone https://github.com/scottdensmore/Cakebrew.git
+cd Cakebrew
+open Cakebrew.xcworkspace
+```
 
-If you wish to contribute by translating Cakebrew to your language, please open a [new issue in GitHub](https://github.com/brunophilipe/Cakebrew/issues).
+Or from the command line:
 
-## Website Source
+```sh
+# Build (must be warning-free)
+xcodebuild build -workspace Cakebrew.xcworkspace -scheme Cakebrew \
+  -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO
 
-The source for the Cakebrew website is also present on GitHub! Visit the [repository](https://github.com/brunophilipe/Cakebrew-site/).
+# Unit tests — fast and hermetic
+xcodebuild test -workspace Cakebrew.xcworkspace -scheme CakebrewTests \
+  -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO
 
-## License
+# UI tests — journeys against a mock brew, no real Homebrew involved
+xcodebuild test -scheme CakebrewUITests -destination 'platform=macOS' \
+  CODE_SIGN_IDENTITY="-" CODE_SIGN_STYLE=Manual CODE_SIGNING_REQUIRED=NO \
+  CODE_SIGNING_ALLOWED=YES DEVELOPMENT_TEAM="" PROVISIONING_PROFILE_SPECIFIER=""
+```
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-You should have received a copy of the GNU General Public License along with this program.  If not, see [<http://www.gnu.org/licenses/>](http://www.gnu.org/licenses/).
+Launching with `-BPMockBrew` swaps in a fixture-backed interface, so you can
+drive the whole UI without touching a real Homebrew installation. That build is
+Debug-only.
 
-This document was written with my free plain text editor, [TipTyper](https://brunophilipe.com/software/tiptyper)!
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow, and
+[AGENTS.md](AGENTS.md) for the full working agreement — it is written for both
+human contributors and coding agents, and it is the authoritative version.
+
+## Security
+
+Cakebrew ships a privileged helper. Please report vulnerabilities privately
+rather than in a public issue — see [SECURITY.md](SECURITY.md).
+
+## Credits
+
+Cakebrew was created by [Bruno Philipe](https://github.com/brunophilipe), based
+on a project by [vincentsaluzzo](https://github.com/vincentsaluzzo/Homebrew-GUI)
+whose commits are still in the working tree. This repository is a fork
+maintained by [Scott Densmore](https://github.com/scottdensmore).
+
+Distributed under the GNU General Public License version 3. See
+[LICENSE](LICENSE).
