@@ -39,6 +39,7 @@
 @property (strong, nonatomic) NSArray *options;
 
 @property BOOL operationStatus;
+@property (nonatomic) BOOL zapCask;
 @property (nonatomic, copy) void (^completionBlock)(BOOL);
 
 @end
@@ -101,6 +102,19 @@
 											 options:(NSArray *)options
 {
 	return [self runWithOperation:windowOperation formulae:formulae options:options completion:nil];
+}
+
++ (BPInstallationWindowController *)runWithOperation:(BPWindowOperation)windowOperation
+											formulae:(NSArray *)formulae
+											 options:(NSArray *)options
+												 zap:(BOOL)zap
+{
+	BPInstallationWindowController *controller = [self runWithOperation:windowOperation
+															   formulae:formulae
+																options:options
+															 completion:nil];
+	controller.zapCask = zap;
+	return controller;
 }
 
 + (BPInstallationWindowController *)runWithOperation:(BPWindowOperation)windowOperation
@@ -181,6 +195,7 @@
 			if (formula.cask)
 			{
 				self.operationStatus = [homebrewInterface uninstallCask:formula.name
+																	zap:self.zapCask
 														withReturnBlock:displayTerminalOutput];
 			}
 			else

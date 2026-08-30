@@ -293,3 +293,4 @@
 "Panel_Export_Button" = "Export";
 "Panel_Import_Message" = "Import From:";
 "Panel_Import_Button" = "Import";
+"Confirmation_Uninstall_Cask_Zap" = "Also remove preferences and support files (zap)";

@@ -803,14 +803,33 @@ NSOpenSavePanelDelegate>
 	[alert setInformativeText:[NSString stringWithFormat:NSLocalizedString(@"Confirmation_Uninstall_Formula", nil),
 							   formula.name]];
 
+	// Only casks have a zap stanza; a plain uninstall leaves their preferences,
+	// application support directories and launch agents behind.
+	NSButton *zapCheckbox = nil;
+	if (formula.cask)
+	{
+		zapCheckbox = [NSButton checkboxWithTitle:NSLocalizedString(@"Confirmation_Uninstall_Cask_Zap", nil)
+										   target:nil
+										   action:nil];
+		[zapCheckbox sizeToFit];
+		zapCheckbox.state = [BPPreferences zapCasksOnUninstall] ? NSControlStateValueOn : NSControlStateValueOff;
+		alert.accessoryView = zapCheckbox;
+	}
+
 	// Present as a sheet rather than an app-modal runModal: non-blocking (so the
 	// app stays responsive / UI-testable) and the expected macOS confirmation
 	// style. Attach to the app's main window like the other sheets here.
 	[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
 		if (returnCode == NSAlertFirstButtonReturn) {
+			BOOL zap = zapCheckbox && zapCheckbox.state == NSControlStateValueOn;
+			if (zapCheckbox)
+			{
+				[BPPreferences setZapCasksOnUninstall:zap];
+			}
 			self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationUninstall
 																					 formulae:@[formula]
-																					  options:nil];
+																					  options:nil
+																						  zap:zap];
 		}
 	}];
 }

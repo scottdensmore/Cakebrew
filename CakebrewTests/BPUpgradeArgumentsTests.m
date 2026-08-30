@@ -89,4 +89,32 @@
 						  (@[@"upgrade", @"--cask", @"mockchrome"]));
 }
 
+
+#pragma mark - cask uninstall: zap
+
+- (void)testUninstallingACaskWithoutZapLeavesTheFlagOff
+{
+	XCTAssertEqualObjects([BPHomebrewInterface argumentsForUninstallingCask:@"mockchrome" zap:NO],
+						  (@[@"uninstall", @"--cask", @"mockchrome"]));
+}
+
+- (void)testZapAsksHomebrewToRunTheCasksZapStanza
+{
+	// Plain uninstall removes the app bundle and deliberately leaves
+	// preferences, application support and launch agents behind.
+	XCTAssertEqualObjects([BPHomebrewInterface argumentsForUninstallingCask:@"mockchrome" zap:YES],
+						  (@[@"uninstall", @"--cask", @"--zap", @"mockchrome"]),
+						  @"--zap must precede the token, like every other brew flag here");
+}
+
+- (void)testABlankCaskTokenIsNeverForwarded
+{
+	// Same hazard as the upgrade path: a blank operand reaches brew as a real
+	// empty argv entry and fails.
+	XCTAssertEqualObjects([BPHomebrewInterface argumentsForUninstallingCask:@"" zap:YES],
+						  (@[@"uninstall", @"--cask", @"--zap"]));
+	XCTAssertEqualObjects([BPHomebrewInterface argumentsForUninstallingCask:@"  " zap:NO],
+						  (@[@"uninstall", @"--cask"]));
+}
+
 @end

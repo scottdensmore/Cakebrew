@@ -146,4 +146,19 @@
 	XCTAssertNil([BPPreferences sortColumnIdentifier]);
 }
 
+
+#pragma mark - cask zap
+
+- (void)testZapChoiceRoundTripsAndDefaultsToOff
+{
+	// Off by default: zap deletes preferences and support files, not just the
+	// app, so it should never be the silent default.
+	[[NSUserDefaults standardUserDefaults] removeObjectForKey:@"BPZapCasksOnUninstall"];
+	[BPPreferences registerDefaults];
+	XCTAssertFalse([BPPreferences zapCasksOnUninstall]);
+
+	[BPPreferences setZapCasksOnUninstall:YES];
+	XCTAssertTrue([BPPreferences zapCasksOnUninstall]);
+}
+
 @end

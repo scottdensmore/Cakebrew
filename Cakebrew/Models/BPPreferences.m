@@ -24,6 +24,7 @@ NSString *const kBPGreedyCaskUpgradesKey = @"BPGreedyCaskUpgrades";
 NSString *const kBPLastSelectedSidebarRowKey = @"BPLastSelectedSidebarRow";
 NSString *const kBPSortColumnIdentifierKey = @"BPSortColumnIdentifier";
 NSString *const kBPSortAscendingKey = @"BPSortAscending";
+NSString *const kBPZapCasksOnUninstallKey = @"BPZapCasksOnUninstall";
 
 @implementation BPPreferences
 
@@ -36,6 +37,7 @@ NSString *const kBPSortAscendingKey = @"BPSortAscending";
 		// 1 == FormulaeSideBarItemInstalled, where the app has always opened.
 		kBPLastSelectedSidebarRowKey: @1,
 		kBPSortAscendingKey: @YES,
+		kBPZapCasksOnUninstallKey: @NO,
 	}];
 }
 
@@ -92,6 +94,16 @@ NSString *const kBPSortAscendingKey = @"BPSortAscending";
 + (void)setSortAscending:(BOOL)ascending
 {
 	[[NSUserDefaults standardUserDefaults] setBool:ascending forKey:kBPSortAscendingKey];
+}
+
++ (BOOL)zapCasksOnUninstall
+{
+	return [[NSUserDefaults standardUserDefaults] boolForKey:kBPZapCasksOnUninstallKey];
+}
+
++ (void)setZapCasksOnUninstall:(BOOL)zap
+{
+	[[NSUserDefaults standardUserDefaults] setBool:zap forKey:kBPZapCasksOnUninstallKey];
 }
 
 + (BOOL)greedyCaskUpgrades
