@@ -1,0 +1,83 @@
+name: Bug report
+description: Something in Cakebrew behaves incorrectly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The environment questions below are not boilerplate. The macOS version,
+        the Homebrew version and prefix, and whether the problem reproduces
+        under the mock build are what separate a parsing bug from an
+        environment one — without them a report usually cannot be acted on.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead.
+      placeholder: |
+        1. Selected Outdated
+        2. Clicked Upgrade
+        3. Expected … but saw …
+    validations:
+      required: true
+
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version
+      placeholder: "15.4"
+    validations:
+      required: true
+
+  - type: input
+    id: cakebrew-version
+    attributes:
+      label: Cakebrew version and build
+      description: Cakebrew ▸ About Cakebrew
+      placeholder: "1.3 (594)"
+    validations:
+      required: true
+
+  - type: input
+    id: brew-version
+    attributes:
+      label: Homebrew version
+      description: Output of `brew --version`
+      placeholder: "Homebrew 4.6.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: brew-prefix
+    attributes:
+      label: Homebrew prefix
+      description: Output of `brew --prefix`. Path handling differs between the two.
+      options:
+        - /opt/homebrew (Apple silicon)
+        - /usr/local (Intel, or a manual install)
+        - Somewhere else — say where in the description
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mock-repro
+    attributes:
+      label: Does it reproduce with the mock build?
+      description: |
+        Launch with `-BPMockBrew` (Debug builds only) to run against fixtures
+        instead of your real Homebrew. If it still happens, the bug is in
+        Cakebrew; if it does not, it is in how Cakebrew reads *your* brew.
+      options:
+        - "Yes — reproduces with -BPMockBrew"
+        - "No — only with real Homebrew"
+        - "Haven't tried / not running a Debug build"
+    validations:
+      required: true
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Output from the operation window
+      description: If the problem involves an operation, paste what the log showed.
+      render: text

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/scottdensmore/Cakebrew/security/advisories/new
+    about: Report privately rather than in a public issue. See SECURITY.md.
+  - name: Homebrew itself
+    url: https://github.com/Homebrew/brew/issues
+    about: If `brew` does the same thing in Terminal, the issue belongs upstream.
