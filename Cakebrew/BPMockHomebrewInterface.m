@@ -7,6 +7,13 @@
 #import "BPFormula.h"
 #import "BPService.h"
 
+// Debug only. The mock must live inside the app binary — XCUITest drives the
+// app out of process and cannot inject a class, so +sharedInterface finds it
+// via NSClassFromString — but a shipping build has no business carrying a
+// fixture interface, or honouring -BPMockBrew in a user's hands.
+#if DEBUG
+
+
 @implementation BPMockHomebrewInterface
 
 // Always report Homebrew as present so the app never shows the disabled overlay.
@@ -201,4 +208,58 @@
 	return YES;
 }
 
+
+// The formula-side mutating operations. Without these the mock inherits the
+// real implementations and -BPMockBrew executes brew for real — which nothing
+// caught only because every mutating journey pressed Cancel at the
+// confirmation sheet.
+- (BOOL)installFormula:(NSString *)formula withOptions:(NSArray *)options andReturnBlock:(void (^)(NSString *))block
+{
+	if (block) {
+		block(@"MOCK_INSTALL_OK\nInstalled 1 formula.\n");
+	}
+	return YES;
+}
+
+- (BOOL)uninstallFormula:(NSString *)formula withReturnBlock:(void (^)(NSString *))block
+{
+	if (block) {
+		block(@"MOCK_UNINSTALL_OK\nUninstalled 1 formula.\n");
+	}
+	return YES;
+}
+
+- (BOOL)tapRepository:(NSString *)repository withReturnsBlock:(void (^)(NSString *))block
+{
+	if (block) {
+		block(@"MOCK_TAP_OK\nTapped 1 repository.\n");
+	}
+	return YES;
+}
+
+- (BOOL)untapRepository:(NSString *)repository withReturnsBlock:(void (^)(NSString *))block
+{
+	if (block) {
+		block(@"MOCK_UNTAP_OK\nUntapped 1 repository.\n");
+	}
+	return YES;
+}
+
+// Both bundle operations touch the filesystem, so they are no-ops rather than
+// writing a Brewfile wherever the panel happened to point.
+- (NSError *)runBrewExportToolWithPath:(NSString *)path
+{
+	return nil;
+}
+
+- (BOOL)runBrewImportToolWithPath:(NSString *)path withReturnsBlock:(void (^)(NSString *))block
+{
+	if (block) {
+		block(@"MOCK_IMPORT_OK\nBrewfile applied.\n");
+	}
+	return YES;
+}
+
 @end
+
+#endif // DEBUG
