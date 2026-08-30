@@ -301,4 +301,26 @@
 - (void)homebrewManagerFinishedUpdating:(BPHomebrewManager *)manager {}
 - (void)homebrewManager:(BPHomebrewManager *)manager shouldDisplayNoBrewMessage:(BOOL)yesOrNo {}
 
+
+#pragma mark - reload coalescing
+
+- (void)testASecondReloadRequestDoesNotStartASecondPipeline
+{
+	// Four callers can fire a reload — launch, the background timer,
+	// post-operation, and unlock-after-no-brew — and the timer only checks
+	// whether a brew *operation* is running, not whether a reload already is.
+	XCTAssertTrue([BPHomebrewManager shouldStartReloadWhenInFlight:NO]);
+	XCTAssertFalse([BPHomebrewManager shouldStartReloadWhenInFlight:YES],
+				   @"a concurrent request should coalesce, not start a second pipeline");
+}
+
+- (void)testOnlyTheNewestPipelineMayPublish
+{
+	// Whichever pipeline finished last used to win the property assignments,
+	// so a slower older snapshot could clobber a newer one.
+	XCTAssertTrue([BPHomebrewManager shouldPublishReloadGeneration:4 current:4]);
+	XCTAssertFalse([BPHomebrewManager shouldPublishReloadGeneration:3 current:4],
+				   @"a superseded snapshot must be discarded, not published");
+}
+
 @end
