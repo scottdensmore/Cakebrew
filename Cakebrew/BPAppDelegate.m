@@ -66,15 +66,11 @@ NSString *const kBP_CAKEBREW_DOCUMENTATION = @"https://github.com/scottdensmore/
 	
 	[[BPHomebrewManager sharedManager] reloadFromInterfaceRebuildingCache:NO];
 	
-	// Request notification permissions and set delegate
-	UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
-	[center setDelegate:self];
-	[center requestAuthorizationWithOptions:(UNAuthorizationOptionAlert | UNAuthorizationOptionSound)
-						  completionHandler:^(BOOL granted, NSError * _Nullable error) {
-		if (error) {
-			NSLog(@"Error requesting notification permissions: %@", error);
-		}
-	}];
+	// The delegate is needed to route taps, but authorization is deliberately
+	// not requested here: at launch the user has done nothing and has no reason
+	// to know the app checks for updates in the background. BPBackgroundUpdater
+	// asks the first time it actually has an update to report.
+	[[UNUserNotificationCenter currentNotificationCenter] setDelegate:self];
 }
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)sender hasVisibleWindows:(BOOL)flag
