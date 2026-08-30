@@ -29,6 +29,11 @@ extern NSString *const kBP_HOMEBREW_PATH_KEY;
 extern NSString *const kBP_HOMEBREW_WEBSITE;
 extern NSString *const kBP_CAKEBREW_DOCUMENTATION;
 
+/// Who a Brewfile opened from Finder, or dropped on the app, is handed to.
+@protocol BPBrewfileImporting <NSObject>
+- (void)importBrewfileAtURL:(NSURL *)url;
+@end
+
 @interface BPAppDelegate : NSObject <NSApplicationDelegate>
 
 @property (assign) IBOutlet NSWindow *window;
@@ -37,6 +42,11 @@ extern NSString *const kBP_CAKEBREW_DOCUMENTATION;
 /// when it comes up; weak, so a closed window leaves the menu inert rather
 /// than firing into a dead controller.
 @property (weak) id<BPDockMenuTarget> dockActionTarget;
+
+/// Who handles a Brewfile arriving from outside the app. Weak for the same
+/// reason as dockActionTarget: no window, nothing to import into. nonatomic
+/// because setting it drains any pending file, through a custom setter.
+@property (weak, nonatomic) id<BPBrewfileImporting> brewfileImportTarget;
 
 @property (getter=isRunningBackgroundTask) BOOL runningBackgroundTask;
 

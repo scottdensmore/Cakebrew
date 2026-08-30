@@ -25,6 +25,7 @@
 #import "BPFormulaPopoverViewController.h"
 #import "BPSideBarController.h"
 #import "BPDockMenu.h"
+#import "BPAppDelegate.h"
 
 typedef NS_ENUM(NSUInteger, BPWindowOperation) {
 	kBPWindowOperationInstall,
@@ -37,7 +38,7 @@ typedef NS_ENUM(NSUInteger, BPWindowOperation) {
 
 @class BPUpdateDoctorController;
 
-@interface BPHomebrewViewController : NSViewController <BPDockMenuTarget>
+@interface BPHomebrewViewController : NSViewController <BPDockMenuTarget, BPBrewfileImporting>
 
 
 @property (weak) IBOutlet BPSideBarController      *sidebarController;

@@ -24,6 +24,7 @@
 #import "BPHomebrewManager.h"
 #import "BPHomebrewInterface.h"
 #import "BPCleanupPreview.h"
+#import "BPBrewfile.h"
 #import "BPFormulaOptionsWindowController.h"
 #import "BPInstallationWindowController.h"
 #import "BPUpdateViewController.h"
@@ -243,6 +244,9 @@ NSOpenSavePanelDelegate>
 	
 	_appDelegate = BPAppDelegateRef;
 	_appDelegate.dockActionTarget = self;
+	// Set last: assigning this hands over any Brewfile that arrived before
+	// there was a window to import it into.
+	_appDelegate.brewfileImportTarget = self;
 }
 
 - (void)addToolbar
@@ -1235,6 +1239,30 @@ NSOpenSavePanelDelegate>
 	}];
 }
 
+/// A Brewfile arriving from outside the app — a Finder double-click, "Open
+/// With", `open -a`, or a drop on the Dock icon or the window.
+///
+/// Confirms first, unlike Tools ▸ Import: importing runs `brew bundle`, which
+/// installs everything the file lists, and a drop is easy to do by accident.
+- (void)importBrewfileAtURL:(NSURL *)url
+{
+	if (!url || [self hasBlockingBackgroundTask]) return;
+
+	NSAlert *alert = [[NSAlert alloc] init];
+	[alert setMessageText:NSLocalizedString(@"Generic_Attention", nil)];
+	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Yes", nil)];
+	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Cancel", nil)];
+	[alert setInformativeText:[NSString localizedStringWithFormat:
+							   NSLocalizedString(@"Confirmation_Import_Brewfile", nil),
+							   url.lastPathComponent]];
+
+	[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
+		if (returnCode != NSAlertFirstButtonReturn) return;
+
+		self.operationWindowController = [BPBundleWindowController runImportOperationWithFile:url];
+	}];
+}
+
 - (IBAction)runHomebrewImport:(id)sender
 {
 	NSOpenPanel *openPanel = [NSOpenPanel openPanel];
@@ -1297,7 +1325,9 @@ NSOpenSavePanelDelegate>
 
 - (BOOL)panel:(id)sender shouldEnableURL:(NSURL *)url
 {
-	return [[[url pathComponents] lastObject] isEqualToString:@"Brewfile"];
+	// One rule for what counts as a Brewfile, shared with the Finder-open and
+	// drop paths — the panel used to be stricter than both.
+	return [BPBrewfile isBrewfileURL:url];
 }
 
 @end
