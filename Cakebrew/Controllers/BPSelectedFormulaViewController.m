@@ -27,6 +27,20 @@
 											   object:self.view];
 	
 	[self setTimedDispatch:[BPTimedDispatch new]];
+	[self labelValueFieldsForVoiceOver];
+}
+
+/// Without this VoiceOver reads "clang, curl, openssl" with no indication it is
+/// the Dependencies row — the value fields have no relationship to the title
+/// labels beside them.
+- (void)labelValueFieldsForVoiceOver
+{
+	self.formulaDescriptionLabel.accessibilityLabel  = NSLocalizedString(@"Detail_VoiceOver_Description", nil);
+	self.formulaPathLabel.accessibilityLabel         = NSLocalizedString(@"Detail_VoiceOver_Installed", nil);
+	self.formulaVersionLabel.accessibilityLabel      = NSLocalizedString(@"Detail_VoiceOver_Version", nil);
+	self.formulaDependenciesLabel.accessibilityLabel = NSLocalizedString(@"Detail_VoiceOver_Dependencies", nil);
+	self.formulaConflictsLabel.accessibilityLabel    = NSLocalizedString(@"Detail_VoiceOver_Conflicts", nil);
+	self.formulaDependentsLabel.accessibilityLabel   = NSLocalizedString(@"Detail_VoiceOver_RequiredBy", nil);
 }
 
 - (void)dealloc

@@ -79,6 +79,7 @@ typedef NS_ENUM(NSUInteger, FormulaeSideBarItem)
  */
 + (NSString *)infoKeyForRow:(NSInteger)row;
 
+
 @property (assign) IBOutlet NSOutlineView *sidebar;
 
 @property (weak) id <BPSideBarControllerDelegate>delegate;

@@ -36,6 +36,7 @@
 @implementation BPUpdateViewController
 
 - (void)awakeFromNib {
+	self.progressIndicator.accessibilityLabel = NSLocalizedString(@"VoiceOver_Operation_Progress", nil);
 	NSFont *font = [BPStyle defaultFixedWidthFont];
 	[self.updateTextView setFont:font];
 	self.isPerformingUpdate = NO;

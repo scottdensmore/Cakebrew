@@ -53,6 +53,19 @@
 
 #pragma mark -
 
+/// "42 items", or just "42" if the format string is unavailable. A missing key
+/// returns the key itself, and "Sidebar_VoiceOver_Badge_Count" is worse to hear
+/// than a bare number.
+static NSString *BPSpokenBadgeCount(NSNumber *badge)
+{
+	NSString *format = NSLocalizedString(@"Sidebar_VoiceOver_Badge_Count", nil);
+	if ([format containsString:@"%@"])
+	{
+		return [NSString stringWithFormat:format, badge];
+	}
+	return badge.stringValue;
+}
+
 @implementation BPSidebarBadgeView
 
 - (void)setBadgeValue:(NSUInteger)badgeValue
@@ -62,6 +75,25 @@
 		[self invalidateIntrinsicContentSize];
 		[self setNeedsDisplay:YES];
 	}
+}
+
+#pragma mark - Accessibility
+
+// The count is drawn with drawAtPoint:withAttributes:, so nothing about it
+// reaches the accessibility tree unless it is declared here.
+- (BOOL)isAccessibilityElement
+{
+	return YES;
+}
+
+- (NSAccessibilityRole)accessibilityRole
+{
+	return NSAccessibilityStaticTextRole;
+}
+
+- (id)accessibilityValue
+{
+	return BPSpokenBadgeCount(@(self.badgeValue));
 }
 
 - (void)setEmphasized:(BOOL)emphasized
@@ -358,7 +390,7 @@
 	FormulaeSideBarItem row = [BPSideBarController restorableRowFrom:[BPPreferences lastSelectedSidebarRow]
 															rowCount:[self.sidebar numberOfRows]];
 	[self.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
-	[self.sidebar setAccessibilityLabel:NSLocalizedString(@"Sidebar_VoiceOver_Tools", nil)];
+	[self.sidebar setAccessibilityLabel:NSLocalizedString(@"Sidebar_VoiceOver_Sidebar", nil)];
 }
 
 - (void)refreshSidebarBadges
