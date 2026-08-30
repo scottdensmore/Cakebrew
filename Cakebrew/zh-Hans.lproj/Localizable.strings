@@ -331,3 +331,5 @@
 "Dock_Check_For_Updates" = "Check for Updates";
 "Dock_Upgrade_All_Outdated" = "Upgrade All Outdated";
 "Dock_Show_Outdated" = "Show Outdated Formulae";
+
+"Sidebar_VoiceOver_Separator" = ", ";

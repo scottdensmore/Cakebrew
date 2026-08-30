@@ -39,6 +39,14 @@ typedef NS_ENUM(NSUInteger, FormulaeSideBarItem)
 @property (strong) NSNumber *badgeValue;
 @property (readonly) NSArray<BPSidebarItem *> *children;
 
+/// Stable, unlocalized address for this row, e.g. "sidebar.casks.installed".
+/// Applied to the cell's text field, which is the accessibility element — the
+/// NSTableCellView container is not, so setting it there reaches nothing.
+@property (copy) NSString *accessibilityIdentifier;
+
+/// The group this row was added under, or nil for a group or the root.
+@property (weak, readonly) BPSidebarItem *parentItem;
+
 + (instancetype)itemWithTitle:(NSString *)title identifier:(NSString *)identifier;
 - (void)addChildItem:(BPSidebarItem *)item;
 - (BOOL)hasChildren;
@@ -83,6 +91,16 @@ typedef NS_ENUM(NSUInteger, FormulaeSideBarItem)
 @property (assign) IBOutlet NSOutlineView *sidebar;
 
 @property (weak) id <BPSideBarControllerDelegate>delegate;
+
+/// How a row is announced: "Formulae, Installed, 3 items". The group is what
+/// separates the two Installed rows and the two Outdated rows. A -1 badge is
+/// the "no badge" sentinel and is omitted rather than spoken as a count.
++ (NSString *)accessibilityLabelForGroup:(NSString *)group
+								   title:(NSString *)title
+								   badge:(NSNumber *)badge;
+
+/// Every selectable row's accessibility identifier, in sidebar order.
+- (NSArray<NSString *> *)selectableRowAccessibilityIdentifiers;
 
 - (void)refreshSidebarBadges;
 - (void)configureSidebarSettings;
