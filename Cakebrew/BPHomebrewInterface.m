@@ -24,6 +24,7 @@
 #import "BPService.h"
 #import "BPPreferences.h"
 #import "BPHelperClient.h"
+#import "BPBrewError.h"
 
 #define kDEBUG_WARNING @"\
 User Shell: %@\n\
@@ -675,9 +676,11 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 		[output enumerateLinesUsingBlock:^(NSString *line, BOOL *stop) {
 			if ([line hasPrefix:@"Error:"] || [line hasPrefix:@"fatal:"])
 			{
-				error = [NSError errorWithDomain:@"Cakebrew"
-											code:2701
-										userInfo:@{NSLocalizedDescriptionKey: line}];
+				// brew bundle dump reports failure in its output rather than
+				// through an exit status this path can see, so the line is
+				// still what identifies it — but the error itself is now built
+				// the same way as every other one.
+				error = [BPBrewError errorForExitStatus:1 output:line];
 				
 				*stop = YES;
 			}

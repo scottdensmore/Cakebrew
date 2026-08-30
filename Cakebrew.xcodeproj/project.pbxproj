@@ -11,6 +11,7 @@
 		043485DC0F857D4D67DDA141 /* BPHelperSecurityTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D182C39AED5D9C54ED4D0B33 /* BPHelperSecurityTests.m */; };
 		0CCA4B9885187C5F2FBE92E1 /* com.scottdensmore.Cakebrew.Helper.plist in Copy Helper LaunchAgent */ = {isa = PBXBuildFile; fileRef = D8582C4CE349B64B6DE6FF75 /* com.scottdensmore.Cakebrew.Helper.plist */; };
 		0E5E1AFEFC2EB5ACFC76A355 /* BPService.m in Sources */ = {isa = PBXBuildFile; fileRef = AA67F6479F85E50C83706E3E /* BPService.m */; };
+		3F479CBF6D5CDB2B5BCDCD4B /* BPBrewError.m in Sources */ = {isa = PBXBuildFile; fileRef = 6F14AB39D9A4FA816D3A932C /* BPBrewError.m */; };
 		0F9F85DA2325D35621ECBEAE /* BPHelperSecurity.m in Sources */ = {isa = PBXBuildFile; fileRef = 1227A6AF7A6E1F24A913015B /* BPHelperSecurity.m */; };
 		150AEC4C1B3F999A00163767 /* BPDoctorViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC391B3F999A00163767 /* BPDoctorViewController.m */; };
 		150AEC4D1B3F999A00163767 /* BPFormulaOptionsWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC3B1B3F999A00163767 /* BPFormulaOptionsWindowController.m */; };
@@ -67,6 +68,7 @@
 		234DE928FBCE6DDE7B82183D /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 46BD61BF82D5E8C0C487BD7D /* PrivacyInfo.xcprivacy */; };
 		2D8AA669642BBFBEF248B016 /* BPPreferences.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D77DDA97C5A016EBA1AA607 /* BPPreferences.m */; };
 		4403EFA806C14981AAB4D830 /* BPService.m in Sources */ = {isa = PBXBuildFile; fileRef = AA67F6479F85E50C83706E3E /* BPService.m */; };
+		F9A912776646B62D5BF57F40 /* BPBrewError.m in Sources */ = {isa = PBXBuildFile; fileRef = 6F14AB39D9A4FA816D3A932C /* BPBrewError.m */; };
 		49CC41B5A77580D8BF6465A5 /* BPServicesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D88E53757CC27FC7F7734D0D /* BPServicesViewController.m */; };
 		543AA5812EA7FF9BDE33DFA8 /* BPBrewTransportTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A3EFEDFD2D84875FD5E89BA1 /* BPBrewTransportTests.m */; };
 		19FEDE3C1439D7A1FD5F9B9F /* BPUpgradeArgumentsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 74CEBC2BDF5416D80F215920 /* BPUpgradeArgumentsTests.m */; };
@@ -82,6 +84,7 @@
 		2D630A95BC372F5BDE94E4E7 /* BPVersionStampingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 674FD1D9F871DDE01F853A88 /* BPVersionStampingTests.m */; };
 		2B599EC8322105ACA0893956 /* BPLocalizedStringsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 828B14661B644D554E964BFC /* BPLocalizedStringsTests.m */; };
 		6147CF053208BD77693EA689 /* BPMockFidelityTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 1DB1AF02EFFE124B9EC54578 /* BPMockFidelityTests.m */; };
+		C8B84A9EB0235B5FC6DC82C9 /* BPBrewErrorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 924FA3A9F0675252E8BF2440 /* BPBrewErrorTests.m */; };
 		55BE3020BDDC9FCA19C1ECBC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C155F549AE6671B51A3FCAD /* Cocoa.framework */; };
 		5F38898450E03D2D56291D29 /* BPHelperSecurity.m in Sources */ = {isa = PBXBuildFile; fileRef = 1227A6AF7A6E1F24A913015B /* BPHelperSecurity.m */; };
 		627F454983A4C2C93584B748 /* BPHelperOutputRelayTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 88BBB2337F47C685C807D566 /* BPHelperOutputRelayTests.m */; };
@@ -207,6 +210,7 @@
 		0D42C8684E62ED50FB7A319A /* CakebrewUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CakebrewUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1227A6AF7A6E1F24A913015B /* BPHelperSecurity.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPHelperSecurity.m; sourceTree = "<group>"; };
 		133D2B42D25F6316C55C3FE2 /* BPService.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = BPService.h; path = Models/BPService.h; sourceTree = "<group>"; };
+B6830022477FCFE425D036B9 /* BPBrewError.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = BPBrewError.h; path = Models/BPBrewError.h; sourceTree = "<group>"; };
 		144F27849ACA00D8A7EDB084 /* BPHelperSecurity.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPHelperSecurity.h; sourceTree = "<group>"; };
 		150AEC381B3F999A00163767 /* BPDoctorViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPDoctorViewController.h; path = Controllers/BPDoctorViewController.h; sourceTree = "<group>"; };
 		150AEC391B3F999A00163767 /* BPDoctorViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPDoctorViewController.m; path = Controllers/BPDoctorViewController.m; sourceTree = "<group>"; };
@@ -368,8 +372,10 @@
 		674FD1D9F871DDE01F853A88 /* BPVersionStampingTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPVersionStampingTests.m; sourceTree = "<group>"; };
 		828B14661B644D554E964BFC /* BPLocalizedStringsTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPLocalizedStringsTests.m; sourceTree = "<group>"; };
 		1DB1AF02EFFE124B9EC54578 /* BPMockFidelityTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPMockFidelityTests.m; sourceTree = "<group>"; };
+		924FA3A9F0675252E8BF2440 /* BPBrewErrorTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPBrewErrorTests.m; sourceTree = "<group>"; };
 		A8052362C08CE3FF3945ABAD /* BPPreferencesTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPPreferencesTests.m; sourceTree = "<group>"; };
 		AA67F6479F85E50C83706E3E /* BPService.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPService.m; path = Models/BPService.m; sourceTree = "<group>"; };
+6F14AB39D9A4FA816D3A932C /* BPBrewError.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPBrewError.m; path = Models/BPBrewError.m; sourceTree = "<group>"; };
 		B040E2F0936D991B4511CE23 /* BPHelperOutputRelay.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPHelperOutputRelay.h; sourceTree = "<group>"; };
 		B15AF968007B8829A04A4ECC /* BPMockHomebrewInterface.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPMockHomebrewInterface.m; sourceTree = "<group>"; };
 		B1F0C40DBB035A181E3860BE /* BPHelperCommandTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPHelperCommandTests.m; sourceTree = "<group>"; };
@@ -622,7 +628,9 @@
 				1570BA5418EE50BD001C3C5C /* BPFormula.h */,
 				1570BA5518EE50BD001C3C5C /* BPFormula.m */,
 				133D2B42D25F6316C55C3FE2 /* BPService.h */,
+				B6830022477FCFE425D036B9 /* BPBrewError.h */,
 				AA67F6479F85E50C83706E3E /* BPService.m */,
+				6F14AB39D9A4FA816D3A932C /* BPBrewError.m */,
 				8451F8493C62A113AED576E9 /* BPPreferences.h */,
 				4D77DDA97C5A016EBA1AA607 /* BPPreferences.m */,
 			);
@@ -777,6 +785,7 @@
 				674FD1D9F871DDE01F853A88 /* BPVersionStampingTests.m */,
 				828B14661B644D554E964BFC /* BPLocalizedStringsTests.m */,
 				1DB1AF02EFFE124B9EC54578 /* BPMockFidelityTests.m */,
+				924FA3A9F0675252E8BF2440 /* BPBrewErrorTests.m */,
 				8F2D53C524FAE8B655FD3778 /* BPHelperRegistrationTests.m */,
 			);
 			path = CakebrewTests;
@@ -1047,6 +1056,7 @@
 				150AEC551B3F999A00163767 /* BPUpdateViewController.m in Sources */,
 				FC6F1F065021F6E3D4AAB378 /* BPMockHomebrewInterface.m in Sources */,
 				0E5E1AFEFC2EB5ACFC76A355 /* BPService.m in Sources */,
+				3F479CBF6D5CDB2B5BCDCD4B /* BPBrewError.m in Sources */,
 				49CC41B5A77580D8BF6465A5 /* BPServicesViewController.m in Sources */,
 				2D8AA669642BBFBEF248B016 /* BPPreferences.m in Sources */,
 				BFE5ABAF8C68B6DD30115FB1 /* BPPreferencesWindowController.m in Sources */,
@@ -1087,6 +1097,7 @@
 				CFC6235C90449D13C035A5DD /* BPFormulaeTableView.m in Sources */,
 				F686E7E93EA64727C5BD476A /* BPServiceTests.m in Sources */,
 				4403EFA806C14981AAB4D830 /* BPService.m in Sources */,
+				F9A912776646B62D5BF57F40 /* BPBrewError.m in Sources */,
 				CB444AAF97F2767EE566D067 /* BPPreferences.m in Sources */,
 				9D8CB0FDFCD1CC2E9148390C /* BPPreferencesTests.m in Sources */,
 				6F3A310A6C9E6A2AB30C921F /* BPPreferencesWindowController.m in Sources */,
@@ -1113,6 +1124,7 @@
 				2D630A95BC372F5BDE94E4E7 /* BPVersionStampingTests.m in Sources */,
 				2B599EC8322105ACA0893956 /* BPLocalizedStringsTests.m in Sources */,
 				6147CF053208BD77693EA689 /* BPMockFidelityTests.m in Sources */,
+				C8B84A9EB0235B5FC6DC82C9 /* BPBrewErrorTests.m in Sources */,
 				00D4E0159FF9B3D0D368E0AD /* BPMockHomebrewInterface.m in Sources */,
 				8DEE82E248857750CD9BDC4D /* BPSideBarController.m in Sources */,
 				59246886F867B7F80EBA72A9 /* BPMainWindowController.m in Sources */,
