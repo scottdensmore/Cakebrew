@@ -1,0 +1,24 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "a0e3a1c6f650",
+  "strategy": "manual-commit",
+  "branch": "fix/gate-mock-out-of-release",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/a0/e3a1c6f650/0/metadata.json",
+      "transcript": "/a0/e3a1c6f650/0/full.jsonl",
+      "compact_transcript": "/a0/e3a1c6f650/0/transcript.jsonl",
+      "content_hash": "/a0/e3a1c6f650/0/content_hash.txt",
+      "prompt": "/a0/e3a1c6f650/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1075,
+    "cache_creation_tokens": 2332581,
+    "cache_read_tokens": 231938216,
+    "output_tokens": 415679,
+    "api_call_count": 553
+  }
+}
