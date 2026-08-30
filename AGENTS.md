@@ -130,6 +130,17 @@ uploads crash logs from `~/Library/Logs/DiagnosticReports` on failure.
   (groups included). Inserting a row renumbers everything after it — update
   the enum, the View-menu item tags in `MainMenu.xib`, and check every
   `switch`/comparison on the enum (`grep -rn FormulaeSideBarItem`).
+- **Never `reloadData` the sidebar to refresh a badge.** Reloading an
+  `NSOutlineView` clears its selection, and `-configureSidebarSettings` restores
+  the user's last row at setup — so a stray reload silently drops it, and the
+  next `sourceListSelectionDidChange` persists whatever replaced it. Use
+  `-refreshBadgeForListMode:`, which redraws one row with `reloadItem:`. The
+  old all-at-once reload got away with it only because it ran inside
+  `-homebrewManagerFinishedUpdating:`, which reselects immediately afterwards.
+- **Row identity for VoiceOver and XCUITest lives on the cell's text field**,
+  not the `NSTableCellView` — the container is not an accessibility element, so
+  an identifier set there reaches neither. Rows carry unlocalized identifiers
+  (`sidebar.casks.installed`); journeys address rows by those, never by index.
 
 ## UI conventions
 
@@ -227,5 +238,17 @@ macOS ships: bump the deployment target one, bump the CI runner, never pin
   `DevToolsSecurity -status` first. The full local run takes ~6 minutes (vs ~4s
   for the unit suite), so it is a pre-PR step, not an inner-loop one. CI remains
   the merge gate.
+- **A locked screen blocks the whole visual toolchain**, not just XCUITest:
+  `screencapture` fails with "could not create image from window", and the UI
+  suite fails with `Failed to activate application … (current state: Running
+  Background)`. Check `ioreg -n Root -d 1 -r -k IOConsoleLocked` before
+  believing either. There is no way around it from a shell — the work is a
+  pre-PR step that needs the display awake.
+- **You cannot force one app to light mode from the command line.**
+  `-AppleInterfaceStyle Light` in the argument domain is ignored: AppKit reads
+  the appearance from the system preference directly rather than through
+  `NSUserDefaults` precedence, so the app comes up in whatever the system is.
+  Capturing a light-mode screenshot means flipping System Settings ▸ Appearance
+  by hand.
 - Commit signing is temporarily disabled (`git -c commit.gpgsign=false`) while
   the 1Password SSH agent is broken. Re-enable when fixed.
