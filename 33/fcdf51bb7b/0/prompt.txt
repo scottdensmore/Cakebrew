@@ -1,1 +1,9 @@
 Take a look through this project.  There are issues that have been filed already. One thing that needs to be done is create a icon that is good for the system. It supports light, dark modes. Given the app, design one for it. It should follow great mac OS design
+
+---
+
+ok those look good what is next?
+
+---
+
+Ok lets do it
