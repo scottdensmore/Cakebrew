@@ -1,0 +1,184 @@
+{
+  "color-space-for-untagged-svg-colors" : "display-p3",
+  "fill-specializations" : [
+    {
+      "value" : {
+        "linear-gradient" : [
+          "display-p3:1.00000,0.74118,0.22745,1.00000",
+          "display-p3:0.94902,0.42353,0.07059,1.00000"
+        ],
+        "orientation" : {
+          "start" : {
+            "x" : 0.5,
+            "y" : 0.0
+          },
+          "stop" : {
+            "x" : 0.5,
+            "y" : 1.0
+          }
+        }
+      }
+    },
+    {
+      "appearance" : "dark",
+      "value" : {
+        "linear-gradient" : [
+          "display-p3:0.30196,0.14510,0.05098,1.00000",
+          "display-p3:0.09412,0.04706,0.02353,1.00000"
+        ],
+        "orientation" : {
+          "start" : {
+            "x" : 0.5,
+            "y" : 0.0
+          },
+          "stop" : {
+            "x" : 0.5,
+            "y" : 1.0
+          }
+        }
+      }
+    }
+  ],
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "display-p3:0.86275,0.10588,0.15686,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "display-p3:0.92941,0.14510,0.20784,1.00000"
+              }
+            }
+          ],
+          "glass" : true,
+          "image-name" : "cherry.svg",
+          "name" : "Cherry"
+        },
+        {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "display-p3:0.08627,0.49020,0.25098,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "display-p3:0.14902,0.62745,0.33725,1.00000"
+              }
+            }
+          ],
+          "glass" : true,
+          "image-name" : "stem.svg",
+          "name" : "Stem"
+        }
+      ],
+      "lighting" : "combined",
+      "name" : "Cherry",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.22
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.0
+      }
+    },
+    {
+      "layers" : [
+        {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "display-p3:0.30588,0.11765,0.05490,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "display-p3:0.40000,0.20784,0.13333,1.00000"
+              }
+            }
+          ],
+          "glass" : true,
+          "image-name" : "icing.svg",
+          "name" : "Chocolate icing"
+        }
+      ],
+      "lighting" : "combined",
+      "name" : "Icing",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.2
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.0
+      }
+    },
+    {
+      "layers" : [
+        {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "display-p3:1.00000,0.93333,0.76078,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "display-p3:0.95686,0.85490,0.68235,1.00000"
+              }
+            }
+          ],
+          "glass" : true,
+          "image-name" : "cream.svg",
+          "name" : "Cream filling"
+        },
+        {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "display-p3:0.98824,0.69412,0.10196,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "display-p3:0.90196,0.56471,0.07451,1.00000"
+              }
+            }
+          ],
+          "glass" : true,
+          "image-name" : "body.svg",
+          "name" : "Cake and handle"
+        }
+      ],
+      "lighting" : "combined",
+      "name" : "Cake",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.25
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.0
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : [
+      "macOS"
+    ]
+  }
+}
