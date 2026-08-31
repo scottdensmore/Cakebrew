@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "33fcdf51bb7b",
+  "strategy": "manual-commit",
+  "branch": "feat/layered-app-icon",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "Cakebrew.xcodeproj/project.pbxproj",
+    "Cakebrew/AppIcon.icon/Assets/body.svg",
+    "Cakebrew/AppIcon.icon/Assets/cherry.svg",
+    "Cakebrew/AppIcon.icon/Assets/cream.svg",
+    "Cakebrew/AppIcon.icon/Assets/icing.svg",
+    "Cakebrew/AppIcon.icon/Assets/stem.svg",
+    "Cakebrew/AppIcon.icon/icon.json",
+    "Tools/export-appicon-fallbacks.sh",
+    "Tools/generate-placeholder-appicon.swift"
+  ],
+  "sessions": [
+    {
+      "metadata": "/33/fcdf51bb7b/0/metadata.json",
+      "transcript": "/33/fcdf51bb7b/0/full.jsonl",
+      "compact_transcript": "/33/fcdf51bb7b/0/transcript.jsonl",
+      "content_hash": "/33/fcdf51bb7b/0/content_hash.txt",
+      "prompt": "/33/fcdf51bb7b/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 692228,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 20482688,
+    "output_tokens": 47020,
+    "api_call_count": 185
+  }
+}
