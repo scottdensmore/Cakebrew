@@ -3,7 +3,7 @@
   "checkpoint_id": "44d4d57d7f92",
   "strategy": "manual-commit",
   "branch": "chore/workflow-agents",
-  "checkpoints_count": 6,
+  "checkpoints_count": 7,
   "files_touched": [
     ".agents/skills/cakebrew-code-review/SKILL.md",
     ".agents/skills/cakebrew-code-review/agents/openai.yaml",
@@ -35,13 +35,20 @@
       "compact_transcript": "/44/d4d57d7f92/1/transcript.jsonl",
       "content_hash": "/44/d4d57d7f92/1/content_hash.txt",
       "prompt": "/44/d4d57d7f92/1/prompt.txt"
+    },
+    {
+      "metadata": "/44/d4d57d7f92/2/metadata.json",
+      "transcript": "/44/d4d57d7f92/2/full.jsonl",
+      "compact_transcript": "/44/d4d57d7f92/2/transcript.jsonl",
+      "content_hash": "/44/d4d57d7f92/2/content_hash.txt",
+      "prompt": "/44/d4d57d7f92/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 1537363,
+    "input_tokens": 1566448,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 48717824,
-    "output_tokens": 74056,
-    "api_call_count": 351
+    "cache_read_tokens": 48926720,
+    "output_tokens": 75156,
+    "api_call_count": 359
   }
 }
