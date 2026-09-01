@@ -1,0 +1,40 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "44d4d57d7f92",
+  "strategy": "manual-commit",
+  "branch": "chore/workflow-agents",
+  "checkpoints_count": 5,
+  "files_touched": [
+    ".agents/skills/cakebrew-code-review/SKILL.md",
+    ".agents/skills/cakebrew-code-review/agents/openai.yaml",
+    ".agents/skills/cakebrew-deliver/SKILL.md",
+    ".agents/skills/cakebrew-deliver/agents/openai.yaml",
+    ".agents/skills/cakebrew-implement/SKILL.md",
+    ".agents/skills/cakebrew-implement/agents/openai.yaml",
+    ".agents/skills/cakebrew-plan/SKILL.md",
+    ".agents/skills/cakebrew-plan/agents/openai.yaml",
+    ".agents/skills/cakebrew-ui-review/SKILL.md",
+    ".agents/skills/cakebrew-ui-review/agents/openai.yaml",
+    ".agents/skills/cakebrew-verify/SKILL.md",
+    ".agents/skills/cakebrew-verify/agents/openai.yaml",
+    ".agents/skills/cakebrew-workflow/SKILL.md",
+    ".agents/skills/cakebrew-workflow/agents/openai.yaml",
+    "AGENTS.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/44/d4d57d7f92/0/metadata.json",
+      "transcript": "/44/d4d57d7f92/0/full.jsonl",
+      "compact_transcript": "/44/d4d57d7f92/0/transcript.jsonl",
+      "content_hash": "/44/d4d57d7f92/0/content_hash.txt",
+      "prompt": "/44/d4d57d7f92/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1513708,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 48662272,
+    "output_tokens": 71216,
+    "api_call_count": 348
+  }
+}

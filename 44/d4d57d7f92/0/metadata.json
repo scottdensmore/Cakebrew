@@ -1,0 +1,131 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "44d4d57d7f92",
+  "session_id": "01a055ce-e4d9-77c1-ac18-0944a8c71200",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-01T02:56:56.116112Z",
+  "branch": "chore/workflow-agents",
+  "checkpoints_count": 5,
+  "save_step_count": 5,
+  "files_touched": [
+    ".agents/skills/cakebrew-code-review/SKILL.md",
+    ".agents/skills/cakebrew-code-review/agents/openai.yaml",
+    ".agents/skills/cakebrew-deliver/SKILL.md",
+    ".agents/skills/cakebrew-deliver/agents/openai.yaml",
+    ".agents/skills/cakebrew-implement/SKILL.md",
+    ".agents/skills/cakebrew-implement/agents/openai.yaml",
+    ".agents/skills/cakebrew-plan/SKILL.md",
+    ".agents/skills/cakebrew-plan/agents/openai.yaml",
+    ".agents/skills/cakebrew-ui-review/SKILL.md",
+    ".agents/skills/cakebrew-ui-review/agents/openai.yaml",
+    ".agents/skills/cakebrew-verify/SKILL.md",
+    ".agents/skills/cakebrew-verify/agents/openai.yaml",
+    ".agents/skills/cakebrew-workflow/SKILL.md",
+    ".agents/skills/cakebrew-workflow/agents/openai.yaml",
+    "AGENTS.md"
+  ],
+  "agent": "Codex",
+  "model": "gpt-5.6-sol",
+  "turn_id": "7c2b883dfd1b",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 1513708,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 48662272,
+    "output_tokens": 71216,
+    "api_call_count": 348
+  },
+  "session_metrics": {
+    "turn_count": 5
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-01T02:56:55.407356Z",
+    "agent_lines": 292,
+    "agent_removed": 25,
+    "human_added": 126,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 418,
+    "total_lines_changed": 443,
+    "agent_percentage": 71.55756207674943,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 130,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".codex/config.toml": 2,
+        "workflow.md": 128
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 2,
+      "user_lines_removed": 0,
+      "agent_lines_added": 203,
+      "agent_lines_removed": 25,
+      "user_added_per_file": {
+        ".codex/config.toml": 2
+      }
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 2,
+      "user_lines_removed": 0,
+      "agent_lines_added": 203,
+      "agent_lines_removed": 25,
+      "user_added_per_file": {
+        ".codex/config.toml": 2
+      }
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 44,
+      "user_lines_removed": 0,
+      "agent_lines_added": 420,
+      "agent_lines_removed": 25,
+      "user_added_per_file": {
+        ".codex/agents/cakebrew-code-reviewer.toml": 8,
+        ".codex/agents/cakebrew-implementer.toml": 9,
+        ".codex/agents/cakebrew-planner.toml": 9,
+        ".codex/agents/cakebrew-ui-reviewer.toml": 8,
+        ".codex/agents/cakebrew-verifier.toml": 8,
+        ".codex/config.toml": 2
+      }
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 44,
+      "user_lines_removed": 0,
+      "agent_lines_added": 420,
+      "agent_lines_removed": 25,
+      "user_added_per_file": {
+        ".codex/agents/cakebrew-code-reviewer.toml": 8,
+        ".codex/agents/cakebrew-implementer.toml": 9,
+        ".codex/agents/cakebrew-planner.toml": 9,
+        ".codex/agents/cakebrew-ui-reviewer.toml": 8,
+        ".codex/agents/cakebrew-verifier.toml": 8,
+        ".codex/config.toml": 2
+      }
+    },
+    {
+      "checkpoint_number": 6,
+      "user_lines_added": 44,
+      "user_lines_removed": 0,
+      "agent_lines_added": 420,
+      "agent_lines_removed": 25,
+      "user_added_per_file": {
+        ".codex/agents/cakebrew-code-reviewer.toml": 8,
+        ".codex/agents/cakebrew-implementer.toml": 9,
+        ".codex/agents/cakebrew-planner.toml": 9,
+        ".codex/agents/cakebrew-ui-reviewer.toml": 8,
+        ".codex/agents/cakebrew-verifier.toml": 8,
+        ".codex/config.toml": 2
+      }
+    }
+  ]
+}

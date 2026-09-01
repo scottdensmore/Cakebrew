@@ -1,0 +1,21 @@
+I want to update the workflow for this project to be based on [workflow.md](workflow.md) . Remember to only use Agents.md. Also you can just start over if that is the easiest to do. Don't point to that file since we will delete it later
+
+---
+
+Did you update and create all the skills and subagents
+
+---
+
+Then go ahead and create them
+
+---
+
+Ok lets pick up and issue and test the new workflow to make sure it ws working well
+
+---
+
+ok try again
+
+---
+
+try again
