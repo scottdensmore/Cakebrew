@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cakebrew Verify"
+  short_description: "Run Cakebrew's complete verification gate"
+  default_prompt: "Use $cakebrew-verify to verify the current Cakebrew branch from the start."

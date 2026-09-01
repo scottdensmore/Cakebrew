@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cakebrew Code Review"
+  short_description: "Independently review the full Cakebrew diff"
+  default_prompt: "Use $cakebrew-code-review to perform the pre-commit expert review of this Cakebrew branch."

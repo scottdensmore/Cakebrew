@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cakebrew Implement"
+  short_description: "Implement one Cakebrew slice with strict TDD"
+  default_prompt: "Use $cakebrew-implement to implement this scoped Cakebrew slice with red-green-refactor evidence."
