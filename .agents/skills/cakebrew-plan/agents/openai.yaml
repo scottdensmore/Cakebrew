@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cakebrew Plan"
+  short_description: "Plan and de-risk a Cakebrew vertical slice"
+  default_prompt: "Use $cakebrew-plan to investigate and scope this Cakebrew change before implementation."

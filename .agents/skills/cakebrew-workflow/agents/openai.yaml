@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cakebrew Workflow"
+  short_description: "Run Cakebrew's gated engineering lifecycle"
+  default_prompt: "Use $cakebrew-workflow to deliver this Cakebrew change through every required gate."

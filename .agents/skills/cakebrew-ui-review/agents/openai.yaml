@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cakebrew UI Review"
+  short_description: "Review Cakebrew UI, UX, and accessibility"
+  default_prompt: "Use $cakebrew-ui-review to review the user-visible changes in this Cakebrew branch."

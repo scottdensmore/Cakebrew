@@ -18,37 +18,43 @@ measurements that cost real time to obtain.
 
 ```mermaid
 flowchart TD
-    A[0. Plan, prototype, spike] --> B[1. Inspect & branch]
-    B --> C[2. Scope a thin vertical slice]
-    C --> D[3. TDD: red, green, refactor]
-    D --> E[4. Inspect the whole workspace diff]
+    A[1. Plan, prototype & spike] --> B[2. Inspect & branch]
+    B --> C[3. Scope a thin vertical slice]
+    C --> D[4. TDD: red, green, refactor]
+    D --> E[5. Inspect the whole workspace diff]
     E --> F{User-visible change?}
-    F -- Yes --> G[5. UI/UX review gate]
-    F -- No --> H[6. Verification gate]
+    F -- Yes --> G[6. UI/UX review gate]
+    F -- No --> H[7. Verification gate]
     G --> H
-    H --> I[7. Code review gate]
-    I -- Findings --> D
-    I -- Approved --> J[8. Atomic commit]
-    J --> K[9. Pull request]
-    K --> L[10. Gated merge, linear history]
+    H --> I[8. Expert code review gate]
+    I -- Findings or changes --> D
+    I -- Approved --> J[9. Atomic commit]
+    J --> K[10. Pull request]
+    K --> L[11. Gated merge, linear history]
 ```
 
 ### Phase 0 — Discovery
 
-**Spike before you commit to a design.** Build throwaway prototypes to test
-framework assumptions and find the edge cases, especially at integration
-boundaries — never assume a third-party API behaves as documented. Two examples
-from this repo's history: the App Sandbox question was settled by measuring
-what actually broke, and layered app-icon support was settled by feeding
-`actool` a probe entry and reading the warning. Both answers were the opposite
-of the documentation-level guess.
+#### 1. Plan, prototype and spike
+
+**Spike before you commit to a design.** Explore the problem, then build the
+smallest throwaway prototype that can test framework assumptions, feasibility,
+integration boundaries, edge cases or performance risks. Never assume a
+third-party API behaves as documented. Two examples from this repo's history:
+the App Sandbox question was settled by measuring what actually broke, and
+layered app-icon support was settled by feeding `actool` a probe entry and
+reading the warning. Both answers were the opposite of the documentation-level
+guess.
 
 Weigh alternatives on architectural fit, complexity, performance and
 maintenance burden. Then break the design into an ordered list of thin vertical
 slices, and **throw the prototype away** — production code is rebuilt under
-TDD, not promoted from a spike.
+TDD, not promoted from a spike. Clear all spike code and scratch artifacts from
+the workspace before implementation begins.
 
 ### Phase 1 — Context and scoping
+
+#### 2. Inspect and branch
 
 **Inspect before mutating.** Read the repo state, branches, and working tree
 first. Preserve unrelated staged, unstaged and untracked changes — this machine
@@ -59,12 +65,16 @@ are not yours to commit or discard. Stash them around a rebase; never
 **Branch off latest `main`.** Prefixes: `feat/`, `fix/`, `refactor/`, `docs/`,
 `chore/`, `test/`, `perf/`. Never commit to `main` directly.
 
+#### 3. Scope a thin vertical slice
+
 **Take one thin vertical slice** — the smallest cohesive end-to-end outcome
 that can be tested, reviewed and shipped on its own. One PR per logical unit of
 work; unrelated changes go on their own branch. A horizontal layer spanning the
 whole app is not a slice.
 
 ### Phase 2 — Test-driven implementation
+
+#### 4. Red, green, refactor
 
 **Red → green → refactor, and the red is not optional.** Write the smallest
 failing test first and confirm it fails *for the expected reason* — a compile
@@ -81,14 +91,22 @@ red, you have not done TDD — **prove the test bites** by mutation instead:
 break the implementation deliberately, confirm the suite fails, and restore it.
 Say which of the two you did in the PR.
 
+#### 5. Inspect the workspace diff
+
 **Then inspect the whole workspace diff**, including untracked files
 (`git status --untracked-files=all`). Remove scratch files, probes and
 debugging artifacts. Temporary instrumentation must not reach a commit.
 
 ### Phase 3 — Quality gates
 
-Run these in order. **If any gate causes a code change, restart from the
-verification gate** — a fix invalidates every result that came before it.
+Use distinct reviewer roles or separate passes so that planning, implementation,
+UI review, verification and expert code review do not collapse into one
+self-review. Give reviewers the diff and observed evidence, not merely the
+implementation intent. Run the gates in order. **If any gate causes a code
+change, restart from the verification gate and obtain fresh code review
+approval** — a fix invalidates every result that came before it.
+
+#### 6. UI/UX and design review
 
 **UI/UX review** *(only if a user-facing surface changed)*. Verify it visually:
 launch the mock build (`-BPMockBrew`), look at it, confirm layout, dark mode,
@@ -96,15 +114,24 @@ and badges. For behaviour rather than looks, add a `CakebrewUITests` journey —
 an assertion beats eyeballing a screenshot. Check accessibility and platform
 idioms, not just that it renders.
 
+#### 7. Verification and automated checks
+
 **Verification.** Build **Debug and Release**, both warning-free — a new
 warning is a failure. Run the full unit suite. Compile the UI test target.
-Run the UI journeys before opening the PR.
+Run the UI journeys before opening the PR. Treat every warning or failing check
+as a finding; after any code edit, rerun the full verification sequence from
+the beginning.
+
+#### 8. Pre-commit expert code review
 
 **Code review** over the full branch diff plus anything uncommitted. Language
 idioms, memory and concurrency safety, performance, architecture, edge cases.
-Fix what you find, then re-verify.
+Resolve every actionable finding, then re-verify and repeat the review until it
+is approved.
 
 ### Phase 4 — Integration and delivery
+
+#### 9. Structured atomic commit
 
 **Conventional Commits.** `<type>(<scope>): <imperative summary>`, where type
 is one of `feat` `fix` `refactor` `docs` `chore` `test` `perf` `build` `ci`
@@ -112,15 +139,23 @@ and scope names the area (`sidebar`, `reload`, `toolbar`, `brewfile`, `l10n`,
 …). The body explains *why*, and names what the test covers. History before
 this convention was adopted is left alone; do not rewrite it.
 
+Commit only the reviewed and verified slice. The test and production code for a
+behaviour land together in the same atomic commit.
+
+#### 10. Pull request
+
 **Open a PR with the `gh` CLI**, never the web UI, and never a draft unless
 asked. Describe what changed, why, and how it was tested — including what you
 could *not* verify and the reason.
 
+#### 11. Gated merge and linear history
+
 **Green CI is the merge gate.** Both jobs (Build & Test, UI Tests) must pass.
 Never merge on pending or failing checks. If a UI test fails on CI, read the
 failure and the `CAKEBREW_UI_TREE_*` dump in the job log before assuming a
-flake — re-run once only when the evidence says infrastructure. If a reviewer
-is assigned, wait for approval; never bypass an assigned review.
+flake — re-run once only when the evidence says infrastructure. If a human or
+automated reviewer is assigned, wait for approval; never bypass an assigned
+review.
 
 **Merge and clean up:** `gh pr merge <n> --squash --delete-branch` (squash is
 the maintainer's explicit choice, and keeps history linear and bisectable),
@@ -129,6 +164,47 @@ then `git checkout main`, `git pull --ff-only`.
 > **Stacked PRs:** retarget a child branch's base to `main` *before* merging its
 > parent. Deleting a merged branch auto-closes any PR still based on it, and
 > GitHub will not reopen a PR whose base is gone.
+
+### Quick reference
+
+| Stage | Pass criteria |
+| --- | --- |
+| Discovery | Feasibility measured, alternatives weighed, vertical slices ordered, spike discarded |
+| Setup | Repository inspected, unrelated work preserved, branch created from latest `main` |
+| Scope | Smallest independently shippable end-to-end outcome selected |
+| TDD | Focused test observed red, minimal implementation green, refactor stays green |
+| Diff | Staged, unstaged and untracked files inspected; no scratch or debug artifacts |
+| UI review | Changed surfaces checked for layout, appearance, accessibility and platform idioms |
+| Verification | Debug and Release warning-free; unit suite, UI target and UI journeys pass |
+| Code review | Full branch and workspace diff reviewed; all findings resolved; verification repeated after edits |
+| Delivery | Atomic Conventional Commit, ready PR, assigned approvals and both CI jobs green |
+| Merge | Squash merge completed, branch deleted, local `main` fast-forwarded |
+
+### Configured skills and subagents
+
+For every feature, bugfix or behaviour-changing refactor, the primary agent
+invokes `$cakebrew-workflow` and coordinates the configured roles below. The
+primary agent owns requirements, cross-role decisions and delivery; subagents
+return bounded evidence and never silently expand their assignment.
+
+| Role | Skill | Custom agent | Use |
+| --- | --- | --- | --- |
+| Orchestrator | `$cakebrew-workflow` | Primary agent | Route the slice through every applicable phase and repeat invalidated gates |
+| Planner / architect | `$cakebrew-plan` | `cakebrew-planner` | Measure unknowns, compare alternatives and define the vertical slice before implementation |
+| Implementer | `$cakebrew-implement` | `cakebrew-implementer` | Own explicitly assigned files and produce red-green-refactor evidence |
+| UI reviewer | `$cakebrew-ui-review` | `cakebrew-ui-reviewer` | Independently review every user-visible change after implementation stabilizes |
+| Verifier | `$cakebrew-verify` | `cakebrew-verifier` | Run the complete applicable verification sequence without editing source |
+| Code reviewer | `$cakebrew-code-review` | `cakebrew-code-reviewer` | Independently review the full branch and workspace diff after verification passes |
+| Delivery | `$cakebrew-deliver` | Primary agent | Perform only the commit, PR or merge actions the user authorized |
+
+Run the mutating implementer separately from gate agents. UI review,
+verification and code review do not fix their own findings: send them back to
+the implementer, then rerun every invalidated gate. If independent work must run
+in parallel, give each agent an isolated worktree and explicit file ownership.
+
+The skill and custom-agent files are routing adapters, not additional sources
+of project policy. They must defer to this file. Change workflow rules here
+first and keep the adapters narrow.
 
 ---
 

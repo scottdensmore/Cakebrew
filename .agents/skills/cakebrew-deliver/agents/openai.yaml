@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cakebrew Deliver"
+  short_description: "Deliver a verified Cakebrew slice safely"
+  default_prompt: "Use $cakebrew-deliver to perform the authorized delivery steps for this verified Cakebrew branch."
