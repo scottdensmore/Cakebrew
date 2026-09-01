@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "fc5b110bf204",
+  "strategy": "manual-commit",
+  "branch": "chore/workflow-agents",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "Cakebrew/Views/BPAutoScrollTextView.h",
+    "Cakebrew/Views/BPAutoScrollTextView.m",
+    "CakebrewTests/BPTaskStreamingTests.m"
+  ],
+  "sessions": [
+    {
+      "metadata": "/fc/5b110bf204/0/metadata.json",
+      "transcript": "/fc/5b110bf204/0/full.jsonl",
+      "compact_transcript": "/fc/5b110bf204/0/transcript.jsonl",
+      "content_hash": "/fc/5b110bf204/0/content_hash.txt",
+      "prompt": "/fc/5b110bf204/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 2019,
+    "cache_creation_tokens": 4187744,
+    "cache_read_tokens": 454043474,
+    "output_tokens": 861377,
+    "api_call_count": 1025
+  }
+}
