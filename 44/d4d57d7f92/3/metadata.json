@@ -1,0 +1,75 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "44d4d57d7f92",
+  "session_id": "01a0562d-ade2-72f3-9ea3-a9f89500cb4d",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-01T02:57:49.981752Z",
+  "branch": "chore/workflow-agents",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    "AGENTS.md"
+  ],
+  "agent": "Codex",
+  "model": "gpt-5.6-sol",
+  "turn_id": "ab000153893e",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 23737,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 82944,
+    "output_tokens": 1321,
+    "api_call_count": 4
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-01T02:57:49.961496Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 25,
+    "total_committed": 0,
+    "total_lines_changed": 25,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 464,
+      "user_lines_removed": 25,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".agents/skills/cakebrew-code-review/SKILL.md": 20,
+        ".agents/skills/cakebrew-code-review/agents/openai.yaml": 4,
+        ".agents/skills/cakebrew-deliver/SKILL.md": 25,
+        ".agents/skills/cakebrew-deliver/agents/openai.yaml": 4,
+        ".agents/skills/cakebrew-implement/SKILL.md": 21,
+        ".agents/skills/cakebrew-implement/agents/openai.yaml": 4,
+        ".agents/skills/cakebrew-plan/SKILL.md": 22,
+        ".agents/skills/cakebrew-plan/agents/openai.yaml": 4,
+        ".agents/skills/cakebrew-ui-review/SKILL.md": 21,
+        ".agents/skills/cakebrew-ui-review/agents/openai.yaml": 4,
+        ".agents/skills/cakebrew-verify/SKILL.md": 23,
+        ".agents/skills/cakebrew-verify/agents/openai.yaml": 4,
+        ".agents/skills/cakebrew-workflow/SKILL.md": 31,
+        ".agents/skills/cakebrew-workflow/agents/openai.yaml": 4,
+        ".codex/agents/cakebrew-code-reviewer.toml": 8,
+        ".codex/agents/cakebrew-implementer.toml": 9,
+        ".codex/agents/cakebrew-planner.toml": 9,
+        ".codex/agents/cakebrew-ui-reviewer.toml": 8,
+        ".codex/agents/cakebrew-verifier.toml": 8,
+        ".codex/config.toml": 2,
+        "AGENTS.md": 101,
+        "workflow.md": 128
+      },
+      "user_removed_per_file": {
+        "AGENTS.md": 25
+      }
+    }
+  ]
+}
