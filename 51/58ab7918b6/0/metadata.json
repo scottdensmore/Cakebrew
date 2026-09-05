@@ -1,0 +1,39 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "5158ab7918b6",
+  "session_id": "01a055ce-e4d9-77c1-ac18-0944a8c71200",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-05T04:16:36.960742Z",
+  "branch": "feat/notification-navigation-recovered",
+  "checkpoints_count": 1,
+  "files_touched": [],
+  "agent": "Codex",
+  "model": "gpt-6-astra",
+  "turn_id": "8e2135499ad5",
+  "checkpoint_transcript_start": 4952,
+  "transcript_lines_at_start": 4952,
+  "compact_transcript_start": 689,
+  "token_usage": {
+    "input_tokens": 100840,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 7648896,
+    "output_tokens": 24108,
+    "api_call_count": 105
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 130,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".codex/config.toml": 2,
+        "workflow.md": 128
+      }
+    }
+  ]
+}
