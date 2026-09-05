@@ -23,7 +23,7 @@ jobs:
     runs-on: macos-26
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Show versions
         run: |
@@ -75,7 +75,7 @@ jobs:
 
       - name: Upload brew output
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: brew-output
           path: brew-output/
