@@ -85,7 +85,7 @@
 
 	// "Required by" comes from a separate `brew uses` call, not getInformation.
 	// Reset it now (clearing any previous selection) and fetch it debounced.
-	[self.formulaDependentsLabel setStringValue:@"--"];
+	[self.formulaDependentsLabel setStringValue:NSLocalizedString(@"Info_View_Empty_Value", nil)];
 
 	[self.timedDispatch scheduleDispatchAfterTimeInterval:0.3
 												  inQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0)
@@ -117,7 +117,7 @@
 		{
 			return;
 		}
-		NSString *value = [dependents count] > 0 ? [dependents componentsJoinedByString:@", "] : @"--";
+		NSString *value = [dependents count] > 0 ? [dependents componentsJoinedByString:@", "] : NSLocalizedString(@"Info_View_Empty_Value", nil);
 		[self.formulaDependentsLabel setStringValue:value];
 	});
 }
@@ -131,7 +131,7 @@
 
 - (void)displayInformationForFormulae
 {
-	static NSString *emptyString = @"--";
+	NSString *emptyString = NSLocalizedString(@"Info_View_Empty_Value", nil);
 	
 	NSString *multipleString = NSLocalizedString(@"Info_View_Multiple_Values", nil);
 	

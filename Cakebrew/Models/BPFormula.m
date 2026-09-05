@@ -470,7 +470,6 @@ static BOOL BPLineLooksLikeWebsite(NSString *line)
 		{
 			[self setConflicts:[line substringFromIndex:16]];
 			lineIndex++;
-			line = [lines objectAtIndex:lineIndex];
 		}
 	}
 	

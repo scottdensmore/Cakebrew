@@ -97,6 +97,24 @@
 	XCTAssertNotNil(english[@"Sidebar_Item_Services"], @"a known key should be present");
 }
 
+- (void)testDetailPlaceholderAndExportFailureHaveReadableEnglishDefaults
+{
+	NSString *root = [self localizationsDirectory];
+	for (NSString *locale in @[@"en", @"de", @"fr", @"it", @"pt", @"zh-Hans"])
+	{
+		NSString *path = [root stringByAppendingPathComponent:
+			[NSString stringWithFormat:@"%@.lproj/Localizable.strings", locale]];
+		NSDictionary *strings = [[self class] stringsAtPath:path];
+		XCTAssertNotNil(strings[@"Info_View_Empty_Value"], @"%@ needs the detail placeholder", locale);
+		XCTAssertNotNil(strings[@"Brewfile_Export_Failed"], @"%@ needs the export failure caption", locale);
+		if ([locale isEqualToString:@"en"])
+		{
+			XCTAssertEqualObjects(strings[@"Info_View_Empty_Value"], @"--");
+			XCTAssertEqualObjects(strings[@"Brewfile_Export_Failed"], @"Export Failed");
+		}
+	}
+}
+
 - (void)testEveryLocaleCarriesEveryEnglishKey
 {
 	NSString *root = [self localizationsDirectory];

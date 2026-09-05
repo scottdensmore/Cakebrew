@@ -114,7 +114,7 @@
 	
 	if (error)
 	{
-		[self.statusLabelExport setStringValue:@"Export Failed"];
+		[self.statusLabelExport setStringValue:NSLocalizedString(@"Brewfile_Export_Failed", nil)];
 		[self.statusViewExport setImage:[NSImage imageNamed:@"status_Error"]];
 		[self.progressLabelExport setStringValue:[error localizedDescription]];
 		[self.progressLabelExport setHidden:NO];

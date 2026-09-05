@@ -1,0 +1,6 @@
+Cakebrew/Models/BPFormula.m:473:4: warning: Value stored to 'line' is never read [deadcode.DeadStores]
+Cakebrew/Controllers/BPSelectedFormulaViewController.m:88:2: warning: User-facing text should use localized string macro [optin.osx.cocoa.localizability.NonLocalizedStringChecker]
+ld: warning: search path 'Cakebrew/Frameworks' not found
+Cakebrew/Test.m:12:3: warning: unused variable 'value' [-Wunused-variable]
+warning: Run script build phase will be run during every build
+--- xcodebuild: WARNING: Using the first of multiple matching destinations
