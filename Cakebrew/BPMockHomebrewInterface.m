@@ -14,13 +14,26 @@
 // fixture interface, or honouring -BPMockBrew in a user's hands.
 #if DEBUG
 
+@interface BPMockHomebrewInterface ()
+@property NSUInteger discoveryAttempts;
+@end
 
 @implementation BPMockHomebrewInterface
 
-// Always report Homebrew as present so the app never shows the disabled overlay.
-- (BOOL)checkForHomebrew
+// Override the entire execution boundary: no shell validation, config command,
+// or real brew call is allowed, including failure/retry journeys.
+- (BPHomebrewDiscoveryResult)discoverHomebrew
 {
-	return YES;
+	self.discoveryAttempts++;
+	NSArray *arguments = NSProcessInfo.processInfo.arguments;
+	if (self.discoveryAttempts > 1 && [arguments containsObject:@"-BPMockSlowHomebrewRetry"])
+		[NSThread sleepForTimeInterval:3.0];
+	if ([arguments containsObject:@"-BPMockHomebrewInvalidShell"]) return BPHomebrewDiscoveryInvalidShell;
+	if ([arguments containsObject:@"-BPMockHomebrewCheckFailed"]) return BPHomebrewDiscoveryCheckFailed;
+	if ([arguments containsObject:@"-BPMockHomebrewMissing"] ||
+		([arguments containsObject:@"-BPMockHomebrewRecovers"] && self.discoveryAttempts == 1))
+		return BPHomebrewDiscoveryMissing;
+	return BPHomebrewDiscoveryAvailable;
 }
 
 // Serve deterministic fixture lists instead of running brew. installed / outdated

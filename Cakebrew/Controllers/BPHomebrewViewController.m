@@ -326,7 +326,10 @@ NSOpenSavePanelDelegate>
 
 - (void)addDisabledView
 {
+	if (self.disabledView) return;
 	BPDisabledView *disabledView = [[BPDisabledView alloc] initWithFrame:NSZeroRect];
+	__weak BPHomebrewManager *manager = _homebrewManager;
+	disabledView.retryHandler = ^{ [manager retryHomebrewDiscovery]; };
 	disabledView.translatesAutoresizingMaskIntoConstraints = NO;
 	[self.view addSubview:disabledView];
 
@@ -743,37 +746,28 @@ NSOpenSavePanelDelegate>
 	
 	if (yesOrNo)
 	{
+		[self.loadingView removeFromSuperview];
+		self.loadingView = nil;
 		[self addDisabledView];
+		[self.disabledView showDiscoveryResult:manager.discoveryResult checking:manager.checkingHomebrew];
 		[self.label_information setHidden:YES];
 		[self.mainWindowController setContentViewHidden:YES];
 		[self.toolbar lockItems];
-
-		NSAlert *alert = [[NSAlert alloc] init];
-		[alert setMessageText:NSLocalizedString(@"Generic_Error", nil)];
-		[alert addButtonWithTitle:NSLocalizedString(@"Message_No_Homebrew_Title", nil)];
-		[alert addButtonWithTitle:NSLocalizedString(@"Generic_Cancel", nil)];
-		[alert setInformativeText:NSLocalizedString(@"Message_No_Homebrew_Body", nil)];
-		[alert.window setTitle:NSLocalizedString(@"Cakebrew", nil)];
-		
-		NSURL *brew_URL = [NSURL URLWithString:@"https://brew.sh"];
-
-		[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
-			if (returnCode == NSAlertFirstButtonReturn) {
-				[[NSWorkspace sharedWorkspace] openURL:brew_URL];
-			}
-		}];
 	}
 	else
 	{
 		[self.disabledView removeFromSuperview];
 		self.disabledView = nil;
-		[self.label_information setHidden:NO];
-		[self.mainWindowController setContentViewHidden:NO];
-		
-		[self.toolbar unlockItems];
-		
-		[[BPHomebrewManager sharedManager] reloadFromInterfaceRebuildingCache:YES];
+		// Discovery's original pipeline owns the reload. Keep operations locked
+		// until that pipeline publishes its first Installed list.
+		if (!self.loadingView) [self addLoadingView];
+		[self.toolbar lockItems];
 	}
+}
+
+- (void)homebrewManagerDidBeginDiscovery:(BPHomebrewManager *)manager
+{
+	[self.disabledView showDiscoveryResult:manager.discoveryResult checking:YES];
 }
 
 - (void)showFormulaInfoForCurrentlySelectedFormulaUsingInfoType:(BPFormulaInfoType)type
