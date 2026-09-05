@@ -34,7 +34,28 @@ extern NSString *const kBP_CAKEBREW_DOCUMENTATION;
 - (void)importBrewfileAtURL:(NSURL *)url;
 @end
 
-@interface BPAppDelegate : NSObject <NSApplicationDelegate>
+typedef NS_ENUM(NSUInteger, BPNotificationNavigationAction) {
+	BPNotificationNavigationActionNone,
+	BPNotificationNavigationActionOutdatedFormulae,
+	BPNotificationNavigationActionOutdatedCasks,
+};
+
+/// The main-window destinations a notification response can navigate to.
+@protocol BPNotificationNavigation <NSObject>
+- (void)showOutdatedFormulae:(id)sender;
+- (void)showOutdatedCasks:(id)sender;
+@end
+
+/// The AppKit presentation every notification response requires, regardless of
+/// whether its payload names a navigation destination. Injectable so response
+/// handling can be tested without touching global NSApplication state.
+@protocol BPNotificationPresenting <NSObject>
+- (void)cleanupNotificationAlerts;
+- (void)activateCakebrewIgnoringOtherApps;
+- (void)showMainWindow;
+@end
+
+@interface BPAppDelegate : NSObject <NSApplicationDelegate, BPNotificationPresenting>
 
 @property (assign) IBOutlet NSWindow *window;
 
@@ -47,6 +68,14 @@ extern NSString *const kBP_CAKEBREW_DOCUMENTATION;
 /// reason as dockActionTarget: no window, nothing to import into. nonatomic
 /// because setting it drains any pending file, through a custom setter.
 @property (weak, nonatomic) id<BPBrewfileImporting> brewfileImportTarget;
+
+/// Set by BPHomebrewViewController when the main window is ready. Assigning a
+/// target drains one notification action that arrived during launch.
+@property (weak, nonatomic) id<BPNotificationNavigation> notificationNavigationTarget;
+
+/// Defaults to the app delegate's real AppKit presentation. Tests can replace
+/// it with a spy that does not access NSApplication or a real window.
+@property (strong, nonatomic) id<BPNotificationPresenting> notificationPresenter;
 
 @property (getter=isRunningBackgroundTask) BOOL runningBackgroundTask;
 
@@ -62,6 +91,13 @@ extern NSString *const kBP_CAKEBREW_DOCUMENTATION;
  *  -displayBackgroundWarning.
  */
 + (BOOL)shouldBlockOperationWhileRunningBackgroundTask:(BOOL)isRunningBackgroundTask;
+
+/// Pure mapping from a stable notification payload to an app navigation.
++ (BPNotificationNavigationAction)notificationNavigationActionForUserInfo:(NSDictionary *)userInfo;
+
+/// Routes a notification payload on the main thread, or holds it until the
+/// main-window navigation target registers during launch.
+- (void)navigateForNotificationUserInfo:(NSDictionary *)userInfo;
 
 - (IBAction)openWebsite:(id)sender;
 

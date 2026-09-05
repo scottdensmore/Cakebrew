@@ -8,6 +8,28 @@
 
 #import <XCTest/XCTest.h>
 #import "BPBackgroundUpdater.h"
+#import <UserNotifications/UserNotifications.h>
+
+@interface BPBackgroundUpdater (NotificationDeliveryTests)
+- (instancetype)initWithNotificationCenter:(id)notificationCenter;
+- (void)deliverOutdatedNotificationWithFormulaeCount:(NSUInteger)formulaeCount caskCount:(NSUInteger)caskCount;
+@end
+
+@interface BPNotificationCenterDeliverySpy : NSObject
+@property (strong) UNNotificationRequest *request;
+@property NSUInteger deliveryCount;
+@end
+
+@implementation BPNotificationCenterDeliverySpy
+
+- (void)addNotificationRequest:(UNNotificationRequest *)request
+		 withCompletionHandler:(void (^)(NSError *error))completionHandler
+{
+	self.request = request;
+	self.deliveryCount += 1;
+}
+
+@end
 
 @interface BPBackgroundUpdaterTests : XCTestCase
 @end
@@ -29,6 +51,62 @@
 }
 
 #pragma mark - notification decision
+
+- (void)testProductionNotificationDeliveryAttachesSemanticPayloadToRequestContent
+{
+	BPNotificationCenterDeliverySpy *center = [[BPNotificationCenterDeliverySpy alloc] init];
+	BPBackgroundUpdater *updater = [[BPBackgroundUpdater alloc] initWithNotificationCenter:center];
+
+	[updater deliverOutdatedNotificationWithFormulaeCount:0 caskCount:3];
+
+	XCTAssertEqual(center.deliveryCount, 1u);
+	XCTAssertEqualObjects(center.request.content.userInfo,
+		@{ BPOutdatedNotificationTargetKey: BPOutdatedNotificationTargetCasks });
+}
+
+- (void)testProductionMixedNotificationDeliveryPreservesBothPackageKinds
+{
+	BPNotificationCenterDeliverySpy *center = [[BPNotificationCenterDeliverySpy alloc] init];
+	BPBackgroundUpdater *updater = [[BPBackgroundUpdater alloc] initWithNotificationCenter:center];
+
+	[updater deliverOutdatedNotificationWithFormulaeCount:2 caskCount:3];
+
+	XCTAssertEqual(center.deliveryCount, 1u);
+	XCTAssertEqualObjects(center.request.content.userInfo,
+		@{ BPOutdatedNotificationTargetKey: @"mixed" });
+}
+
+- (void)testFormulaeNotificationPayloadIsSemanticAndStable
+{
+	NSDictionary *payload = [BPBackgroundUpdater notificationUserInfoForOutdatedFormulaeCount:2
+															 caskCount:0];
+
+	XCTAssertEqualObjects(payload, @{ BPOutdatedNotificationTargetKey: BPOutdatedNotificationTargetFormulae });
+}
+
+- (void)testCaskOnlyNotificationPayloadTargetsCasks
+{
+	NSDictionary *payload = [BPBackgroundUpdater notificationUserInfoForOutdatedFormulaeCount:0
+															 caskCount:3];
+
+	XCTAssertEqualObjects(payload, @{ BPOutdatedNotificationTargetKey: BPOutdatedNotificationTargetCasks });
+}
+
+- (void)testMixedNotificationPayloadIsDistinctFromFormulaeOnly
+{
+	NSDictionary *payload = [BPBackgroundUpdater notificationUserInfoForOutdatedFormulaeCount:2
+															 caskCount:3];
+
+	XCTAssertEqualObjects(payload, @{ BPOutdatedNotificationTargetKey: @"mixed" });
+	XCTAssertEqualObjects(BPOutdatedNotificationTargetMixed, @"mixed");
+	XCTAssertNotEqualObjects(payload, [BPBackgroundUpdater notificationUserInfoForOutdatedFormulaeCount:2
+																					caskCount:0]);
+}
+
+- (void)testEmptyOutdatedSetHasNoNotificationPayload
+{
+	XCTAssertNil([BPBackgroundUpdater notificationUserInfoForOutdatedFormulaeCount:0 caskCount:0]);
+}
 
 - (void)testNotifiesWhenOutdatedCountRises
 {
