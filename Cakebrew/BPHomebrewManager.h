@@ -26,6 +26,14 @@
 
 @class BPHomebrewManager;
 
+/// Posted on the main thread once both successful outdated lists of a reload
+/// have arrived. The object is the manager; userInfo is an immutable count and
+/// generation snapshot, independent of later incremental list changes.
+extern NSNotificationName const BPHomebrewManagerDidPublishOutdatedSnapshotNotification;
+extern NSString *const BPOutdatedSnapshotFormulaeCountKey;
+extern NSString *const BPOutdatedSnapshotCaskCountKey;
+extern NSString *const BPOutdatedSnapshotGenerationKey;
+
 typedef NS_ENUM(NSInteger, BPFormulaStatus) {
 	kBPFormulaNotInstalled,
 	kBPFormulaInstalled,

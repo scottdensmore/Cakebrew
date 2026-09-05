@@ -135,6 +135,8 @@ NSString *const BPOutdatedNotificationTargetMixed = @"mixed";
 	[manager addObserver:self forKeyPath:NSStringFromSelector(@selector(outdatedCasks))
 				 options:0 context:BPBackgroundUpdaterContext];
 	self.observingHomebrewManager = YES;
+	[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(outdatedSnapshotDidPublish:)
+		name:BPHomebrewManagerDidPublishOutdatedSnapshotNotification object:manager];
 
 	// Reschedule when the user changes the settings.
 	[[NSNotificationCenter defaultCenter] addObserver:self
@@ -207,23 +209,37 @@ NSString *const BPOutdatedNotificationTargetMixed = @"mixed";
 		return;
 	}
 
-	// One reload sets outdatedFormulae and outdatedCasks separately, so this
-	// fires twice: once summing the new formulae with the *old* cask count, and
-	// again with the true total — two banners with different numbers. Coalesce
-	// to the end of the run-loop turn so a reload yields at most one.
+	// Incremental counts keep the Dock badge live, but cannot decide whether
+	// to notify: the other namespace may still belong to the previous reload.
 	[NSObject cancelPreviousPerformRequestsWithTarget:self
-											 selector:@selector(outdatedCountDidSettle)
+											 selector:@selector(updateDockBadge)
 											   object:nil];
-	[self performSelector:@selector(outdatedCountDidSettle) withObject:nil afterDelay:0];
+	[self performSelector:@selector(updateDockBadge) withObject:nil afterDelay:0];
 }
 
-- (void)outdatedCountDidSettle
+- (void)updateDockBadge
 {
 	BPHomebrewManager *manager = [BPHomebrewManager sharedManager];
 	NSUInteger count = manager.outdatedFormulae.count + manager.outdatedCasks.count;
 
 	// The badge reflects every reload, whether or not it is news.
-	[[[NSApplication sharedApplication] dockTile] setBadgeLabel:[BPBackgroundUpdater badgeLabelForOutdatedCount:count]];
+	[self applyDockBadgeLabel:[BPBackgroundUpdater badgeLabelForOutdatedCount:count]];
+}
+
+- (void)applyDockBadgeLabel:(NSString *)label
+{
+	[[[NSApplication sharedApplication] dockTile] setBadgeLabel:label];
+}
+
+- (void)outdatedSnapshotDidPublish:(NSNotification *)notification
+{
+	BPHomebrewManager *manager = notification.object;
+	NSDictionary *snapshot = notification.userInfo;
+	// A preceding synchronous observer may have superseded this snapshot.
+	if ([snapshot[BPOutdatedSnapshotGenerationKey] unsignedIntegerValue] != manager.currentReloadGeneration) return;
+	NSUInteger formulaeCount = [snapshot[BPOutdatedSnapshotFormulaeCountKey] unsignedIntegerValue];
+	NSUInteger caskCount = [snapshot[BPOutdatedSnapshotCaskCountKey] unsignedIntegerValue];
+	NSUInteger count = formulaeCount + caskCount;
 
 	BOOL hasBaseline = [BPBackgroundUpdater hasPersistedOutdatedCount];
 	NSUInteger previous = [BPBackgroundUpdater persistedOutdatedCount];
@@ -232,8 +248,7 @@ NSString *const BPOutdatedNotificationTargetMixed = @"mixed";
 
 	if ([BPBackgroundUpdater shouldNotifyForCount:count previousCount:previous hasBaseline:hasBaseline])
 	{
-		[self postOutdatedNotificationWithFormulaeCount:manager.outdatedFormulae.count
-											 caskCount:manager.outdatedCasks.count];
+		[self postOutdatedNotificationWithFormulaeCount:formulaeCount caskCount:caskCount];
 	}
 }
 
