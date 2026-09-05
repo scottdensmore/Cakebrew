@@ -22,6 +22,11 @@ static NSString * const kBPBrewfileName = @"Brewfile";
 
 @implementation BPBrewfile
 
++ (NSString *)defaultFilename
+{
+	return kBPBrewfileName;
+}
+
 + (BOOL)isBrewfileURL:(NSURL *)url
 {
 	if (!url.isFileURL)

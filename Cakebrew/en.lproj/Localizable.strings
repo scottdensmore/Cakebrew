@@ -224,3 +224,7 @@
 "Search Mock Packages" = "Search Mock Packages";
 "Open Mock Notification" = "Open Mock Notification";
 "Search Then Open Mock Notification" = "Search Then Open Mock Notification";
+
+/* Detail values and Brewfile export errors */
+"Info_View_Empty_Value" = "--";
+"Brewfile_Export_Failed" = "Export Failed";

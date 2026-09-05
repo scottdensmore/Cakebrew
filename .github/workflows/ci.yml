@@ -22,18 +22,20 @@ jobs:
           xcodebuild -version
           xcrun --sdk macosx --show-sdk-version
 
+      - name: Test warning gate
+        run: bash scripts/tests/check-warnings-tests.sh
+
       # AGENTS.md makes "zero warnings" a hard gate; nothing enforced it, so a
       # build emitting fifty warnings passed identically to a clean one.
       # Warnings-as-errors is passed on the command line rather than baked into
       # the project, so local incremental work stays ergonomic.
       - name: Build app (Debug)
         run: |
-          set -o pipefail
-          xcodebuild build \
+          bash scripts/check-warnings.sh build-debug.log xcodebuild build \
             -workspace Cakebrew.xcworkspace \
             -scheme Cakebrew \
             -configuration Debug \
-            -destination 'platform=macOS' \
+            -destination "platform=macOS,arch=$(uname -m)" \
             GCC_TREAT_WARNINGS_AS_ERRORS=YES \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
 
@@ -41,12 +43,11 @@ jobs:
       # stayed invisible until a release was already being cut.
       - name: Build app (Release)
         run: |
-          set -o pipefail
-          xcodebuild build \
+          bash scripts/check-warnings.sh build-release.log xcodebuild build \
             -workspace Cakebrew.xcworkspace \
             -scheme Cakebrew \
             -configuration Release \
-            -destination 'platform=macOS' \
+            -destination "platform=macOS,arch=$(uname -m)" \
             GCC_TREAT_WARNINGS_AS_ERRORS=YES \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
 
@@ -55,29 +56,33 @@ jobs:
       # XPC connections and manual KVO teardown.
       - name: Static analyzer
         run: |
-          set -o pipefail
-          xcodebuild analyze \
+          bash scripts/check-warnings.sh analyze.log xcodebuild analyze \
             -workspace Cakebrew.xcworkspace \
             -scheme Cakebrew \
             -configuration Debug \
-            -destination 'platform=macOS' \
+            -destination "platform=macOS,arch=$(uname -m)" \
             CLANG_ANALYZER_OUTPUT=text \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tee analyze.log
-
-          # xcodebuild analyze exits 0 even when it reports findings.
-          if grep -E "warning: .*\[clang-analyzer" analyze.log; then
-            echo "::error::the static analyzer reported findings"
-            exit 1
-          fi
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
 
       - name: Run unit tests
         run: |
-          set -o pipefail
-          xcodebuild test \
+          bash scripts/check-warnings.sh unit-tests.log xcodebuild test \
             -workspace Cakebrew.xcworkspace \
             -scheme CakebrewTests \
-            -destination 'platform=macOS' \
+            -destination "platform=macOS,arch=$(uname -m)" \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+
+      - name: Upload build and analyzer logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-and-analyzer-logs
+          path: |
+            build-debug.log
+            build-release.log
+            analyze.log
+            unit-tests.log
+          if-no-files-found: ignore
 
   ui-tests:
     name: UI Tests
@@ -88,18 +93,25 @@ jobs:
 
       - name: Run UI tests
         run: |
-          set -o pipefail
           # UI tests must launch the app, so it has to be (ad-hoc) signed.
           # Force ad-hoc signing so no developer team / provisioning profile is needed.
-          xcodebuild test \
+          bash scripts/check-warnings.sh ui-tests.log xcodebuild test \
             -scheme CakebrewUITests \
-            -destination 'platform=macOS' \
+            -destination "platform=macOS,arch=$(uname -m)" \
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=YES \
             DEVELOPMENT_TEAM="" \
             PROVISIONING_PROFILE_SPECIFIER=""
+
+      - name: Upload UI test log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-log
+          path: ui-tests.log
+          if-no-files-found: ignore
 
       - name: Collect crash logs
         if: failure()

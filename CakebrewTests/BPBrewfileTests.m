@@ -27,6 +27,12 @@
 
 #pragma mark - What counts
 
+- (void)testDefaultFilenameKeepsTheCanonicalHomebrewName
+{
+	XCTAssertEqualObjects([BPBrewfile defaultFilename], @"Brewfile");
+	XCTAssertTrue([self accepts:[BPBrewfile defaultFilename]]);
+}
+
 - (void)testTheCanonicalNameIsAccepted
 {
 	XCTAssertTrue([self accepts:@"Brewfile"]);

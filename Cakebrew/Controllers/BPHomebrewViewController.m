@@ -1355,7 +1355,7 @@ NSOpenSavePanelDelegate>
 	NSSavePanel *savePanel = [NSSavePanel savePanel];
 	[savePanel setNameFieldLabel:NSLocalizedString(@"Panel_Export_Message", nil)];
 	[savePanel setPrompt:NSLocalizedString(@"Panel_Export_Button", nil)];
-	[savePanel setNameFieldStringValue:@"Brewfile"];
+	[savePanel setNameFieldStringValue:[BPBrewfile defaultFilename]];
 	
 	[savePanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:^(NSInteger result) {
 		NSURL *fileURL = [savePanel URL];
@@ -1399,7 +1399,7 @@ NSOpenSavePanelDelegate>
 	NSOpenPanel *openPanel = [NSOpenPanel openPanel];
 	[openPanel setNameFieldLabel:NSLocalizedString(@"Panel_Import_Message", nil)];
 	[openPanel setPrompt:NSLocalizedString(@"Panel_Import_Button", nil)];
-	[openPanel setNameFieldStringValue:@"Brewfile"];
+	[openPanel setNameFieldStringValue:[BPBrewfile defaultFilename]];
 	[openPanel setAllowsMultipleSelection:NO];
 	[openPanel setCanChooseDirectories:NO];
 	[openPanel setCanChooseFiles:YES];

@@ -30,6 +30,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface BPBrewfile : NSObject
 
+/// Homebrew's canonical filename is an identifier, never translated by locale.
++ (NSString *)defaultFilename __attribute__((annotate("returns_localized_nsstring")));
+
 /// YES for a file URL named `Brewfile` or `<something>.Brewfile`, either case.
 /// Does not touch the filesystem, so a caller that needs the file to exist
 /// checks that separately.

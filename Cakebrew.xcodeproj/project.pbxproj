@@ -1610,7 +1610,6 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/Cakebrew/Frameworks",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Cakebrew/Cakebrew-Prefix.pch";
@@ -1656,7 +1655,6 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/Cakebrew/Frameworks",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Cakebrew/Cakebrew-Prefix.pch";
