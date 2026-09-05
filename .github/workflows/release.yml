@@ -32,7 +32,7 @@ jobs:
     runs-on: macos-26
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Show toolchain
         run: |
@@ -199,7 +199,7 @@ jobs:
           /usr/bin/ditto -c -k --keepParent "$APP" "$ZIP"
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: Cakebrew-notarized
           path: ${{ runner.temp }}/Cakebrew.zip
@@ -207,7 +207,7 @@ jobs:
 
       - name: Attach to GitHub release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ runner.temp }}/Cakebrew.zip
           generate_release_notes: true
