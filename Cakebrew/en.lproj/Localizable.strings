@@ -228,3 +228,15 @@
 /* Detail values and Brewfile export errors */
 "Info_View_Empty_Value" = "--";
 "Brewfile_Export_Failed" = "Export Failed";
+
+/* Homebrew discovery and recovery */
+"Try Again" = "Try Again";
+"Open brew.sh" = "Open brew.sh";
+"Checking for Homebrew…" = "Checking for Homebrew…";
+"Checking your login shell for Homebrew. This may take a moment." = "Checking your login shell for Homebrew. This may take a moment.";
+"Homebrew wasn’t found" = "Homebrew wasn’t found";
+"Cakebrew couldn’t find Homebrew in your login shell’s PATH. Open brew.sh for installation instructions, or fix your shell configuration, then choose Try Again." = "Cakebrew couldn’t find Homebrew in your login shell’s PATH. Open brew.sh for installation instructions, or fix your shell configuration, then choose Try Again.";
+"Your login shell is unavailable" = "Your login shell is unavailable";
+"Cakebrew needs an executable login shell listed in /etc/shells. Check your shell configuration, then choose Try Again. Homebrew installation instructions are available at brew.sh." = "Cakebrew needs an executable login shell listed in /etc/shells. Check your shell configuration, then choose Try Again. Homebrew installation instructions are available at brew.sh.";
+"Homebrew couldn’t be checked" = "Homebrew couldn’t be checked";
+"Your login shell didn’t return a usable Homebrew executable. Check its startup configuration and PATH, then choose Try Again. Installation instructions are available at brew.sh." = "Your login shell didn’t return a usable Homebrew executable. Check its startup configuration and PATH, then choose Try Again. Installation instructions are available at brew.sh.";

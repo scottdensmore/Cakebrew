@@ -45,6 +45,9 @@ typedef NS_ENUM(NSInteger, BPFormulaStatus) {
 - (void)homebrewManagerFinishedUpdating:(BPHomebrewManager*)manager;
 
 @optional
+/// Discovery has begun; a recovery view can disable its retry action.
+- (void)homebrewManagerDidBeginDiscovery:(BPHomebrewManager *)manager;
+
 /**
  *  One list of a reload has landed and its property is set.
  *
@@ -80,6 +83,10 @@ typedef NS_ENUM(NSInteger, BPFormulaStatus) {
 /// The reload currently allowed to publish. A reload carries the generation it
 /// started with; anything older has been superseded and must stay silent.
 @property (readonly) NSUInteger currentReloadGeneration;
+@property (readonly) BPHomebrewDiscoveryResult discoveryResult;
+@property (readonly) BOOL checkingHomebrew;
+/// A retry during discovery or the recovered reload is ignored.
+- (void)retryHomebrewDiscovery;
 
 @property (strong) NSArray<BPFormula*> *installedFormulae;
 @property (strong) NSArray<BPFormula*> *outdatedFormulae;

@@ -75,7 +75,6 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 
 @interface BPHomebrewInterface () <BPTaskCompleted>
 
-@property (strong) NSString *path_cellar;
 @property (strong) NSString *path_shell;
 @property (strong) NSMutableDictionary *tasks;
 @property (strong) dispatch_queue_t taskOperationsQueue;
@@ -174,39 +173,37 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 	return self.currentOperationTask != nil;
 }
 
-- (BOOL)checkForHomebrew
++ (NSURL *)installationURL
 {
-	if (!self.path_shell) return NO;
-	
-	BPTask *task = [[BPTask alloc] initWithPath:self.path_shell arguments:@[@"-l", @"-c", @"which brew"]];
-	task.delegate = self;
-	[task execute];
-	
-	NSString *output = [task output];
-	output = [self removeLoginShellOutputFromString:output];
-#ifdef DEBUG
-	NSLog(@"brew: %@", output);
-#endif
-	
-	return output.length != 0;
+	return [NSURL URLWithString:@"https://brew.sh"];
 }
 
-- (void)setDelegate:(id<BPHomebrewInterfaceDelegate>)delegate
++ (BPHomebrewDiscoveryResult)discoveryResultForOutput:(NSString *)output exitStatus:(int)status
 {
-	if (_delegate != delegate) {
-		_delegate = delegate;
-		
-		[self setPath_shell:[self getValidUserShellPath]];
-		
-		if (![self checkForHomebrew])
-			[self showHomebrewNotInstalledMessage];
-		else
-		{
-			[self setPath_cellar:[self getUserCellarPath]];
-			
-			NSLog(@"cellar: %@", self.path_cellar);
-		}
-	}
+	NSArray *start = [output componentsSeparatedByString:@"+++++Cakebrew Discovery+++++\n"];
+	if (start.count != 2) return BPHomebrewDiscoveryCheckFailed;
+	NSArray *end = [start.lastObject componentsSeparatedByString:@"+++++Cakebrew Discovery End+++++\n"];
+	if (end.count != 2) return BPHomebrewDiscoveryCheckFailed;
+	NSString *path = [end.firstObject stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+	if (status == 1 && path.length == 0) return BPHomebrewDiscoveryMissing;
+	if (status != 0 || !path.isAbsolutePath || [path rangeOfCharacterFromSet:NSCharacterSet.newlineCharacterSet].location != NSNotFound)
+		return BPHomebrewDiscoveryCheckFailed;
+	BOOL directory = NO;
+	NSFileManager *files = NSFileManager.defaultManager;
+	return [files fileExistsAtPath:path isDirectory:&directory] && !directory && [files isExecutableFileAtPath:path]
+		? BPHomebrewDiscoveryAvailable : BPHomebrewDiscoveryCheckFailed;
+}
+
+- (BPHomebrewDiscoveryResult)discoverHomebrew
+{
+	self.path_shell = [self getValidUserShellPath];
+	if (!self.path_shell) return BPHomebrewDiscoveryInvalidShell;
+	// Markers exclude login banners; preserve command-v's exit status instead
+	// of treating diagnostics (notably "brew not found") as an executable.
+	NSString *command = @"printf '\\n+++++Cakebrew Discovery+++++\\n'; command -v brew; cakebrew_status=$?; printf '+++++Cakebrew Discovery End+++++\\n'; exit \"$cakebrew_status\"";
+	BPTask *task = [[BPTask alloc] initWithPath:self.path_shell arguments:@[@"-l", @"-c", command]];
+	int status = [task execute];
+	return [BPHomebrewInterface discoveryResultForOutput:task.output exitStatus:status];
 }
 
 #pragma mark - Private Methods
@@ -226,48 +223,13 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 		}
 	}
 	
-	if (!isValidShell)
-	{
-		static NSAlert *alert = nil;
-		if (!alert) {
-			alert = [[NSAlert alloc] init];
-			[alert setMessageText:NSLocalizedString(@"Message_Shell_Invalid_Title", nil)];
-			[alert addButtonWithTitle:NSLocalizedString(@"Generic_OK", nil)];
-			[alert setInformativeText:[NSString stringWithFormat:NSLocalizedString(@"Message_Shell_Invalid_Body", nil), userShell]];
-		}
-		// Intentionally app-modal: this runs deep in the interface layer on a
-		// background thread with no window to anchor a sheet, and it blocks a
-		// fatal "no usable shell" path that must halt before returning nil.
-		[alert performSelectorOnMainThread:@selector(runModal) withObject:nil waitUntilDone:YES];
-		
-		NSLog(@"No valid shell found...");
-		return nil;
-	}
+	if (!isValidShell || ![NSFileManager.defaultManager isExecutableFileAtPath:userShell]) return nil;
 	
 #ifdef DEBUG
 	NSLog(@"shell: %@", userShell);
 #endif
 	
 	return userShell;
-}
-
-- (NSString *)getUserCellarPath
-{
-	NSString __block *path = [[NSUserDefaults standardUserDefaults] objectForKey:@"BPBrewCellarPath"];
-	
-	if (!path) {
-		NSString *brew_config = [self performSyncBrewCommandWithArguments:@[@"config"]];
-		
-		[brew_config enumerateLinesUsingBlock:^(NSString *line, BOOL *stop) {
-			if ([line hasPrefix:@"HOMEBREW_CELLAR"]) {
-				path = [line substringFromIndex:17];
-			}
-		}];
-		
-		[[NSUserDefaults standardUserDefaults] setObject:path forKey:@"BPBrewCellarPath"];
-	}
-	
-	return path;
 }
 
 - (NSArray *)formatArguments:(NSArray *)extraArguments sendOutputId:(BOOL)sendOutputID
@@ -288,20 +250,6 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 	[arguments addObjectsFromArray:(extraArguments ?: @[])];
 
 	return arguments;
-}
-
-- (void)showHomebrewNotInstalledMessage
-{
-	static BOOL isShowing = NO;
-	if (!isShowing) {
-		isShowing = YES;
-		if (self.delegate) {
-			id delegate = self.delegate;
-			dispatch_async(dispatch_get_main_queue(), ^{
-				[delegate homebrewInterfaceShouldDisplayNoBrewMessage:YES];
-			});
-		}
-	}
 }
 
 - (void)task:(BPTask *)task didFinishWithOutput:(NSString *)output error:(NSString *)error

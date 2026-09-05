@@ -100,6 +100,54 @@
 	[self launchWithArguments:@[]];
 }
 
+// Unavailable Homebrew cannot satisfy the normal helper's mockwget settle
+// wait. Only these recovery journeys use this distinct launch path.
+- (void)launchRecoveryWithArguments:(NSArray<NSString *> *)arguments
+{
+	self.app.launchArguments = [@[@"-BPMockBrew", @"-BPLastSelectedSidebarRow", @"1",
+		@"-BPSortColumnIdentifier", @""] arrayByAddingObjectsFromArray:arguments];
+	[self.app launch];
+	XCTAssertTrue([self.app.windows.firstMatch waitForExistenceWithTimeout:30]);
+	XCTAssertTrue([self.app.buttons[@"homebrew.retry"] waitForExistenceWithTimeout:30]);
+}
+
+- (void)testMissingHomebrewShowsActionableNonmodalRecovery
+{
+	[self launchRecoveryWithArguments:@[@"-BPMockHomebrewMissing"]];
+	XCTAssertTrue(self.app.buttons[@"homebrew.install"].exists);
+	XCTAssertTrue(self.app.buttons[@"homebrew.retry"].enabled);
+	XCTAssertTrue(self.app.staticTexts[@"homebrew.recovery.message"].exists);
+	XCTAssertGreaterThan(self.app.staticTexts[@"homebrew.recovery.message"].frame.size.height, 30.0);
+	XCTAssertEqual(self.app.sheets.count, 0u);
+	XCTAssertEqual(self.app.dialogs.count, 0u);
+	XCTAssertFalse([self formulaCellWithName:@"mockwget"].exists);
+}
+
+- (void)testPersistentHomebrewFailureRemainsRetryableWithoutDuplicateRecovery
+{
+	[self launchRecoveryWithArguments:@[@"-BPMockHomebrewMissing", @"-BPMockSlowHomebrewRetry"]];
+	XCUIElement *retry = self.app.buttons[@"homebrew.retry"];
+	[retry click];
+	XCTAssertFalse(retry.enabled);
+	NSPredicate *enabled = [NSPredicate predicateWithFormat:@"enabled == YES"];
+	XCTAssertEqual([XCTWaiter waitForExpectations:@[[[XCTNSPredicateExpectation alloc] initWithPredicate:enabled object:retry]] timeout:10], XCTWaiterResultCompleted);
+	XCTAssertEqual([self.app.buttons matchingIdentifier:@"homebrew.retry"].count, 1u);
+	XCTAssertEqual(self.app.sheets.count, 0u);
+	XCTAssertFalse([self formulaCellWithName:@"mockwget"].exists);
+}
+
+- (void)testHomebrewRetryRecoversInstalledPackagesWithoutRelaunching
+{
+	[self launchRecoveryWithArguments:@[@"-BPMockHomebrewRecovers", @"-BPMockSlowHomebrewRetry"]];
+	XCUIElement *retry = self.app.buttons[@"homebrew.retry"];
+	[retry click];
+	XCTAssertFalse(retry.enabled);
+	XCTAssertTrue([[self formulaCellWithName:@"mockwget"] waitForExistenceWithTimeout:30]);
+	XCTAssertFalse(self.app.buttons[@"homebrew.retry"].exists);
+	[self assertSelectedSidebarIdentifier:@"sidebar.formulae.installed"];
+	XCTAssertEqual(self.app.sheets.count, 0u);
+}
+
 #pragma mark - Sidebar navigation journeys
 
 // Notification launch journeys start somewhere other than Installed, so they

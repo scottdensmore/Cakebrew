@@ -53,6 +53,8 @@ static const NSInteger kBPCacheVersion = 2;
 	NSNumber *_outdatedSnapshotFormulaeCount;
 	NSNumber *_outdatedSnapshotCaskCount;
 	BOOL _didPublishOutdatedSnapshot;
+	BOOL _discoveryInFlight;
+	BPHomebrewDiscoveryResult _discoveryResult;
 }
 @end
 
@@ -227,12 +229,39 @@ static const NSInteger kBPCacheVersion = 2;
 		object:self userInfo:snapshot];
 }
 
-- (void)reloadFromInterfaceRebuildingCache:(BOOL)shouldRebuildCache;
+- (BPHomebrewInterface *)homebrewInterface
+{
+	return [BPHomebrewInterface sharedInterface];
+}
+
+- (BPHomebrewDiscoveryResult)discoveryResult
+{
+	@synchronized (self) { return _discoveryResult; }
+}
+
+- (BOOL)checkingHomebrew
+{
+	@synchronized (self) { return _discoveryInFlight; }
+}
+
+- (void)retryHomebrewDiscovery
+{
+	@synchronized (self) {
+		if (_reloadInFlight) return;
+		[self reloadFromInterfaceRebuildingCache:NO];
+	}
+}
+
+- (void)reloadFromInterfaceRebuildingCache:(BOOL)shouldRebuildCache
 {
 	NSUInteger generation;
+	BOOL needsDiscovery;
 
 	@synchronized (self)
 	{
+		// Retry clicks and ordinary refresh requests cannot queue a second
+		// pipeline while the installation check is still running.
+		if (_discoveryInFlight) return;
 		if (![BPHomebrewManager shouldStartReloadWhenInFlight:_reloadInFlight])
 		{
 			// Coalesce. Four callers can fire a reload and the background timer
@@ -245,17 +274,54 @@ static const NSInteger kBPCacheVersion = 2;
 
 		_reloadInFlight = YES;
 		generation = ++_reloadGeneration;
+		needsDiscovery = _discoveryResult != BPHomebrewDiscoveryAvailable;
+		_discoveryInFlight = needsDiscovery;
+	}
+	if (needsDiscovery) {
+		dispatch_async(dispatch_get_main_queue(), ^{
+			if ([self.delegate respondsToSelector:@selector(homebrewManagerDidBeginDiscovery:)])
+				[self.delegate homebrewManagerDidBeginDiscovery:self];
+		});
 	}
 
 	NSUInteger previousCountOfAllFormulae = [self allFormulae].count;
 
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-		[[BPHomebrewInterface sharedInterface] setDelegate:self];
+		BPHomebrewInterface *interface = [self homebrewInterface];
+		interface.delegate = self;
+		if (needsDiscovery) {
+			BPHomebrewDiscoveryResult result = [interface discoverHomebrew];
+			BOOL current;
+			@synchronized (self) {
+				current = generation == self->_reloadGeneration;
+			}
+			if (result != BPHomebrewDiscoveryAvailable || !current) {
+				dispatch_async(dispatch_get_main_queue(), ^{
+					@synchronized (self) {
+						self->_discoveryInFlight = NO;
+						self->_reloadInFlight = NO;
+						self->_reloadRequestedWhileRunning = NO;
+						self->_pendingRebuildCache = NO;
+						if (generation != self->_reloadGeneration) return;
+						self->_discoveryResult = result;
+					}
+					[self.delegate homebrewManager:self shouldDisplayNoBrewMessage:YES];
+				});
+				return; // No lists, services, cache read or cache write on failure.
+			}
+			dispatch_async(dispatch_get_main_queue(), ^{
+				@synchronized (self) {
+					self->_discoveryInFlight = NO;
+					if (generation != self->_reloadGeneration) return;
+					self->_discoveryResult = result;
+				}
+				[self.delegate homebrewManager:self shouldDisplayNoBrewMessage:NO];
+			});
+		}
 
 		// Ten blocking brew calls, each spawning its own login shell and Ruby
 		// startup, ran back to back — about 7.8 s warm. Nothing here is
 		// CPU-bound and the calls are independent, so they go out together.
-		BPHomebrewInterface *interface = [BPHomebrewInterface sharedInterface];
 		dispatch_queue_t fanOut = dispatch_get_global_queue(QOS_CLASS_UTILITY, 0);
 		dispatch_group_t group = dispatch_group_create();
 

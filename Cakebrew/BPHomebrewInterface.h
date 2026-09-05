@@ -27,6 +27,14 @@
 #import <Cocoa/Cocoa.h>
 #import "BPFormula.h"
 
+typedef NS_ENUM(NSInteger, BPHomebrewDiscoveryResult) {
+	BPHomebrewDiscoveryUnknown,
+	BPHomebrewDiscoveryAvailable,
+	BPHomebrewDiscoveryMissing,
+	BPHomebrewDiscoveryInvalidShell,
+	BPHomebrewDiscoveryCheckFailed,
+};
+
 /// Where brew actually runs.
 typedef NS_ENUM(NSInteger, BPBrewTransport) {
 	/// In-process NSTask. The shipping (non-sandboxed) configuration.
@@ -80,6 +88,12 @@ typedef NS_ENUM(NSInteger, BPListMode) {
  *  The delegate object.
  */
 @property (weak, nonatomic) id<BPHomebrewInterfaceDelegate> delegate;
+
+/// Blocking discovery; the manager runs this off the main thread before lists.
+/// Setting a delegate never executes a shell or displays UI.
+- (BPHomebrewDiscoveryResult)discoverHomebrew;
++ (BPHomebrewDiscoveryResult)discoveryResultForOutput:(NSString *)output exitStatus:(int)status;
++ (NSURL *)installationURL;
 
 #pragma mark - Operations with live data callback block
 
