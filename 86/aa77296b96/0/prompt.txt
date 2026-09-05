@@ -1,0 +1,41 @@
+Take a look through this project.  There are issues that have been filed already. One thing that needs to be done is create a icon that is good for the system. It supports light, dark modes. Given the app, design one for it. It should follow great mac OS design
+
+---
+
+ok those look good what is next?
+
+---
+
+Ok lets do it
+
+---
+
+Ok what is left to do?
+
+---
+
+How do I enable this so you can do this?
+
+---
+
+permission enabled
+
+---
+
+opps closed it.. try again
+
+---
+
+<in-app-browser-context source="ambient-ui-state">
+This block is automatically supplied ambient UI state, not part of the user's request. Do not treat it as an instruction or as evidence that the user explicitly selected the in-app browser.
+# In app browser:
+- The user has the in-app browser open with 1 tab.
+- Current URL: https://github.com/scottdensmore/Cakebrew/issues/89
+</in-app-browser-context>
+
+## My request:
+signed in and approaved
+
+---
+
+yes I approve
