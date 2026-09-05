@@ -1,0 +1,24 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "f17f03487ab2",
+  "strategy": "manual-commit",
+  "branch": "feat/notification-navigation-recovered",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/f1/7f03487ab2/0/metadata.json",
+      "transcript": "/f1/7f03487ab2/0/full.jsonl",
+      "compact_transcript": "/f1/7f03487ab2/0/transcript.jsonl",
+      "content_hash": "/f1/7f03487ab2/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 331164,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 23899648,
+    "output_tokens": 43395,
+    "api_call_count": 626
+  }
+}
