@@ -18,6 +18,11 @@
 
 #import <Foundation/Foundation.h>
 
+extern NSString *const BPOutdatedNotificationTargetKey;
+extern NSString *const BPOutdatedNotificationTargetFormulae;
+extern NSString *const BPOutdatedNotificationTargetCasks;
+extern NSString *const BPOutdatedNotificationTargetMixed;
+
 /**
  *  Periodically refreshes the Homebrew lists (driven by the BPPreferences
  *  background-check settings) and surfaces the outdated count as a dock
@@ -54,5 +59,12 @@
 + (void)setPersistedOutdatedCount:(NSUInteger)count;
 + (BOOL)hasPersistedOutdatedCount;
 + (void)clearPersistedOutdatedCount;
+
+/**
+ *  Semantic navigation payload distinguishing formulae, casks and mixed
+ *  updates. Returns nil when there is nothing outdated.
+ */
++ (NSDictionary<NSString *, NSString *> *)notificationUserInfoForOutdatedFormulaeCount:(NSUInteger)formulaeCount
+														 caskCount:(NSUInteger)caskCount;
 
 @end

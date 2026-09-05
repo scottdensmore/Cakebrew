@@ -102,6 +102,175 @@
 
 #pragma mark - Sidebar navigation journeys
 
+// Notification launch journeys start somewhere other than Installed, so they
+// cannot use the shared helper's Installed-list settle wait.
+- (void)launchWithPendingNotificationTarget:(NSString *)target
+{
+	self.app.launchArguments = @[ @"-BPMockBrew", @"-BPMockSlowCatalog",
+		@"-BPMockNotificationTarget", target, @"-BPLastSelectedSidebarRow", @"1",
+		@"-BPSortColumnIdentifier", @"" ];
+	[self.app launch];
+	XCTAssertTrue([self.app.windows.firstMatch waitForExistenceWithTimeout:30.0]);
+	XCTAssertTrue([self.app.buttons[@"Stop Reloading"] waitForExistenceWithTimeout:30.0],
+		@"the journey must observe the initial reload before its completion");
+}
+
+- (void)assertSelectedSidebarIdentifier:(NSString *)identifier
+{
+	XCUIElement *row = [[self sidebar].outlineRows containingType:XCUIElementTypeStaticText
+		identifier:identifier].firstMatch;
+	BOOL selected = row.exists && row.isSelected;
+	if (!selected) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(selected, @"%@ should be the selected sidebar destination", identifier);
+}
+
+- (void)waitForNotificationLaunchReloadToFinish
+{
+	NSPredicate *finished = [NSPredicate predicateWithFormat:@"exists == NO"];
+	[self expectationForPredicate:finished evaluatedWithObject:self.app.buttons[@"Stop Reloading"] handler:nil];
+	[self waitForExpectationsWithTimeout:30.0 handler:nil];
+}
+
+- (void)assertPendingNotificationTarget:(NSString *)target
+					selectsSidebar:(NSString *)identifier
+					   fixtureName:(NSString *)fixtureName
+{
+	[self launchWithPendingNotificationTarget:target];
+	[self assertSelectedSidebarIdentifier:identifier];
+	[self waitForNotificationLaunchReloadToFinish];
+	[self assertSelectedSidebarIdentifier:identifier];
+	XCTAssertTrue([[self formulaCellWithName:fixtureName] waitForExistenceWithTimeout:15.0],
+		@"the notification destination should display its outdated package");
+	XCTAssertFalse([self formulaCellWithName:@"mockwget"].exists,
+		@"an outdated notification must not leave the Installed formulae list selected");
+	XCTAssertFalse([self formulaCellWithName:@"mockvscode"].exists,
+		@"cask notifications must select Outdated, not Installed Casks");
+}
+
+- (void)testPendingFormulaeNotificationSurvivesInitialReload
+{
+	[self assertPendingNotificationTarget:@"formulae" selectsSidebar:@"sidebar.formulae.outdated"
+		fixtureName:@"mockgit"];
+}
+
+- (void)testPendingCaskNotificationSurvivesInitialReload
+{
+	[self assertPendingNotificationTarget:@"casks" selectsSidebar:@"sidebar.casks.outdated"
+		fixtureName:@"mockchrome"];
+}
+
+- (void)testPendingMixedNotificationOpensFormulaeAndSurvivesInitialReload
+{
+	[self assertPendingNotificationTarget:@"mixed" selectsSidebar:@"sidebar.formulae.outdated"
+		fixtureName:@"mockgit"];
+}
+
+- (void)testPendingNotificationDoesNotReplayAfterUserNavigatesDuringReload
+{
+	[self launchWithPendingNotificationTarget:@"casks"];
+	[self assertSelectedSidebarIdentifier:@"sidebar.casks.outdated"];
+	[[self sidebarRow:@"sidebar.formulae.installed"] click];
+	[self waitForNotificationLaunchReloadToFinish];
+	[self assertSelectedSidebarIdentifier:@"sidebar.formulae.installed"];
+	XCTAssertTrue([[self formulaCellWithName:@"mockwget"] waitForExistenceWithTimeout:15.0],
+		@"finishing the reload must keep the user's later navigation");
+	XCTAssertFalse([self formulaCellWithName:@"mockchrome"].exists);
+}
+
+// The mock-only menu drives real controller actions without typing into a
+// non-key window on CI. It carries semantic payloads, never sidebar row logic.
+- (void)clickNotificationTestMenuItem:(NSString *)title
+{
+	[self.app.menuBars.menuBarItems[@"Notification Test"] click];
+	[self.app.menuItems[title] click];
+}
+
+- (void)assertWarmNotificationTarget:(NSString *)target
+					 selectsSidebar:(NSString *)identifier
+						fixtureName:(NSString *)fixtureName
+					alreadySelected:(BOOL)alreadySelected
+					  pendingSearch:(BOOL)pendingSearch
+{
+	[self launchWithArguments:@[@"-BPMockBrew", @"-BPMockWarmNotificationTarget", target]];
+	[self waitForNotificationLaunchReloadToFinish];
+	if (alreadySelected)
+	{
+		[[self sidebarRow:identifier] click];
+		[self assertSelectedSidebarIdentifier:identifier];
+		XCTAssertTrue([[self formulaCellWithName:fixtureName] waitForExistenceWithTimeout:15.0]);
+	}
+
+	if (pendingSearch)
+	{
+		// Queue the 150 ms debounce and route the notification in the same event.
+		[self clickNotificationTestMenuItem:@"Search Then Open Mock Notification"];
+		XCTNSPredicateExpectation *noLateSearch = [[XCTNSPredicateExpectation alloc]
+			initWithPredicate:[NSPredicate predicateWithFormat:@"exists == YES"]
+			object:[self formulaCellWithName:@"mockvscode"]];
+		noLateSearch.inverted = YES;
+		XCTAssertEqual([XCTWaiter waitForExpectations:@[noLateSearch] timeout:1.0], XCTWaiterResultCompleted,
+			@"a pending debounce must not restart search after notification navigation");
+	}
+	else
+	{
+		[self clickNotificationTestMenuItem:@"Search Mock Packages"];
+		XCTAssertTrue([[self formulaCellWithName:@"mockvscode"] waitForExistenceWithTimeout:15.0],
+			@"the journey must observe real search results before routing the notification");
+		XCTAssertEqualObjects(self.app.searchFields.firstMatch.value, @"mockvscode");
+		[self clickNotificationTestMenuItem:@"Open Mock Notification"];
+	}
+
+	[self assertSelectedSidebarIdentifier:identifier];
+	XCTAssertEqualObjects(self.app.searchFields.firstMatch.value, @"",
+		@"notification navigation should clear the search field");
+	BOOL appeared = [[self formulaCellWithName:fixtureName] waitForExistenceWithTimeout:15.0];
+	if (!appeared) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertTrue(appeared, @"the outdated destination must remain visible after leaving search");
+	XCTAssertFalse([self formulaCellWithName:@"mockvscode"].exists,
+		@"the table should show the outdated destination, not stale search results");
+	XCTAssertFalse([self formulaCellWithName:@"mockwget"].exists);
+}
+
+- (void)testFormulaeNotificationLeavesSearchForOutdatedDestination
+{
+	[self assertWarmNotificationTarget:@"formulae" selectsSidebar:@"sidebar.formulae.outdated"
+		fixtureName:@"mockgit" alreadySelected:NO pendingSearch:NO];
+}
+
+- (void)testCaskNotificationLeavesSearchForOutdatedDestination
+{
+	[self assertWarmNotificationTarget:@"casks" selectsSidebar:@"sidebar.casks.outdated"
+		fixtureName:@"mockchrome" alreadySelected:NO pendingSearch:NO];
+}
+
+- (void)testFormulaeNotificationLeavesSearchOnAlreadySelectedDestination
+{
+	[self assertWarmNotificationTarget:@"formulae" selectsSidebar:@"sidebar.formulae.outdated"
+		fixtureName:@"mockgit" alreadySelected:YES pendingSearch:NO];
+}
+
+- (void)testCaskNotificationLeavesSearchOnAlreadySelectedDestination
+{
+	[self assertWarmNotificationTarget:@"casks" selectsSidebar:@"sidebar.casks.outdated"
+		fixtureName:@"mockchrome" alreadySelected:YES pendingSearch:NO];
+}
+
+- (void)testFormulaeNotificationCancelsPendingSearch
+{
+	[self assertWarmNotificationTarget:@"formulae" selectsSidebar:@"sidebar.formulae.outdated"
+		fixtureName:@"mockgit" alreadySelected:NO pendingSearch:YES];
+}
+
+- (void)testCaskNotificationCancelsPendingSearch
+{
+	[self assertWarmNotificationTarget:@"casks" selectsSidebar:@"sidebar.casks.outdated"
+		fixtureName:@"mockchrome" alreadySelected:NO pendingSearch:YES];
+}
+
 // Journey: the sidebar presents every navigation destination.
 // Runs with the mock: a real-brew launch spawns a full `brew` reload whose
 // subprocesses outlive the test when the app is terminated, and the orphaned

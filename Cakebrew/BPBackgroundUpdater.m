@@ -27,15 +27,46 @@ static void *BPBackgroundUpdaterContext = &BPBackgroundUpdaterContext;
 
 static NSString *const kBPLastNotifiedOutdatedCountKey = @"BPLastNotifiedOutdatedCount";
 
+NSString *const BPOutdatedNotificationTargetKey = @"outdated-target";
+NSString *const BPOutdatedNotificationTargetFormulae = @"formulae";
+NSString *const BPOutdatedNotificationTargetCasks = @"casks";
+NSString *const BPOutdatedNotificationTargetMixed = @"mixed";
+
+@protocol BPUserNotificationCenter <NSObject>
+- (void)requestAuthorizationWithOptions:(UNAuthorizationOptions)options
+					  completionHandler:(void (^)(BOOL granted, NSError *error))completionHandler;
+- (void)addNotificationRequest:(UNNotificationRequest *)request
+			 withCompletionHandler:(void (^)(NSError *error))completionHandler;
+@end
+
 @interface BPBackgroundUpdater ()
 
 @property (strong) NSTimer *timer;
 @property (assign) NSUInteger lastKnownOutdatedCount;
 @property (assign) NSTimeInterval scheduledInterval;
+@property (assign) BOOL observingHomebrewManager;
+@property (strong) id<BPUserNotificationCenter> notificationCenter;
+
+- (instancetype)initWithNotificationCenter:(id<BPUserNotificationCenter>)notificationCenter;
 
 @end
 
 @implementation BPBackgroundUpdater
+
+- (instancetype)init
+{
+	return [self initWithNotificationCenter:(id<BPUserNotificationCenter>)UNUserNotificationCenter.currentNotificationCenter];
+}
+
+- (instancetype)initWithNotificationCenter:(id<BPUserNotificationCenter>)notificationCenter
+{
+	self = [super init];
+	if (self)
+	{
+		_notificationCenter = notificationCenter;
+	}
+	return self;
+}
 
 + (NSString *)badgeLabelForOutdatedCount:(NSUInteger)count
 {
@@ -78,6 +109,24 @@ static NSString *const kBPLastNotifiedOutdatedCountKey = @"BPLastNotifiedOutdate
 	[[NSUserDefaults standardUserDefaults] removeObjectForKey:kBPLastNotifiedOutdatedCountKey];
 }
 
++ (NSDictionary<NSString *, NSString *> *)notificationUserInfoForOutdatedFormulaeCount:(NSUInteger)formulaeCount
+														 caskCount:(NSUInteger)caskCount
+{
+	if (formulaeCount > 0 && caskCount > 0)
+	{
+		return @{ BPOutdatedNotificationTargetKey: BPOutdatedNotificationTargetMixed };
+	}
+	if (formulaeCount > 0)
+	{
+		return @{ BPOutdatedNotificationTargetKey: BPOutdatedNotificationTargetFormulae };
+	}
+	if (caskCount > 0)
+	{
+		return @{ BPOutdatedNotificationTargetKey: BPOutdatedNotificationTargetCasks };
+	}
+	return nil;
+}
+
 - (void)start
 {
 	BPHomebrewManager *manager = [BPHomebrewManager sharedManager];
@@ -85,6 +134,9 @@ static NSString *const kBPLastNotifiedOutdatedCountKey = @"BPLastNotifiedOutdate
 				 options:0 context:BPBackgroundUpdaterContext];
 	[manager addObserver:self forKeyPath:NSStringFromSelector(@selector(outdatedCasks))
 				 options:0 context:BPBackgroundUpdaterContext];
+	self.observingHomebrewManager = YES;
+	[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(outdatedSnapshotDidPublish:)
+		name:BPHomebrewManagerDidPublishOutdatedSnapshotNotification object:manager];
 
 	// Reschedule when the user changes the settings.
 	[[NSNotificationCenter defaultCenter] addObserver:self
@@ -96,9 +148,12 @@ static NSString *const kBPLastNotifiedOutdatedCountKey = @"BPLastNotifiedOutdate
 
 - (void)dealloc
 {
-	BPHomebrewManager *manager = [BPHomebrewManager sharedManager];
-	[manager removeObserver:self forKeyPath:NSStringFromSelector(@selector(outdatedFormulae)) context:BPBackgroundUpdaterContext];
-	[manager removeObserver:self forKeyPath:NSStringFromSelector(@selector(outdatedCasks)) context:BPBackgroundUpdaterContext];
+	if (self.observingHomebrewManager)
+	{
+		BPHomebrewManager *manager = [BPHomebrewManager sharedManager];
+		[manager removeObserver:self forKeyPath:NSStringFromSelector(@selector(outdatedFormulae)) context:BPBackgroundUpdaterContext];
+		[manager removeObserver:self forKeyPath:NSStringFromSelector(@selector(outdatedCasks)) context:BPBackgroundUpdaterContext];
+	}
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	[NSObject cancelPreviousPerformRequestsWithTarget:self];
 	[self.timer invalidate];
@@ -154,23 +209,37 @@ static NSString *const kBPLastNotifiedOutdatedCountKey = @"BPLastNotifiedOutdate
 		return;
 	}
 
-	// One reload sets outdatedFormulae and outdatedCasks separately, so this
-	// fires twice: once summing the new formulae with the *old* cask count, and
-	// again with the true total — two banners with different numbers. Coalesce
-	// to the end of the run-loop turn so a reload yields at most one.
+	// Incremental counts keep the Dock badge live, but cannot decide whether
+	// to notify: the other namespace may still belong to the previous reload.
 	[NSObject cancelPreviousPerformRequestsWithTarget:self
-											 selector:@selector(outdatedCountDidSettle)
+											 selector:@selector(updateDockBadge)
 											   object:nil];
-	[self performSelector:@selector(outdatedCountDidSettle) withObject:nil afterDelay:0];
+	[self performSelector:@selector(updateDockBadge) withObject:nil afterDelay:0];
 }
 
-- (void)outdatedCountDidSettle
+- (void)updateDockBadge
 {
 	BPHomebrewManager *manager = [BPHomebrewManager sharedManager];
 	NSUInteger count = manager.outdatedFormulae.count + manager.outdatedCasks.count;
 
 	// The badge reflects every reload, whether or not it is news.
-	[[[NSApplication sharedApplication] dockTile] setBadgeLabel:[BPBackgroundUpdater badgeLabelForOutdatedCount:count]];
+	[self applyDockBadgeLabel:[BPBackgroundUpdater badgeLabelForOutdatedCount:count]];
+}
+
+- (void)applyDockBadgeLabel:(NSString *)label
+{
+	[[[NSApplication sharedApplication] dockTile] setBadgeLabel:label];
+}
+
+- (void)outdatedSnapshotDidPublish:(NSNotification *)notification
+{
+	BPHomebrewManager *manager = notification.object;
+	NSDictionary *snapshot = notification.userInfo;
+	// A preceding synchronous observer may have superseded this snapshot.
+	if ([snapshot[BPOutdatedSnapshotGenerationKey] unsignedIntegerValue] != manager.currentReloadGeneration) return;
+	NSUInteger formulaeCount = [snapshot[BPOutdatedSnapshotFormulaeCountKey] unsignedIntegerValue];
+	NSUInteger caskCount = [snapshot[BPOutdatedSnapshotCaskCountKey] unsignedIntegerValue];
+	NSUInteger count = formulaeCount + caskCount;
 
 	BOOL hasBaseline = [BPBackgroundUpdater hasPersistedOutdatedCount];
 	NSUInteger previous = [BPBackgroundUpdater persistedOutdatedCount];
@@ -179,15 +248,15 @@ static NSString *const kBPLastNotifiedOutdatedCountKey = @"BPLastNotifiedOutdate
 
 	if ([BPBackgroundUpdater shouldNotifyForCount:count previousCount:previous hasBaseline:hasBaseline])
 	{
-		[self postOutdatedNotificationWithCount:count];
+		[self postOutdatedNotificationWithFormulaeCount:formulaeCount caskCount:caskCount];
 	}
 }
 
-- (void)postOutdatedNotificationWithCount:(NSUInteger)count
+- (void)postOutdatedNotificationWithFormulaeCount:(NSUInteger)formulaeCount caskCount:(NSUInteger)caskCount
 {
 	// Asked here rather than at launch, so the system prompt arrives with an
 	// actual reason: the app has found updates and wants to tell you.
-	UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
+	id<BPUserNotificationCenter> center = self.notificationCenter;
 	[center requestAuthorizationWithOptions:(UNAuthorizationOptionAlert | UNAuthorizationOptionSound)
 						  completionHandler:^(BOOL granted, NSError *error) {
 		if (error)
@@ -197,23 +266,26 @@ static NSString *const kBPLastNotifiedOutdatedCountKey = @"BPLastNotifiedOutdate
 		if (granted)
 		{
 			dispatch_async(dispatch_get_main_queue(), ^{
-				[self deliverOutdatedNotificationWithCount:count];
+				[self deliverOutdatedNotificationWithFormulaeCount:formulaeCount caskCount:caskCount];
 			});
 		}
 	}];
 }
 
-- (void)deliverOutdatedNotificationWithCount:(NSUInteger)count
+- (void)deliverOutdatedNotificationWithFormulaeCount:(NSUInteger)formulaeCount caskCount:(NSUInteger)caskCount
 {
+	NSUInteger count = formulaeCount + caskCount;
 	UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
 	content.title = NSLocalizedString(@"Background_Update_Notification_Title", nil);
 	content.body = [NSString stringWithFormat:NSLocalizedString(@"Background_Update_Notification_Body", nil),
 					(unsigned long)count];
+	content.userInfo = [BPBackgroundUpdater notificationUserInfoForOutdatedFormulaeCount:formulaeCount
+														 caskCount:caskCount];
 
 	UNNotificationRequest *request = [UNNotificationRequest requestWithIdentifier:[[NSUUID UUID] UUIDString]
 																		  content:content
 																		  trigger:nil];
-	[[UNUserNotificationCenter currentNotificationCenter] addNotificationRequest:request withCompletionHandler:nil];
+	[self.notificationCenter addNotificationRequest:request withCompletionHandler:nil];
 }
 
 @end

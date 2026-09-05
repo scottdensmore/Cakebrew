@@ -41,6 +41,11 @@ NSString *const kBP_CAKEBREW_DOCUMENTATION = @"https://github.com/scottdensmore/
 /// A Brewfile that arrived before there was a window to import it into.
 @property (strong) NSURL *pendingBrewfileURL;
 
+@property BPNotificationNavigationAction pendingNotificationNavigationAction;
+#if DEBUG
+@property BOOL didQueueMockNotification;
+#endif
+
 @end
 
 @interface BPAppDelegate (SignalHandler)
@@ -127,6 +132,127 @@ NSString *const kBP_CAKEBREW_DOCUMENTATION = @"https://github.com/scottdensmore/
 		self.pendingBrewfileURL = nil;
 		[brewfileImportTarget importBrewfileAtURL:pending];
 	}
+}
+
+#pragma mark - Notification navigation
+
++ (BPNotificationNavigationAction)notificationNavigationActionForUserInfo:(NSDictionary *)userInfo
+{
+	id target = userInfo[BPOutdatedNotificationTargetKey];
+	if (![target isKindOfClass:NSString.class])
+	{
+		return BPNotificationNavigationActionNone;
+	}
+	// Keep the mixed marker in the payload even while navigation uses the
+	// formulae list until there is a combined outdated destination.
+	if ([target isEqualToString:BPOutdatedNotificationTargetFormulae]
+		|| [target isEqualToString:BPOutdatedNotificationTargetMixed])
+	{
+		return BPNotificationNavigationActionOutdatedFormulae;
+	}
+	if ([target isEqualToString:BPOutdatedNotificationTargetCasks])
+	{
+		return BPNotificationNavigationActionOutdatedCasks;
+	}
+	return BPNotificationNavigationActionNone;
+}
+
+- (void)navigateForNotificationUserInfo:(NSDictionary *)userInfo
+{
+	BPNotificationNavigationAction action = [BPAppDelegate notificationNavigationActionForUserInfo:userInfo];
+	if (action == BPNotificationNavigationActionNone)
+	{
+		return;
+	}
+
+	if (!NSThread.isMainThread)
+	{
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[self navigateForNotificationAction:action];
+		});
+		return;
+	}
+
+	[self navigateForNotificationAction:action];
+}
+
+- (void)setNotificationNavigationTarget:(id<BPNotificationNavigation>)notificationNavigationTarget
+{
+#if DEBUG
+	if (notificationNavigationTarget && !_notificationNavigationTarget)
+	{
+		[self queueMockNotificationBeforeTargetRegistration];
+	}
+#endif
+	_notificationNavigationTarget = notificationNavigationTarget;
+
+	BPNotificationNavigationAction pending = self.pendingNotificationNavigationAction;
+	if (notificationNavigationTarget && pending != BPNotificationNavigationActionNone)
+	{
+		// Clear before calling out so registration cannot replay the action if
+		// navigation causes view lifecycle work synchronously.
+		self.pendingNotificationNavigationAction = BPNotificationNavigationActionNone;
+		[self navigateForNotificationAction:pending];
+	}
+}
+
+#if DEBUG
+// Exercise the production pending-action path before the real controller is
+// registered. This opt-in launch event exists only in Debug mock journeys.
+- (void)queueMockNotificationBeforeTargetRegistration
+{
+	NSArray<NSString *> *arguments = NSProcessInfo.processInfo.arguments;
+	NSUInteger targetIndex = [arguments indexOfObject:@"-BPMockNotificationTarget"];
+	if (self.didQueueMockNotification || ![arguments containsObject:@"-BPMockBrew"]
+		|| targetIndex == NSNotFound || targetIndex + 1 >= arguments.count)
+	{
+		return;
+	}
+	self.didQueueMockNotification = YES;
+	[self navigateForNotificationUserInfo:@{ BPOutdatedNotificationTargetKey: arguments[targetIndex + 1] }];
+}
+#endif
+
+- (void)navigateForNotificationAction:(BPNotificationNavigationAction)action
+{
+	id<BPNotificationNavigation> target = self.notificationNavigationTarget;
+	if (!target)
+	{
+		self.pendingNotificationNavigationAction = action;
+		return;
+	}
+
+	switch (action)
+	{
+		case BPNotificationNavigationActionOutdatedFormulae:
+			[target showOutdatedFormulae:self];
+			break;
+		case BPNotificationNavigationActionOutdatedCasks:
+			[target showOutdatedCasks:self];
+			break;
+		case BPNotificationNavigationActionNone:
+			break;
+	}
+}
+
+- (id<BPNotificationPresenting>)notificationPresenter
+{
+	return _notificationPresenter ?: self;
+}
+
+- (void)cleanupNotificationAlerts
+{
+	[self cleanupTaskAlerts];
+}
+
+- (void)activateCakebrewIgnoringOtherApps
+{
+	[NSApp activateIgnoringOtherApps:YES];
+}
+
+- (void)showMainWindow
+{
+	[self.window makeKeyAndOrderFront:self];
 }
 
 - (void)displayBrewfileNotRecognizedForURLs:(NSArray<NSURL *> *)urls
@@ -321,8 +447,26 @@ NSString *const kBP_CAKEBREW_DOCUMENTATION = @"https://github.com/scottdensmore/
 	   didReceiveNotificationResponse:(UNNotificationResponse *)response 
 				withCompletionHandler:(void(^)(void))completionHandler
 {
-	[self cleanupTaskAlerts];
-	completionHandler();
+	void (^handleResponse)(void) = ^{
+		id<BPNotificationPresenting> presenter = self.notificationPresenter;
+		[presenter cleanupNotificationAlerts];
+		[presenter activateCakebrewIgnoringOtherApps];
+		[presenter showMainWindow];
+
+		// Legacy, malformed, and future payloads still present Cakebrew, but only
+		// the two semantic destinations are allowed to change the selected list.
+		[self navigateForNotificationUserInfo:response.notification.request.content.userInfo];
+		completionHandler();
+	};
+
+	if (NSThread.isMainThread)
+	{
+		handleResponse();
+	}
+	else
+	{
+		dispatch_async(dispatch_get_main_queue(), handleResponse);
+	}
 }
 
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center 

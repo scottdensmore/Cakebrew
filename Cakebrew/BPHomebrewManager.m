@@ -30,6 +30,11 @@ NSString *const kBPCacheCasksDataKey = @"BPCacheCasksDataKey";
 NSString *const kBPCacheVersionKey = @"BPCacheVersionKey";
 NSString *const kBPCacheStoredDateKey = @"BPCacheStoredDateKey";
 
+NSNotificationName const BPHomebrewManagerDidPublishOutdatedSnapshotNotification = @"BPHomebrewManagerDidPublishOutdatedSnapshotNotification";
+NSString *const BPOutdatedSnapshotFormulaeCountKey = @"formulae-count";
+NSString *const BPOutdatedSnapshotCaskCountKey = @"cask-count";
+NSString *const BPOutdatedSnapshotGenerationKey = @"generation";
+
 /// Bumped whenever the archived shape changes, so a stale layout rebuilds
 /// instead of decoding into the wrong fields. Raised to 2 with the
 /// shortDescription coding-key fix.
@@ -44,6 +49,10 @@ static const NSInteger kBPCacheVersion = 2;
 	BOOL _reloadRequestedWhileRunning;
 	NSUInteger _reloadGeneration;
 	BOOL _pendingRebuildCache;
+	NSUInteger _outdatedSnapshotGeneration;
+	NSNumber *_outdatedSnapshotFormulaeCount;
+	NSNumber *_outdatedSnapshotCaskCount;
+	BOOL _didPublishOutdatedSnapshot;
 }
 @end
 
@@ -179,10 +188,43 @@ static const NSInteger kBPCacheVersion = 2;
 			return;
 	}
 
+	[self publishOutdatedSnapshotForList:list mode:mode generation:generation];
+
 	if ([self.delegate respondsToSelector:@selector(homebrewManager:didPublishListForMode:)])
 	{
 		[self.delegate homebrewManager:self didPublishListForMode:mode];
 	}
+}
+
+- (void)publishOutdatedSnapshotForList:(NSArray *)list mode:(BPListMode)mode generation:(NSUInteger)generation
+{
+	if (mode != kBPListOutdated && mode != kBPListOutdatedCasks) return;
+	NSDictionary *snapshot;
+	@synchronized (self)
+	{
+		// Property KVO can reenter and cancel or start another generation.
+		if (generation != _reloadGeneration) return;
+		if (_outdatedSnapshotGeneration != generation)
+		{
+			_outdatedSnapshotGeneration = generation;
+			_outdatedSnapshotFormulaeCount = nil;
+			_outdatedSnapshotCaskCount = nil;
+			_didPublishOutdatedSnapshot = NO;
+		}
+		// nil is a failed/missing result; an empty array is a successful zero.
+		if (!list || _didPublishOutdatedSnapshot) return;
+		if (mode == kBPListOutdated) _outdatedSnapshotFormulaeCount = @(list.count);
+		else _outdatedSnapshotCaskCount = @(list.count);
+		if (!_outdatedSnapshotFormulaeCount || !_outdatedSnapshotCaskCount) return;
+
+		snapshot = @{BPOutdatedSnapshotFormulaeCountKey: _outdatedSnapshotFormulaeCount,
+			BPOutdatedSnapshotCaskCountKey: _outdatedSnapshotCaskCount,
+			BPOutdatedSnapshotGenerationKey: @(generation)};
+		// Reserve before calling observers, which may synchronously publish again.
+		_didPublishOutdatedSnapshot = YES;
+	}
+	[NSNotificationCenter.defaultCenter postNotificationName:BPHomebrewManagerDidPublishOutdatedSnapshotNotification
+		object:self userInfo:snapshot];
 }
 
 - (void)reloadFromInterfaceRebuildingCache:(BOOL)shouldRebuildCache;

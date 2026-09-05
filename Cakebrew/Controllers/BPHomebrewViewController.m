@@ -46,6 +46,17 @@
 #import "BPTimedDispatch.h"
 #import "BPEmptyState.h"
 #import "BPEmptyStateView.h"
+#if DEBUG
+#import "BPBackgroundUpdater.h"
+
+// Package identifiers are intentionally untranslated. This is Clang's targeted
+// false-positive annotation for a fixed test fixture, not user-facing text.
+__attribute__((annotate("returns_localized_nsstring")))
+static NSString *BPNotificationSearchFixtureIdentifier(void)
+{
+	return @"mockvscode";
+}
+#endif
 
 typedef NS_ENUM(NSUInteger, BPContentTab) {
 	kBPContentTabFormulae,
@@ -67,6 +78,7 @@ NSOpenSavePanelDelegate>
 @property NSInteger lastSelectedSidebarIndex;
 @property BOOL hasAppliedDefaultDividerPosition;
 @property (strong) BPTimedDispatch *searchDispatch;
+@property NSUInteger searchGeneration;
 /// The row the user was on when the search began, so clearing the field puts
 /// them back rather than dumping them on All Formulae.
 @property NSInteger sidebarRowBeforeSearch;
@@ -248,7 +260,59 @@ NSOpenSavePanelDelegate>
 	// Set last: assigning this hands over any Brewfile that arrived before
 	// there was a window to import it into.
 	_appDelegate.brewfileImportTarget = self;
+	// Likewise, a notification tap can launch the app before this controller
+	// exists. Register only after the main-window outlets are ready.
+	_appDelegate.notificationNavigationTarget = self;
+#if DEBUG
+	[self installMockWarmNotificationMenu];
+#endif
 }
+
+#if DEBUG
+// Native menus work without keyboard focus on CI. Only explicit mock launches
+// expose these actions, which exercise the real search and notification paths.
+- (void)installMockWarmNotificationMenu
+{
+	NSArray<NSString *> *arguments = NSProcessInfo.processInfo.arguments;
+	NSUInteger targetIndex = [arguments indexOfObject:@"-BPMockWarmNotificationTarget"];
+	if (![arguments containsObject:@"-BPMockBrew"] || targetIndex == NSNotFound
+		|| targetIndex + 1 >= arguments.count)
+	{
+		return;
+	}
+
+	NSMenuItem *root = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Notification Test", nil) action:NULL keyEquivalent:@""];
+	NSMenu *menu = [[NSMenu alloc] initWithTitle:root.title];
+	NSArray<NSString *> *titles = @[NSLocalizedString(@"Search Mock Packages", nil),
+		NSLocalizedString(@"Open Mock Notification", nil), NSLocalizedString(@"Search Then Open Mock Notification", nil)];
+	SEL actions[] = {@selector(beginMockNotificationSearch:), @selector(openMockNotification:), @selector(openMockNotificationDuringSearch:)};
+	for (NSUInteger index = 0; index < titles.count; index++)
+	{
+		NSMenuItem *item = [menu addItemWithTitle:titles[index] action:actions[index] keyEquivalent:@""];
+		item.target = self;
+		item.representedObject = arguments[targetIndex + 1];
+	}
+	root.submenu = menu;
+	[NSApp.mainMenu addItem:root];
+}
+
+- (void)beginMockNotificationSearch:(id)sender
+{
+	self.toolbar.searchField.stringValue = BPNotificationSearchFixtureIdentifier();
+	[self performSearchWithString:self.toolbar.searchField.stringValue];
+}
+
+- (void)openMockNotification:(NSMenuItem *)sender
+{
+	[self.appDelegate navigateForNotificationUserInfo:@{BPOutdatedNotificationTargetKey: sender.representedObject}];
+}
+
+- (void)openMockNotificationDuringSearch:(NSMenuItem *)sender
+{
+	[self beginMockNotificationSearch:sender];
+	[self openMockNotification:sender];
+}
+#endif
 
 - (void)addToolbar
 {
@@ -1139,8 +1203,32 @@ NSOpenSavePanelDelegate>
 
 - (IBAction)showOutdatedFormulae:(id)sender
 {
-	[self.sidebarController.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:FormulaeSideBarItemOutdated]
+	[self showOutdatedSidebarRow:FormulaeSideBarItemOutdated];
+}
+
+- (IBAction)showOutdatedCasks:(id)sender
+{
+	[self showOutdatedSidebarRow:FormulaeSideBarItemOutdatedCasks];
+}
+
+- (void)showOutdatedSidebarRow:(FormulaeSideBarItem)row
+{
+	// Explicit navigation must leave search without restoring its previous row.
+	// Invalidate both the queued debounce and any scan already in flight.
+	self.searchGeneration += 1;
+	self.toolbar.searchField.stringValue = @"";
+	self.searching = NO;
+	[_homebrewManager cancelSearch];
+
+	BOOL alreadySelected = self.sidebarController.sidebar.selectedRow == (NSInteger)row;
+	[self.sidebarController.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:row]
 								byExtendingSelection:NO];
+	if (alreadySelected)
+	{
+		// Selecting the same outline row does not emit a selection-change event,
+		// but its table may still contain search results.
+		[self sourceListSelectionDidChange];
+	}
 }
 
 - (IBAction)openSelectedFormulaWebsite:(id)sender
@@ -1167,9 +1255,11 @@ NSOpenSavePanelDelegate>
 
 	// The field is continuous, so this runs per keystroke; each scan walks the
 	// whole catalog. Coalesce so a burst of typing costs one scan.
+	NSUInteger generation = self.searchGeneration;
 	[self.searchDispatch scheduleDispatchAfterTimeInterval:0.15
 												   inQueue:dispatch_get_main_queue()
 												   ofBlock:^{
+		if (generation != self.searchGeneration) return;
 		[[BPHomebrewManager sharedManager] updateSearchWithName:searchPhrase];
 	}];
 }

@@ -23,6 +23,7 @@
 @property (strong) NSMutableArray<NSNumber *> *publishedModes;
 @property (strong) NSMutableArray<NSNumber *> *announcedSteps;
 @property (assign) NSUInteger finishedCount;
+@property (copy) void (^onPublication)(BPHomebrewManager *, BPListMode);
 @end
 
 @implementation BPIncrementalReloadRecorder
@@ -40,6 +41,7 @@
 - (void)homebrewManager:(BPHomebrewManager *)manager didPublishListForMode:(BPListMode)mode
 {
 	[self.publishedModes addObject:@(mode)];
+	if (self.onPublication) self.onPublication(manager, mode);
 }
 
 - (void)homebrewManager:(BPHomebrewManager *)manager didBeginStepForMode:(BPListMode)mode
@@ -58,6 +60,8 @@
 @interface BPIncrementalReloadTests : XCTestCase
 @property (strong) BPHomebrewManager *manager;
 @property (strong) BPIncrementalReloadRecorder *recorder;
+@property (strong) NSMutableArray<NSDictionary *> *outdatedSnapshots;
+@property (strong) id snapshotObserver;
 @end
 
 @implementation BPIncrementalReloadTests
@@ -72,10 +76,21 @@
 	self.manager.installedFormulae = @[];
 	self.manager.outdatedFormulae = @[];
 	self.manager.installedCasks = @[];
+	self.manager.outdatedCasks = @[];
+	[self.manager cancelReload];
+	self.outdatedSnapshots = [NSMutableArray array];
+	NSMutableArray *snapshots = self.outdatedSnapshots;
+	self.snapshotObserver = [NSNotificationCenter.defaultCenter
+		addObserverForName:@"BPHomebrewManagerDidPublishOutdatedSnapshotNotification"
+		object:self.manager queue:nil usingBlock:^(NSNotification *notification) {
+			XCTAssertTrue(NSThread.isMainThread);
+			[snapshots addObject:notification.userInfo];
+		}];
 }
 
 - (void)tearDown
 {
+	[NSNotificationCenter.defaultCenter removeObserver:self.snapshotObserver];
 	self.manager.delegate = nil;
 	[super tearDown];
 }
@@ -83,6 +98,113 @@
 - (NSArray<BPFormula *> *)oneFormulaNamed:(NSString *)name
 {
 	return @[ [BPFormula formulaWithName:name andVersion:@"1.0.0"] ];
+}
+
+#pragma mark - Coherent outdated snapshots
+
+- (void)assertSnapshotWaitsForBothListsWithCasksFirst:(BOOL)casksFirst
+{
+	NSUInteger generation = self.manager.currentReloadGeneration;
+	NSArray *formulae = [self oneFormulaNamed:@"formula"];
+	NSArray *casks = @[[BPFormula formulaWithName:@"cask-a"], [BPFormula formulaWithName:@"cask-b"]];
+	[self.manager publishList:casksFirst ? casks : formulae
+		forMode:casksFirst ? kBPListOutdatedCasks : kBPListOutdated generation:generation];
+	XCTAssertEqual(self.outdatedSnapshots.count, 0u);
+	[self.manager publishList:casksFirst ? formulae : casks
+		forMode:casksFirst ? kBPListOutdated : kBPListOutdatedCasks generation:generation];
+	XCTAssertEqualObjects(self.outdatedSnapshots,
+		(@[@{@"formulae-count": @1, @"cask-count": @2, @"generation": @(generation)}]));
+	XCTAssertEqual(self.recorder.finishedCount, 0u, @"the pair must not wait for the slow catalog or final reload callback");
+}
+
+- (void)testOutdatedSnapshotWaitsForFormulaeWhenCasksFinishFirst
+{
+	[self assertSnapshotWaitsForBothListsWithCasksFirst:YES];
+}
+
+- (void)testOutdatedSnapshotWaitsForCasksWhenFormulaeFinishFirst
+{
+	[self assertSnapshotWaitsForBothListsWithCasksFirst:NO];
+}
+
+- (void)testEmptyOutdatedListsPublishAValidZeroSnapshot
+{
+	NSUInteger generation = self.manager.currentReloadGeneration;
+	[self.manager publishList:@[] forMode:kBPListOutdated generation:generation];
+	[self.manager publishList:@[] forMode:kBPListOutdatedCasks generation:generation];
+	XCTAssertEqualObjects(self.outdatedSnapshots,
+		(@[@{@"formulae-count": @0, @"cask-count": @0, @"generation": @(generation)}]));
+}
+
+- (void)testNilOutdatedListCannotCompleteTheSnapshot
+{
+	NSUInteger generation = self.manager.currentReloadGeneration;
+	[self.manager publishList:nil forMode:kBPListOutdated generation:generation];
+	[self.manager publishList:@[] forMode:kBPListOutdatedCasks generation:generation];
+	XCTAssertEqual(self.outdatedSnapshots.count, 0u, @"nil is a missing result, not a successful empty list");
+}
+
+- (void)testCanceledPartialPairCannotCompleteOrLeakIntoTheNextGeneration
+{
+	NSUInteger oldGeneration = self.manager.currentReloadGeneration;
+	[self.manager publishList:[self oneFormulaNamed:@"old"] forMode:kBPListOutdated generation:oldGeneration];
+	[self.manager cancelReload];
+	[self.manager publishList:@[] forMode:kBPListOutdatedCasks generation:oldGeneration];
+	XCTAssertEqual(self.outdatedSnapshots.count, 0u);
+	NSUInteger generation = self.manager.currentReloadGeneration;
+	[self.manager publishList:@[] forMode:kBPListOutdatedCasks generation:generation];
+	XCTAssertEqual(self.outdatedSnapshots.count, 0u, @"the new generation cannot borrow the old formula count");
+	[self.manager publishList:@[] forMode:kBPListOutdated generation:generation];
+	XCTAssertEqualObjects(self.outdatedSnapshots,
+		(@[@{@"formulae-count": @0, @"cask-count": @0, @"generation": @(generation)}]));
+}
+
+- (void)testEveryGenerationRequiresItsOwnOutdatedPair
+{
+	NSUInteger generation = self.manager.currentReloadGeneration;
+	[self.manager publishList:@[] forMode:kBPListOutdated generation:generation];
+	[self.manager publishList:@[] forMode:kBPListOutdatedCasks generation:generation];
+	[self.manager cancelReload];
+	generation = self.manager.currentReloadGeneration;
+	[self.manager publishList:[self oneFormulaNamed:@"new"] forMode:kBPListOutdated generation:generation];
+	XCTAssertEqual(self.outdatedSnapshots.count, 1u);
+	[self.manager publishList:@[] forMode:kBPListOutdatedCasks generation:generation];
+	XCTAssertEqual(self.outdatedSnapshots.count, 2u);
+	XCTAssertEqualObjects(self.outdatedSnapshots.lastObject,
+		(@{@"formulae-count": @1, @"cask-count": @0, @"generation": @(generation)}));
+}
+
+- (void)testOutdatedSnapshotIsImmutableAndEmittedBeforeReentrantPublication
+{
+	NSUInteger generation = self.manager.currentReloadGeneration;
+	__block NSUInteger emissions = 0;
+	BPHomebrewManager *manager = self.manager;
+	id observer = [NSNotificationCenter.defaultCenter
+		addObserverForName:@"BPHomebrewManagerDidPublishOutdatedSnapshotNotification"
+		object:manager queue:nil usingBlock:^(NSNotification *notification) {
+			emissions += 1;
+			if (emissions == 1) {
+				[manager publishList:@[] forMode:kBPListOutdated generation:generation];
+				[manager publishList:@[] forMode:kBPListOutdatedCasks generation:generation];
+			}
+		}];
+	[self.manager publishList:[self oneFormulaNamed:@"formula"] forMode:kBPListOutdated generation:generation];
+	[self.manager publishList:[self oneFormulaNamed:@"cask"] forMode:kBPListOutdatedCasks generation:generation];
+	[NSNotificationCenter.defaultCenter removeObserver:observer];
+	XCTAssertEqual(emissions, 1u, @"mark the snapshot emitted before notifying reentrant observers");
+	XCTAssertEqualObjects(self.outdatedSnapshots,
+		(@[@{@"formulae-count": @1, @"cask-count": @1, @"generation": @(generation)}]));
+}
+
+- (void)testReentrantCancellationDiscardsAnIncompleteOutdatedSnapshot
+{
+	NSUInteger generation = self.manager.currentReloadGeneration;
+	self.recorder.onPublication = ^(BPHomebrewManager *manager, BPListMode mode) {
+		if (mode == kBPListOutdated) [manager cancelReload];
+	};
+	[self.manager publishList:@[] forMode:kBPListOutdated generation:generation];
+	[self.manager publishList:@[] forMode:kBPListOutdatedCasks generation:generation];
+	XCTAssertEqual(self.outdatedSnapshots.count, 0u);
 }
 
 #pragma mark - Publishing a list
