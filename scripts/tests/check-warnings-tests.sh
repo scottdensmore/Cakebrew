@@ -47,4 +47,24 @@ expect_status 2 'missing log cannot pass inspection' bash "$runner" "$test_dir/b
   exit 3
 ' bash "$test_dir/build.log"
 expect_status 2 'missing command is rejected' bash "$runner" "$test_dir/build.log"
+
+# Exercise the actual CI destination arguments without launching Xcode or
+# changing the host: Apple Silicon offers both native and translated targets.
+check_ci_destinations() (
+  architecture=$1
+  uname() { [[ $# -eq 1 && "$1" == '-m' ]] && printf '%s\n' "$architecture"; }
+  options=$(sed -n 's/^[[:space:]]*\(-destination .* \)\\$/\1/p' "$script_dir/../../.github/workflows/ci.yml")
+  count=0
+  while IFS= read -r option; do
+    eval "set -- $option"
+    if [[ $# -ne 2 || "$1" != '-destination' || "$2" != "platform=macOS,arch=$architecture" ]]; then
+      printf 'Expected native %s destination, got: %s\n' "$architecture" "$*"
+      exit 1
+    fi
+    count=$((count + 1))
+  done <<< "$options"
+  [[ $count -eq 5 ]]
+)
+expect_status 0 'all five CI destinations select native arm64' check_ci_destinations arm64
+expect_status 0 'all five CI destinations select native x86_64' check_ci_destinations x86_64
 printf '%s warning-gate checks passed\n' "$checks"

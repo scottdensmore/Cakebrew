@@ -35,7 +35,7 @@ jobs:
             -workspace Cakebrew.xcworkspace \
             -scheme Cakebrew \
             -configuration Debug \
-            -destination 'platform=macOS' \
+            -destination "platform=macOS,arch=$(uname -m)" \
             GCC_TREAT_WARNINGS_AS_ERRORS=YES \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
 
@@ -47,7 +47,7 @@ jobs:
             -workspace Cakebrew.xcworkspace \
             -scheme Cakebrew \
             -configuration Release \
-            -destination 'platform=macOS' \
+            -destination "platform=macOS,arch=$(uname -m)" \
             GCC_TREAT_WARNINGS_AS_ERRORS=YES \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
 
@@ -60,7 +60,7 @@ jobs:
             -workspace Cakebrew.xcworkspace \
             -scheme Cakebrew \
             -configuration Debug \
-            -destination 'platform=macOS' \
+            -destination "platform=macOS,arch=$(uname -m)" \
             CLANG_ANALYZER_OUTPUT=text \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
 
@@ -69,7 +69,7 @@ jobs:
           bash scripts/check-warnings.sh unit-tests.log xcodebuild test \
             -workspace Cakebrew.xcworkspace \
             -scheme CakebrewTests \
-            -destination 'platform=macOS' \
+            -destination "platform=macOS,arch=$(uname -m)" \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
 
       - name: Upload build and analyzer logs
@@ -97,7 +97,7 @@ jobs:
           # Force ad-hoc signing so no developer team / provisioning profile is needed.
           bash scripts/check-warnings.sh ui-tests.log xcodebuild test \
             -scheme CakebrewUITests \
-            -destination 'platform=macOS' \
+            -destination "platform=macOS,arch=$(uname -m)" \
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGNING_REQUIRED=NO \
