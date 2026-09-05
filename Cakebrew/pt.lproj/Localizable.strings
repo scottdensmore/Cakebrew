@@ -359,3 +359,9 @@
 "Loading_Cancel" = "Cancel";
 
 "Toolbar_Cancel_Reload" = "Stop Reloading";
+
+/* Debug mock notification journeys */
+"Notification Test" = "Notification Test";
+"Search Mock Packages" = "Search Mock Packages";
+"Open Mock Notification" = "Open Mock Notification";
+"Search Then Open Mock Notification" = "Search Then Open Mock Notification";

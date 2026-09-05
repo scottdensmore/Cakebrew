@@ -48,6 +48,14 @@
 #import "BPEmptyStateView.h"
 #if DEBUG
 #import "BPBackgroundUpdater.h"
+
+// Package identifiers are intentionally untranslated. This is Clang's targeted
+// false-positive annotation for a fixed test fixture, not user-facing text.
+__attribute__((annotate("returns_localized_nsstring")))
+static NSString *BPNotificationSearchFixtureIdentifier(void)
+{
+	return @"mockvscode";
+}
 #endif
 
 typedef NS_ENUM(NSUInteger, BPContentTab) {
@@ -273,9 +281,10 @@ NSOpenSavePanelDelegate>
 		return;
 	}
 
-	NSMenuItem *root = [[NSMenuItem alloc] initWithTitle:@"Notification Test" action:NULL keyEquivalent:@""];
+	NSMenuItem *root = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Notification Test", nil) action:NULL keyEquivalent:@""];
 	NSMenu *menu = [[NSMenu alloc] initWithTitle:root.title];
-	NSArray<NSString *> *titles = @[@"Search Mock Packages", @"Open Mock Notification", @"Search Then Open Mock Notification"];
+	NSArray<NSString *> *titles = @[NSLocalizedString(@"Search Mock Packages", nil),
+		NSLocalizedString(@"Open Mock Notification", nil), NSLocalizedString(@"Search Then Open Mock Notification", nil)];
 	SEL actions[] = {@selector(beginMockNotificationSearch:), @selector(openMockNotification:), @selector(openMockNotificationDuringSearch:)};
 	for (NSUInteger index = 0; index < titles.count; index++)
 	{
@@ -289,7 +298,7 @@ NSOpenSavePanelDelegate>
 
 - (void)beginMockNotificationSearch:(id)sender
 {
-	self.toolbar.searchField.stringValue = @"mockvscode";
+	self.toolbar.searchField.stringValue = BPNotificationSearchFixtureIdentifier();
 	[self performSearchWithString:self.toolbar.searchField.stringValue];
 }
 
