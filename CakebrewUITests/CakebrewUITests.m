@@ -14,6 +14,104 @@
 
 @implementation CakebrewUITests
 
+- (void)openAutoremoveWithArguments:(NSArray *)arguments
+{
+	[self launchWithArguments:[@[@"-BPMockBrew"] arrayByAddingObjectsFromArray:arguments]];
+	[self.app.menuBars.menuBarItems[@"Tools"] click];
+	[self.app.menuItems[@"Remove Unused Dependencies…"] click];
+	XCTAssertTrue([self.app.sheets.firstMatch.textViews[@"autoremove.output"] waitForExistenceWithTimeout:10]);
+}
+- (void)testAutoremoveReviewedRemovalStreamsAndFinishes
+{
+	[self openAutoremoveWithArguments:@[]];
+	XCUIElement *remove = self.app.sheets.firstMatch.buttons[@"autoremove.remove"];
+	[self expectationForPredicate:[NSPredicate predicateWithFormat:@"enabled == YES"] evaluatedWithObject:remove handler:nil];
+	[self waitForExpectationsWithTimeout:10 handler:nil];
+	XCTAssertTrue([self.app.textViews[@"autoremove.output"].value containsString:@"mockunused"]);
+	[remove click];
+	XCUIElement *status = self.app.staticTexts[@"autoremove.status"];
+	[self expectationForPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS 'were removed'"] evaluatedWithObject:status handler:nil];
+	[self waitForExpectationsWithTimeout:10 handler:nil];
+	XCTAssertTrue([self.app.textViews[@"autoremove.output"].value containsString:@"MOCK_AUTOREMOVE_OK"]);
+	XCTAssertTrue(self.app.sheets.firstMatch.buttons[@"autoremove.cancel"].enabled);
+}
+- (void)testAutoremoveReviewCancellationDoesNotRunRemoval
+{
+	[self openAutoremoveWithArguments:@[]];
+	XCUIElement *remove = self.app.sheets.firstMatch.buttons[@"autoremove.remove"];
+	[self expectationForPredicate:[NSPredicate predicateWithFormat:@"enabled == YES"] evaluatedWithObject:remove handler:nil];
+	[self waitForExpectationsWithTimeout:10 handler:nil];
+	XCTAssertFalse([self.app.textViews[@"autoremove.output"].value containsString:@"MOCK_AUTOREMOVE_STARTED"]);
+	[self.app.sheets.firstMatch.buttons[@"autoremove.cancel"] click];
+	[self expectationForPredicate:[NSPredicate predicateWithFormat:@"exists == NO"] evaluatedWithObject:self.app.sheets.firstMatch handler:nil];
+	[self waitForExpectationsWithTimeout:5 handler:nil];
+}
+- (void)testAutoremoveIncompleteRefreshRemainsVisibleAfterRemoval
+{
+	[self openAutoremoveWithArguments:@[@"-BPMockFailedAutoremoveRefresh"]];
+	XCUIElement *remove = self.app.sheets.firstMatch.buttons[@"autoremove.remove"];
+	[self expectationForPredicate:[NSPredicate predicateWithFormat:@"enabled == YES"] evaluatedWithObject:remove handler:nil];
+	[self waitForExpectationsWithTimeout:10 handler:nil];
+	[remove click];
+	[self expectationForPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS 'could not be refreshed'"] evaluatedWithObject:self.app.staticTexts[@"autoremove.status"] handler:nil];
+	[self waitForExpectationsWithTimeout:10 handler:nil];
+	XCTAssertTrue([self.app.textViews[@"autoremove.output"].value containsString:@"MOCK_AUTOREMOVE_OK"]);
+	XCTAssertTrue(self.app.sheets.firstMatch.buttons[@"autoremove.cancel"].enabled);
+}
+- (void)testAutoremoveEmptyPreviewDoesNotEnableRemoval
+{
+	[self openAutoremoveWithArguments:@[@"-BPMockEmptyAutoremove"]];
+	[self expectationForPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS 'No unused'"] evaluatedWithObject:self.app.staticTexts[@"autoremove.status"] handler:nil];
+	[self waitForExpectationsWithTimeout:10 handler:nil];
+	XCTAssertFalse(self.app.sheets.firstMatch.buttons[@"autoremove.remove"].enabled);
+}
+- (void)testAutoremoveMalformedPreviewDoesNotEnableRemoval
+{
+	[self openAutoremoveWithArguments:@[@"-BPMockInvalidAutoremove"]];
+	[self expectationForPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS 'could not'"] evaluatedWithObject:self.app.staticTexts[@"autoremove.status"] handler:nil];
+	[self waitForExpectationsWithTimeout:10 handler:nil];
+	XCTAssertFalse(self.app.sheets.firstMatch.buttons[@"autoremove.remove"].enabled);
+	XCTAssertTrue([self.app.textViews[@"autoremove.output"].value containsString:@"MOCK_UNRECOGNIZED"]);
+}
+- (void)testAutoremoveActiveCancellationReportsPartialChanges
+{
+	[self openAutoremoveWithArguments:@[@"-BPMockSlowAutoremove"]];
+	XCUIElement *remove = self.app.sheets.firstMatch.buttons[@"autoremove.remove"];
+	[self expectationForPredicate:[NSPredicate predicateWithFormat:@"enabled == YES"] evaluatedWithObject:remove handler:nil];
+	[self waitForExpectationsWithTimeout:10 handler:nil];
+	[remove click];
+	[self expectationForPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS 'MOCK_AUTOREMOVE_STARTED'"] evaluatedWithObject:self.app.textViews[@"autoremove.output"] handler:nil];
+	[self waitForExpectationsWithTimeout:10 handler:nil];
+	[self.app.sheets.firstMatch.buttons[@"autoremove.cancel"] click];
+	[self expectationForPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS 'partially removed'"] evaluatedWithObject:self.app.staticTexts[@"autoremove.status"] handler:nil];
+	[self waitForExpectationsWithTimeout:10 handler:nil];
+	XCTAssertFalse([self.app.textViews[@"autoremove.output"].value containsString:@"MOCK_AUTOREMOVE_OK"]);
+}
+
+- (void)testAutoremoveChangedPreviewCannotRunRemoval
+{
+	[self openAutoremoveWithArguments:@[@"-BPMockChangedAutoremove"]];
+	XCUIElement *remove = self.app.sheets.firstMatch.buttons[@"autoremove.remove"];
+	[self expectationForPredicate:[NSPredicate predicateWithFormat:@"enabled == YES"] evaluatedWithObject:remove handler:nil];
+	[self waitForExpectationsWithTimeout:10 handler:nil];
+	[remove click];
+	[self expectationForPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS 'list changed'"] evaluatedWithObject:self.app.staticTexts[@"autoremove.status"] handler:nil];
+	[self waitForExpectationsWithTimeout:10 handler:nil];
+	XCTAssertFalse([self.app.textViews[@"autoremove.output"].value containsString:@"MOCK_AUTOREMOVE_STARTED"]);
+}
+- (void)testAutoremoveFailureKeepsDiagnosticsVisible
+{
+	[self openAutoremoveWithArguments:@[@"-BPMockFailedAutoremove"]];
+	XCUIElement *remove = self.app.sheets.firstMatch.buttons[@"autoremove.remove"];
+	[self expectationForPredicate:[NSPredicate predicateWithFormat:@"enabled == YES"] evaluatedWithObject:remove handler:nil];
+	[self waitForExpectationsWithTimeout:10 handler:nil];
+	[remove click];
+	[self expectationForPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS 'Removal failed'"] evaluatedWithObject:self.app.staticTexts[@"autoremove.status"] handler:nil];
+	[self waitForExpectationsWithTimeout:10 handler:nil];
+	XCTAssertTrue([self.app.textViews[@"autoremove.output"].value containsString:@"MOCK_AUTOREMOVE_FAILED"]);
+	XCTAssertFalse([self.app.textViews[@"autoremove.output"].value containsString:@"MOCK_AUTOREMOVE_OK"]);
+}
+
 - (void)setUp
 {
 	[super setUp];

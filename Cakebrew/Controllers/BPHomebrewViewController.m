@@ -41,6 +41,7 @@
 #import "BPLoadingView.h"
 #import "BPDisabledView.h"
 #import "BPBundleWindowController.h"
+#import "BPAutoremoveWindowController.h"
 #import "BPTask.h"
 #import "BPMainWindowController.h"
 #import "NSLayoutConstraint+Shims.h"
@@ -1332,6 +1333,12 @@ NSOpenSavePanelDelegate>
 			[self presentCleanupConfirmationForPreview:preview];
 		});
 	});
+}
+
+- (IBAction)removeUnusedDependencies:(id)sender
+{
+ if ([self hasBlockingBackgroundTask] || _appDelegate.window.attachedSheet) return;
+ self.operationWindowController = [BPAutoremoveWindowController presentForWindow:_appDelegate.window interface:[BPHomebrewInterface sharedInterface] manager:_homebrewManager];
 }
 
 - (void)presentCleanupConfirmationForPreview:(BPCleanupPreview *)preview

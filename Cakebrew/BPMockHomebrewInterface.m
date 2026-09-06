@@ -8,6 +8,7 @@
 #import "BPService.h"
 #import "BPServiceDetails.h"
 #import "BPCleanupPreview.h"
+#import "BPAutoremovePreview.h"
 
 // Debug only. The mock must live inside the app binary — XCUITest drives the
 // app out of process and cannot inject a class, so +sharedInterface finds it
@@ -17,9 +18,46 @@
 
 @interface BPMockHomebrewInterface ()
 @property NSUInteger discoveryAttempts;
+@property NSUInteger autoremovePreviews;
 @end
 
 @implementation BPMockHomebrewInterface
+
+- (NSArray<BPFormula *> *)listModeForRemovalRefresh:(BPListMode)mode
+{
+	if (mode != kBPListInstalled && mode != kBPListLeaves && mode != kBPListOutdated) return nil;
+	return [self listMode:mode];
+}
+
+- (NSArray<BPService *> *)listServicesForRemovalRefresh
+{
+	if ([NSProcessInfo.processInfo.arguments containsObject:@"-BPMockFailedAutoremoveRefresh"]) return nil;
+	return [self listServices];
+}
+
+- (BPAutoremovePreview *)previewAutoremoveWithProgress:(NSProgress *)progress
+{
+	self.autoremovePreviews++;
+	NSArray *arguments = NSProcessInfo.processInfo.arguments;
+	NSString *output = @"==> Would autoremove 1 unneeded formula:\nmockunused\n";
+	if ([arguments containsObject:@"-BPMockEmptyAutoremove"] || ([arguments containsObject:@"-BPMockChangedAutoremove"] && self.autoremovePreviews > 1)) output = @"";
+	if ([arguments containsObject:@"-BPMockInvalidAutoremove"]) output = @"MOCK_UNRECOGNIZED\n";
+	return [BPAutoremovePreview previewWithOutput:output succeeded:!progress.cancelled];
+}
+- (BOOL)removeUnusedFormulae:(NSArray<NSString *> *)names progress:(NSProgress *)progress output:(void (^)(NSString *))output
+{
+	if (progress.cancelled) return NO;
+	if (output) output(@"MOCK_AUTOREMOVE_STARTED\n");
+	NSArray *arguments = NSProcessInfo.processInfo.arguments;
+	if ([arguments containsObject:@"-BPMockSlowAutoremove"]) {
+		NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:10];
+		while (!progress.cancelled && deadline.timeIntervalSinceNow > 0) [NSThread sleepForTimeInterval:0.05];
+	}
+	if (progress.cancelled) { if (output) output(@"MOCK_AUTOREMOVE_CANCELLED\n"); return NO; }
+	if ([arguments containsObject:@"-BPMockFailedAutoremove"]) { if (output) output(@"MOCK_AUTOREMOVE_FAILED\n"); return NO; }
+	if (output) output(@"MOCK_AUTOREMOVE_OK\n");
+	return YES;
+}
 
 // Override the entire execution boundary: no shell validation, config command,
 // or real brew call is allowed, including failure/retry journeys.

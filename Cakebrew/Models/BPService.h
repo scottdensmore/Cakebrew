@@ -54,4 +54,9 @@ typedef NS_ENUM(NSInteger, BPServiceStatus) {
  */
 + (NSArray<BPService *> *)servicesFromJSONString:(NSString *)output;
 
+/// All-or-nothing parser for refreshes that must retain prior state on failure.
+/// Nil for malformed JSON/entries; an empty array only for a valid empty list.
+/// Unknown fields and future string status values remain supported.
++ (NSArray<BPService *> *)validatedServicesFromJSONString:(NSString *)output;
+
 @end

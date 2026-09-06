@@ -20,6 +20,27 @@
 
 @implementation BPService
 
++ (NSArray<BPService *> *)validatedServicesFromJSONString:(NSString *)output
+{
+	NSData *data = [output dataUsingEncoding:NSUTF8StringEncoding];
+	if (!data) return nil;
+	id parsed = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+	if (![parsed isKindOfClass:NSArray.class]) return nil;
+	NSMutableArray<BPService *> *services = [NSMutableArray array];
+	for (id entry in parsed) {
+		if (![entry isKindOfClass:NSDictionary.class]) return nil;
+		for (NSString *key in @[@"user", @"status", @"pid"]) {
+			id value = entry[key];
+			Class expected = [key isEqualToString:@"pid"] ? NSNumber.class : NSString.class;
+			if (value && value != NSNull.null && ![value isKindOfClass:expected]) return nil;
+		}
+		BPService *service = [self serviceWithDictionary:entry];
+		if (!service) return nil;
+		[services addObject:service];
+	}
+	return services;
+}
+
 + (NSArray<BPService *> *)servicesFromJSONString:(NSString *)output
 {
 	NSData *data = [output dataUsingEncoding:NSUTF8StringEncoding];

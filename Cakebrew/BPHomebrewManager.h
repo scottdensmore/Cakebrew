@@ -132,6 +132,10 @@ typedef NS_ENUM(NSInteger, BPFormulaStatus) {
 
 - (void)reloadFromInterfaceRebuildingCache:(BOOL)shouldRebuildCache;
 
+/// Refresh only formula state and services after removal. Failed lists retain
+/// their previous value. Completion is on main; NO means refresh was incomplete.
+- (void)refreshFormulaStateAfterRemovalWithCompletion:(void (^)(BOOL succeeded))completion;
+
 /// Whether a request should start a pipeline. A request arriving while one runs
 /// coalesces into a single pending re-run instead.
 + (BOOL)shouldStartReloadWhenInFlight:(BOOL)inFlight;
