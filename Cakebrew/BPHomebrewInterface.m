@@ -23,6 +23,7 @@
 #import "BPCleanupPreview.h"
 #import "BPTask.h"
 #import "BPService.h"
+#import "BPServiceDetails.h"
 #import "BPPreferences.h"
 #import "BPHelperClient.h"
 #import "BPBrewError.h"
@@ -271,6 +272,25 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 
 - (BOOL)performAsyncBrewCommandWithArguments:(NSArray *)arguments wrapsSynchronousRequest:(BOOL)isSynchronous progress:(NSProgress *)progress dataReturnBlock:(void (^)(NSString *))block
 {
+	return [self performAsyncBrewCommandWithArguments:arguments wrapsSynchronousRequest:isSynchronous progress:progress
+		includesCompletionMessage:YES dataReturnBlock:block];
+}
+
+- (BOOL)performAsyncBrewCommandWithArguments:(NSArray *)arguments
+					 wrapsSynchronousRequest:(BOOL)isSynchronous
+					  includesCompletionMessage:(BOOL)includesCompletionMessage
+							 dataReturnBlock:(void (^)(NSString *))block
+{
+	return [self performAsyncBrewCommandWithArguments:arguments wrapsSynchronousRequest:isSynchronous progress:nil
+		includesCompletionMessage:includesCompletionMessage dataReturnBlock:block];
+}
+
+- (BOOL)performAsyncBrewCommandWithArguments:(NSArray *)arguments
+					 wrapsSynchronousRequest:(BOOL)isSynchronous
+								progress:(NSProgress *)progress
+					  includesCompletionMessage:(BOOL)includesCompletionMessage
+							 dataReturnBlock:(void (^)(NSString *))block
+{
 	if (self.brewTransport == kBPBrewTransportHelper)
 	{
 		// The helper builds its own (identical) shell invocation, so it takes
@@ -337,7 +357,7 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 															   dateStyle:NSDateFormatterShortStyle
 															   timeStyle:NSDateFormatterShortStyle]];
 	
-	[self invokeOutputBlock:block withString:taskDoneString];
+	if (includesCompletionMessage) [self invokeOutputBlock:block withString:taskDoneString];
 
 	return status == 0;
 }
@@ -483,8 +503,45 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 
 #pragma mark - Services
 
+- (BPServiceDetails *)serviceDetailsForName:(NSString *)name
+{
+	if (!name.length || [name hasPrefix:@"-"]) return [BPServiceDetails detailsForName:name output:@"" succeeded:NO];
+	// Cakebrew ships unsandboxed with direct transport. The test-only helper
+	// shares a server-side operation slot, so an info request there could steal
+	// cancellation from an install. Do not dispatch it through that transport.
+	if (self.brewTransport == kBPBrewTransportHelper) return [BPServiceDetails detailsForName:name
+		output:NSLocalizedString(@"Services_Details_Helper_Unavailable", nil) succeeded:NO];
+	NSString *output;
+	BOOL succeeded = [self performCleanReadOnlyBrewCommandWithArguments:@[@"services", @"info", @"--json", name] output:&output];
+	return [BPServiceDetails detailsForName:name output:output succeeded:succeeded];
+}
+
+/// Service JSON must not include the human-readable completion footer. Other
+/// sync callers retain their existing output contract.
+- (BOOL)performCleanReadOnlyBrewCommandWithArguments:(NSArray<NSString *> *)arguments output:(NSString * __autoreleasing *)result
+{
+	__block BOOL succeeded = NO;
+	__block NSString *transcript;
+	dispatch_sync(_taskOperationsQueue, ^{
+		NSMutableString *output = [NSMutableString string];
+		succeeded = [self performAsyncBrewCommandWithArguments:arguments
+			wrapsSynchronousRequest:YES includesCompletionMessage:NO dataReturnBlock:^(NSString *chunk) {
+				[output appendString:chunk ?: @""];
+			}];
+		transcript = [self removeLoginShellOutputFromString:output];
+	});
+	if (result) *result = transcript;
+	return succeeded;
+}
+
 - (NSArray<BPService *> *)listServices
 {
+	if (self.brewTransport == kBPBrewTransportDirect) {
+		NSString *output;
+		BOOL succeeded = [self performCleanReadOnlyBrewCommandWithArguments:@[@"services", @"list", @"--json"] output:&output];
+		return succeeded ? [BPService servicesFromJSONString:output] : @[];
+	}
+	// Preserve the existing optional helper list behavior.
 	NSString *output = [self performSyncBrewCommandWithArguments:@[@"services", @"list", @"--json"]];
 	return output ? [BPService servicesFromJSONString:output] : @[];
 }

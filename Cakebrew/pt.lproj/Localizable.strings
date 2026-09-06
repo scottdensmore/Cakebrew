@@ -407,3 +407,16 @@
 "Cancelling… Waiting for Homebrew to exit." = "Cancelling… Waiting for Homebrew to exit.";
 "Brewfile Test" = "Brewfile Test";
 "Review Mock Brewfile" = "Review Mock Brewfile";
+
+/* Selected service details */
+"Services_Details_Title" = "Service Details";
+"Services_Details_Select" = "Select a service to view its details.";
+"Services_Details_Loading" = "Loading details for %@…";
+"Services_Details_Not_Available" = "Not available";
+"Services_Details_Format" = "Service: %@\nStatus: %@\nPID: %@    User: %@\nService file: %@\nLoaded file: %@\nLog: %@\nError log: %@\nExit code: %@";
+"Services_Details_Failed" = "Could not load service details. Homebrew reported:";
+"Services_Details_Helper_Unavailable" = "Service details are unavailable with the unsupported helper transport. The service list remains available.";
+"Services_Reveal_File" = "Reveal File";
+"Services_Open_Logs" = "Open Logs";
+"Services_Copy_Output" = "Copy Output";
+"Services_File_Unavailable" = "The file is unavailable or could not be opened.";

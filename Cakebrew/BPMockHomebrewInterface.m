@@ -6,6 +6,7 @@
 #import "BPMockHomebrewInterface.h"
 #import "BPFormula.h"
 #import "BPService.h"
+#import "BPServiceDetails.h"
 #import "BPCleanupPreview.h"
 
 // Debug only. The mock must live inside the app binary — XCUITest drives the
@@ -237,6 +238,21 @@
 - (BOOL)startService:(NSString *)name withReturnBlock:(void (^)(NSString *))block
 {
 	return YES;
+}
+
+- (BPServiceDetails *)serviceDetailsForName:(NSString *)name
+{
+	NSArray *arguments = NSProcessInfo.processInfo.arguments;
+	if ([arguments containsObject:@"-BPMockServiceDetailsFailure"]) return [BPServiceDetails detailsForName:name
+		output:@"Error: mock service details unavailable\nThe mock service list is still available." succeeded:NO];
+	if ([arguments containsObject:@"-BPMockSlowServiceDetails"]) [NSThread sleepForTimeInterval:2];
+	BOOL running = [name isEqualToString:@"mockpostgres"];
+	NSDictionary *record = @{@"name": name, @"status": running ? @"started" : @"none",
+		@"pid": running ? @123 : NSNull.null, @"user": running ? @"mockuser" : NSNull.null,
+		@"file": @"/cakebrew-mock-missing/service.plist", @"log_path": @"/cakebrew-mock-missing/service.log",
+		@"error_log_path": @"/cakebrew-mock-missing/service.log", @"exit_code": NSNull.null};
+	NSData *data = [NSJSONSerialization dataWithJSONObject:@[record] options:0 error:nil];
+	return [BPServiceDetails detailsForName:name output:[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] succeeded:YES];
 }
 
 - (BOOL)stopService:(NSString *)name withReturnBlock:(void (^)(NSString *))block
