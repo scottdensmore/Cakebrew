@@ -157,6 +157,16 @@ static NSString *kToolbarItemCancelReloadIdentifier = @"toolbarItemCancelReload"
 {
 	NSDictionary *supportedItems = [self customToolbarItems];
 	[supportedItems enumerateKeysAndObjectsUsingBlock:^(id key, NSToolbarItem *object, BOOL *stop) {
+		if ([key isEqualToString:kToolbarItemSearchIdentifier])
+		{
+			// Search sends a control, while the controller accepts a string.
+			// Keep the cached field bound to this toolbar's forwarding adapter.
+			self.searchField = ((NSSearchToolbarItem *)object).searchField;
+			self.searchField.delegate = self;
+			object.target = target != nil ? self : nil;
+			object.enabled = (target != nil);
+			return;
+		}
 		if ([key isEqualToString:kToolbarItemCancelReloadIdentifier])
 		{
 			// Exempt from locking: the toolbar is locked precisely while a
@@ -376,7 +386,9 @@ static NSString *kToolbarItemCancelReloadIdentifier = @"toolbarItemCancelReload"
 		item = [[NSSearchToolbarItem alloc] initWithItemIdentifier:kToolbarItemSearchIdentifier];
 		item.label = NSLocalizedString(@"Toolbar_Search", nil);
 		item.paletteLabel = NSLocalizedString(@"Toolbar_Search", nil);
-		item.action = @selector(performSearchWithString:);
+		// Loading explicitly locks/unlocks Search; responder-chain validation
+		// must not re-enable it while the toolbar is locked.
+		item.autovalidates = NO;
 
 		self.searchField = [[NSSearchField alloc] initWithFrame:NSZeroRect];
 		self.searchField.delegate = self;
@@ -384,6 +396,9 @@ static NSString *kToolbarItemCancelReloadIdentifier = @"toolbarItemCancelReload"
 		[self.searchField setRecentsAutosaveName:@"RecentSearches"];
 
 		item.searchField = self.searchField;
+		// NSSearchToolbarItem forwards action to its field, so configure it
+		// after replacing the field (replacement discards the previous action).
+		item.action = @selector(submitSearch:);
 	}
 	return item;
 }
@@ -430,10 +445,15 @@ static NSString *kToolbarItemCancelReloadIdentifier = @"toolbarItemCancelReload"
 }
 
 #pragma mark - NSTextField Delegate
+- (void)submitSearch:(NSSearchField *)field
+{
+	[self.controller performSearchWithString:field.stringValue];
+}
+
 - (void)controlTextDidChange:(NSNotification *)aNotification
 {
 	NSSearchField *field = (NSSearchField *)[aNotification object];
-	[self.controller performSearchWithString:field.stringValue];
+	[self submitSearch:field];
 }
 
 @end

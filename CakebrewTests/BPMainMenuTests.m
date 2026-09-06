@@ -18,6 +18,29 @@
 #import "BPMainWindowController.h"
 #import "BPToolbar.h"
 
+// Simulated user-entered package identifiers are intentionally untranslated.
+// Limit the analyzer annotation to these two fixed input fixtures.
+__attribute__((annotate("returns_localized_nsstring")))
+static NSString *BPSearchPackageInput(BOOL cask)
+{
+	return cask ? @"MockChrome" : @"MockWget";
+}
+
+@interface BPSearchToolbarController : NSObject
+@property (copy) NSString *lastSearch;
+@property NSUInteger searchCount;
+- (void)performSearchWithString:(NSString *)search;
+@end
+
+@implementation BPSearchToolbarController
+- (void)performSearchWithString:(NSString *)search
+{
+	// Like the real controller, require string semantics, not a control sender.
+	self.lastSearch = [search lowercaseString];
+	self.searchCount++;
+}
+@end
+
 @interface BPMainMenuTests : XCTestCase
 @end
 
@@ -111,6 +134,87 @@
 }
 
 #pragma mark - toolbar customization
+
+- (NSSearchToolbarItem *)searchItemForToolbar:(BPToolbar *)toolbar
+{
+	return (NSSearchToolbarItem *)[toolbar toolbar:toolbar
+		itemForItemIdentifier:@"toolbarItemSearch" willBeInsertedIntoToolbar:YES];
+}
+
+- (void)testSearchUnlockEnablesTheFieldWithoutEnablingInactiveActions
+{
+	BPToolbar *toolbar = [[BPToolbar alloc] initWithIdentifier:@"SearchEnablement"];
+	BPSearchToolbarController *controller = [BPSearchToolbarController new];
+	toolbar.controller = controller;
+	NSSearchToolbarItem *item = [self searchItemForToolbar:toolbar];
+	XCTAssertFalse(item.enabled, @"Search starts locked during the initial load");
+	XCTAssertFalse(item.searchField.enabled);
+	[toolbar unlockItems];
+	[item validate];
+	[toolbar validateVisibleItems];
+	XCTAssertTrue(item.enabled, @"Search must be available after loading");
+	XCTAssertTrue(item.searchField.enabled, @"An existing but disabled field cannot be clicked");
+	for (NSString *identifier in @[@"toolbarItemInformation", @"toolbarItemMultiAction"])
+	{
+		NSToolbarItem *placeholder = [toolbar toolbar:toolbar itemForItemIdentifier:identifier
+			willBeInsertedIntoToolbar:YES];
+		XCTAssertFalse(placeholder.enabled, @"Inactive slots must stay disabled");
+	}
+	[toolbar lockItems];
+}
+
+- (void)testSearchLockAndUnlockSurviveValidationAndMissingController
+{
+	BPToolbar *toolbar = [[BPToolbar alloc] initWithIdentifier:@"SearchLocking"];
+	BPSearchToolbarController *controller = [BPSearchToolbarController new];
+	toolbar.controller = controller;
+	NSSearchToolbarItem *item = [self searchItemForToolbar:toolbar];
+	[toolbar unlockItems];
+	[toolbar lockItems];
+	[item validate];
+	XCTAssertFalse(item.enabled);
+	XCTAssertFalse(item.searchField.enabled);
+	[toolbar unlockItems];
+	[item validate];
+	XCTAssertTrue(item.enabled);
+	XCTAssertTrue(item.searchField.enabled);
+	toolbar.controller = nil;
+	[toolbar unlockItems];
+	[item validate];
+	XCTAssertFalse(item.enabled, @"Search has no destination without a controller");
+	XCTAssertFalse(item.searchField.enabled);
+}
+
+- (void)testSearchTextChangesAndSubmissionDeliverStringsToTheController
+{
+	BPToolbar *toolbar = [[BPToolbar alloc] initWithIdentifier:@"SearchDelivery"];
+	BPSearchToolbarController *controller = [BPSearchToolbarController new];
+	toolbar.controller = controller;
+	[toolbar unlockItems];
+	NSSearchField *field = [self searchItemForToolbar:toolbar].searchField;
+	XCTAssertEqual(toolbar.searchField, field);
+	XCTAssertEqual((id)field.delegate, toolbar);
+	field.stringValue = BPSearchPackageInput(NO);
+	XCTAssertNoThrow([field.delegate controlTextDidChange:
+		[NSNotification notificationWithName:NSControlTextDidChangeNotification object:field]]);
+	XCTAssertEqualObjects(controller.lastSearch, @"mockwget");
+	XCTAssertEqual(controller.searchCount, 1u);
+	field.stringValue = BPSearchPackageInput(YES);
+	XCTAssertNotEqual(field.action, NULL, @"Submitting or clearing Search needs a safe action");
+	if (field.action != NULL)
+	{
+		XCTAssertNoThrow([[NSApplication sharedApplication] sendAction:field.action to:field.target from:field]);
+	}
+	XCTAssertEqualObjects(controller.lastSearch, @"mockchrome");
+	XCTAssertEqual(controller.searchCount, 2u);
+	field.stringValue = @"";
+	if (field.action != NULL)
+	{
+		XCTAssertNoThrow([[NSApplication sharedApplication] sendAction:field.action to:field.target from:field]);
+	}
+	XCTAssertEqualObjects(controller.lastSearch, @"", @"Clearing Search must reset the filter");
+	[toolbar lockItems];
+}
 
 - (void)testToolbarCustomizationIsNotHalfWired
 {

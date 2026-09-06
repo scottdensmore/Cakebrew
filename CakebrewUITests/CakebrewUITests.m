@@ -1289,6 +1289,9 @@
 		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
 	}
 	XCTAssertTrue(exists, @"the toolbar should provide a search field");
+	XCTAssertTrue(searchField.enabled, @"Search must accept input after the initial load, not just exist");
+	XCTAssertGreaterThan(searchField.frame.size.width, 0.0);
+	XCTAssertGreaterThan(searchField.frame.size.height, 0.0);
 }
 
 #pragma mark - Formula info journey
