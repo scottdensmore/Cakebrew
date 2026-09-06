@@ -14,8 +14,19 @@ extern NSString * const kColumnIdentifierLatestVersion;
 extern NSString * const kColumnIdentifierStatus;
 extern NSString * const kColumnIdentifierName;
 
+typedef NS_ENUM(NSInteger, BPFormulaeTableRequest) {
+	BPFormulaeTableRequestPrimary,
+	BPFormulaeTableRequestUninstall
+};
+
+@class BPFormulaeTableView;
+@protocol BPFormulaeTableActionDelegate <NSObject>
+- (void)formulaeTableView:(BPFormulaeTableView *)table requestAction:(BPFormulaeTableRequest)request;
+@end
+
 @interface BPFormulaeTableView : NSTableView
 
 @property (nonatomic, assign) BPListMode mode;
+@property (nonatomic, weak) id<BPFormulaeTableActionDelegate> actionDelegate;
 
 @end

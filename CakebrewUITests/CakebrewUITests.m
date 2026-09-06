@@ -96,6 +96,114 @@
 
 #pragma mark - Launch / chrome
 
+// Mouse journeys are valid on headless CI; keyboard routing is exercised by
+// synthetic NSEvents in BPFormulaeTableActionTests and checked locally on macOS.
+- (void)testDoubleClickInstalledFormulaShowsInfoWithoutUninstalling
+{
+	[self launchWithArguments:@[@"-BPMockBrew"]];
+	[[self formulaCellWithName:@"mockwget"] doubleClick];
+	XCUIElement *info = [self.app.textViews matchingPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS %@", @"A mock formula"]].firstMatch;
+	BOOL appeared = [info waitForExistenceWithTimeout:15];
+	if (!appeared) NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	XCTAssertTrue(appeared);
+	XCTAssertFalse(self.app.sheets.firstMatch.exists, @"Installed primary action is information, not uninstall");
+}
+
+- (void)testDoubleClickInstalledCaskShowsInfoWithoutUninstalling
+{
+	[self launchWithArguments:@[@"-BPMockBrew"]];
+	[[self sidebarRow:@"sidebar.casks.installed"] click];
+	XCUIElement *cask = [self formulaCellWithName:@"mockchrome"];
+	XCTAssertTrue([cask waitForExistenceWithTimeout:15]);
+	[cask doubleClick];
+	XCUIElement *info = [self.app.textViews matchingPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS %@", @"A mock cask"]].firstMatch;
+	BOOL appeared = [info waitForExistenceWithTimeout:15];
+	if (!appeared) NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	XCTAssertTrue(appeared);
+	XCTAssertFalse(self.app.sheets.firstMatch.exists);
+}
+
+- (void)testDoubleClickAvailableFormulaUsesInstallConfirmationAndCancel
+{
+	[self launchWithArguments:@[@"-BPMockBrew"]];
+	[[self sidebarRow:@"sidebar.formulae.all"] click];
+	XCUIElement *formula = [self formulaCellWithName:@"mockhtop"];
+	XCTAssertTrue([formula waitForExistenceWithTimeout:15]);
+	[formula doubleClick];
+	XCUIElement *sheet = self.app.sheets.firstMatch;
+	BOOL appeared = [sheet.buttons[@"Yes"] waitForExistenceWithTimeout:15];
+	if (!appeared) NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	XCTAssertTrue(appeared);
+	XCUIElement *message = [sheet.staticTexts matchingPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS %@", @"mockhtop"]].firstMatch;
+	XCTAssertTrue(message.exists);
+	[sheet.buttons[@"Cancel"] click];
+	XCTAssertTrue([sheet waitForNonExistenceWithTimeout:10]);
+	XCTAssertTrue(formula.exists);
+	XCTAssertTrue(self.app.buttons[@"Install Formula"].exists, @"Cancel leaves the selected package uninstalled");
+}
+
+- (void)testDoubleClickOutdatedFormulaAndCaskUseUpgradeConfirmation
+{
+	[self launchWithArguments:@[@"-BPMockBrew"]];
+	NSArray *rows = @[@"sidebar.formulae.outdated", @"sidebar.casks.outdated"];
+	NSArray *names = @[@"mockgit", @"mockchrome"];
+	for (NSUInteger index = 0; index < rows.count; index++) {
+		[[self sidebarRow:rows[index]] click];
+		XCUIElement *formula = [self formulaCellWithName:names[index]];
+		XCTAssertTrue([formula waitForExistenceWithTimeout:15]);
+		[formula doubleClick];
+		XCUIElement *sheet = self.app.sheets.firstMatch;
+		BOOL appeared = [sheet.buttons[@"Yes"] waitForExistenceWithTimeout:15];
+		if (!appeared) NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+		XCTAssertTrue(appeared);
+		XCTAssertTrue(sheet.staticTexts[@"Updating Formulae"].exists);
+		XCUIElement *message = [sheet.staticTexts matchingPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS %@", names[index]]].firstMatch;
+		XCTAssertTrue(message.exists);
+		[sheet.buttons[@"Cancel"] click];
+		XCTAssertTrue([sheet waitForNonExistenceWithTimeout:10]);
+		XCTAssertTrue(formula.exists);
+	}
+}
+
+- (void)testDoubleClickAvailableCaskUsesInstallConfirmationAndCancel
+{
+	[self launchWithArguments:@[@"-BPMockBrew"]];
+	[[self sidebarRow:@"sidebar.casks.all"] click];
+	XCUIElement *cask = [self formulaCellWithName:@"mockfirefox"];
+	XCTAssertTrue([cask waitForExistenceWithTimeout:15]);
+	[cask doubleClick];
+	XCUIElement *sheet = self.app.sheets.firstMatch;
+	BOOL appeared = [sheet.buttons[@"Yes"] waitForExistenceWithTimeout:15];
+	if (!appeared) NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	XCTAssertTrue(appeared);
+	XCUIElement *message = [sheet.staticTexts matchingPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS %@", @"mockfirefox"]].firstMatch;
+	XCTAssertTrue(message.exists);
+	[sheet.buttons[@"Cancel"] click];
+	XCTAssertTrue([sheet waitForNonExistenceWithTimeout:10]);
+	XCTAssertTrue(cask.exists);
+	XCTAssertTrue(self.app.buttons[@"Install Formula"].exists);
+}
+
+- (void)testDoubleClickEmptyTableSpaceDoesNotActOnSelectedFormula
+{
+	[self launchWithArguments:@[@"-BPMockBrew"]];
+	[[self sidebarRow:@"sidebar.formulae.all"] click];
+	XCUIElement *formula = [self formulaCellWithName:@"mockhtop"];
+	XCTAssertTrue([formula waitForExistenceWithTimeout:15]);
+	[formula click];
+	XCUIElement *table = self.app.tables.firstMatch;
+	XCTAssertTrue(table.exists);
+	CGFloat rowsBottom = 0;
+	NSArray<XCUIElement *> *tableRows = [table descendantsMatchingType:XCUIElementTypeTableRow].allElementsBoundByIndex;
+	XCTAssertGreaterThan(tableRows.count, 0u, @"Validate that the row geometry probe found the rendered rows");
+	for (XCUIElement *row in tableRows) rowsBottom = MAX(rowsBottom, CGRectGetMaxY(row.frame));
+	CGFloat y = CGRectGetMaxY(table.frame) - 8;
+	XCTAssertGreaterThan(y, rowsBottom, @"The click must really be below every row");
+	XCUICoordinate *point = [[table coordinateWithNormalizedOffset:CGVectorMake(0, 0)] coordinateWithOffset:CGVectorMake(20, y - CGRectGetMinY(table.frame))];
+	[point doubleClick];
+	XCTAssertFalse([self.app.sheets.firstMatch waitForExistenceWithTimeout:2]);
+}
+
 - (void)openBrewfileReviewWithContents:(NSString *)contents extraArguments:(NSArray *)arguments
 {
  self.brewfileFixtureDirectory = [[NSURL fileURLWithPath:NSTemporaryDirectory()] URLByAppendingPathComponent:NSUUID.UUID.UUIDString];
