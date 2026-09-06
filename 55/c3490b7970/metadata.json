@@ -1,0 +1,24 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "55c3490b7970",
+  "strategy": "manual-commit",
+  "branch": "fix/search-field-enablement",
+  "checkpoints_count": 8,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/55/c3490b7970/0/metadata.json",
+      "transcript": "/55/c3490b7970/0/full.jsonl",
+      "compact_transcript": "/55/c3490b7970/0/transcript.jsonl",
+      "content_hash": "/55/c3490b7970/0/content_hash.txt",
+      "prompt": "/55/c3490b7970/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 805939,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 79435776,
+    "output_tokens": 101499,
+    "api_call_count": 665
+  }
+}
