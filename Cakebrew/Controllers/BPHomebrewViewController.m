@@ -21,6 +21,7 @@
 
 #import "BPHomebrewViewController.h"
 #import "BPFormula.h"
+#import "BPFormulaeTableAction.h"
 #import "BPHomebrewManager.h"
 #import "BPHomebrewInterface.h"
 #import "BPCleanupPreview.h"
@@ -65,7 +66,7 @@ typedef NS_ENUM(NSUInteger, BPContentTab) {
 	kBPContentTabServices
 };
 
-@interface BPHomebrewViewController () <NSTableViewDelegate,
+@interface BPHomebrewViewController () <NSTableViewDelegate, BPFormulaeTableActionDelegate,
 BPSideBarControllerDelegate,
 BPSelectedFormulaViewControllerDelegate,
 BPHomebrewManagerDelegate,
@@ -193,6 +194,7 @@ NSOpenSavePanelDelegate>
 		self.formulaeDataSource.sortDescriptors = @[restored];
 	}
 	self.formulaeTableView.delegate = self;
+	self.formulaeTableView.actionDelegate = self;
 	[self.formulaeTableView setAccessibilityLabel:NSLocalizedString(@"Formulae", nil)];
 	
 	// Autosave the divider so a dragged position survives relaunch. The window
@@ -847,6 +849,35 @@ NSOpenSavePanelDelegate>
 }
 
 #pragma mark - NSTableView Delegate
+
+- (void)formulaeTableView:(BPFormulaeTableView *)table requestAction:(BPFormulaeTableRequest)request
+{
+	// A Tools tab leaves the old table mode/selection in memory. Never let a
+	// hidden, unavailable, busy, or sheet-covered surface dispatch that state.
+	if (table != self.formulaeTableView || !table.window || !table.enabled
+		|| table.isHiddenOrHasHiddenAncestor || self.loadingView || self.disabledView
+		|| !self.homebrewInstalled || _appDelegate.window.attachedSheet || !self.tabView.selectedTabViewItem
+		|| [self.tabView indexOfTabViewItem:self.tabView.selectedTabViewItem] != kBPContentTabFormulae
+		|| table.mode != self.formulaeDataSource.mode
+		|| _appDelegate.isRunningBackgroundTask) return;
+	NSIndexSet *rows = table.selectedRowIndexes;
+	if (!rows.count || rows.lastIndex >= (NSUInteger)table.numberOfRows) return;
+	NSArray<BPFormula *> *formulae = [self.formulaeDataSource formulasAtIndexSet:rows];
+	if (formulae.count != rows.count) return;
+	NSMutableArray<NSNumber *> *statuses = [NSMutableArray arrayWithCapacity:formulae.count];
+	for (BPFormula *formula in formulae) {
+		if (![formula isKindOfClass:BPFormula.class]) return;
+		[statuses addObject:@([_homebrewManager statusForFormula:formula])];
+	}
+	BPFormulaeTableAction action = [BPFormulaeTableActions actionForRequest:request mode:table.mode formulae:formulae statuses:statuses];
+	switch (action) {
+		case BPFormulaeTableActionInstall: [self installFormula:table]; break;
+		case BPFormulaeTableActionUpgrade: [self upgradeSelectedFormulae:table]; break;
+		case BPFormulaeTableActionInfo: [self showFormulaInfo:table]; break;
+		case BPFormulaeTableActionUninstall: [self uninstallFormula:table]; break;
+		case BPFormulaeTableActionNone: break;
+	}
+}
 
 - (void)tableViewSelectionDidChange:(NSNotification *)notification
 {

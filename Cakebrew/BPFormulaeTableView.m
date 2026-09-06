@@ -19,6 +19,8 @@ unichar SPACE_CHARACTER = 0x0020;
 
 - (void)awakeFromNib
 {
+	self.target = self;
+	self.doubleAction = @selector(performDoubleClickAction:);
 	[self addObserver:self
 		   forKeyPath:NSStringFromSelector(@selector(mode))
 			  options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
@@ -155,9 +157,33 @@ unichar SPACE_CHARACTER = 0x0020;
 			[self spaceBarPressed];
 			return YES;
 		}
+		// Keep Space's existing responder-chain behavior, including modifiers.
+		// New row actions are plain, non-repeating table-local key presses only.
+		NSEventModifierFlags shortcuts = NSEventModifierFlagCommand | NSEventModifierFlagOption
+			| NSEventModifierFlagControl | NSEventModifierFlagShift;
+		if (!theEvent.isARepeat && !(theEvent.modifierFlags & shortcuts))
+		{
+			if (key == NSCarriageReturnCharacter || key == NSEnterCharacter)
+			{
+				[self.actionDelegate formulaeTableView:self requestAction:BPFormulaeTableRequestPrimary];
+				return YES;
+			}
+			if (key == NSDeleteCharacter || key == NSDeleteFunctionKey)
+			{
+				[self.actionDelegate formulaeTableView:self requestAction:BPFormulaeTableRequestUninstall];
+				return YES;
+			}
+		}
 	}
 	
 	return NO;
+}
+
+- (void)performDoubleClickAction:(id)sender
+{
+	NSInteger row = self.clickedRow;
+	if (row < 0 || row >= self.numberOfRows || ![self.selectedRowIndexes containsIndex:(NSUInteger)row]) return;
+	[self.actionDelegate formulaeTableView:self requestAction:BPFormulaeTableRequestPrimary];
 }
 
 
