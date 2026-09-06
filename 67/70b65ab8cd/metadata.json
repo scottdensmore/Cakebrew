@@ -1,0 +1,24 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "6770b65ab8cd",
+  "strategy": "manual-commit",
+  "branch": "feat/autoremove-integrated",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/67/70b65ab8cd/0/metadata.json",
+      "transcript": "/67/70b65ab8cd/0/full.jsonl",
+      "compact_transcript": "/67/70b65ab8cd/0/transcript.jsonl",
+      "content_hash": "/67/70b65ab8cd/0/content_hash.txt",
+      "prompt": "/67/70b65ab8cd/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 134783,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 11477632,
+    "output_tokens": 23189,
+    "api_call_count": 134
+  }
+}
