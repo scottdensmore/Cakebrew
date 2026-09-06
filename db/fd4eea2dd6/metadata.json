@@ -1,0 +1,24 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "dbfd4eea2dd6",
+  "strategy": "manual-commit",
+  "branch": "feat/brewfile-review",
+  "checkpoints_count": 3,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/db/fd4eea2dd6/0/metadata.json",
+      "transcript": "/db/fd4eea2dd6/0/full.jsonl",
+      "compact_transcript": "/db/fd4eea2dd6/0/transcript.jsonl",
+      "content_hash": "/db/fd4eea2dd6/0/content_hash.txt",
+      "prompt": "/db/fd4eea2dd6/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 536831,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 38321536,
+    "output_tokens": 57695,
+    "api_call_count": 308
+  }
+}
