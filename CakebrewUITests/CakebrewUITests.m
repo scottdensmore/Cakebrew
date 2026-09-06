@@ -9,6 +9,7 @@
 
 @interface CakebrewUITests : XCTestCase
 @property (strong) XCUIApplication *app;
+@property (strong) NSURL *brewfileFixtureDirectory;
 @end
 
 @implementation CakebrewUITests
@@ -23,6 +24,7 @@
 - (void)tearDown
 {
 	[self.app terminate];
+ if (self.brewfileFixtureDirectory) [[NSFileManager defaultManager] removeItemAtURL:self.brewfileFixtureDirectory error:NULL];
 	self.app = nil;
 	[super tearDown];
 }
@@ -93,6 +95,85 @@
 }
 
 #pragma mark - Launch / chrome
+
+- (void)openBrewfileReviewWithContents:(NSString *)contents extraArguments:(NSArray *)arguments
+{
+ self.brewfileFixtureDirectory = [[NSURL fileURLWithPath:NSTemporaryDirectory()] URLByAppendingPathComponent:NSUUID.UUID.UUIDString];
+ XCTAssertTrue([[NSFileManager defaultManager] createDirectoryAtURL:self.brewfileFixtureDirectory withIntermediateDirectories:NO attributes:nil error:NULL]);
+ NSURL *file = [self.brewfileFixtureDirectory URLByAppendingPathComponent:@"Brewfile"];
+ XCTAssertTrue([contents writeToURL:file atomically:YES encoding:NSUTF8StringEncoding error:NULL]);
+ [self launchWithArguments:[@[@"-BPMockBrew", @"-BPMockBrewfileURL", file.path] arrayByAddingObjectsFromArray:arguments]];
+ [self.app.menuBars.menuBarItems[@"Brewfile Test"] click];
+ [self.app.menuItems[@"Review Mock Brewfile"] click];
+ XCTAssertTrue([self.app.sheets.firstMatch.buttons[@"brewfile.review.cancel"] waitForExistenceWithTimeout:5]);
+}
+
+- (void)testBrewfileReviewShowsGroupedStatusesAndCancelRunsNothing
+{
+ [self openBrewfileReviewWithContents:@"brew 'mockwget'\ncask 'missingapp'\ntap 'owner/tap'\nmas 'App', id: 123\nvscode 'pub.ext'" extraArguments:@[]];
+ NSString *review = self.app.sheets.firstMatch.textViews[@"brewfile.review.entries"].value;
+ XCTAssertTrue([review containsString:@"mockwget — Installed"]);
+ XCTAssertTrue([review containsString:@"missingapp — Missing"]);
+ XCTAssertTrue([review containsString:@"Mac App Store"]);
+ XCTAssertTrue([review containsString:@"Not checked"]);
+ [self.app.sheets.firstMatch.buttons[@"brewfile.review.cancel"] click];
+ XCTAssertFalse(self.app.textViews[@"brewfile.import.output"].exists);
+}
+
+- (void)testBrewfileReviewBlocksUnsupportedFiles
+{
+ [self openBrewfileReviewWithContents:@"brew 'mockwget'\nsystem('unsafe')" extraArguments:@[]];
+ XCTAssertFalse(self.app.sheets.firstMatch.buttons[@"brewfile.review.install"].enabled);
+ XCTAssertTrue([self.app.sheets.firstMatch.textViews[@"brewfile.review.entries"].value containsString:@"Line 2"]);
+ [self.app.sheets.firstMatch.buttons[@"brewfile.review.cancel"] click];
+}
+
+- (void)testBrewfileReviewBlocksEmptyFiles
+{
+ [self openBrewfileReviewWithContents:@"# no direct entries\n" extraArguments:@[]];
+ XCTAssertFalse(self.app.sheets.firstMatch.buttons[@"brewfile.review.install"].enabled);
+ XCTAssertTrue([self.app.sheets.firstMatch.textViews[@"brewfile.review.entries"].value containsString:@"No supported package entries"]);
+ [self.app.sheets.firstMatch.buttons[@"brewfile.review.cancel"] click];
+}
+
+- (void)testBrewfileReviewConfirmedImportFinishes
+{
+ [self openBrewfileReviewWithContents:@"brew 'mockwget'\ncask 'mockchrome'" extraArguments:@[]];
+ [self.app.sheets.firstMatch.buttons[@"brewfile.review.install"] click];
+ XCUIElement *status = self.app.staticTexts[@"brewfile.import.status"];
+ XCTAssertTrue([status waitForExistenceWithTimeout:5]);
+ NSPredicate *finished = [NSPredicate predicateWithFormat:@"value == %@", @"Import finished."];
+ [self expectationForPredicate:finished evaluatedWithObject:status handler:nil];
+ [self waitForExpectationsWithTimeout:10 handler:nil];
+ XCTAssertTrue([self.app.textViews[@"brewfile.import.output"].value containsString:@"MOCK_IMPORT_OK"]);
+ [self.app.sheets.firstMatch.buttons[@"brewfile.import.action"] click];
+}
+
+- (void)testBrewfileImportCanBeCancelledWhileStreaming
+{
+ [self openBrewfileReviewWithContents:@"brew 'mockwget'" extraArguments:@[@"-BPMockSlowBrewfileImport"]];
+ [self.app.sheets.firstMatch.buttons[@"brewfile.review.install"] click];
+ XCUIElement *action = self.app.sheets.firstMatch.buttons[@"brewfile.import.action"];
+ XCTAssertTrue([action waitForExistenceWithTimeout:5]);
+ [action click];
+ XCUIElement *status = self.app.staticTexts[@"brewfile.import.status"];
+ [self expectationForPredicate:[NSPredicate predicateWithFormat:@"value BEGINSWITH %@", @"Import cancelled."] evaluatedWithObject:status handler:nil];
+ [self waitForExpectationsWithTimeout:10 handler:nil];
+ XCTAssertFalse([self.app.textViews[@"brewfile.import.output"].value containsString:@"MOCK_IMPORT_OK"]);
+ [action click];
+}
+
+- (void)testBrewfileImportFailureRemainsVisible
+{
+ [self openBrewfileReviewWithContents:@"brew 'mockwget'" extraArguments:@[@"-BPMockBrewfileImportFails"]];
+ [self.app.sheets.firstMatch.buttons[@"brewfile.review.install"] click];
+ XCUIElement *status = self.app.staticTexts[@"brewfile.import.status"];
+ XCTAssertTrue([status waitForExistenceWithTimeout:5]);
+ [self expectationForPredicate:[NSPredicate predicateWithFormat:@"value BEGINSWITH %@", @"Import failed."] evaluatedWithObject:status handler:nil];
+ [self waitForExpectationsWithTimeout:10 handler:nil];
+ XCTAssertTrue([self.app.textViews[@"brewfile.import.output"].value containsString:@"MOCK_IMPORT_FAILED"]);
+ [self.app.sheets.firstMatch.buttons[@"brewfile.import.action"] click];
+}
 
 // Smoke test: the app launches and presents its main window.
 - (void)testAppLaunchesAndShowsMainWindow

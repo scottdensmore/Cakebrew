@@ -133,7 +133,11 @@ static const NSUInteger kTrimTargetLength = (NSUInteger)(1.5 * 1024 * 1024);
 
 	NSTextStorage *storage = self.textStorage;
 	[storage beginEditing];
+	NSRange appendedRange = NSMakeRange(storage.length, chunk.length);
 	[storage replaceCharactersInRange:NSMakeRange(storage.length, 0) withString:chunk];
+	// Empty storage has no attributes to inherit, even when textColor is set
+	// on the view. Retain the semantic color so old output adapts to Dark Mode.
+	[storage addAttribute:NSForegroundColorAttributeName value:NSColor.textColor range:appendedRange];
 	[self trimScrollbackInStorage:storage];
 	[storage endEditing];
 

@@ -306,6 +306,20 @@
 	return YES;
 }
 
+- (BOOL)runBrewImportToolWithPath:(NSString *)path progress:(NSProgress *)progress withReturnsBlock:(void (^)(NSString *))block
+{
+ if (progress.cancelled) return NO;
+ if (block) block(@"MOCK_IMPORT_STARTED\n");
+ if ([[NSProcessInfo processInfo].arguments containsObject:@"-BPMockSlowBrewfileImport"]) {
+  NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:5];
+  while (!progress.cancelled && deadline.timeIntervalSinceNow > 0) [NSThread sleepForTimeInterval:0.05];
+ }
+ if (progress.cancelled) { if (block) block(@"MOCK_IMPORT_CANCELLED\n"); return NO; }
+ if ([[NSProcessInfo processInfo].arguments containsObject:@"-BPMockBrewfileImportFails"]) { if (block) block(@"MOCK_IMPORT_FAILED\n"); return NO; }
+ if (block) block(@"MOCK_IMPORT_OK\n");
+ return YES;
+}
+
 @end
 
 #endif // DEBUG

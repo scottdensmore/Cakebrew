@@ -7,10 +7,13 @@
 //
 
 #import <Cocoa/Cocoa.h>
+@class BPBrewfilePlan;
 
 @interface BPBundleWindowController : NSWindowController
 
-+ (BPBundleWindowController*)runImportOperationWithFile:(NSURL*)fileURL;
++ (BPBundleWindowController *)runImportOperationWithPlan:(BPBrewfilePlan *)plan;
+/// Reads and reviews without executing Homebrew. Completion is on main.
++ (void)reviewFile:(NSURL *)url inventories:(NSDictionary *)inventories parentWindow:(NSWindow *)window completion:(void (^)(BPBrewfilePlan *confirmedPlan))completion;
 + (BPBundleWindowController*)runExportOperationWithFile:(NSURL*)fileURL;
 
 @end

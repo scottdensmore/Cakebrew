@@ -50,6 +50,10 @@ extern NSString * _Nonnull const kDidEndBackgroundActivityNotification;
 /// brew failure. Both are non-zero exits.
 @property (readonly) BOOL wasCancelled;
 
+/// Optional import token checked atomically with launch. Its owner synchronizes
+/// cancellation on this same token; asynchronous handlers only stop a live task.
+@property (strong, nullable) NSProgress *cancellationProgress;
+
 /**
  *  Called with each chunk of output as it arrives, in order, on a private
  *  serial queue. Every chunk has been delivered by the time -execute returns.

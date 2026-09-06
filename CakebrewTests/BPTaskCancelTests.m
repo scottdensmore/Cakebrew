@@ -21,6 +21,27 @@
 
 @implementation BPTaskCancelTests
 
+- (void)testCancelledProgressPreventsLaunchBeforeAsynchronousHandlerDelivery
+{
+ BPTask *task = [[BPTask alloc] initWithPath:@"/bin/sh" arguments:@[@"-c", @"echo DELAYED_HANDLER_LAUNCH"]];
+ NSProgress *progress = [NSProgress progressWithTotalUnitCount:1];
+ task.cancellationProgress = progress;
+ // Deliberately no handler calls -cancel: the task must inspect the token.
+ [progress cancel];
+ XCTAssertFalse(task.wasCancelled);
+ XCTAssertNotEqual([task execute], 0);
+ XCTAssertTrue(task.wasCancelled);
+ XCTAssertFalse([task.output containsString:@"DELAYED_HANDLER_LAUNCH"]);
+}
+
+- (void)testCancelledBeforeExecuteNeverLaunchesAndCannotReportSuccess
+{
+ BPTask *task = [[BPTask alloc] initWithPath:@"/bin/sh" arguments:@[@"-c", @"echo SHOULD_NOT_EXECUTE"]];
+ [task cancel];
+ XCTAssertNotEqual([task execute], 0);
+ XCTAssertFalse([task.output containsString:@"SHOULD_NOT_EXECUTE"]);
+}
+
 /// Runs `task` off the main thread; returns the exit status via `status`.
 - (BOOL)run:(BPTask *)task timeout:(NSTimeInterval)timeout status:(int *)status
 {

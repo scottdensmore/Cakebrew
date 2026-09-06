@@ -266,6 +266,11 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 					 wrapsSynchronousRequest:(BOOL)isSynchronous
 							 dataReturnBlock:(void (^)(NSString*))block
 {
+ return [self performAsyncBrewCommandWithArguments:arguments wrapsSynchronousRequest:isSynchronous progress:nil dataReturnBlock:block];
+}
+
+- (BOOL)performAsyncBrewCommandWithArguments:(NSArray *)arguments wrapsSynchronousRequest:(BOOL)isSynchronous progress:(NSProgress *)progress dataReturnBlock:(void (^)(NSString *))block
+{
 	if (self.brewTransport == kBPBrewTransportHelper)
 	{
 		// The helper builds its own (identical) shell invocation, so it takes
@@ -285,6 +290,14 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 	BPTask *task = [[BPTask alloc] initWithPath:self.path_shell arguments:arguments];
 	task.delegate = self;
 	task.updateBlock = block;
+    if (progress) {
+        task.cancellationProgress = progress;
+        progress.cancellationHandler = ^{
+            // Never take the task lock while an owner holds the token lock.
+            dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{ [task cancel]; });
+        };
+        if (progress.cancelled) [task cancel];
+    }
 
 	// Only the operation the user is watching. List refreshes go through the
 	// synchronous wrapper, so cancelling an install cannot abort a reload
@@ -308,6 +321,8 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 #endif
 	
 	int status = [task execute];
+    progress.cancellationHandler = nil;
+    task.cancellationProgress = nil;
 
 	if (self.currentOperationTask == task)
 	{
@@ -719,6 +734,14 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 	[self sendDelegateFormulaeUpdatedCallForCommand:@"bundle"];
 
 	return result;
+}
+
+- (BOOL)runBrewImportToolWithPath:(NSString *)path progress:(NSProgress *)progress withReturnsBlock:(void (^)(NSString *))block
+{
+ if (self.brewTransport != kBPBrewTransportDirect || progress.cancelled) return NO;
+ BOOL result = [self performAsyncBrewCommandWithArguments:@[@"bundle", [@"--file=" stringByAppendingString:path]] wrapsSynchronousRequest:NO progress:progress dataReturnBlock:block];
+ [self sendDelegateFormulaeUpdatedCallForCommand:@"bundle"];
+ return result && !progress.cancelled;
 }
 
 + (BOOL)brewCommandChangesCatalogMembership:(NSString *)command

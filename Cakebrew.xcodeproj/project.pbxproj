@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+  CB1510000000000000000005 /* BPBrewfileImportOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1510000000000000000007; };
+  CB1510000000000000000006 /* BPBrewfileImportOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1510000000000000000007; };
+  CB1510000000000000000001 /* BPBrewfilePlan.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1510000000000000000003; };
+  CB1510000000000000000002 /* BPBrewfilePlan.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1510000000000000000003; };
 		0105688F4773C69A6295C387 /* BPHelperSecurity.m in Sources */ = {isa = PBXBuildFile; fileRef = 1227A6AF7A6E1F24A913015B /* BPHelperSecurity.m */; };
 		043485DC0F857D4D67DDA141 /* BPHelperSecurityTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D182C39AED5D9C54ED4D0B33 /* BPHelperSecurityTests.m */; };
 		0CCA4B9885187C5F2FBE92E1 /* com.scottdensmore.Cakebrew.Helper.plist in Copy Helper LaunchAgent */ = {isa = PBXBuildFile; fileRef = D8582C4CE349B64B6DE6FF75 /* com.scottdensmore.Cakebrew.Helper.plist */; };
@@ -233,6 +237,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+  CB1510000000000000000007 /* BPBrewfileImportOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPBrewfileImportOperation.m; path = Models/BPBrewfileImportOperation.m; sourceTree = "<group>"; };
+  CB1510000000000000000008 /* BPBrewfileImportOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPBrewfileImportOperation.h; path = Models/BPBrewfileImportOperation.h; sourceTree = "<group>"; };
+  CB1510000000000000000003 /* BPBrewfilePlan.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPBrewfilePlan.m; path = Models/BPBrewfilePlan.m; sourceTree = "<group>"; };
+  CB1510000000000000000004 /* BPBrewfilePlan.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPBrewfilePlan.h; path = Models/BPBrewfilePlan.h; sourceTree = "<group>"; };
 		0ADE0B7BD1F6112D22A7BF17 /* BPHelperRegistration.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPHelperRegistration.h; sourceTree = "<group>"; };
 		0D42C8684E62ED50FB7A319A /* CakebrewUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CakebrewUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1227A6AF7A6E1F24A913015B /* BPHelperSecurity.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPHelperSecurity.m; sourceTree = "<group>"; };
@@ -692,6 +700,10 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				133D2B42D25F6316C55C3FE2 /* BPService.h */,
 				B6830022477FCFE425D036B9 /* BPBrewError.h */,
 				9356C8197EA740C1A1896614 /* BPBrewfile.h */,
+    CB1510000000000000000003 /* BPBrewfilePlan.m */,
+    CB1510000000000000000004 /* BPBrewfilePlan.h */,
+    CB1510000000000000000007 /* BPBrewfileImportOperation.m */,
+    CB1510000000000000000008 /* BPBrewfileImportOperation.h */,
 				04128FDA59B34E8B927E45AB /* BPCleanupPreview.h */,
 				AA67F6479F85E50C83706E3E /* BPService.m */,
 				6F14AB39D9A4FA816D3A932C /* BPBrewError.m */,
@@ -1140,6 +1152,8 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				0E5E1AFEFC2EB5ACFC76A355 /* BPService.m in Sources */,
 				3F479CBF6D5CDB2B5BCDCD4B /* BPBrewError.m in Sources */,
 				3756CA844C65481380A89A1A /* BPBrewfile.m in Sources */,
+    CB1510000000000000000001 /* BPBrewfilePlan.m in Sources */,
+    CB1510000000000000000005 /* BPBrewfileImportOperation.m in Sources */,
 				7B8FC3DCCA5A40978F28FE53 /* BPCleanupPreview.m in Sources */,
 				49CC41B5A77580D8BF6465A5 /* BPServicesViewController.m in Sources */,
 				2D8AA669642BBFBEF248B016 /* BPPreferences.m in Sources */,
@@ -1183,6 +1197,8 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				4403EFA806C14981AAB4D830 /* BPService.m in Sources */,
 				F9A912776646B62D5BF57F40 /* BPBrewError.m in Sources */,
 				600B9A88F67B4B23955FC662 /* BPBrewfile.m in Sources */,
+    CB1510000000000000000002 /* BPBrewfilePlan.m in Sources */,
+    CB1510000000000000000006 /* BPBrewfileImportOperation.m in Sources */,
 				C0522710FEED4734BD9216BE /* BPCleanupPreview.m in Sources */,
 				CB444AAF97F2767EE566D067 /* BPPreferences.m in Sources */,
 				9D8CB0FDFCD1CC2E9148390C /* BPPreferencesTests.m in Sources */,
