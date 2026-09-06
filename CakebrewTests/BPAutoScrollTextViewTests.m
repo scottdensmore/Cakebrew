@@ -39,6 +39,34 @@
 
 #pragma mark - accumulation
 
+- (void)testStreamedTextRetainsSemanticForegroundColorAfterClearAndReappend
+{
+	// Setting NSTextView.textColor on an empty view is not enough: direct plain
+	// textStorage insertion can discard its typing attributes (the import case).
+	_textView.textColor = NSColor.textColor;
+	for (NSUInteger cycle = 0; cycle < 2; cycle++)
+	{
+		[_textView clearOutput];
+		[_textView appendOutput:@"first "];
+		[_textView appendOutput:@"second"];
+		[_textView flushPendingOutput];
+		[_textView.textStorage enumerateAttribute:NSForegroundColorAttributeName
+			inRange:NSMakeRange(0, _textView.textStorage.length) options:0
+			usingBlock:^(NSColor *color, NSRange range, BOOL *stop) {
+				XCTAssertEqualObjects(color, NSColor.textColor,
+					@"every streamed character needs an appearance-adaptive foreground");
+				__block CGFloat light = 0, dark = 0;
+				[[NSAppearance appearanceNamed:NSAppearanceNameAqua] performAsCurrentDrawingAppearance:^{
+					light = [color colorUsingColorSpace:NSColorSpace.genericRGBColorSpace].redComponent;
+				}];
+				[[NSAppearance appearanceNamed:NSAppearanceNameDarkAqua] performAsCurrentDrawingAppearance:^{
+					dark = [color colorUsingColorSpace:NSColorSpace.genericRGBColorSpace].redComponent;
+				}];
+				XCTAssertGreaterThan(dark, light, @"the stored color must adapt when appearance changes");
+			}];
+	}
+}
+
 - (void)testChunksAccumulateInOrder
 {
 	[_textView appendOutput:@"one "];

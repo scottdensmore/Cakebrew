@@ -162,7 +162,21 @@ NSString *const kDidEndBackgroundActivityNotification	= @"DidEndBackgroundActivi
 	[self configurePipes];
 	[self beginActivity];
 	@try {
-		[self.task launch];
+		// Cancellation and launch share a lock: a queued cancellation must not
+		// be lost between checking the flag and actually spawning the shell.
+		BOOL cancelledBeforeLaunch = NO;
+		@synchronized (self) {
+			@synchronized (self.cancellationProgress) {
+				cancelledBeforeLaunch = self.wasCancelled || self.cancellationProgress.cancelled;
+				if (cancelledBeforeLaunch) self.wasCancelled = YES;
+				else [self.task launch];
+			}
+		}
+		if (cancelledBeforeLaunch) {
+			[self cleanup];
+			[self taskDidFinish];
+			return -1;
+		}
 		[self.task waitUntilExit];
 
 		[self finishReading];
@@ -214,16 +228,19 @@ NSString *const kDidEndBackgroundActivityNotification	= @"DidEndBackgroundActivi
 
 - (void)cancel
 {
-	self.wasCancelled = YES;
+	NSTask *task;
+	@synchronized (self) {
+		self.wasCancelled = YES;
 
-	NSTask *task = self.task;
-	if (!task.isRunning)
-	{
-		return;
+		task = self.task;
+		if (!task.isRunning)
+		{
+			return;
+		}
 	}
 
 	// Collect first: terminating the shell reparents its children to launchd,
-	// after which pgrep -P can no longer find them.
+	// after which pgrep -P can no longer find them. No launch lock is held here.
 	NSArray<NSNumber *> *descendants = [BPProcessTree descendantsOfProcess:task.processIdentifier];
 
 	[task terminate];

@@ -310,6 +310,9 @@ typedef NS_ENUM(NSInteger, BPListMode) {
  */
 - (NSError*)runBrewExportToolWithPath:(NSString*)path;
 
+/// Blocking, direct transport only; the token cancels this exact import task.
+- (BOOL)runBrewImportToolWithPath:(NSString *)path progress:(NSProgress *)progress withReturnsBlock:(void (^)(NSString *))block;
+
 /**
  *  Runs Homebrew bundle import tool. Will request instalation of Homebrew-Bundle tap if it is not already tapped.
  *

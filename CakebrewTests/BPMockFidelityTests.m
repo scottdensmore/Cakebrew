@@ -44,6 +44,7 @@
 			  @"runDoctorWithReturnBlock:",
 			  @"runBrewExportToolWithPath:",
 			  @"runBrewImportToolWithPath:withReturnsBlock:",
+              @"runBrewImportToolWithPath:progress:withReturnsBlock:",
 			  @"startService:withReturnBlock:",
 			  @"stopService:withReturnBlock:",
 			  @"restartService:withReturnBlock:" ];

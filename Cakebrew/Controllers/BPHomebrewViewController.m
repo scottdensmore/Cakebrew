@@ -265,10 +265,28 @@ NSOpenSavePanelDelegate>
 	_appDelegate.notificationNavigationTarget = self;
 #if DEBUG
 	[self installMockWarmNotificationMenu];
+ [self installMockBrewfileMenu];
 #endif
 }
 
 #if DEBUG
+- (void)installMockBrewfileMenu
+{
+ NSArray *arguments = NSProcessInfo.processInfo.arguments;
+ NSUInteger index = [arguments indexOfObject:@"-BPMockBrewfileURL"];
+ if (![arguments containsObject:@"-BPMockBrew"] || index == NSNotFound || index + 1 >= arguments.count) return;
+ NSMenuItem *root = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Brewfile Test", nil) action:NULL keyEquivalent:@""];
+ NSMenu *menu = [[NSMenu alloc] initWithTitle:root.title];
+ NSMenuItem *item = [menu addItemWithTitle:NSLocalizedString(@"Review Mock Brewfile", nil) action:@selector(reviewMockBrewfile:) keyEquivalent:@""];
+ item.target = self; item.representedObject = arguments[index + 1]; root.submenu = menu;
+ [NSApp.mainMenu addItem:root];
+}
+
+- (void)reviewMockBrewfile:(NSMenuItem *)item
+{
+ [self importBrewfileAtURL:[NSURL fileURLWithPath:item.representedObject]];
+}
+
 // Native menus work without keyboard focus on CI. Only explicit mock launches
 // expose these actions, which exercise the real search and notification paths.
 - (void)installMockWarmNotificationMenu
@@ -1367,29 +1385,27 @@ NSOpenSavePanelDelegate>
 /// A Brewfile arriving from outside the app — a Finder double-click, "Open
 /// With", `open -a`, or a drop on the Dock icon or the window.
 ///
-/// Confirms first, unlike Tools ▸ Import: importing runs `brew bundle`, which
-/// installs everything the file lists, and a drop is easy to do by accident.
+/// Both Finder/Dock and Tools imports pass through this one guarded review.
 - (void)importBrewfileAtURL:(NSURL *)url
 {
 	if (!url || [self hasBlockingBackgroundTask]) return;
 
-	NSAlert *alert = [[NSAlert alloc] init];
-	[alert setMessageText:NSLocalizedString(@"Generic_Attention", nil)];
-	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Yes", nil)];
-	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Cancel", nil)];
-	[alert setInformativeText:[NSString localizedStringWithFormat:
-							   NSLocalizedString(@"Confirmation_Import_Brewfile", nil),
-							   url.lastPathComponent]];
-
-	[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
-		if (returnCode != NSAlertFirstButtonReturn) return;
-
-		self.operationWindowController = [BPBundleWindowController runImportOperationWithFile:url];
-	}];
+ if (_appDelegate.window.attachedSheet) return;
+ _appDelegate.runningBackgroundTask = YES;
+ BPHomebrewManager *manager = [BPHomebrewManager sharedManager];
+ NSMutableDictionary *inventories = [NSMutableDictionary dictionary];
+ if (manager.installedFormulae) inventories[@"brew"] = [manager.installedFormulae valueForKey:@"name"];
+ if (manager.installedCasks) inventories[@"cask"] = [manager.installedCasks valueForKey:@"name"];
+ if (manager.repositoriesFormulae) inventories[@"tap"] = [manager.repositoriesFormulae valueForKey:@"name"];
+ [BPBundleWindowController reviewFile:url inventories:[inventories copy] parentWindow:_appDelegate.window completion:^(BPBrewfilePlan *plan) {
+  if (!plan) { self->_appDelegate.runningBackgroundTask = NO; return; }
+  self.operationWindowController = [BPBundleWindowController runImportOperationWithPlan:plan];
+ }];
 }
 
 - (IBAction)runHomebrewImport:(id)sender
 {
+ if ([self hasBlockingBackgroundTask] || _appDelegate.window.attachedSheet) return;
 	NSOpenPanel *openPanel = [NSOpenPanel openPanel];
 	[openPanel setNameFieldLabel:NSLocalizedString(@"Panel_Import_Message", nil)];
 	[openPanel setPrompt:NSLocalizedString(@"Panel_Import_Button", nil)];
@@ -1399,14 +1415,14 @@ NSOpenSavePanelDelegate>
 	[openPanel setCanChooseFiles:YES];
 	[openPanel setDelegate:self];
 	
-	[openPanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:^(NSInteger result) {
+	[openPanel beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSInteger result) {
 		NSURL *fileURL = [openPanel URL];
 		
 		if (fileURL && result)
 		{
 			dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
 						   dispatch_get_main_queue(), ^{
-							   self.operationWindowController = [BPBundleWindowController runImportOperationWithFile:fileURL];
+							   [self importBrewfileAtURL:fileURL];
 						   });
 		}
 	}];
