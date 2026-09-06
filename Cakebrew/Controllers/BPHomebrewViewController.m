@@ -939,6 +939,7 @@ NSOpenSavePanelDelegate>
 	[self updateInfoLabelWithSidebarSelection];
 	
 	[self.tabView selectTabViewItemAtIndex:tabIndex];
+	if (tabIndex != kBPContentTabServices) [self.servicesViewController invalidateServiceDetails];
 }
 
 #pragma mark - NSMenu Delegate

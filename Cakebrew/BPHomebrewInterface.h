@@ -24,6 +24,7 @@
 @class BPCleanupPreview;
 
 @class BPService;
+@class BPServiceDetails;
 #import <Cocoa/Cocoa.h>
 #import "BPFormula.h"
 
@@ -374,6 +375,9 @@ typedef NS_ENUM(NSInteger, BPListMode) {
  *  @return The services, or an empty array when there are none / on error.
  */
 - (NSArray<BPService *> *)listServices;
+
+/// Blocking read-only lookup; call from a background queue. Keeps raw errors.
+- (BPServiceDetails *)serviceDetailsForName:(NSString *)name;
 
 /**
  *  Starts a service (`brew services start`).

@@ -28,4 +28,7 @@
 /** Reloads the service list from brew on a background queue. */
 - (void)refreshServices;
 
+/// Invalidates outstanding details/list replies when leaving the tool.
+- (void)invalidateServiceDetails;
+
 @end

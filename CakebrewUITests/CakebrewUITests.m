@@ -964,6 +964,52 @@
 	XCTAssertTrue(self.app.buttons[@"Stop"].isEnabled, @"Stop should enable for a started service");
 }
 
+- (void)waitForServiceDetailsContaining:(NSString *)text
+{
+	XCUIElement *details = self.app.textViews[@"services.details"];
+	XCTAssertTrue([details waitForExistenceWithTimeout:10]);
+	NSPredicate *contains = [NSPredicate predicateWithFormat:@"value CONTAINS %@", text];
+	XCTNSPredicateExpectation *expectation = [[XCTNSPredicateExpectation alloc] initWithPredicate:contains object:details];
+	XCTAssertEqual([XCTWaiter waitForExpectations:@[expectation] timeout:10], XCTWaiterResultCompleted,
+		@"CAKEBREW_UI_TREE_SERVICE_DETAILS\n%@", self.app.debugDescription);
+}
+
+- (void)testServiceDetailsFollowRunningAndStoppedSelection
+{
+	[self launchWithArguments:@[@"-BPMockBrew"]];
+	[[self sidebarRow:@"sidebar.tools.services"] click];
+	XCUIElement *postgres = [self formulaCellWithName:@"mockpostgres"];
+	XCTAssertTrue([postgres waitForExistenceWithTimeout:15]);
+	[postgres click];
+	[self waitForServiceDetailsContaining:@"PID: 123    User: mockuser"];
+	XCTAssertTrue(self.app.buttons[@"services.copyOutput"].enabled);
+	XCTAssertFalse(self.app.buttons[@"services.openLogs"].enabled);
+	XCTAssertFalse(self.app.buttons[@"services.revealFile"].enabled);
+	[[self formulaCellWithName:@"mockredis"] click];
+	[self waitForServiceDetailsContaining:@"Service: mockredis"];
+	[self waitForServiceDetailsContaining:@"PID: Not available"];
+	XCTAssertTrue([self formulaCellWithName:@"mockpostgres"].exists);
+}
+
+- (void)testServiceDetailFailureKeepsListAndRawDiagnostic
+{
+	[self launchWithArguments:@[@"-BPMockBrew", @"-BPMockServiceDetailsFailure"]];
+	[[self sidebarRow:@"sidebar.tools.services"] click];
+	XCUIElement *postgres = [self formulaCellWithName:@"mockpostgres"];
+	XCTAssertTrue([postgres waitForExistenceWithTimeout:15]);
+	[postgres click];
+	[self waitForServiceDetailsContaining:@"Error: mock service details unavailable"];
+	[self waitForServiceDetailsContaining:@"The mock service list is still available."];
+	NSString *details = self.app.textViews[@"services.details"].value;
+	XCTAssertTrue([details hasPrefix:@"Could not load service details. Homebrew reported:\nError: mock service details unavailable"],
+		@"Failure and diagnostic must appear first without scrolling past metadata placeholders.");
+	XCTAssertTrue([self formulaCellWithName:@"mockpostgres"].exists);
+	XCTAssertTrue([self formulaCellWithName:@"mockredis"].exists);
+	XCTAssertTrue(self.app.buttons[@"services.copyOutput"].enabled);
+	XCTAssertFalse(self.app.buttons[@"services.openLogs"].enabled);
+	XCTAssertTrue(self.app.buttons[@"Stop"].enabled);
+}
+
 // Journey: selecting a cask shows the detail pane populated from
 // `brew info --cask` (description parsed from the cask output shape).
 - (void)testSelectingCaskShowsCaskInfoInDetailPane

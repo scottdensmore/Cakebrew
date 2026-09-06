@@ -19,6 +19,7 @@
 #import "BPServicesViewController.h"
 #import "BPHomebrewInterface.h"
 #import "BPService.h"
+#import "BPServiceDetails.h"
 #import "BPStyle.h"
 #import "BPAppDelegate.h"
 #import "BPBrewError.h"
@@ -38,6 +39,14 @@ static NSString * const kServiceColumnUser   = @"User";
 @property (strong) NSButton *stopButton;
 @property (strong) NSButton *restartButton;
 @property (assign) BOOL operationInFlight;
+@property (strong) BPServiceDetails *details;
+@property (assign) NSUInteger detailsGeneration;
+@property (assign) NSUInteger listGeneration;
+@property (assign) BOOL applyingServices;
+@property (strong) NSTextView *detailsText;
+@property (strong) NSButton *revealButton;
+@property (strong) NSButton *logsButton;
+@property (strong) NSButton *outputCopyButton;
 
 @end
 
@@ -79,6 +88,39 @@ static NSString * const kServiceColumnUser   = @"User";
 	[view addSubview:self.stopButton];
 	[view addSubview:self.restartButton];
 
+	NSScrollView *detailsScroll = [[NSScrollView alloc] initWithFrame:NSZeroRect];
+	detailsScroll.hasVerticalScroller = YES;
+	detailsScroll.borderType = NSBezelBorder;
+	detailsScroll.translatesAutoresizingMaskIntoConstraints = NO;
+	self.detailsText = [[NSTextView alloc] initWithFrame:NSMakeRect(0, 0, 600, 100)];
+	self.detailsText.editable = NO;
+	self.detailsText.selectable = YES;
+	self.detailsText.font = [NSFont systemFontOfSize:NSFont.smallSystemFontSize];
+	self.detailsText.textColor = NSColor.labelColor;
+	self.detailsText.backgroundColor = NSColor.textBackgroundColor;
+	self.detailsText.textContainerInset = NSMakeSize(8, 6);
+	self.detailsText.autoresizingMask = NSViewWidthSizable;
+	self.detailsText.verticallyResizable = YES;
+	self.detailsText.horizontallyResizable = NO;
+	self.detailsText.textContainer.widthTracksTextView = YES;
+	self.detailsText.textContainer.containerSize = NSMakeSize(600, CGFLOAT_MAX);
+	[self.detailsText setAccessibilityIdentifier:@"services.details"];
+	[self.detailsText setAccessibilityLabel:NSLocalizedString(@"Services_Details_Title", nil)];
+	detailsScroll.documentView = self.detailsText;
+	[view addSubview:detailsScroll];
+	self.revealButton = [self buttonWithTitle:NSLocalizedString(@"Services_Reveal_File", nil) action:@selector(revealServiceFile:)];
+	self.logsButton = [self buttonWithTitle:NSLocalizedString(@"Services_Open_Logs", nil) action:@selector(openServiceLogs:)];
+	self.outputCopyButton = [self buttonWithTitle:NSLocalizedString(@"Services_Copy_Output", nil) action:@selector(copyServiceOutput:)];
+	[self.revealButton setAccessibilityIdentifier:@"services.revealFile"];
+	[self.logsButton setAccessibilityIdentifier:@"services.openLogs"];
+	[self.outputCopyButton setAccessibilityIdentifier:@"services.copyOutput"];
+	[view addSubview:self.revealButton];
+	[view addSubview:self.logsButton];
+	[view addSubview:self.outputCopyButton];
+	NSLayoutConstraint *detailHeight = [detailsScroll.heightAnchor constraintEqualToConstant:115];
+	detailHeight.priority = NSLayoutPriorityDefaultHigh;
+	detailHeight.active = YES;
+
 	[NSLayoutConstraint activateConstraints:@[
 		[titleLabel.topAnchor constraintEqualToAnchor:view.topAnchor constant:16],
 		[titleLabel.leadingAnchor constraintEqualToAnchor:view.leadingAnchor constant:20],
@@ -89,15 +131,28 @@ static NSString * const kServiceColumnUser   = @"User";
 
 		[self.startButton.topAnchor constraintEqualToAnchor:scrollView.bottomAnchor constant:12],
 		[self.startButton.leadingAnchor constraintEqualToAnchor:view.leadingAnchor constant:20],
-		[self.startButton.bottomAnchor constraintEqualToAnchor:view.bottomAnchor constant:-16],
 		[self.stopButton.leadingAnchor constraintEqualToAnchor:self.startButton.trailingAnchor constant:8],
 		[self.stopButton.centerYAnchor constraintEqualToAnchor:self.startButton.centerYAnchor],
 		[self.restartButton.leadingAnchor constraintEqualToAnchor:self.stopButton.trailingAnchor constant:8],
 		[self.restartButton.centerYAnchor constraintEqualToAnchor:self.startButton.centerYAnchor],
+		[scrollView.heightAnchor constraintGreaterThanOrEqualToConstant:45],
+		[detailsScroll.topAnchor constraintEqualToAnchor:self.startButton.bottomAnchor constant:8],
+		[detailsScroll.leadingAnchor constraintEqualToAnchor:scrollView.leadingAnchor],
+		[detailsScroll.trailingAnchor constraintEqualToAnchor:scrollView.trailingAnchor],
+		[detailsScroll.heightAnchor constraintGreaterThanOrEqualToConstant:40],
+		[self.revealButton.topAnchor constraintEqualToAnchor:detailsScroll.bottomAnchor constant:8],
+		[self.revealButton.leadingAnchor constraintEqualToAnchor:scrollView.leadingAnchor],
+		[self.logsButton.leadingAnchor constraintEqualToAnchor:self.revealButton.trailingAnchor constant:6],
+		[self.logsButton.centerYAnchor constraintEqualToAnchor:self.revealButton.centerYAnchor],
+		[self.outputCopyButton.leadingAnchor constraintEqualToAnchor:self.logsButton.trailingAnchor constant:6],
+		[self.outputCopyButton.centerYAnchor constraintEqualToAnchor:self.revealButton.centerYAnchor],
+		[self.outputCopyButton.trailingAnchor constraintLessThanOrEqualToAnchor:scrollView.trailingAnchor],
+		[self.revealButton.bottomAnchor constraintEqualToAnchor:view.bottomAnchor constant:-12],
 	]];
 
 	self.view = view;
 	[self updateButtonStates];
+	[self showDetailsMessage:NSLocalizedString(@"Services_Details_Select", nil)];
 }
 
 - (NSButton *)buttonWithTitle:(NSString *)title action:(SEL)action
@@ -113,18 +168,157 @@ static NSString * const kServiceColumnUser   = @"User";
 
 - (void)refreshServices
 {
-	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-		NSArray<BPService *> *services = [[BPHomebrewInterface sharedInterface] listServices];
-		dispatch_async(dispatch_get_main_queue(), ^{
-			self.services = services;
-			[self.tableView reloadData];
-			[self updateButtonStates];
-			[self refreshEmptyState];
-		});
+	NSString *selectedName = [self selectedService].name;
+	[self invalidateServiceDetails];
+	NSUInteger generation = self.listGeneration;
+	[self fetchServicesWithCompletion:^(NSArray<BPService *> *services) {
+		if (generation != self.listGeneration) return;
+		self.applyingServices = YES;
+		self.services = services;
+		[self.tableView reloadData];
+		NSUInteger index = [services indexOfObjectPassingTest:^BOOL(BPService *service, NSUInteger idx, BOOL *stop) {
+			return [service.name isEqualToString:selectedName];
+		}];
+		if (index != NSNotFound) [self.tableView selectRowIndexes:[NSIndexSet indexSetWithIndex:index] byExtendingSelection:NO];
+		else [self.tableView deselectAll:nil];
+		self.applyingServices = NO;
+		[self updateButtonStates];
+		[self refreshEmptyState];
+		// reloadData may preserve the same row without a selection notification.
+		[self requestSelectedServiceDetails];
+	}];
+}
+
+- (void)fetchServicesWithCompletion:(void (^)(NSArray<BPService *> *))completion
+{
+	dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+		NSArray *services = [[BPHomebrewInterface sharedInterface] listServices];
+		dispatch_async(dispatch_get_main_queue(), ^{ completion(services); });
 	});
 }
 
 #pragma mark - Operations
+
+- (BPService *)selectedService
+{
+	NSInteger row = self.tableView.selectedRow;
+	return row >= 0 && (NSUInteger)row < self.services.count ? self.services[(NSUInteger)row] : nil;
+}
+
+- (void)invalidateServiceDetails
+{
+	self.detailsGeneration++;
+	self.listGeneration++;
+	self.details = nil;
+	[self showDetailsMessage:NSLocalizedString(@"Services_Details_Select", nil)];
+}
+
+- (void)fetchDetailsForName:(NSString *)name completion:(void (^)(BPServiceDetails *))completion
+{
+	dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+		BPServiceDetails *result = [[BPHomebrewInterface sharedInterface] serviceDetailsForName:name];
+		dispatch_async(dispatch_get_main_queue(), ^{ completion(result); });
+	});
+}
+
+- (void)requestSelectedServiceDetails
+{
+	NSUInteger generation = ++self.detailsGeneration;
+	self.details = nil;
+	NSString *name = [self selectedService].name;
+	if (!name.length) {
+		[self showDetailsMessage:NSLocalizedString(@"Services_Details_Select", nil)];
+		return;
+	}
+	[self showDetailsMessage:[NSString stringWithFormat:NSLocalizedString(@"Services_Details_Loading", nil), name]];
+	__weak typeof(self) weakSelf = self;
+	[self fetchDetailsForName:name completion:^(BPServiceDetails *details) {
+		typeof(self) self = weakSelf;
+		if (!self || generation != self.detailsGeneration || ![[self selectedService].name isEqualToString:name]) return;
+		self.details = details;
+		[self renderServiceDetails];
+	}];
+}
+
+- (void)showDetailsMessage:(NSString *)message
+{
+	self.detailsText.string = message ?: @"";
+	self.revealButton.enabled = [self validatedServiceFileURL] != nil;
+	self.logsButton.enabled = [self validatedLogURLs].count > 0;
+	self.outputCopyButton.enabled = self.details.rawOutput.length > 0;
+}
+
+- (void)renderServiceDetails
+{
+	BPService *service = self.details.service ?: [self selectedService];
+	NSString *unknown = NSLocalizedString(@"Services_Details_Not_Available", nil);
+	NSString *text = [NSString stringWithFormat:NSLocalizedString(@"Services_Details_Format", nil),
+		service.name ?: unknown, [BPService localizedNameForStatus:service.status], service.pid.stringValue ?: unknown,
+		service.user ?: unknown, self.details.serviceFile ?: unknown, self.details.loadedFile ?: unknown, self.details.logPath ?: unknown,
+		self.details.errorLogPath ?: unknown, self.details.exitCode.stringValue ?: unknown];
+	if (!self.details.available) text = [NSString stringWithFormat:@"%@\n%@\n\n%@", NSLocalizedString(@"Services_Details_Failed", nil), self.details.rawOutput, text];
+	[self showDetailsMessage:text];
+	[self.detailsText scrollRangeToVisible:NSMakeRange(0, 0)];
+}
+
+- (NSArray<NSURL *> *)validatedLogURLs
+{
+	NSMutableOrderedSet *urls = [NSMutableOrderedSet orderedSet];
+	for (NSString *path in @[self.details.logPath ?: @"", self.details.errorLogPath ?: @""]) {
+		NSURL *url = [BPServiceDetails readableFileURLForPath:path];
+		if (url) [urls addObject:url];
+	}
+	return urls.array;
+}
+
+- (void)showUnavailableFileMessage
+{
+	[self showDetailsMessage:[self.detailsText.string stringByAppendingFormat:@"\n\n%@", NSLocalizedString(@"Services_File_Unavailable", nil)]];
+}
+
+- (void)revealServiceFile:(id)sender
+{
+	NSURL *url = [self validatedServiceFileURL];
+	if (!url) { [self showUnavailableFileMessage]; return; }
+	[self revealValidatedFileURL:url];
+}
+
+- (NSURL *)validatedServiceFileURL
+{
+	return [BPServiceDetails readableFileURLForPath:self.details.loadedFile] ?: [BPServiceDetails readableFileURLForPath:self.details.serviceFile];
+}
+
+- (void)revealValidatedFileURL:(NSURL *)url
+{
+	[NSWorkspace.sharedWorkspace activateFileViewerSelectingURLs:@[url]];
+}
+
+- (void)openServiceLogs:(id)sender
+{
+	NSArray<NSURL *> *urls = [self validatedLogURLs];
+	if (!urls.count) { [self showUnavailableFileMessage]; return; }
+	[self openLogURLs:urls];
+}
+
+- (void)openLogURLs:(NSArray<NSURL *> *)urls
+{
+	NSURL *editor = [NSWorkspace.sharedWorkspace URLForApplicationWithBundleIdentifier:@"com.apple.TextEdit"];
+	if (!editor) { [self showUnavailableFileMessage]; return; }
+	NSUInteger generation = self.detailsGeneration;
+	[NSWorkspace.sharedWorkspace openURLs:urls withApplicationAtURL:editor configuration:NSWorkspaceOpenConfiguration.configuration
+		completionHandler:^(NSRunningApplication *app, NSError *error) {
+			if (error) dispatch_async(dispatch_get_main_queue(), ^{
+				if (generation == self.detailsGeneration) [self showUnavailableFileMessage];
+			});
+		}];
+}
+
+- (void)copyServiceOutput:(id)sender
+{
+	if (!self.details.rawOutput.length) return;
+	[NSPasteboard.generalPasteboard clearContents];
+	[NSPasteboard.generalPasteboard setString:self.details.rawOutput forType:NSPasteboardTypeString];
+}
 
 - (void)startSelectedService:(id)sender
 {
@@ -166,6 +360,7 @@ static NSString * const kServiceColumnUser   = @"User";
 
 	NSString *name = self.services[(NSUInteger)row].name;
 	self.operationInFlight = YES;
+	[self invalidateServiceDetails];
 	[self updateButtonStates];
 
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
@@ -265,6 +460,7 @@ static NSString * const kServiceColumnUser   = @"User";
 - (void)tableViewSelectionDidChange:(NSNotification *)notification
 {
 	[self updateButtonStates];
+	if (!self.applyingServices) [self requestSelectedServiceDetails];
 }
 
 @end
