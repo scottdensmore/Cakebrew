@@ -22,6 +22,7 @@
 #import <Foundation/Foundation.h>
 
 @class BPCleanupPreview;
+@class BPAutoremovePreview;
 
 @class BPService;
 @class BPServiceDetails;
@@ -102,6 +103,15 @@ typedef NS_ENUM(NSInteger, BPListMode) {
  *  Terminates all running tasks
  */
 - (void)cleanup;
+
+/// Blocking, cancellation-owned direct commands. Helper transport fails closed.
+- (BPAutoremovePreview *)previewAutoremoveWithProgress:(NSProgress *)progress;
+- (BOOL)removeUnusedFormulae:(NSArray<NSString *> *)names progress:(NSProgress *)progress output:(void (^)(NSString *))output;
+
+/// Targeted post-removal reads only. Nil means a failed/unsupported read, not
+/// an empty list. Successful empty results are empty arrays. Direct transport only.
+- (NSArray<BPFormula *> *)listModeForRemovalRefresh:(BPListMode)mode;
+- (NSArray<BPService *> *)listServicesForRemovalRefresh;
 
 /**
  *  Ends the operation the user is watching, over whichever transport is in use.

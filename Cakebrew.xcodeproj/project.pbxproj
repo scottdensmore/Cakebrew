@@ -10,7 +10,13 @@
 		CB1440000000000000000003 /* BPFormulaeTableAction.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1440000000000000000005 /* BPFormulaeTableAction.m */; };
 		CB1440000000000000000004 /* BPFormulaeTableAction.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1440000000000000000005 /* BPFormulaeTableAction.m */; };
 		CB1440000000000000000001 /* BPFormulaeTableActionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1440000000000000000002 /* BPFormulaeTableActionTests.m */; };
-  CB1510000000000000000005 /* BPBrewfileImportOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1510000000000000000007; };
+  CB150000000000000000000B = {isa = PBXBuildFile; fileRef = CB150000000000000000000C; };
+  CB1500000000000000000009 = {isa = PBXBuildFile; fileRef = CB150000000000000000000A; };
+  CB1500000000000000000005 = {isa = PBXBuildFile; fileRef = CB1500000000000000000007; };
+  CB1500000000000000000006 = {isa = PBXBuildFile; fileRef = CB1500000000000000000007; };
+  CB1500000000000000000001 = {isa = PBXBuildFile; fileRef = CB1500000000000000000003; };
+  CB1500000000000000000002 = {isa = PBXBuildFile; fileRef = CB1500000000000000000003; };
+   CB1510000000000000000005 /* BPBrewfileImportOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1510000000000000000007; };
   CB1510000000000000000006 /* BPBrewfileImportOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1510000000000000000007; };
   CB1510000000000000000001 /* BPBrewfilePlan.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1510000000000000000003; };
   CB1510000000000000000002 /* BPBrewfilePlan.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1510000000000000000003; };
@@ -248,7 +254,14 @@
 		CB1440000000000000000005 /* BPFormulaeTableAction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPFormulaeTableAction.m; path = Models/BPFormulaeTableAction.m; sourceTree = "<group>"; };
 		CB1440000000000000000006 /* BPFormulaeTableAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPFormulaeTableAction.h; path = Models/BPFormulaeTableAction.h; sourceTree = "<group>"; };
 		CB1440000000000000000002 /* BPFormulaeTableActionTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BPFormulaeTableActionTests.m; sourceTree = "<group>"; };
-  CB1510000000000000000007 /* BPBrewfileImportOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPBrewfileImportOperation.m; path = Models/BPBrewfileImportOperation.m; sourceTree = "<group>"; };
+  CB150000000000000000000C = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BPAutoremoveWindowController.m; sourceTree = "<group>"; };
+  CB150000000000000000000D = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BPAutoremoveWindowController.h; sourceTree = "<group>"; };
+  CB150000000000000000000A = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BPAutoremoveTests.m; sourceTree = "<group>"; };
+  CB1500000000000000000007 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPAutoremoveOperation.m; path = Models/BPAutoremoveOperation.m; sourceTree = "<group>"; };
+  CB1500000000000000000008 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPAutoremoveOperation.h; path = Models/BPAutoremoveOperation.h; sourceTree = "<group>"; };
+  CB1500000000000000000003 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPAutoremovePreview.m; path = Models/BPAutoremovePreview.m; sourceTree = "<group>"; };
+  CB1500000000000000000004 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPAutoremovePreview.h; path = Models/BPAutoremovePreview.h; sourceTree = "<group>"; };
+   CB1510000000000000000007 /* BPBrewfileImportOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPBrewfileImportOperation.m; path = Models/BPBrewfileImportOperation.m; sourceTree = "<group>"; };
   CB1510000000000000000008 /* BPBrewfileImportOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPBrewfileImportOperation.h; path = Models/BPBrewfileImportOperation.h; sourceTree = "<group>"; };
   CB1510000000000000000003 /* BPBrewfilePlan.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPBrewfilePlan.m; path = Models/BPBrewfilePlan.m; sourceTree = "<group>"; };
   CB1510000000000000000004 /* BPBrewfilePlan.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPBrewfilePlan.h; path = Models/BPBrewfilePlan.h; sourceTree = "<group>"; };
@@ -720,6 +733,12 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				B6830022477FCFE425D036B9 /* BPBrewError.h */,
 				9356C8197EA740C1A1896614 /* BPBrewfile.h */,
     CB1510000000000000000003 /* BPBrewfilePlan.m */,
+    CB1500000000000000000003,
+    CB150000000000000000000C,
+    CB150000000000000000000D,
+    CB1500000000000000000007,
+    CB1500000000000000000008,
+    CB1500000000000000000004,
     CB1510000000000000000004 /* BPBrewfilePlan.h */,
     CB1510000000000000000007 /* BPBrewfileImportOperation.m */,
     CB1510000000000000000008 /* BPBrewfileImportOperation.h */,
@@ -891,6 +910,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				E48CA8FF562841CDABA511C8 /* BPLoadingStatusTests.m */,
 				EDB6083CE52B414D96FA5C44 /* BPIncrementalReloadTests.m */,
 				381B68AFC5AA44938DD0E22F /* BPBrewfileTests.m */,
+    CB150000000000000000000A,
 				3FD0481EC5974B78A7B905A2 /* BPCleanupPreviewTests.m */,
 				B61746363AD340B8A5BEBDF1 /* BPDockMenuTests.m */,
 				924FA3A9F0675252E8BF2440 /* BPBrewErrorTests.m */,
@@ -1177,6 +1197,9 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				3F479CBF6D5CDB2B5BCDCD4B /* BPBrewError.m in Sources */,
 				3756CA844C65481380A89A1A /* BPBrewfile.m in Sources */,
     CB1510000000000000000001 /* BPBrewfilePlan.m in Sources */,
+    CB1500000000000000000001,
+    CB150000000000000000000B,
+    CB1500000000000000000005,
     CB1510000000000000000005 /* BPBrewfileImportOperation.m in Sources */,
 				7B8FC3DCCA5A40978F28FE53 /* BPCleanupPreview.m in Sources */,
 				49CC41B5A77580D8BF6465A5 /* BPServicesViewController.m in Sources */,
@@ -1228,6 +1251,8 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				F9A912776646B62D5BF57F40 /* BPBrewError.m in Sources */,
 				600B9A88F67B4B23955FC662 /* BPBrewfile.m in Sources */,
     CB1510000000000000000002 /* BPBrewfilePlan.m in Sources */,
+    CB1500000000000000000002,
+    CB1500000000000000000006,
     CB1510000000000000000006 /* BPBrewfileImportOperation.m in Sources */,
 				C0522710FEED4734BD9216BE /* BPCleanupPreview.m in Sources */,
 				CB444AAF97F2767EE566D067 /* BPPreferences.m in Sources */,
@@ -1262,6 +1287,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				7B66C47E7C214658AF58EC7F /* BPLoadingStatusTests.m in Sources */,
 				8653704673014814BB37485A /* BPIncrementalReloadTests.m in Sources */,
 				EFB108CC72CD4588B8DDB24D /* BPBrewfileTests.m in Sources */,
+    CB1500000000000000000009,
 				99E842CF72AF417A96F28F75 /* BPCleanupPreviewTests.m in Sources */,
 				26E7CAA9FDB240059E0AECD6 /* BPDockMenuTests.m in Sources */,
 				C8B84A9EB0235B5FC6DC82C9 /* BPBrewErrorTests.m in Sources */,

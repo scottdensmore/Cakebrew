@@ -29,6 +29,10 @@
 - (NSArray<NSString *> *)mutatingSelectorNames
 {
 	return @[ @"updateWithReturnBlock:",
+              @"previewAutoremoveWithProgress:",
+              @"listModeForRemovalRefresh:",
+              @"listServicesForRemovalRefresh",
+              @"removeUnusedFormulae:progress:output:",
 			  @"upgradeFormulae:withReturnBlock:",
 			  @"upgradeCasks:withReturnBlock:",
 			  @"installFormula:withOptions:andReturnBlock:",

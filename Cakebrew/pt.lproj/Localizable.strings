@@ -420,3 +420,23 @@
 "Services_Open_Logs" = "Open Logs";
 "Services_Copy_Output" = "Copy Output";
 "Services_File_Unavailable" = "The file is unavailable or could not be opened.";
+
+/* Unused dependency review */
+"Remove Unused Dependencies" = "Remove Unused Dependencies";
+"Checking unused dependencies…" = "Checking unused dependencies…";
+"Only the reviewed formulae will be submitted for removal. Homebrew will recheck its dependency rules. Do not run other Homebrew operations until this finishes: external changes cannot be checked atomically." = "Only the reviewed formulae will be submitted for removal. Homebrew will recheck its dependency rules. Do not run other Homebrew operations until this finishes: external changes cannot be checked atomically.";
+"Unused dependency preview and command output" = "Unused dependency preview and command output";
+"Remove Reviewed Dependencies" = "Remove Reviewed Dependencies";
+"Cancelled before removal. Nothing was removed." = "Cancelled before removal. Nothing was removed.";
+"The unused dependency preview could not be verified. Nothing can be removed." = "The unused dependency preview could not be verified. Nothing can be removed.";
+"No unused dependencies to remove." = "No unused dependencies to remove.";
+"Review %lu unused dependencies before removal." = "Review %lu unused dependencies before removal.";
+"Rechecking and removing reviewed dependencies…" = "Rechecking and removing reviewed dependencies…";
+"Some formula or service lists could not be refreshed. Previous values were retained; refresh again before another operation." = "Some formula or service lists could not be refreshed. Previous values were retained; refresh again before another operation.";
+"Cancelling; waiting for Homebrew to stop…" = "Cancelling; waiting for Homebrew to stop…";
+"The unused dependency list changed or could not be verified. Nothing was removed. Close this window and review a new preview." = "The unused dependency list changed or could not be verified. Nothing was removed. Close this window and review a new preview.";
+"Reviewed unused dependencies were removed." = "Reviewed unused dependencies were removed.";
+"Removal failed. Packages may have been partially removed. The formula and service lists will be refreshed." = "Removal failed. Packages may have been partially removed. The formula and service lists will be refreshed.";
+"Removal cancelled. Packages may have been partially removed. The formula and service lists will be refreshed." = "Removal cancelled. Packages may have been partially removed. The formula and service lists will be refreshed.";
+"Unused dependency removal requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported." = "Unused dependency removal requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported.";
+"\nHomebrew exit status: %d\n" = "\nHomebrew exit status: %d\n";

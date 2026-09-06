@@ -54,6 +54,8 @@ static const NSInteger kBPCacheVersion = 2;
 	NSNumber *_outdatedSnapshotCaskCount;
 	BOOL _didPublishOutdatedSnapshot;
 	BOOL _discoveryInFlight;
+	BOOL _formulaRefreshRequested;
+	NSMutableArray<void (^)(BOOL)> *_formulaRefreshCompletions;
 	BPHomebrewDiscoveryResult _discoveryResult;
 }
 @end
@@ -234,6 +236,59 @@ static const NSInteger kBPCacheVersion = 2;
 	return [BPHomebrewInterface sharedInterface];
 }
 
+- (void)refreshFormulaStateAfterRemovalWithCompletion:(void (^)(BOOL))completion
+{
+	if (!NSThread.isMainThread) {
+		dispatch_async(dispatch_get_main_queue(), ^{ [self refreshFormulaStateAfterRemovalWithCompletion:completion]; });
+		return;
+	}
+	NSUInteger generation;
+	@synchronized (self) {
+		if (!_formulaRefreshCompletions) _formulaRefreshCompletions = [NSMutableArray array];
+		if (completion) [_formulaRefreshCompletions addObject:[completion copy]];
+		if (_reloadInFlight) { _formulaRefreshRequested = YES; return; }
+		_formulaRefreshRequested = NO;
+		_reloadInFlight = YES;
+		// Carry only a known successful cask result into this partial generation.
+		NSNumber *caskCount = _outdatedSnapshotGeneration == _reloadGeneration ? _outdatedSnapshotCaskCount : nil;
+		generation = ++_reloadGeneration;
+		_outdatedSnapshotGeneration = generation;
+		_outdatedSnapshotFormulaeCount = nil;
+		_outdatedSnapshotCaskCount = caskCount;
+		_didPublishOutdatedSnapshot = NO;
+	}
+	BPHomebrewInterface *interface = [self homebrewInterface];
+	dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+		NSArray *installed = [interface listModeForRemovalRefresh:kBPListInstalled];
+		NSArray *leaves = [interface listModeForRemovalRefresh:kBPListLeaves];
+		NSArray *outdated = [interface listModeForRemovalRefresh:kBPListOutdated];
+		NSArray *services = [interface listServicesForRemovalRefresh];
+		dispatch_async(dispatch_get_main_queue(), ^{
+			BOOL succeeded = installed && leaves && outdated && services;
+			if (installed) [self publishList:installed forMode:kBPListInstalled generation:generation];
+			if (leaves) [self publishList:leaves forMode:kBPListLeaves generation:generation];
+			if (outdated) [self publishList:outdated forMode:kBPListOutdated generation:generation];
+			if (generation == self.currentReloadGeneration && services) self.services = services;
+			succeeded = succeeded && generation == self.currentReloadGeneration;
+			NSArray *completions;
+			BOOL rerun, rebuild, formulaRerun;
+			@synchronized (self) {
+				self->_reloadInFlight = NO;
+				completions = [self->_formulaRefreshCompletions copy];
+				[self->_formulaRefreshCompletions removeAllObjects];
+				rerun = self->_reloadRequestedWhileRunning;
+				rebuild = self->_pendingRebuildCache;
+				formulaRerun = self->_formulaRefreshRequested;
+				self->_reloadRequestedWhileRunning = NO;
+				self->_pendingRebuildCache = NO;
+			}
+			for (void (^done)(BOOL) in completions) done(succeeded);
+			if (formulaRerun) [self refreshFormulaStateAfterRemovalWithCompletion:nil];
+			if (rerun) [self reloadFromInterfaceRebuildingCache:rebuild];
+		});
+	});
+}
+
 - (BPHomebrewDiscoveryResult)discoveryResult
 {
 	@synchronized (self) { return _discoveryResult; }
@@ -297,15 +352,21 @@ static const NSInteger kBPCacheVersion = 2;
 			}
 			if (result != BPHomebrewDiscoveryAvailable || !current) {
 				dispatch_async(dispatch_get_main_queue(), ^{
+					NSArray *pendingFormulaCompletions;
+					BOOL publishFailure;
 					@synchronized (self) {
 						self->_discoveryInFlight = NO;
 						self->_reloadInFlight = NO;
 						self->_reloadRequestedWhileRunning = NO;
 						self->_pendingRebuildCache = NO;
-						if (generation != self->_reloadGeneration) return;
-						self->_discoveryResult = result;
+						pendingFormulaCompletions = [self->_formulaRefreshCompletions copy];
+						[self->_formulaRefreshCompletions removeAllObjects];
+						self->_formulaRefreshRequested = NO;
+						publishFailure = generation == self->_reloadGeneration;
+						if (publishFailure) self->_discoveryResult = result;
 					}
-					[self.delegate homebrewManager:self shouldDisplayNoBrewMessage:YES];
+					for (void (^done)(BOOL) in pendingFormulaCompletions) done(NO);
+					if (publishFailure) [self.delegate homebrewManager:self shouldDisplayNoBrewMessage:YES];
 				});
 				return; // No lists, services, cache read or cache write on failure.
 			}
@@ -415,6 +476,7 @@ static const NSInteger kBPCacheVersion = 2;
 				}
 			}
 
+			if (self->_formulaRefreshRequested) [self refreshFormulaStateAfterRemovalWithCompletion:nil];
 			if (rerun)
 			{
 				[self reloadFromInterfaceRebuildingCache:rerunRebuild];

@@ -22,6 +22,7 @@
 #import "BPHomebrewInterface.h"
 #import "BPCleanupPreview.h"
 #import "BPTask.h"
+#import "BPAutoremovePreview.h"
 #import "BPService.h"
 #import "BPServiceDetails.h"
 #import "BPPreferences.h"
@@ -256,6 +257,63 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 - (void)task:(BPTask *)task didFinishWithOutput:(NSString *)output error:(NSString *)error
 {
 	@synchronized (self.tasks) { [self.tasks removeObjectForKey:[NSString stringWithFormat:@"%p", task]]; }
+}
+
+// Fixed environment assignments are made after login initialization, never
+// through global setenv. Positional arguments remain data, not shell source.
+- (NSArray *)formatAutoremoveArguments:(NSArray *)arguments
+{
+	NSMutableArray *result = [NSMutableArray arrayWithArray:@[@"-l", @"-c",
+		@"printf '\\n+++++Cakebrew Autoremove+++++\\n'; /usr/bin/env HOMEBREW_NO_AUTOREMOVE=1 HOMEBREW_NO_AUTO_UPDATE=1 brew \"$@\"", @"brew"]];
+	[result addObjectsFromArray:arguments];
+	return result;
+}
+
+- (int)executeAutoremoveArguments:(NSArray *)arguments progress:(NSProgress *)progress output:(void (^)(NSString *))output
+{
+	if (self.brewTransport != kBPBrewTransportDirect || !self.path_shell || progress.cancelled) return -1;
+	BPTask *task = [[BPTask alloc] initWithPath:self.path_shell arguments:[self formatAutoremoveArguments:arguments]];
+	task.delegate = self;
+	BOOL preview = [arguments.firstObject isEqualToString:@"autoremove"];
+	task.updateBlock = preview ? nil : output;
+	task.cancellationProgress = progress;
+	progress.cancellationHandler = ^{
+		dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{ [task cancel]; });
+	};
+	if (progress.cancelled) [task cancel];
+	@synchronized (self.tasks) { self.tasks[[NSString stringWithFormat:@"%p", task]] = task; }
+	int status = [task execute];
+	progress.cancellationHandler = nil;
+	task.cancellationProgress = nil;
+	if (preview) {
+		NSRange marker = [task.output rangeOfString:@"+++++Cakebrew Autoremove+++++\n"];
+		NSString *clean = marker.location == NSNotFound ? task.output : [task.output substringFromIndex:NSMaxRange(marker)];
+		// Keep stderr separate until the login-banner marker has been removed:
+		// an early warning must never be swallowed with the shell's stdout banner.
+		if (output) output([NSString stringWithFormat:@"%@%@%@", clean, task.error.length ? @"\n" : @"", task.error]);
+		if (marker.location == NSNotFound) return -1;
+	}
+	return status;
+}
+
+- (BPAutoremovePreview *)previewAutoremoveWithProgress:(NSProgress *)progress
+{
+	if (self.brewTransport != kBPBrewTransportDirect)
+		return [BPAutoremovePreview previewWithOutput:NSLocalizedString(@"Unused dependency removal requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported.", nil) succeeded:NO];
+	NSMutableString *raw = [NSMutableString string];
+	int status = [self executeAutoremoveArguments:@[@"autoremove", @"--dry-run"] progress:progress output:^(NSString *chunk) { [raw appendString:chunk]; }];
+	return [BPAutoremovePreview previewWithOutput:raw succeeded:status == 0 && !progress.cancelled];
+}
+
+- (BOOL)removeUnusedFormulae:(NSArray<NSString *> *)names progress:(NSProgress *)progress output:(void (^)(NSString *))output
+{
+	// Validate even when invoked outside the reviewed operation.
+	NSString *header = [NSString stringWithFormat:@"==> Would autoremove %lu unneeded formula%@:\n", (unsigned long)names.count, names.count == 1 ? @"" : @"e"];
+	BPAutoremovePreview *validated = [BPAutoremovePreview previewWithOutput:[header stringByAppendingString:[names componentsJoinedByString:@"\n"]] succeeded:YES];
+	if (!validated.valid || !names.count || progress.cancelled || self.brewTransport != kBPBrewTransportDirect) return NO;
+	int status = [self executeAutoremoveArguments:[@[@"uninstall", @"--formula"] arrayByAddingObjectsFromArray:validated.names] progress:progress output:output];
+	if (output) output([NSString stringWithFormat:NSLocalizedString(@"\nHomebrew exit status: %d\n", nil), status]);
+	return status == 0 && !progress.cancelled;
 }
 
 - (BOOL)performBrewCommandWithArguments:(NSArray*)arguments dataReturnBlock:(void (^)(NSString*))block
@@ -494,6 +552,29 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 - (NSString *)informationForFormulaName:(NSString *)name;
 {
 	return [self performSyncBrewCommandWithArguments:@[@"info", name]];
+}
+
+- (NSArray<BPFormula *> *)listModeForRemovalRefresh:(BPListMode)mode
+{
+	if (self.brewTransport != kBPBrewTransportDirect) return nil;
+	BPHomebrewInterfaceListCall *listCall;
+	switch (mode) {
+		case kBPListInstalled: listCall = [[BPHomebrewInterfaceListCallInstalled alloc] init]; break;
+		case kBPListLeaves: listCall = [[BPHomebrewInterfaceListCallLeaves alloc] init]; break;
+		case kBPListOutdated: listCall = [[BPHomebrewInterfaceListCallUpgradeable alloc] init]; break;
+		default: return nil;
+	}
+	NSString *output;
+	if (![self performCleanReadOnlyBrewCommandWithArguments:listCall.arguments output:&output] || !output) return nil;
+	return [listCall parseData:output];
+}
+
+- (NSArray<BPService *> *)listServicesForRemovalRefresh
+{
+	if (self.brewTransport != kBPBrewTransportDirect) return nil;
+	NSString *output;
+	if (![self performCleanReadOnlyBrewCommandWithArguments:@[@"services", @"list", @"--json"] output:&output]) return nil;
+	return [BPService validatedServicesFromJSONString:output];
 }
 
 - (NSString *)informationForCaskName:(NSString *)name

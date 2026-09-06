@@ -277,6 +277,13 @@ CA
                                     <binding destination="547" name="enabled" keyPath="self.isHomebrewInstalled" id="lSy-fl-XmV"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Remove Unused Dependencies…" id="cbk-autoremove-menu">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="removeUnusedDependencies:" target="547" id="cbk-autoremove-action"/>
+                                    <binding destination="547" name="enabled" keyPath="self.isHomebrewInstalled" id="cbk-autoremove-enabled"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="MQi-FD-Trr"/>
                             <menuItem title="Export Brew Installation…" id="Gbv-K1-deL">
                                 <modifierMask key="keyEquivalentModifierMask"/>
