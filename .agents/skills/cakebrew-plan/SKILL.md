@@ -1,22 +1,12 @@
 ---
 name: cakebrew-plan
-description: Plan or spike a Cakebrew change before implementation when requirements, architecture, framework behavior, integration boundaries, or vertical-slice scope need to be resolved.
+description: Plan a Cakebrew change or spike when requirements, framework behavior, architectural tradeoffs or vertical-slice scope need resolution.
 ---
 
-# Cakebrew Plan
+# Cakebrew Planning
 
-Read `AGENTS.md` completely. Stay in the planner role: do not implement
-production code.
+Read the repository's `AGENTS.md` completely before acting. It is the sole
+project authority; this skill is a routing adapter. Follow its **Discovery and scoping**
+section and the assigned role's evidence contract, not a separate checklist here.
 
-- Inspect the repository and trace the relevant execution paths.
-- Identify unknowns that require measurement. Use the smallest disposable
-  spike needed, keep it out of production paths, and remove it before returning.
-- Compare viable alternatives by architectural fit, complexity, performance
-  and maintenance burden.
-- Define the smallest cohesive vertical slice, its acceptance criteria, test
-  seams and expected red test.
-- Report assumptions, evidence, risks, rejected alternatives and an ordered
-  slice plan. Clearly distinguish measured behavior from inference.
-
-Preserve all unrelated changes. Do not commit, push, open a PR or change
-project instructions.
+Read the assigned problem and trace the relevant code and tests. Return the planner handoff specified in AGENTS.md, distinguishing observations from assumptions and identifying what must be measured. Keep any authorized spike isolated and account for its cleanup; do not implement production changes.
