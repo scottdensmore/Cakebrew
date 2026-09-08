@@ -16,6 +16,7 @@
 #import "BPBrewfile.h"
 #import "BPBrewfilePlan.h"
 #import "BPBrewfileImportOperation.h"
+#import "BPBrewfileExportOperation.h"
 #import "BPHomebrewInterface.h"
 
 @interface BPHomebrewInterface (CB151Testing)
@@ -53,10 +54,103 @@
 }
 @end
 
+@interface CBExportInterface : BPHomebrewInterface
+@property BOOL commandSucceeded;
+@property (copy) NSString *commandOutput;
+@property (copy) NSArray *exportArguments;
+@end
+@implementation CBExportInterface
+- (NSString *)performSyncBrewCommandWithArguments:(NSArray *)arguments
+{
+ self.exportArguments = arguments;
+ return self.commandOutput;
+}
+- (BOOL)performAsyncBrewCommandWithArguments:(NSArray *)arguments wrapsSynchronousRequest:(BOOL)sync includesCompletionMessage:(BOOL)completion dataReturnBlock:(void (^)(NSString *))block
+{
+ self.exportArguments = arguments;
+ if (block && self.commandOutput) block(self.commandOutput);
+ return self.commandSucceeded;
+}
+@end
+
+@interface CBDelayedExportInterface : BPHomebrewInterface
+@property (copy) void (^entered)(void);
+@property (strong) dispatch_semaphore_t releaseCommand;
+@property NSUInteger calls;
+@property (strong) NSError *exportError;
+@end
+@implementation CBDelayedExportInterface
+- (NSError *)runBrewExportToolWithPath:(NSString *)path
+{
+ XCTAssertFalse(NSThread.isMainThread);
+ XCTAssertEqualObjects(path, @"/fixture/Brewfile");
+ self.calls++;
+ self.entered();
+ dispatch_semaphore_wait(self.releaseCommand, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC));
+ return self.exportError;
+}
+@end
+
 @interface BPBrewfileTests : XCTestCase
 @end
 
 @implementation BPBrewfileTests
+
+- (void)testOnlyConfirmedLocalSaveDestinationCanStartExport
+{
+ NSURL *file = [NSURL fileURLWithPath:@"/fixture/Brewfile"];
+ XCTAssertEqualObjects([BPBrewfileExportOperation exportURLForSaveResponse:NSModalResponseOK URL:file], file);
+ for (NSNumber *response in @[@(NSModalResponseCancel), @(NSModalResponseAbort), @(NSModalResponseStop)])
+  XCTAssertNil([BPBrewfileExportOperation exportURLForSaveResponse:response.integerValue URL:file]);
+ XCTAssertNil([BPBrewfileExportOperation exportURLForSaveResponse:NSModalResponseOK URL:nil]);
+ XCTAssertNil([BPBrewfileExportOperation exportURLForSaveResponse:NSModalResponseOK URL:[NSURL URLWithString:@"https://example.com/Brewfile"]]);
+}
+
+- (void)testExportUsesCommandResultForSilentAndUnfamiliarFailures
+{
+ for (NSString *output in @[@"", @"permission denied writing destination", @"Error: destination unavailable"]) {
+  CBExportInterface *interface = [[CBExportInterface allocWithZone:NULL] initUniqueInstance];
+  interface.commandOutput = output;
+  interface.commandSucceeded = NO;
+  NSError *error = [interface runBrewExportToolWithPath:@"/fixture/My Brewfile"];
+  XCTAssertNotNil(error);
+  XCTAssertGreaterThan(error.localizedDescription.length, 0u);
+  if (output.length) XCTAssertTrue([error.localizedDescription containsString:output]);
+  XCTAssertEqualObjects(interface.exportArguments, (@[@"bundle", @"dump", @"--force", @"--file=/fixture/My Brewfile"]));
+ }
+}
+
+- (void)testSuccessfulExportDoesNotInferFailureFromDiagnosticText
+{
+ CBExportInterface *interface = [[CBExportInterface allocWithZone:NULL] initUniqueInstance];
+ interface.commandOutput = @"Error: quoted in a successful diagnostic";
+ interface.commandSucceeded = YES;
+ XCTAssertNil([interface runBrewExportToolWithPath:@"/fixture/Brewfile"]);
+}
+
+- (void)testExportRunsOffMainKeepsRunningUntilExitAndCompletesOnceOnMain
+{
+ for (NSNumber *fails in @[@NO, @YES]) {
+  CBDelayedExportInterface *interface = [[CBDelayedExportInterface allocWithZone:NULL] initUniqueInstance];
+  interface.releaseCommand = dispatch_semaphore_create(0);
+  interface.exportError = fails.boolValue ? [NSError errorWithDomain:@"fixture" code:7 userInfo:nil] : nil;
+  BPBrewfileExportOperation *operation = [[BPBrewfileExportOperation alloc] initWithURL:[NSURL fileURLWithPath:@"/fixture/Brewfile"] interface:interface];
+  XCTestExpectation *entered = [self expectationWithDescription:@"command entered"], *finished = [self expectationWithDescription:@"command finished"];
+  interface.entered = ^{ [entered fulfill]; };
+  [operation startWithCompletion:^(NSError *error) {
+   XCTAssertTrue(NSThread.isMainThread);
+   XCTAssertFalse(operation.running);
+   XCTAssertEqualObjects(error, interface.exportError);
+   [finished fulfill];
+  }];
+  [self waitForExpectations:@[entered] timeout:5];
+  XCTAssertTrue(operation.running);
+  [operation startWithCompletion:^(NSError *error) { XCTFail(@"operation must be one shot"); }];
+  dispatch_semaphore_signal(interface.releaseCommand);
+  [self waitForExpectations:@[finished] timeout:5];
+  XCTAssertEqual(interface.calls, 1u);
+ }
+}
 
 - (void)testDirectImportCancellationBetweenRequestAndTaskCreationIsNotLost
 {

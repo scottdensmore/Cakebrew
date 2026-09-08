@@ -828,36 +828,18 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 
 - (NSError*)runBrewExportToolWithPath:(NSString*)path
 {
-	NSString *output = [self performSyncBrewCommandWithArguments:@[@"bundle",
-																   @"dump",
-																   @"--force",
-																   [NSString stringWithFormat:@"--file=%@", path]]];
-	
-	[self sendDelegateFormulaeUpdatedCallForCommand:@"export"];
-	
-	if ([output length] == 0)
-	{
-		return nil;
-	}
-	else
-	{
-		__block NSError *error = nil;
-		
-		[output enumerateLinesUsingBlock:^(NSString *line, BOOL *stop) {
-			if ([line hasPrefix:@"Error:"] || [line hasPrefix:@"fatal:"])
-			{
-				// brew bundle dump reports failure in its output rather than
-				// through an exit status this path can see, so the line is
-				// still what identifies it — but the error itself is now built
-				// the same way as every other one.
-				error = [BPBrewError errorForExitStatus:1 output:line];
-				
-				*stop = YES;
-			}
-		}];
-		
-		return error;
-	}
+ NSMutableString *output = [NSMutableString string];
+ BOOL succeeded = [self performAsyncBrewCommandWithArguments:@[@"bundle", @"dump", @"--force", [@"--file=" stringByAppendingString:path]]
+  wrapsSynchronousRequest:NO includesCompletionMessage:NO dataReturnBlock:^(NSString *chunk) {
+   [output appendString:chunk];
+   // Retain only the diagnostic tail; a verbose shell must not grow this forever.
+   if (output.length > 1500) [output deleteCharactersInRange:NSMakeRange(0, output.length - 1500)];
+  }];
+ if (succeeded) return nil;
+ NSString *description = [output stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+ if (!description.length) description = NSLocalizedString(@"Homebrew could not export the Brewfile. Check the destination and try again.", nil);
+ // The transport exposes success/failure, not a numeric exit status. Do not invent one.
+ return [NSError errorWithDomain:@"Cakebrew.Brewfile.Export" code:1 userInfo:@{NSLocalizedDescriptionKey: description}];
 }
 
 - (BOOL)runBrewImportToolWithPath:(NSString*)path withReturnsBlock:(void (^)(NSString *))block

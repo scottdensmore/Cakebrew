@@ -21,7 +21,9 @@
   CB1500000000000000000001 = {isa = PBXBuildFile; fileRef = CB1500000000000000000003; };
   CB1500000000000000000002 = {isa = PBXBuildFile; fileRef = CB1500000000000000000003; };
    CB1510000000000000000005 /* BPBrewfileImportOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1510000000000000000007; };
+   CB1590000000000000000005 /* BPBrewfileExportOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1590000000000000000007; };
   CB1510000000000000000006 /* BPBrewfileImportOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1510000000000000000007; };
+  CB1590000000000000000006 /* BPBrewfileExportOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1590000000000000000007; };
   CB1510000000000000000001 /* BPBrewfilePlan.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1510000000000000000003; };
   CB1510000000000000000002 /* BPBrewfilePlan.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1510000000000000000003; };
 		CB1520000000000000000007 /* BPServicesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D88E53757CC27FC7F7734D0D /* BPServicesViewController.m */; };
@@ -269,7 +271,9 @@
   CB1500000000000000000003 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPAutoremovePreview.m; path = Models/BPAutoremovePreview.m; sourceTree = "<group>"; };
   CB1500000000000000000004 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPAutoremovePreview.h; path = Models/BPAutoremovePreview.h; sourceTree = "<group>"; };
    CB1510000000000000000007 /* BPBrewfileImportOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPBrewfileImportOperation.m; path = Models/BPBrewfileImportOperation.m; sourceTree = "<group>"; };
+   CB1590000000000000000007 /* BPBrewfileExportOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPBrewfileExportOperation.m; path = Models/BPBrewfileExportOperation.m; sourceTree = "<group>"; };
   CB1510000000000000000008 /* BPBrewfileImportOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPBrewfileImportOperation.h; path = Models/BPBrewfileImportOperation.h; sourceTree = "<group>"; };
+  CB1590000000000000000008 /* BPBrewfileExportOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPBrewfileExportOperation.h; path = Models/BPBrewfileExportOperation.h; sourceTree = "<group>"; };
   CB1510000000000000000003 /* BPBrewfilePlan.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPBrewfilePlan.m; path = Models/BPBrewfilePlan.m; sourceTree = "<group>"; };
   CB1510000000000000000004 /* BPBrewfilePlan.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPBrewfilePlan.h; path = Models/BPBrewfilePlan.h; sourceTree = "<group>"; };
 		CB1520000000000000000009 /* BPServiceDetailsControllerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BPServiceDetailsControllerTests.m; sourceTree = "<group>"; };
@@ -750,7 +754,9 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
     CB1500000000000000000004,
     CB1510000000000000000004 /* BPBrewfilePlan.h */,
     CB1510000000000000000007 /* BPBrewfileImportOperation.m */,
+    CB1590000000000000000007 /* BPBrewfileExportOperation.m */,
     CB1510000000000000000008 /* BPBrewfileImportOperation.h */,
+    CB1590000000000000000008 /* BPBrewfileExportOperation.h */,
 				04128FDA59B34E8B927E45AB /* BPCleanupPreview.h */,
 				AA67F6479F85E50C83706E3E /* BPService.m */,
 				6F14AB39D9A4FA816D3A932C /* BPBrewError.m */,
@@ -1212,6 +1218,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
     CB150000000000000000000B,
     CB1500000000000000000005,
     CB1510000000000000000005 /* BPBrewfileImportOperation.m in Sources */,
+    CB1590000000000000000005 /* BPBrewfileExportOperation.m in Sources */,
 				7B8FC3DCCA5A40978F28FE53 /* BPCleanupPreview.m in Sources */,
 				49CC41B5A77580D8BF6465A5 /* BPServicesViewController.m in Sources */,
 				2D8AA669642BBFBEF248B016 /* BPPreferences.m in Sources */,
@@ -1268,6 +1275,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
     CB1500000000000000000002,
     CB1500000000000000000006,
     CB1510000000000000000006 /* BPBrewfileImportOperation.m in Sources */,
+    CB1590000000000000000006 /* BPBrewfileExportOperation.m in Sources */,
 				C0522710FEED4734BD9216BE /* BPCleanupPreview.m in Sources */,
 				CB444AAF97F2767EE566D067 /* BPPreferences.m in Sources */,
 				9D8CB0FDFCD1CC2E9148390C /* BPPreferencesTests.m in Sources */,

@@ -349,6 +349,9 @@
 // writing a Brewfile wherever the panel happened to point.
 - (NSError *)runBrewExportToolWithPath:(NSString *)path
 {
+ if ([NSProcessInfo.processInfo.arguments containsObject:@"-BPMockSlowExport"]) [NSThread sleepForTimeInterval:10];
+ if ([NSProcessInfo.processInfo.arguments containsObject:@"-BPMockExportFails"])
+  return [NSError errorWithDomain:@"Cakebrew.Mock.Export" code:1 userInfo:@{NSLocalizedDescriptionKey: @"MOCK_EXPORT_FAILED: destination is not writable."}];
 	return nil;
 }
 

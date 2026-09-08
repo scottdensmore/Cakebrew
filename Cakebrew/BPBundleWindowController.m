@@ -12,6 +12,7 @@
 #import "BPAutoScrollTextView.h"
 #import "BPBrewfilePlan.h"
 #import "BPBrewfileImportOperation.h"
+#import "BPBrewfileExportOperation.h"
 
 @interface BPBundleWindowController ()
 
@@ -32,6 +33,7 @@
 @property (nonatomic, copy) void (^windowLoadedBlock)(void);
 @property (nonatomic, copy) void (^operationBlock)(void);
 @property (strong) BPBrewfileImportOperation *importOperation;
+@property (strong) BPBrewfileExportOperation *exportOperation;
 
 
 @end
@@ -153,26 +155,27 @@
 
 - (void)runExportOperationWithFile:(NSURL*)fileURL
 {
-	NSError *error = [[BPHomebrewInterface sharedInterface] runBrewExportToolWithPath:[fileURL path]];
-	
-	if (error)
-	{
-		[self.statusLabelExport setStringValue:NSLocalizedString(@"Brewfile_Export_Failed", nil)];
-		[self.statusViewExport setImage:[NSImage imageNamed:@"status_Error"]];
-		[self.progressLabelExport setStringValue:[error localizedDescription]];
-		[self.progressLabelExport setHidden:NO];
-		
-		NSLog(@"%@", error.localizedDescription);
-	}
-	else
-	{
-		[self.progressLabelExport setHidden:YES];
-	}
-	
-	[self.statusLabelExport setHidden:NO];
-	[self.statusViewExport setHidden:NO];
-	[self.buttonClose setEnabled:YES];
-	[self.progressIndicator stopAnimation:nil];
+ self.statusLabelExport.accessibilityIdentifier = @"brewfile.export.status";
+ self.progressLabelExport.accessibilityIdentifier = @"brewfile.export.detail";
+ self.buttonClose.accessibilityIdentifier = @"brewfile.export.close";
+ self.progressIndicator.accessibilityIdentifier = @"brewfile.export.progress";
+ self.buttonClose.enabled = NO;
+ self.exportOperation = [[BPBrewfileExportOperation alloc] initWithURL:fileURL interface:[BPHomebrewInterface sharedInterface]];
+ [self.exportOperation startWithCompletion:^(NSError *error) {
+  if (error) {
+   self.statusLabelExport.stringValue = NSLocalizedString(@"Brewfile_Export_Failed", nil);
+   self.statusViewExport.image = [NSImage imageWithSystemSymbolName:@"xmark.circle.fill" accessibilityDescription:nil];
+   self.progressLabelExport.stringValue = error.localizedDescription;
+   self.progressLabelExport.hidden = NO;
+  } else {
+   self.statusViewExport.image = [NSImage imageWithSystemSymbolName:@"checkmark.circle.fill" accessibilityDescription:nil];
+   self.progressLabelExport.hidden = YES;
+  }
+  self.statusLabelExport.hidden = NO;
+  self.statusViewExport.hidden = NO;
+  self.buttonClose.enabled = YES;
+  [self.progressIndicator stopAnimation:nil];
+ }];
 }
 
 - (void)embedView:(NSView*)view
@@ -196,6 +199,7 @@
 
 - (IBAction)didClickClose:(id)sender
 {
+ if (self.exportOperation.running) return;
  if (self.importOperation.running) {
   [self.importOperation cancel]; self.buttonClose.enabled = NO;
   self.progressLabelImport.stringValue = NSLocalizedString(@"Cancelling… Waiting for Homebrew to exit.", nil);

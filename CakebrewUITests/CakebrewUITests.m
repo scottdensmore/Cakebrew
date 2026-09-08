@@ -1713,6 +1713,56 @@
 	[sheet.buttons[@"OK"] click];
 }
 
+- (void)openMockExportWithArguments:(NSArray *)arguments
+{
+ [self launchWithArguments:[@[@"-BPMockBrew", @"-BPMockExportURL", @"/fixture/Brewfile"] arrayByAddingObjectsFromArray:arguments]];
+ [self.app.menuBars.menuBarItems[@"Tools"] click];
+ [self.app.menuItems[@"Export Brew Installation…"] click];
+}
+
+- (void)testExportShowsProgressUntilSuccessAndCloses
+{
+ [self openMockExportWithArguments:@[@"-BPMockSlowExport"]];
+ XCUIElement *close = self.app.sheets.firstMatch.buttons[@"brewfile.export.close"];
+ XCTAssertTrue([close waitForExistenceWithTimeout:10]);
+ XCTAssertFalse(close.enabled);
+ // AppKit spinners expose AXBusyIndicator, not the progress-bar AX role.
+ XCUIElement *progress = [self.app descendantsMatchingType:XCUIElementTypeAny][@"brewfile.export.progress"];
+ if (!progress.exists) NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+ XCTAssertTrue(progress.exists);
+ XCTAssertFalse(self.app.staticTexts[@"brewfile.export.status"].exists);
+ [self expectationForPredicate:[NSPredicate predicateWithFormat:@"enabled == YES"] evaluatedWithObject:close handler:nil];
+ [self waitForExpectationsWithTimeout:15 handler:nil];
+ XCTAssertTrue([self.app.staticTexts[@"brewfile.export.status"].value containsString:@"Successful"]);
+ [close click];
+ [self expectationForPredicate:[NSPredicate predicateWithFormat:@"exists == NO"] evaluatedWithObject:self.app.sheets.firstMatch handler:nil];
+ [self waitForExpectationsWithTimeout:5 handler:nil];
+}
+
+- (void)testExportFailureRemainsVisibleUntilClosed
+{
+ [self openMockExportWithArguments:@[@"-BPMockExportFails"]];
+ XCUIElement *status = self.app.staticTexts[@"brewfile.export.status"];
+ XCTAssertTrue([status waitForExistenceWithTimeout:10]);
+ XCTAssertTrue([status.value containsString:@"Failed"]);
+ XCTAssertTrue([self.app.staticTexts[@"brewfile.export.detail"].value containsString:@"MOCK_EXPORT_FAILED"]);
+ XCUIElement *close = self.app.sheets.firstMatch.buttons[@"brewfile.export.close"];
+ XCTAssertTrue(close.enabled);
+ [close click];
+ [self expectationForPredicate:[NSPredicate predicateWithFormat:@"exists == NO"] evaluatedWithObject:self.app.sheets.firstMatch handler:nil];
+ [self waitForExpectationsWithTimeout:5 handler:nil];
+}
+
+- (void)testCancelledExportSaveLeavesAppReadyForAnotherOperation
+{
+ [self openMockExportWithArguments:@[@"-BPMockExportCancel"]];
+ XCTAssertFalse(self.app.sheets.firstMatch.exists);
+ [self.app.menuBars.menuBarItems[@"Tools"] click];
+ [self.app.menuItems[@"Import Brew Installation…"] click];
+ XCTAssertTrue([self.app.sheets.firstMatch waitForExistenceWithTimeout:10]);
+ XCTAssertFalse(self.app.sheets.firstMatch.buttons[@"brewfile.export.close"].exists);
+}
+
 // Journey: the Tools menu exposes the Import / Export Brewfile actions.
 //
 // The full flow opens a system file panel (a separate process) and needs a
