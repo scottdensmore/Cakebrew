@@ -87,6 +87,48 @@
 	XCTAssertEqual(coordinator.originalSidebarRow, 3);
 }
 
+- (void)testClearingSearchInvalidatesRetainedCallbackWithoutResumingSearch
+{
+	__block dispatch_block_t pending;
+	__block NSUInteger performed = 0;
+	__block NSUInteger cancellations = 0;
+	__block __weak BPSearchCoordinator *weakCoordinator;
+	BPSearchCoordinator *coordinator = [[BPSearchCoordinator alloc]
+		initWithSchedule:^(NSTimeInterval interval, dispatch_block_t work) { pending = work; }
+		performSearch:^(NSString *query) {
+			performed += 1;
+			[weakCoordinator didReceiveResultsForSidebarRow:9];
+		} cancelSearch:^{ cancellations += 1; }];
+	weakCoordinator = coordinator;
+	[coordinator scheduleQuery:@"mockvscode"];
+	[coordinator endSearchReturningSidebarRow];
+	XCTAssertEqual(cancellations, 1u);
+	XCTAssertFalse(coordinator.isSearching);
+	XCTAssertNotNil(pending);
+	pending();
+	XCTAssertEqual(performed, 0u, @"clearing must invalidate already queued search work");
+	XCTAssertFalse(coordinator.isSearching, @"old results must not reopen the cleared search");
+}
+
+- (void)testNewQueryRunsAfterClearingWithoutRevivingOlderQuery
+{
+	NSMutableArray<dispatch_block_t> *scheduled = [NSMutableArray array];
+	NSMutableArray<NSString *> *performed = [NSMutableArray array];
+	BPSearchCoordinator *coordinator = [[BPSearchCoordinator alloc]
+		initWithSchedule:^(NSTimeInterval interval, dispatch_block_t work) { [scheduled addObject:work]; }
+		performSearch:^(NSString *query) { [performed addObject:query]; } cancelSearch:^{}];
+	[coordinator scheduleQuery:@"old"];
+	[coordinator endSearchReturningSidebarRow];
+	[coordinator scheduleQuery:@"new"];
+	scheduled[0]();
+	XCTAssertEqual(performed.count, 0u, @"a new query must not make cleared work valid again");
+	scheduled[1]();
+	XCTAssertEqualObjects(performed, (@[@"new"]));
+	[coordinator didReceiveResultsForSidebarRow:4];
+	XCTAssertTrue(coordinator.isSearching);
+	XCTAssertEqual([coordinator endSearchReturningSidebarRow], 4);
+}
+
 - (void)testRetainedScheduledWorkDoesNotKeepTheCoordinatorAlive
 {
 	__block dispatch_block_t pending;
