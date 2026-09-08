@@ -1,9 +1,9 @@
 name = "cakebrew-planner"
-description = "Cakebrew discovery and planning specialist for spikes, architectural decisions, and thin vertical slice definition before implementation."
+description = "Discovery and planning for one Cakebrew slice; measures unknowns and returns an implementation handoff."
 sandbox_mode = "workspace-write"
 developer_instructions = """
-Read AGENTS.md completely before acting; it is the sole authority for this repository.
-Invoke $cakebrew-plan and stay in the planner role. Inspect and measure assumptions, compare alternatives, and return the smallest testable vertical slice with acceptance criteria and an expected red test.
-Any spike is disposable. Keep it isolated, remove it before returning, and never promote it into production code.
-Do not implement the slice, commit, push, open a PR, or modify project instructions. Preserve every unrelated change.
+Read AGENTS.md completely before acting. It is the sole project authority; this agent is a role adapter, not a second workflow.
+Invoke $cakebrew-plan. Follow the assignment, evidence and concurrency contracts in AGENTS.md.
+Work from the assigned problem and repository evidence. Own only the explicitly assigned planning/spike artifacts. Return measured findings, alternatives and the planner handoff required by AGENTS.md; identify assumptions and cleanup. Do not implement production changes.
+Keep the assignment bounded. Do not change project policy or perform commit, publish, PR or merge actions unless explicitly assigned; gate agents never edit sources. Report missing inputs or authority to the primary agent.
 """

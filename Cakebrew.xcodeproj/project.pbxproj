@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CB1430000000000000000003 /* BPSearchCoordinator.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1430000000000000000005 /* BPSearchCoordinator.m */; };
+		CB1430000000000000000004 /* BPSearchCoordinator.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1430000000000000000005 /* BPSearchCoordinator.m */; };
+		CB1430000000000000000007 /* BPTimedDispatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 15D28A111AE1BD27005C8A3E /* BPTimedDispatch.m */; };
+		CB1430000000000000000001 /* BPSearchCoordinatorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1430000000000000000002 /* BPSearchCoordinatorTests.m */; };
 		CB1440000000000000000003 /* BPFormulaeTableAction.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1440000000000000000005 /* BPFormulaeTableAction.m */; };
 		CB1440000000000000000004 /* BPFormulaeTableAction.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1440000000000000000005 /* BPFormulaeTableAction.m */; };
 		CB1440000000000000000001 /* BPFormulaeTableActionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1440000000000000000002 /* BPFormulaeTableActionTests.m */; };
@@ -251,6 +255,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		CB1430000000000000000005 /* BPSearchCoordinator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPSearchCoordinator.m; path = Controllers/BPSearchCoordinator.m; sourceTree = "<group>"; };
+		CB1430000000000000000006 /* BPSearchCoordinator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPSearchCoordinator.h; path = Controllers/BPSearchCoordinator.h; sourceTree = "<group>"; };
+		CB1430000000000000000002 /* BPSearchCoordinatorTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BPSearchCoordinatorTests.m; sourceTree = "<group>"; };
 		CB1440000000000000000005 /* BPFormulaeTableAction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPFormulaeTableAction.m; path = Models/BPFormulaeTableAction.m; sourceTree = "<group>"; };
 		CB1440000000000000000006 /* BPFormulaeTableAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPFormulaeTableAction.h; path = Models/BPFormulaeTableAction.h; sourceTree = "<group>"; };
 		CB1440000000000000000002 /* BPFormulaeTableActionTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BPFormulaeTableActionTests.m; sourceTree = "<group>"; };
@@ -624,6 +631,8 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 		15A974AB1968A3C900621C35 /* Controllers */ = {
 			isa = PBXGroup;
 			children = (
+				CB1430000000000000000005 /* BPSearchCoordinator.m */,
+				CB1430000000000000000006 /* BPSearchCoordinator.h */,
 				15715F5F1C78050B00AE0E66 /* BPBundleWindow.xib */,
 				15715F621C78053300AE0E66 /* BPBundleWindowController.h */,
 				15715F631C78053300AE0E66 /* BPBundleWindowController.m */,
@@ -885,6 +894,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				65FAFC2DA348DF99A7B6D768 /* BPServiceTests.m */,
 				CB1520000000000000000002 /* BPServiceDetailsTests.m */,
 				CB1440000000000000000002 /* BPFormulaeTableActionTests.m */,
+				CB1430000000000000000002 /* BPSearchCoordinatorTests.m */,
 				CB1520000000000000000009 /* BPServiceDetailsControllerTests.m */,
 				A8052362C08CE3FF3945ABAD /* BPPreferencesTests.m */,
 				18EB9DD2D58391DD9AEC5AE5 /* BPBackgroundUpdaterTests.m */,
@@ -1159,6 +1169,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				23E9996EE1B9366B38DAFD70 /* BPProcessTree.m in Sources */,
 				15BBA18E1BD031C9002C0127 /* BPBackgroundView.m in Sources */,
 				15D28A121AE1BD27005C8A3E /* BPTimedDispatch.m in Sources */,
+				CB1430000000000000000003 /* BPSearchCoordinator.m in Sources */,
 				150AEC4D1B3F999A00163767 /* BPFormulaOptionsWindowController.m in Sources */,
 				15A89D3925F2F467003D33F5 /* NSLayoutConstraint+Shims.m in Sources */,
 				150AEC531B3F999A00163767 /* BPSelectedFormulaViewController.m in Sources */,
@@ -1243,6 +1254,9 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				F686E7E93EA64727C5BD476A /* BPServiceTests.m in Sources */,
 				CB1520000000000000000001 /* BPServiceDetailsTests.m in Sources */,
 				CB1440000000000000000001 /* BPFormulaeTableActionTests.m in Sources */,
+				CB1430000000000000000001 /* BPSearchCoordinatorTests.m in Sources */,
+				CB1430000000000000000004 /* BPSearchCoordinator.m in Sources */,
+				CB1430000000000000000007 /* BPTimedDispatch.m in Sources */,
 				CB1520000000000000000007 /* BPServicesViewController.m in Sources */,
 				CB1520000000000000000008 /* BPServiceDetailsControllerTests.m in Sources */,
 				4403EFA806C14981AAB4D830 /* BPService.m in Sources */,

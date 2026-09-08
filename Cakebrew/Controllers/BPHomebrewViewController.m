@@ -45,7 +45,7 @@
 #import "BPTask.h"
 #import "BPMainWindowController.h"
 #import "NSLayoutConstraint+Shims.h"
-#import "BPTimedDispatch.h"
+#import "BPSearchCoordinator.h"
 #import "BPEmptyState.h"
 #import "BPEmptyStateView.h"
 #if DEBUG
@@ -79,17 +79,13 @@ NSOpenSavePanelDelegate>
 
 @property NSInteger lastSelectedSidebarIndex;
 @property BOOL hasAppliedDefaultDividerPosition;
-@property (strong) BPTimedDispatch *searchDispatch;
-@property NSUInteger searchGeneration;
-/// The row the user was on when the search began, so clearing the field puts
-/// them back rather than dumping them on All Formulae.
-@property NSInteger sidebarRowBeforeSearch;
+@property (strong, nonatomic) BPSearchCoordinator *searchCoordinator;
 
 /// A cleanup dry run is in flight. It takes long enough to invite a second
 /// click, and two dry runs would stack two confirmation sheets.
 @property BOOL cleanupPreviewInFlight;
 
-@property (getter=isSearching)			BOOL searching;
+@property (readonly, getter=isSearching) BOOL searching;
 @property (getter=isHomebrewInstalled)	BOOL homebrewInstalled;
 
 
@@ -819,30 +815,40 @@ NSOpenSavePanelDelegate>
 
 #pragma mark - Search Mode
 
+- (BPSearchCoordinator *)searchCoordinator
+{
+	if (!_searchCoordinator)
+	{
+		_searchCoordinator = [[BPSearchCoordinator alloc]
+			initWithPerformSearch:^(NSString *query) {
+				[[BPHomebrewManager sharedManager] updateSearchWithName:query];
+			} cancelSearch:^{
+				[[BPHomebrewManager sharedManager] cancelSearch];
+			}];
+	}
+	return _searchCoordinator;
+}
+
+- (BOOL)isSearching
+{
+	return self.searchCoordinator.isSearching;
+}
+
 - (void)loadSearchResults
 {
-	// Remember where the user was. Search used to force-select All Formulae,
-	// so someone browsing All Casks who typed three characters was thrown into
-	// the formula namespace and shown an empty table.
-	if (![self isSearching])
-	{
-		self.sidebarRowBeforeSearch = [self.sidebarController.sidebar selectedRow];
-	}
-
-	[self setSearching:YES];
+	[self.searchCoordinator didReceiveResultsForSidebarRow:self.sidebarController.sidebar.selectedRow];
 	[self configureTableForListing:kBPListSearch];
 }
 
 - (void)endSearchAndCleanup
 {
 	[self.toolbar.searchField setStringValue:@""];
-	[self setSearching:NO];
 
 	// Discard anything still in flight, then return the user to the list they
 	// were on rather than leaving them on All Formulae.
-	[[BPHomebrewManager sharedManager] cancelSearch];
+	NSInteger originalRow = [self.searchCoordinator endSearchReturningSidebarRow];
 
-	NSInteger row = [BPSideBarController restorableRowFrom:self.sidebarRowBeforeSearch
+	NSInteger row = [BPSideBarController restorableRowFrom:originalRow
 												  rowCount:[self.sidebarController.sidebar numberOfRows]];
 	[self.sidebarController.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:(NSUInteger)row]
 								byExtendingSelection:NO];
@@ -1260,10 +1266,8 @@ NSOpenSavePanelDelegate>
 {
 	// Explicit navigation must leave search without restoring its previous row.
 	// Invalidate both the queued debounce and any scan already in flight.
-	self.searchGeneration += 1;
 	self.toolbar.searchField.stringValue = @"";
-	self.searching = NO;
-	[_homebrewManager cancelSearch];
+	[self.searchCoordinator cancelForNavigation];
 
 	BOOL alreadySelected = self.sidebarController.sidebar.selectedRow == (NSInteger)row;
 	[self.sidebarController.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:row]
@@ -1293,20 +1297,7 @@ NSOpenSavePanelDelegate>
 		return;
 	}
 
-	if (!self.searchDispatch)
-	{
-		self.searchDispatch = [BPTimedDispatch new];
-	}
-
-	// The field is continuous, so this runs per keystroke; each scan walks the
-	// whole catalog. Coalesce so a burst of typing costs one scan.
-	NSUInteger generation = self.searchGeneration;
-	[self.searchDispatch scheduleDispatchAfterTimeInterval:0.15
-												   inQueue:dispatch_get_main_queue()
-												   ofBlock:^{
-		if (generation != self.searchGeneration) return;
-		[[BPHomebrewManager sharedManager] updateSearchWithName:searchPhrase];
-	}];
+	[self.searchCoordinator scheduleQuery:searchPhrase];
 }
 
 - (IBAction)beginFormulaSearch:(id)sender

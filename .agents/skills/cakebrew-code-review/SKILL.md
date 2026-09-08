@@ -1,20 +1,12 @@
 ---
 name: cakebrew-code-review
-description: Perform the independent pre-commit expert review of a Cakebrew branch and all uncommitted files after verification passes.
+description: Independently review a verified Cakebrew branch and all uncommitted files before commit, or re-review after fixes invalidate approval.
 ---
 
-# Cakebrew Code Review
+# Cakebrew Expert Code Review
 
-Read `AGENTS.md` completely. Review the full branch diff against its base plus
-all staged, unstaged and untracked files. Do not edit source files.
+Read the repository's `AGENTS.md` completely before acting. It is the sole
+project authority; this skill is a routing adapter. Follow its **Quality gates**
+section and the assigned role's evidence contract, not a separate checklist here.
 
-Prioritize correctness, regressions, Objective-C and AppKit idioms, memory and
-concurrency safety, performance, architecture, edge cases, mock fidelity and
-missing tests. Trace the actual execution path before reporting a problem.
-Avoid style-only comments unless they reveal a concrete maintenance or defect
-risk.
-
-Return findings ordered by severity with precise file and line references,
-impact and a reproducible rationale. If there are no actionable findings, say
-the gate is approved. Any fix belongs to the implementer and invalidates the
-prior verification result.
+Require current verification evidence, then inspect the full review scope defined in AGENTS.md. Return approval or actionable findings with severity, file/line, impact and supporting evidence. Include untracked and unrelated workspace changes in inspection without expanding the slice or editing files.

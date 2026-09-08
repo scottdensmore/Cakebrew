@@ -1,23 +1,12 @@
 ---
 name: cakebrew-verify
-description: Run Cakebrew's complete local verification gate after implementation or fixes, including required builds, tests, warnings checks, and UI-target coverage.
+description: Validate a stabilized Cakebrew slice with the complete applicable verification gate and source-matched evidence, without editing source.
 ---
 
-# Cakebrew Verify
+# Cakebrew Verification
 
-Read `AGENTS.md` completely and use its current commands as the authority. Do
-not edit source files.
+Read the repository's `AGENTS.md` completely before acting. It is the sole
+project authority; this skill is a routing adapter. Follow its **Quality gates**
+section and the assigned role's evidence contract, not a separate checklist here.
 
-Run the gate from the beginning in its documented order:
-
-1. Debug build, warning-free.
-2. Release build, warning-free.
-3. Full unit suite.
-4. UI test target compilation.
-5. UI journeys before PR creation, subject to the documented display checks.
-
-Validate that each instrument actually exercised the intended target; do not
-treat an exit code or silent output alone as proof. Separate genuine product or
-setup failures from sandbox, signing, locked-screen or headless-environment
-artifacts. Return a compact command-by-command result with decisive diagnostics
-and an explicit pass/fail. Route failures to the implementer.
+Run the applicable verification gate using AGENTS.md commands and testing contracts. Return commands, source identity, diagnostics, executed counts/skips and evidence paths. Distinguish product failures from environment blockers. Report pass, fail or blocked without fixing sources or waiving checks.

@@ -1,480 +1,334 @@
 # Agent Guide — Cakebrew
 
-Cakebrew is a native macOS GUI for Homebrew (Objective-C / AppKit).
+Cakebrew is a native macOS GUI for Homebrew, written in Objective-C / AppKit.
+This file is the sole authority for workflow, conventions and architecture.
+`CLAUDE.md` and `CONTRIBUTING.md` are pointers; skills and custom agents are
+routing adapters, not independent policy. Update rules here first. Keep live
+status and roadmaps in issues, not additional instruction or status documents.
 
-**This file is the single source of truth** for how work happens in this repo —
-conventions, architecture decisions, and the delivery workflow. It is written
-for coding agents and human contributors alike. `CLAUDE.md` is a pointer to it.
-`CONTRIBUTING.md` is a short human-facing entry point that links here rather
-than restating anything. Do not add a second workflow, roadmap, or status
-document: issues are the live status, and a second instruction file drifts.
-
-Follow this exactly; it encodes decisions the maintainer has already made, and
-measurements that cost real time to obtain.
-
----
-
-## The workflow
+## Engineering workflow
 
 ```mermaid
 flowchart TD
-    A[1. Plan, prototype & spike] --> B[2. Inspect & branch]
+    A[1. Plan, prototype and spike] --> B[2. Inspect and branch]
     B --> C[3. Scope a thin vertical slice]
-    C --> D[4. TDD: red, green, refactor]
+    C --> D[4. Red, green, refactor]
     D --> E[5. Inspect the whole workspace diff]
     E --> F{User-visible change?}
-    F -- Yes --> G[6. UI/UX review gate]
-    F -- No --> H[7. Verification gate]
+    F -- Yes --> G[6. UI and UX review]
+    F -- No --> H[7. Verification]
     G --> H
-    H --> I[8. Expert code review gate]
-    I -- Findings or changes --> D
+    H -- Findings --> D
+    H -- Pass --> I[8. Expert code review]
+    I -- Findings --> D
     I -- Approved --> J[9. Atomic commit]
-    J --> K[10. Pull request]
-    K --> L[11. Gated merge, linear history]
+    J --> K[10. Ready pull request]
+    K --> L[11. Gated squash merge]
+    L -- Code or test fixes needed --> D
 ```
 
-### Phase 0 — Discovery
+### Discovery and scoping — steps 1–3
 
-#### 1. Plan, prototype and spike
+1. **Plan and measure before committing to a design.** Inspect relevant code,
+   integration boundaries and tests. Test uncertain framework/API behavior,
+   feasibility, edge cases and performance with the smallest disposable spike.
+   Compare architectural fit, complexity, performance and maintenance burden;
+   produce ordered, independently shippable slices. Discard your spike and
+   scratch artifacts before production implementation; rebuild under TDD
+   rather than promoting prototype code.
+2. **Inspect before any mutation, including a spike.** Check repository state,
+   branches, worktrees and relevant configuration. Preserve unrelated staged,
+   unstaged and untracked files, especially `.claude/`, `.codex/` and `.entire/`.
+   Do not discard another person's work to obtain a clean tree. Isolate it or
+   stash and restore it when necessary for a rebase. Branch from latest `main`
+   using `feat/`, `fix/`, `refactor/`, `docs/`, `chore/`, `test/` or `perf/`.
+   Never commit directly to `main`.
+3. **Select one thin vertical slice.** Define the smallest cohesive end-to-end
+   outcome, acceptance criteria, exclusions, owned files and expected failing
+   test. One logical unit per PR; unrelated changes need separate branches.
+   A horizontal layer spanning the application is not a slice.
 
-**Spike before you commit to a design.** Explore the problem, then build the
-smallest throwaway prototype that can test framework assumptions, feasibility,
-integration boundaries, edge cases or performance risks. Never assume a
-third-party API behaves as documented. Two examples from this repo's history:
-the App Sandbox question was settled by measuring what actually broke, and
-layered app-icon support was settled by feeding `actool` a probe entry and
-reading the warning. Both answers were the opposite of the documentation-level
-guess.
+### Implementation — steps 4–5
 
-Weigh alternatives on architectural fit, complexity, performance and
-maintenance burden. Then break the design into an ordered list of thin vertical
-slices, and **throw the prototype away** — production code is rebuilt under
-TDD, not promoted from a spike. Clear all spike code and scratch artifacts from
-the workspace before implementation begins.
+4. **Red → green → refactor.** Write the smallest focused test first and
+   observe failure for the expected reason. A compile error for a missing API
+   counts; a runner crash does not. Implement only enough to pass, then
+   refactor with the suite green. Every behavior change needs this evidence,
+   including bugfixes and behavior-changing refactors. If red was missed,
+   deliberately mutate the implementation, observe the expected test failure,
+   and restore it. Report which method proved the test bites. Tests and the
+   code satisfying them belong in the same commit. Only pure documentation
+   and formatting are exempt from behavioral TDD.
+5. **Inspect the complete workspace.** Review the branch diff, staged and
+   unstaged changes, and `git status --untracked-files=all`. Remove only your
+   scratch files, probes and temporary instrumentation. Preserve unrelated
+   changes and exclude them from the slice.
 
-### Phase 1 — Context and scoping
+### Quality gates — steps 6–8
 
-#### 2. Inspect and branch
+Run these gates in order on stable sources. Reviewers receive the actual diff
+and observed evidence, not just implementation intent. They report findings;
+they do not fix their own findings.
 
-**Inspect before mutating.** Read the repo state, branches, and working tree
-first. Preserve unrelated staged, unstaged and untracked changes — this machine
-routinely carries modifications under `.claude/`, `.codex/` and `.entire/` that
-are not yours to commit or discard. Stash them around a rebase; never
-`git checkout --` a file you did not write.
+6. **UI/UX review, when user-visible behavior or appearance changes.** A
+   separate reviewer launches the mock build (`-BPMockBrew`) and checks layout,
+   light/dark appearance, badges, accessibility and AppKit idioms. Behavior
+   needs a `CakebrewUITests` journey, not screenshots alone. Report anything
+   that could not be exercised; an environment limitation is not an approval.
+7. **Verification.** Build Debug and Release warning-free, run the full unit
+   suite and applicable integration checks, compile the UI test target, and
+   run the full UI journeys before opening the PR. Inspect diagnostics and
+   static-analysis results; every warning or failed check is a finding.
+   Confirm tests actually executed against the intended source and binary.
+   For instruction/documentation-only changes, use syntax, link and routing
+   validation plus independent policy review; app builds do not validate prose.
+   This exception does not cover executable code, tests or build/CI changes.
+8. **Independent expert review.** Review the full branch diff and all
+   uncommitted files after verification passes. Cover Objective-C idioms,
+   memory and async safety, performance, architecture, edge cases, regressions
+   and missing tests. Resolve every actionable finding before approval.
 
-**Branch off latest `main`.** Prefixes: `feat/`, `fix/`, `refactor/`, `docs/`,
-`chore/`, `test/`, `perf/`. Never commit to `main` directly.
+**Fix loop:** send findings to the implementer. After any code or test edit,
+restart the entire verification sequence and obtain fresh expert approval;
+repeat UI review when the fix changes a user-facing surface. No partial rerun
+or prior approval substitutes for gates on the changed state. Updated policy
+or instructions likewise need fresh applicable validation and review.
 
-#### 3. Scope a thin vertical slice
+### Delivery — steps 9–11
 
-**Take one thin vertical slice** — the smallest cohesive end-to-end outcome
-that can be tested, reviewed and shipped on its own. One PR per logical unit of
-work; unrelated changes go on their own branch. A horizontal layer spanning the
-whole app is not a slice.
+The primary agent owns delivery. A user-assigned implementation or delivery
+goal authorizes the in-scope lifecycle through commits, pushes, ready PRs,
+gated squash merges and cleanup. Do not ask for renewed permission at each
+stage or stop at an intermediate handoff when the goal remains unfinished.
+An explicit limit such as "plan only", "review only", "do not push" or
+"leave the PR open" overrides this default; questions and diagnosis alone
+do not authorize implementation or delivery.
 
-### Phase 2 — Test-driven implementation
+Continue through the goal's scoped slices, resolve in-scope findings and repeat
+invalidated gates until its acceptance criteria and authorized delivery are
+complete. Once current-head checks and assigned reviews pass, squash merge
+without a second confirmation. Use the available wait/monitor mechanism for
+pending external gates; pending CI alone is not a reason to hand the task back.
+Keep the user informed without turning progress updates into approval prompts.
+Goal authority does not expand scope, override execution permissions or permit
+unrelated destructive actions, releases or host/account configuration changes.
 
-#### 4. Red, green, refactor
+9. **Atomic Conventional Commit.** Stage only the verified, reviewed slice.
+   Use `<type>(<scope>): <imperative summary>` with type `feat`, `fix`,
+   `refactor`, `docs`, `chore`, `test`, `perf`, `build` or `ci`. The body explains
+   why and names the test coverage. Do not rewrite historical conventions.
+10. **Ready PR using `gh`.** No web UI; no draft unless requested. Explain
+    what changed, why, red-first or mutation evidence, verification results
+    and any unverified behavior with its reason.
+11. **Gated squash merge.** All required CI must be green, including both
+    **Build & Test** and **UI Tests**, for the current PR head. Wait for every
+    assigned human or automated review to approve and resolve actionable
+    feedback. Never bypass pending, failing or requested-change gates.
 
-**Red → green → refactor, and the red is not optional.** Write the smallest
-failing test first and confirm it fails *for the expected reason* — a compile
-error on a not-yet-existing API counts, a crash in the runner does not. Then
-the minimum code to pass. Then clean up with the suite green.
+During delivery, diagnose failures and route in-scope code/test fixes through
+the fix loop; hold publication or merge until its gates pass. Stale evidence
+requires revalidation, not abandonment of the task. Stop for missing authority,
+credentials, required user interaction or scope expansion. Do not treat an
+environment failure as a product defect or silently waive a gate.
 
-The test and the code that satisfies it land in the **same commit**, and the
-commit message names what the test covers. Every behaviour change ships with a
-test written first: bugs, features, behaviour-changing refactors. Only pure
-formatting and documentation are exempt.
+Respect an explicit pause or resource constraint. If Actions is intentionally
+disabled, keep it disabled until the user authorizes re-enabling it; continue
+permitted local work and publication, but do not treat absent CI as green.
+When required gates cannot run under that constraint, report the blocker and
+remaining work rather than claiming completion or bypassing the merge gate.
 
-If you write the test and the implementation together and never observe the
-red, you have not done TDD — **prove the test bites** by mutation instead:
-break the implementation deliberately, confirm the suite fails, and restore it.
-Say which of the two you did in the PR.
+For a CI UI failure, read the assertion and `CAKEBREW_UI_TREE_*` dump in the
+job log before calling it flaky. Rerun once only when evidence indicates
+infrastructure; otherwise fix the cause through the workflow.
 
-#### 5. Inspect the workspace diff
+Before deleting a stacked PR's parent branch, retarget the child PR to `main`;
+deletion otherwise auto-closes it. Recheck the child's diff and gates against
+its new base. Merge with `gh pr merge <n> --squash --delete-branch`, then switch
+to `main` and `git pull --ff-only`, preserving unrelated work and respecting
+branches checked out in other worktrees.
 
-**Then inspect the whole workspace diff**, including untracked files
-(`git status --untracked-files=all`). Remove scratch files, probes and
-debugging artifacts. Temporary instrumentation must not reach a commit.
+## Role orchestration and evidence
 
-### Phase 3 — Quality gates
+For each feature, bugfix or behavior-changing refactor, the primary agent uses
+`$cakebrew-workflow` and delegates to the configured roles below. Planning,
+implementation and gates must not collapse into one self-review. If a custom
+agent is unavailable, use a separate agent with its matching skill; disclose
+any unavailable gate rather than claiming it passed.
 
-Use distinct reviewer roles or separate passes so that planning, implementation,
-UI review, verification and expert code review do not collapse into one
-self-review. Give reviewers the diff and observed evidence, not merely the
-implementation intent. Run the gates in order. **If any gate causes a code
-change, restart from the verification gate and obtain fresh code review
-approval** — a fix invalidates every result that came before it.
-
-#### 6. UI/UX and design review
-
-**UI/UX review** *(only if a user-facing surface changed)*. Verify it visually:
-launch the mock build (`-BPMockBrew`), look at it, confirm layout, dark mode,
-and badges. For behaviour rather than looks, add a `CakebrewUITests` journey —
-an assertion beats eyeballing a screenshot. Check accessibility and platform
-idioms, not just that it renders.
-
-#### 7. Verification and automated checks
-
-**Verification.** Build **Debug and Release**, both warning-free — a new
-warning is a failure. Run the full unit suite. Compile the UI test target.
-Run the UI journeys before opening the PR. Treat every warning or failing check
-as a finding; after any code edit, rerun the full verification sequence from
-the beginning.
-
-#### 8. Pre-commit expert code review
-
-**Code review** over the full branch diff plus anything uncommitted. Language
-idioms, memory and concurrency safety, performance, architecture, edge cases.
-Resolve every actionable finding, then re-verify and repeat the review until it
-is approved.
-
-### Phase 4 — Integration and delivery
-
-#### 9. Structured atomic commit
-
-**Conventional Commits.** `<type>(<scope>): <imperative summary>`, where type
-is one of `feat` `fix` `refactor` `docs` `chore` `test` `perf` `build` `ci`
-and scope names the area (`sidebar`, `reload`, `toolbar`, `brewfile`, `l10n`,
-…). The body explains *why*, and names what the test covers. History before
-this convention was adopted is left alone; do not rewrite it.
-
-Commit only the reviewed and verified slice. The test and production code for a
-behaviour land together in the same atomic commit.
-
-#### 10. Pull request
-
-**Open a PR with the `gh` CLI**, never the web UI, and never a draft unless
-asked. Describe what changed, why, and how it was tested — including what you
-could *not* verify and the reason.
-
-#### 11. Gated merge and linear history
-
-**Green CI is the merge gate.** Both jobs (Build & Test, UI Tests) must pass.
-Never merge on pending or failing checks. If a UI test fails on CI, read the
-failure and the `CAKEBREW_UI_TREE_*` dump in the job log before assuming a
-flake — re-run once only when the evidence says infrastructure. If a human or
-automated reviewer is assigned, wait for approval; never bypass an assigned
-review.
-
-**Merge and clean up:** `gh pr merge <n> --squash --delete-branch` (squash is
-the maintainer's explicit choice, and keeps history linear and bisectable),
-then `git checkout main`, `git pull --ff-only`.
-
-> **Stacked PRs:** retarget a child branch's base to `main` *before* merging its
-> parent. Deleting a merged branch auto-closes any PR still based on it, and
-> GitHub will not reopen a PR whose base is gone.
-
-### Quick reference
-
-| Stage | Pass criteria |
-| --- | --- |
-| Discovery | Feasibility measured, alternatives weighed, vertical slices ordered, spike discarded |
-| Setup | Repository inspected, unrelated work preserved, branch created from latest `main` |
-| Scope | Smallest independently shippable end-to-end outcome selected |
-| TDD | Focused test observed red, minimal implementation green, refactor stays green |
-| Diff | Staged, unstaged and untracked files inspected; no scratch or debug artifacts |
-| UI review | Changed surfaces checked for layout, appearance, accessibility and platform idioms |
-| Verification | Debug and Release warning-free; unit suite, UI target and UI journeys pass |
-| Code review | Full branch and workspace diff reviewed; all findings resolved; verification repeated after edits |
-| Delivery | Atomic Conventional Commit, ready PR, assigned approvals and both CI jobs green |
-| Merge | Squash merge completed, branch deleted, local `main` fast-forwarded |
-
-### Configured skills and subagents
-
-For every feature, bugfix or behaviour-changing refactor, the primary agent
-invokes `$cakebrew-workflow` and coordinates the configured roles below. The
-primary agent owns requirements, cross-role decisions and delivery; subagents
-return bounded evidence and never silently expand their assignment.
-
-| Role | Skill | Custom agent | Use |
+| Role | Skill | Custom agent | Required handoff |
 | --- | --- | --- | --- |
-| Orchestrator | `$cakebrew-workflow` | Primary agent | Route the slice through every applicable phase and repeat invalidated gates |
-| Planner / architect | `$cakebrew-plan` | `cakebrew-planner` | Measure unknowns, compare alternatives and define the vertical slice before implementation |
-| Implementer | `$cakebrew-implement` | `cakebrew-implementer` | Own explicitly assigned files and produce red-green-refactor evidence |
-| UI reviewer | `$cakebrew-ui-review` | `cakebrew-ui-reviewer` | Independently review every user-visible change after implementation stabilizes |
-| Verifier | `$cakebrew-verify` | `cakebrew-verifier` | Run the complete applicable verification sequence without editing source |
-| Code reviewer | `$cakebrew-code-review` | `cakebrew-code-reviewer` | Independently review the full branch and workspace diff after verification passes |
-| Delivery | `$cakebrew-deliver` | Primary agent | Perform only the commit, PR or merge actions the user authorized |
+| Orchestrator | `$cakebrew-workflow` | Primary | Scope, decisions, role sequencing, authorized delivery |
+| Planner | `$cakebrew-plan` | `cakebrew-planner` | Measured unknowns, alternatives, ordered slices, acceptance criteria, expected red, spike cleanup |
+| Implementer | `$cakebrew-implement` | `cakebrew-implementer` | Owned diff, red/green or mutation evidence, remaining risks |
+| UI reviewer | `$cakebrew-ui-review` | `cakebrew-ui-reviewer` | Observed visual/journey evidence; approval, findings or blocker |
+| Verifier | `$cakebrew-verify` | `cakebrew-verifier` | Commands, diagnostics, test counts/skips, artifacts; pass, fail or blocker |
+| Code reviewer | `$cakebrew-code-review` | `cakebrew-code-reviewer` | Approval or actionable findings with severity, file/line, impact and evidence |
+| Delivery | `$cakebrew-deliver` | Primary | Commit/PR/head identity, CI and assigned-review status, merge/cleanup result |
 
-Run the mutating implementer separately from gate agents. UI review,
-verification and code review do not fix their own findings: send them back to
-the implementer, then rerun every invalidated gate. If independent work must run
-in parallel, give each agent an isolated worktree and explicit file ownership.
+Give each assignment its worktree, base/head and uncommitted diff, acceptance
+criteria, explicit file ownership, evidence locations and exclusions. Tell
+mutating agents they are not alone and must preserve others' edits. Subagents
+may not expand scope, edit project policy or perform delivery unless those
+actions are explicitly their assignment. Gate agents never edit sources.
 
-The skill and custom-agent files are routing adapters, not additional sources
-of project policy. They must defer to this file. Change workflow rules here
-first and keep the adapters narrow.
+Handoffs must identify the state examined: worktree, base/head and relevant
+uncommitted file state. Include concise observed results and log/artifact paths,
+not raw log floods. A result for another tree or stale binary is not evidence.
 
----
+**Parallel work is encouraged:** the primary agent should delegate independent
+slices, investigations and gate passes concurrently when useful. Identify
+dependencies first; do not wait for one independent slice to finish before
+starting another. Preserve lifecycle order within each slice, and integrate
+dependent slices in order. The primary agent coordinates shared resources,
+collects every handoff and owns delivery; parallelism does not allow self-review.
 
-## Principles for agents working here
+**Safe concurrency:** use isolated worktrees for independent mutating work.
+Never change sources while a verifier or reviewer examines that workspace.
+Separate derived-data directories do not isolate the app's `NSUserDefaults`,
+catalog cache, running process, `/Applications/Cakebrew.app` or display.
+Serialize UI/runtime work unless those resources are safely isolated. Preserve
+and restore user state; do not replace the installed app as incidental testing.
 
-**Prototypes are disposable.** Spike code exists to answer a question. Once
-answered, delete it and rebuild under TDD. Do not promote a spike.
+## Build and test commands
 
-**Separate the roles.** Planner, implementer, UI reviewer, verifier and code
-reviewer are different jobs with different biases. One prompt wearing all five
-hats reviews its own work and finds it good. Use separate agents or separate
-passes, and give the reviewer the diff rather than the intent.
-
-**Validate the instrument before believing its silence.** A probe that prints
-nothing has not proven anything — it may not have run, may have hit a stale
-binary, or may have been filtered out. Confirm the probe executed and observed
-what you think it did. Concretely, in this repo: `xcodebuild analyze` exits 0
-even with findings; `xcodebuild -scheme Cakebrew` never compiles the UI test
-target; `xcodebuild test` output has to be *grepped for the assertion*, not
-just for `TEST SUCCEEDED`; and a `log show` predicate that matches nothing
-looks exactly like a feature that did not fire.
-
-**Isolate shared state when working in parallel.** Agents on one machine
-contend for real singletons: the Xcode derived-data directory, the app's
-`NSUserDefaults` domain, `/Applications/Cakebrew.app`, the running app itself,
-and the display. Never mutate sources in a workspace while a verification or
-review pass is running against it; use a git worktree instead.
-
-**One source of truth.** This file. Pointer files may reference it; nothing may
-restate it.
-
----
-
-## Build & test commands
+Use a separate `-derivedDataPath` per concurrent build/worktree. Select the
+intended architecture explicitly if Xcode reports ambiguous destinations.
+Run the following sequence for executable changes:
 
 ```sh
-# App build, both configurations — both must be warning-free
 xcodebuild build -workspace Cakebrew.xcworkspace -scheme Cakebrew \
   -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO
 
 xcodebuild build -workspace Cakebrew.xcworkspace -scheme Cakebrew \
   -configuration Release -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO
 
-# Unit tests (fast, hermetic — run these locally every time)
 xcodebuild test -workspace Cakebrew.xcworkspace -scheme CakebrewTests \
   -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO
 
-# UI tests (own scheme; needs ad-hoc signing; on CI this is authoritative)
+xcodebuild build-for-testing -scheme CakebrewUITests -destination 'platform=macOS' \
+  CODE_SIGN_IDENTITY="-" CODE_SIGN_STYLE=Manual CODE_SIGNING_REQUIRED=NO \
+  CODE_SIGNING_ALLOWED=YES DEVELOPMENT_TEAM="" PROVISIONING_PROFILE_SPECIFIER=""
+
 xcodebuild test -scheme CakebrewUITests -destination 'platform=macOS' \
   CODE_SIGN_IDENTITY="-" CODE_SIGN_STYLE=Manual CODE_SIGNING_REQUIRED=NO \
   CODE_SIGNING_ALLOWED=YES DEVELOPMENT_TEAM="" PROVISIONING_PROFILE_SPECIFIER=""
 ```
 
-After touching `CakebrewUITests.m`, compile that target — neither command above
-does, so a syntax error there passes locally and fails on CI:
+**Validate the instrument:** the app and unit schemes do not compile
+`CakebrewUITests.m`. After editing it, compile its own target even during the
+inner loop. Inspect actual assertions, executed test counts and skips, not
+only `TEST SUCCEEDED`. `xcodebuild analyze` can exit zero with findings; read
+the diagnostics. An empty `log show` result proves nothing unless the probe
+ran and the predicate captured the intended event.
 
-```sh
-xcodebuild build-for-testing -scheme CakebrewUITests -destination 'platform=macOS' \
-  CODE_SIGN_IDENTITY="-" CODE_SIGN_STYLE=Manual CODE_SIGNING_REQUIRED=NO \
-  CODE_SIGNING_ALLOWED=YES DEVELOPMENT_TEAM="" PROVISIONING_PROFILE_SPECIFIER=""
-```
+CI (`.github/workflows/ci.yml`) builds both configurations, runs static
+analysis and both test jobs on `macos-26`, and uploads diagnostic crash logs
+on failure. Weekly `brew-compat.yml` exercises parsers against real Homebrew
+output; fixtures alone cannot detect upstream drift.
 
-CI (`.github/workflows/ci.yml`) runs both jobs on `macos-26` (latest SDK),
-builds Debug and Release, runs the static analyzer, and uploads crash logs from
-`~/Library/Logs/DiagnosticReports` on failure. A separate weekly
-`brew-compat.yml` pushes the runner's *real* brew output through the parsers,
-because fixture tests cannot notice upstream drift.
+## Testing contracts
 
-## Testing architecture
+- **Mock boundary:** `-BPMockBrew` resolves `+sharedInterface` to
+  `BPMockHomebrewInterface`. Fixtures include `mockwget`, pinned `mockgit`,
+  `mockchrome` and `mockvscode`; operations are no-ops. Every new interface
+  method needs a mock override so UI tests never run real brew.
+  `BPMockFidelityTests` guards mutating selectors. Use `-BPMockEmptyOutdated`,
+  `-BPMockEmptyCleanup` and `-BPMockSlowCatalog` for their respective journeys;
+  the slow catalog makes progress and cancellation observable.
+- **Unit seams:** `CakebrewTests/` covers parsers, models and manager state.
+  `BPHomebrewInterfaceListCall*` provides pure input → `BPFormula` tests;
+  private classes can be re-declared in tests.
+- **Deterministic journeys:** the shared UI launch helper waits for the
+  initial load (`mockwget`) before navigation to avoid the manager's reselect
+  race. Pin persisted launch-view settings in its argument domain, including
+  `-BPLastSelectedSidebarRow 1` and `-BPSortColumnIdentifier ""`; do not bypass
+  persistence in application code just because `-BPMockBrew` is present.
+- **Stable identity:** sidebar names repeat across groups. Use unlocalized
+  identifiers such as `sidebar.casks.installed`, not row indices or titles.
+  Match table cells with `value BEGINSWITH` because pinned rows append a glyph.
+- **Headless CI:** windows are not key, so typing/focus and `isHittable` are
+  unreliable. Assert `exists` and geometry (`frame.size`). System file panels
+  are out-of-process: unit-test their logic and UI-test presence/navigation.
+- **Sheet buttons:** scope actions to `self.app.sheets.firstMatch.buttons`
+  to exclude Touch Bar mirrors. `waitForExistenceWithTimeout:` accepting a
+  multi-match query does not prove the intended button can be clicked.
 
-- **Mock brew:** launching the app with `-BPMockBrew` swaps
-  `BPHomebrewInterface` for `BPMockHomebrewInterface` (resolved in
-  `+sharedInterface`). The mock serves deterministic fixtures (`mockwget`,
-  `mockgit` [pinned], `mockchrome`/`mockvscode` [casks], …) and stubs every
-  operation as a no-op. **Any new interface method must get a mock override**
-  so UI tests never shell out to real brew — `BPMockFidelityTests` fails if a
-  mutating selector lacks one. Opt-in launch flags shape it for a specific
-  journey: `-BPMockEmptyOutdated`, `-BPMockEmptyCleanup`, and
-  `-BPMockSlowCatalog` (holds the catalog calls so progress and cancel are
-  observable; the mock is otherwise instant, which makes both unobservable).
-- **Unit tests** (`CakebrewTests/`) cover parsers, model logic, and manager
-  state. The `BPHomebrewInterfaceListCall*` parsers are the standard TDD seam:
-  pure input → `BPFormula` output. Private classes are re-declared in the test
-  file to reach them.
-- **UI tests** (`CakebrewUITests/`) are journey tests against the mock. The
-  shared launch helper waits for the initial load to settle (mockwget rendered)
-  before navigating — do not remove that; it closes a reselect race in
-  `homebrewManagerFinishedUpdating:`. Sidebar item *names* repeat across groups
-  (two "Installed", two "Outdated"), so journeys address rows by their stable
-  unlocalized identifier — `[self sidebarRow:@"sidebar.casks.installed"]` —
-  never by index. Match table cells with `value BEGINSWITH` (pinned rows carry
-  a pin glyph after the name).
-- **CI environment limits:** the headless runner's window is never key, so
-  typing/keyboard focus is untestable; system file panels (NSSave/NSOpenPanel)
-  are out-of-process and undrivable. Pattern: unit-test the logic, UI-test
-  presence/navigation.
-- **Five ways a green local UI run lies.** Each of these has cost a red CI run
-  or a misdiagnosed failure:
-  1. **`isHittable` is meaningless on CI.** Hit testing needs a key window, so
-     it reports `false` there whatever is on screen. Assert with `exists` and
-     geometry (`frame.size`) instead.
-  2. **Anything persisted that changes the launch view makes the suite
-     order-dependent.** Each journey would inherit whatever the last one left
-     stored. Pin it in the shared launch helper through the argument domain,
-     which outranks stored defaults — `-BPLastSelectedSidebarRow 1`,
-     `-BPSortColumnIdentifier ""` — never by special-casing `-BPMockBrew` in
-     the app, so the feature itself stays exercised.
-  3. **Neither verify command compiles the UI test target.** `-scheme Cakebrew`
-     and `-scheme CakebrewTests` both skip `CakebrewUITests.m`, so a syntax
-     error there passes locally and fails on CI. After touching it, run
-     `xcodebuild build-for-testing -scheme CakebrewUITests …` — about two
-     seconds, versus ~7 minutes for the suite.
-  4. **An alert's buttons are mirrored to the Touch Bar.** `self.app.buttons[@"Yes"]`
-     therefore matches twice, and `firstMatch` can resolve to the mirror, which
-     is not clickable ("cannot be called with Touch Bar elements"). Scope to the
-     sheet: `self.app.sheets.firstMatch.buttons[@"Yes"]`. Note that
-     `waitForExistenceWithTimeout:` tolerates a multi-match query, so an
-     existing assertion passing is not evidence that clicking will work.
-  5. **A locked screen breaks the suite in ways that look like product bugs.**
-     XCUITest cannot drive a locked display: clicks resolve to infinite points
-     and elements never become interactable. Before believing a UI failure that
-     appeared without a related change, check
-     `ioreg -n Root -d 1 -r -k IOConsoleLocked`; `screencapture` failing with
-     "could not create image from window" is the same signal. A ~7 minute run
-     can also be killed part-way by display sleep.
+## Architecture and UI conventions
 
-## Architecture crib sheet
-
-- `BPHomebrewInterface` — all brew execution funnels through
-  `performBrewCommandWithArguments:dataReturnBlock:` (async, streams) or
-  `performSyncBrewCommandWithArguments:`. Output blocks may be nil — always
-  guard (`invokeOutputBlock:withString:`), passing nil is legitimate.
-- **List pattern:** a `BPListMode` enum case → a `BPHomebrewInterfaceListCall`
-  subclass (arguments + line parser) → a `BPHomebrewManager` property fetched
-  in `reloadFromInterfaceRebuildingCache:` → a sidebar item + badge → a mock
-  fixture. Follow this groove for any new list.
-- **Casks** are `BPFormula` instances with `cask == YES` (set by the cask list
-  parsers; survives copy/coding). Operations dispatch on that flag in
-  `BPInstallationWindowController` (`--cask` variants). `statusForFormula:` is
-  namespace-aware — casks read only the cask lists.
-- **Slow catalogs** (`brew formulae`, `brew casks`) share a 24h disk cache
-  (`allFormulae.cache.bin`, two keys). `brew casks` can take 80+ s cold.
-- **Sidebar:** `FormulaeSideBarItem` enum values are **outline row indices**
-  (groups included). Inserting a row renumbers everything after it — update
-  the enum, the View-menu item tags in `MainMenu.xib`, and check every
-  `switch`/comparison on the enum (`grep -rn FormulaeSideBarItem`).
-- **Never `reloadData` the sidebar to refresh a badge.** Reloading an
-  `NSOutlineView` clears its selection, and `-configureSidebarSettings` restores
-  the user's last row at setup — so a stray reload silently drops it, and the
-  next `sourceListSelectionDidChange` persists whatever replaced it. Use
-  `-refreshBadgeForListMode:`, which redraws one row with `reloadItem:`. The
-  old all-at-once reload got away with it only because it ran inside
-  `-homebrewManagerFinishedUpdating:`, which reselects immediately afterwards.
-- **Row identity for VoiceOver and XCUITest lives on the cell's text field**,
-  not the `NSTableCellView` — the container is not an accessibility element, so
-  an identifier set there reaches neither. Rows carry unlocalized identifiers
-  (`sidebar.casks.installed`); journeys address rows by those, never by index.
-
-## UI conventions
-
-- **Sheets, not app-modal:** every alert/confirmation uses
-  `beginSheetModalForWindow:_appDelegate.window …` — never `runModal` (blocks
-  the app and is invisible to XCUITest). Attach to `_appDelegate.window`, NOT
-  `self.view.window` (nil under the split-view reparenting; caused a crash).
-- **Xibs are edited as XML by hand.** After editing: `xmllint --noout` the
-  file, keep new `id`s unique (prefix `cbk-…`), and grow an `NSStackView`'s
-  `visibilityPriorities`/`customSpacing` arrays when adding arranged subviews.
-  Menu items enable via Cocoa **bindings** on `currentFormula` /
-  `currentFormulaPinned` (see existing items), not `validateMenuItem:`.
-- **Localization:** UI strings go in all six `Cakebrew/*.lproj/
-  Localizable.strings` files (lint with `plutil -lint`). New strings use the
-  English text in every locale until translated. Homebrew terms ("Casks") stay
-  untranslated. Xib menu titles are Base-internationalized literals — no
-  `.strings` churn for new menu items.
+- `BPHomebrewInterface` funnels brew execution through
+  `performBrewCommandWithArguments:dataReturnBlock:` (async/streaming) or
+  `performSyncBrewCommandWithArguments:`. Output blocks may legitimately be
+  nil; guard them with `invokeOutputBlock:withString:`.
+- New lists follow: `BPListMode` → `BPHomebrewInterfaceListCall` subclass
+  (arguments/parser) → manager property in `reloadFromInterfaceRebuildingCache:`
+  → sidebar item/badge → mock fixture.
+- Casks are `BPFormula` objects with `cask == YES`, preserved by copying and
+  coding. `BPInstallationWindowController` dispatches `--cask` operations;
+  `statusForFormula:` reads only the matching namespace's lists.
+- Slow `brew formulae` and `brew casks` catalogs share a 24-hour disk cache
+  (`allFormulae.cache.bin`, two keys). Avoid unnecessary cold catalog calls.
+- `FormulaeSideBarItem` values are outline row indices, including groups.
+  Insertions require updating the enum, View-menu tags in `MainMenu.xib` and
+  every switch/comparison (locate with `rg FormulaeSideBarItem`).
+- Refresh badges with `refreshBadgeForListMode:` / `reloadItem:`, never sidebar
+  `reloadData`: it clears selection and can persist an unintended row.
+  Accessibility row identifiers belong on the cell's text field, not the
+  non-accessible `NSTableCellView` container.
+- Use `beginSheetModalForWindow:_appDelegate.window …`, never `runModal` or
+  `self.view.window` (which can be nil during split-view reparenting).
+- Edit xibs as XML; run `xmllint --noout`, use unique `cbk-…` IDs and extend
+  `NSStackView` visibility-priority/custom-spacing arrays with arranged views.
+  Menu enablement uses Cocoa bindings (`currentFormula` / `currentFormulaPinned`),
+  not `validateMenuItem:`.
+- Add UI strings to all six `Cakebrew/*.lproj/Localizable.strings` files and
+  run `plutil -lint`. Use English placeholders until translated; keep Homebrew
+  terms such as "Casks" untranslated. Base-internationalized xib menu titles
+  do not need `.strings` churn. Use SF Symbols for UI chrome, not bundled icons.
   Translation debt is reported by `ruby scripts/localization-debt.rb` in CI
   logs and the job summary; classifications live in
   `scripts/localization-debt.json`. Keep uncertain English matches unreviewed
   rather than labeling them as confirmed placeholders. Debt counts are
   informational; malformed input or invalid classification metadata is an error.
-- Icons are SF Symbols (`imageWithSystemSymbolName:`); no bundled image assets
-  for UI chrome.
 
-## Distribution & sandboxing
+## Distribution and platform constraints
 
-Cakebrew ships **Developer ID + hardened runtime + notarized**, and is
-**not** App-Sandboxed. `.github/workflows/release.yml` does the signing,
-notarization and stapling on a `v*` tag (see its header for the required
-secrets).
+- Ship Developer ID signed, hardened and notarized, **without App Sandbox**.
+  Keep the privacy manifest, input validation and ATS protections. Sandbox
+  probes showed brew execution needs filesystem exceptions; even with them,
+  the redirected home directory splits Homebrew caches and sends Services
+  LaunchAgents into a container where launchd cannot use them. Do not add
+  `com.apple.security.app-sandbox`; remeasure these boundaries before revisiting.
+- `.github/workflows/release.yml` signs, notarizes and staples on `v*` tags;
+  its header lists required secrets. Releases need a Developer ID Application
+  certificate, separate from Apple Development; verify availability before
+  attempting distribution.
+- Ordinary Apple Development-signed Xcode builds satisfy the helper's team-OU
+  designated requirement. Real registration/Login Items testing requires a
+  signed app in `/Applications`. With authorization to replace the installed
+  app, use `scripts/install-signed.sh` (Release by default, or pass `Debug`):
+  it uses fresh derived data and verifies both signatures. Keep the final
+  **Verify embedded helper signature** build phase and its declared input;
+  it skips unsigned/ad-hoc builds intentionally.
+- Minimum macOS is latest major minus one (current project target: `15.0`).
+  Use the latest SDK (`SDKROOT = macosx`, never pinned) and latest CI runner
+  (currently `macos-26`). At a new major release, update the minimum and runner;
+  `LSMinimumSystemVersion` derives from the build setting.
 
-The sandbox question was settled by measurement, not assumption — repeat these
-if you revisit it:
+## Local environment diagnostics
 
-| Configuration | Result |
-|---|---|
-| Plain `com.apple.security.app-sandbox` | `brew` cannot even be executed: `zsh:1: operation not permitted: brew` |
-| Sandbox + `temporary-exception.files.absolute-path.read-write` for the prefix | `brew --version` / `brew list` **work**; `/usr/local/Cellar`, `/usr/local/Caskroom`, `/Applications` are writable |
-| …but the home directory is redirected | `$HOME` becomes `~/Library/Containers/<id>/Data`, so `~/Library/Caches/Homebrew` and `~/Library/LaunchAgents` resolve **inside the container** |
-
-That last row is the blocker: brew's download cache would diverge from the
-user's real one (re-downloading, and disagreeing with `brew` in Terminal), and
-**`brew services` writes LaunchAgents to `~/Library/LaunchAgents`** — under the
-sandbox those land in the container where `launchd` never sees them, silently
-breaking the Services feature. Temporary-exception entitlements are also an
-App-Store-review mechanism (routinely rejected, and they hardcode a prefix that
-differs between `/usr/local` and `/opt/homebrew`), so they buy nothing for
-Developer ID distribution.
-
-**Therefore:** don't add `com.apple.security.app-sandbox`. Hardened runtime,
-no ATS weakening, a privacy manifest, and validated user input are the
-hardening this app can actually carry.
-
-## Signed local builds (helper testing)
-
-Day-to-day development needs nothing special: an Xcode build (Cmd-R) is signed
-with your Apple Development certificate, and that **already satisfies the
-helper's designated requirement** (it pins `anchor apple generic` plus the team
-OU, which development certs carry). So the debug build can drive the helper.
-
-To exercise helper registration and Login Items approval for real, the app has
-to be signed and living in `/Applications`:
-
-```sh
-scripts/install-signed.sh          # Release, or pass Debug
-```
-
-It builds into a temporary derived-data dir (so it can't leave a stale
-unsigned helper in your normal one), verifies both signatures, replaces
-`/Applications/Cakebrew.app`, and prints the next steps.
-
-A final build phase, **Verify embedded helper signature**, fails the build if
-the embedded helper wouldn't satisfy the app's requirement — otherwise the app
-silently refuses to talk to its own helper at runtime. It skips automatically
-for unsigned/ad-hoc builds (CI), and declares the helper as a script input
-because Xcode sandboxes script phases.
-
-**Distribution certificates:** notarized releases need a *Developer ID
-Application* certificate, which is separate from Apple Development. Until one
-exists in the account, `.github/workflows/release.yml` cannot run.
-
-## OS support policy
-
-Minimum deployment target = **latest macOS minus one** (currently 15.0);
-build and CI against the **latest SDK** (`SDKROOT = macosx`, never pinned;
-CI runner tracks the newest image, currently `macos-26`). When a new major
-macOS ships: bump the deployment target one, bump the CI runner, never pin
-`SDKROOT`. `LSMinimumSystemVersion` derives from the build setting.
-
-## Known environment quirks (primary dev machine)
-
-- **`git push` hangs** on the Entire pre-push hook (session-log sync). Push
-  with `git push --no-verify` — it skips only that hook, nothing code-related.
-- **Local XCUITest works** (since 2026-08-15). It used to die at init with
-  "Timed out while enabling automation mode"; the cause was macOS developer
-  mode being off, fixed once with `sudo DevToolsSecurity -enable`. Being in the
-  `_developer` group is not sufficient on its own, and Accessibility permission
-  is *not* required. If that init timeout ever returns, check
-  `DevToolsSecurity -status` first. The full local run takes ~6 minutes (vs ~4s
-  for the unit suite), so it is a pre-PR step, not an inner-loop one. CI remains
-  the merge gate.
-- **A locked screen blocks the whole visual toolchain**, not just XCUITest:
-  `screencapture` fails with "could not create image from window", and the UI
-  suite fails with `Failed to activate application … (current state: Running
-  Background)`. Check `ioreg -n Root -d 1 -r -k IOConsoleLocked` before
-  believing either. There is no way around it from a shell — the work is a
-  pre-PR step that needs the display awake.
-- **You cannot force one app to light mode from the command line.**
-  `-AppleInterfaceStyle Light` in the argument domain is ignored: AppKit reads
-  the appearance from the system preference directly rather than through
-  `NSUserDefaults` precedence, so the app comes up in whatever the system is.
-  Capturing a light-mode screenshot means flipping System Settings ▸ Appearance
-  by hand.
-- Commit signing is temporarily disabled (`git -c commit.gpgsign=false`) while
-  the 1Password SSH agent is broken. Re-enable when fixed.
+- Entire's session-sync pre-push hook hangs on this machine. Use
+  `git push --no-verify` for that known hook issue, not to bypass code checks.
+- For "Timed out while enabling automation mode", check
+  `DevToolsSecurity -status` first. Developer mode, not just `_developer` group
+  membership, was the local prerequisite; do not change host permissions
+  based on an unexplained runner failure. Full UI runs take minutes and belong
+  before PR creation, not in the TDD inner loop.
+- Check `ioreg -n Root -d 1 -r -k IOConsoleLocked` before visual testing.
+  A locked/sleeping display can cause infinite click coordinates, background
+  activation failures or `screencapture` errors. Ask for the display to be
+  unlocked/awake; those are not product failures and cannot be fixed in code.
+- `-AppleInterfaceStyle Light` does not reliably force AppKit appearance.
+  Check the rendered appearance; coordinate a manual System Settings change
+  when needed rather than silently changing the user's global preferences.
+- While the 1Password SSH signing agent remains broken, use
+  `git -c commit.gpgsign=false` for commits. Re-enable signing when fixed.

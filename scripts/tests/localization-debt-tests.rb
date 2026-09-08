@@ -14,11 +14,11 @@ class LocalizationDebtTests < Minitest::Test
 
   def setup
     @root = Dir.mktmpdir('cakebrew-l10n-test-')
-    @metadata = File.join(@root, 'metadata.json')
+    @fixture_metadata_path = File.join(@root, 'metadata.json')
     LOCALES.each { |locale| strings(locale, '"z" = "z"; "a" = "a"; "brand" = "Cakebrew"; "different" = "English";') }
     strings('de', '"z" = "z"; "a" = "a"; "brand" = "Cakebrew"; "different" = "Deutsch";')
-    metadata('placeholders' => [{ 'key' => 'a', 'locales' => ['de'], 'reason' => 'New English placeholder.' }],
-             'intentional' => [{ 'key' => 'brand', 'locales' => ['de'], 'reason' => 'Product name.' }])
+    write_fixture_metadata('placeholders' => [{ 'key' => 'a', 'locales' => ['de'], 'reason' => 'New English placeholder.' }],
+                           'intentional' => [{ 'key' => 'brand', 'locales' => ['de'], 'reason' => 'Product name.' }])
   end
 
   def teardown
@@ -31,12 +31,12 @@ class LocalizationDebtTests < Minitest::Test
     File.write(path, source)
   end
 
-  def metadata(overrides = {})
-    File.write(@metadata, JSON.generate({ 'version' => 1, 'placeholders' => [], 'intentional' => [] }.merge(overrides)))
+  def write_fixture_metadata(overrides = {})
+    File.write(@fixture_metadata_path, JSON.generate({ 'version' => 1, 'placeholders' => [], 'intentional' => [] }.merge(overrides)))
   end
 
   def run_report(*arguments, env: {}, default_root: false)
-    paths = default_root ? [] : ['--root', @root, '--metadata', @metadata]
+    paths = default_root ? [] : ['--root', @root, '--metadata', @fixture_metadata_path]
     Open3.capture3(env, RbConfig.ruby, SCRIPT, *paths, *arguments, chdir: @root)
   end
 
@@ -68,6 +68,17 @@ class LocalizationDebtTests < Minitest::Test
     assert_equal %w[de fr it pt zh-Hans], data.fetch('locales').keys
   end
 
+  def test_result_metadata_remains_readable_after_fixture_teardown
+    completed = self.class.new('test_classification_counts_and_debt_do_not_fail')
+    completed.setup
+    completed.teardown
+
+    # Minitest 5.25 reads metadata in Result.from after teardown. Exercise
+    # that callback on older Minitest too, if the suite exposes the method.
+    assert_kind_of Hash, completed.metadata if completed.respond_to?(:metadata)
+    assert_kind_of Minitest::Result, Minitest::Result.from(completed)
+  end
+
   def test_missing_and_extra_are_separate
     strings('fr', '"a" = "a"; "extra" = "Bonjour";')
     fr = report.fetch('locales').fetch('fr')
@@ -77,7 +88,7 @@ class LocalizationDebtTests < Minitest::Test
   end
 
   def test_native_comments_escapes_and_utf16
-    metadata
+    write_fixture_metadata
     source = '/* "fake" = "ignored"; */ "a\\U0062" = "line\\n\\"quoted\\""; // comment' + "\n" + '"\\U4F60" = "\\U597D";'
     LOCALES.each { |locale| strings(locale, source) }
     path = File.join(@root, 'Cakebrew/de.lproj/Localizable.strings')
@@ -118,18 +129,18 @@ class LocalizationDebtTests < Minitest::Test
       { 'placeholders' => [{ 'key' => 'different', 'locales' => ['de'], 'reason' => 'stale' }] },
       { 'placeholders' => [{ 'key' => 'a', 'locales' => ['de'], 'reason' => 'x', 'typo' => true }] }
     ]
-    cases.each { |value| metadata(value); assert_invalid('metadata') }
+    cases.each { |value| write_fixture_metadata(value); assert_invalid('metadata') }
     entry = { 'key' => 'a', 'locales' => ['de'], 'reason' => 'x' }
-    metadata('placeholders' => [entry], 'intentional' => [entry])
+    write_fixture_metadata('placeholders' => [entry], 'intentional' => [entry])
     assert_invalid('metadata')
-    metadata('placeholders' => [entry, entry])
+    write_fixture_metadata('placeholders' => [entry, entry])
     assert_invalid('metadata')
-    File.write(@metadata, '{bad')
+    File.write(@fixture_metadata_path, '{bad')
     assert_invalid('metadata')
   end
 
   def test_markdown_is_deterministic_safe_and_summary_matches_stdout
-    metadata
+    write_fixture_metadata
     LOCALES.each { |locale| strings(locale, '"::error::\\n<script>`&" = "same";') }
     summary = File.join(@root, 'summary.md')
     out, err, status = run_report('--summary', summary)
@@ -151,9 +162,9 @@ class LocalizationDebtTests < Minitest::Test
   end
 
   def test_metadata_duplicate_json_fields_and_noninteger_version_fail
-    File.write(@metadata, '{"version":2,"version":1,"placeholders":[],"intentional":[]}')
+    File.write(@fixture_metadata_path, '{"version":2,"version":1,"placeholders":[],"intentional":[]}')
     assert_invalid('metadata')
-    metadata('version' => 1.0)
+    write_fixture_metadata('version' => 1.0)
     assert_invalid('metadata')
   end
 
