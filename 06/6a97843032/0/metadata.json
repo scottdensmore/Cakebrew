@@ -1,0 +1,81 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "066a97843032",
+  "session_id": "01a07efb-e28b-7712-98b0-a7eac8497c2d",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-08T04:53:00.202261Z",
+  "branch": "fix/export-reliability",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "Cakebrew.xcodeproj/project.pbxproj",
+    "Cakebrew/BPBundleWindowController.m",
+    "Cakebrew/BPHomebrewInterface.h",
+    "Cakebrew/BPHomebrewInterface.m",
+    "Cakebrew/BPMockHomebrewInterface.m",
+    "Cakebrew/Controllers/BPHomebrewViewController.m",
+    "Cakebrew/Models/BPBrewfileExportOperation.h",
+    "Cakebrew/Models/BPBrewfileExportOperation.m",
+    "Cakebrew/de.lproj/Localizable.strings",
+    "Cakebrew/en.lproj/Localizable.strings",
+    "Cakebrew/fr.lproj/Localizable.strings",
+    "Cakebrew/it.lproj/Localizable.strings",
+    "Cakebrew/pt.lproj/Localizable.strings",
+    "Cakebrew/zh-Hans.lproj/Localizable.strings",
+    "CakebrewTests/BPBrewfileTests.m",
+    "CakebrewUITests/CakebrewUITests.m"
+  ],
+  "agent": "Codex",
+  "model": "gpt-6-astra",
+  "turn_id": "6cd3f8f93f85",
+  "checkpoint_transcript_start": 1075,
+  "transcript_lines_at_start": 1075,
+  "compact_transcript_start": 127,
+  "token_usage": {
+    "input_tokens": 120473,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 12473216,
+    "output_tokens": 27329,
+    "api_call_count": 134
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-08T04:52:59.954542Z",
+    "agent_lines": 333,
+    "agent_removed": 105,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 333,
+    "total_lines_changed": 438,
+    "agent_percentage": 100,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 3154,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".codex/config.toml": 2,
+        ".worktrees/actions-runtime-deprecation-issue.md": 32,
+        ".worktrees/ci-warning-cleanup-pr.md": 49,
+        ".worktrees/issue-148-pr.md": 41,
+        ".worktrees/issue-155-codex-review.txt": 1,
+        ".worktrees/issue-155-snapshot-reply.txt": 7,
+        ".worktrees/recovery-148-original/Cakebrew/BPAppDelegate.h": 113,
+        ".worktrees/recovery-148-original/Cakebrew/BPAppDelegate.m": 470,
+        ".worktrees/recovery-148-original/Cakebrew/BPBackgroundUpdater.h": 70,
+        ".worktrees/recovery-148-original/Cakebrew/BPBackgroundUpdater.m": 271,
+        ".worktrees/recovery-148-original/Cakebrew/Controllers/BPHomebrewViewController.h": 78,
+        ".worktrees/recovery-148-original/Cakebrew/Controllers/BPHomebrewViewController.m": 1402,
+        ".worktrees/recovery-148-original/CakebrewTests/BPBackgroundTaskGuardTests.m": 325,
+        ".worktrees/recovery-148-original/CakebrewTests/BPBackgroundUpdaterTests.m": 165,
+        "workflow.md": 128
+      }
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "066a97843032",
+  "strategy": "manual-commit",
+  "branch": "fix/export-reliability",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "Cakebrew.xcodeproj/project.pbxproj",
+    "Cakebrew/BPBundleWindowController.m",
+    "Cakebrew/BPHomebrewInterface.h",
+    "Cakebrew/BPHomebrewInterface.m",
+    "Cakebrew/BPMockHomebrewInterface.m",
+    "Cakebrew/Controllers/BPHomebrewViewController.m",
+    "Cakebrew/Models/BPBrewfileExportOperation.h",
+    "Cakebrew/Models/BPBrewfileExportOperation.m",
+    "Cakebrew/de.lproj/Localizable.strings",
+    "Cakebrew/en.lproj/Localizable.strings",
+    "Cakebrew/fr.lproj/Localizable.strings",
+    "Cakebrew/it.lproj/Localizable.strings",
+    "Cakebrew/pt.lproj/Localizable.strings",
+    "Cakebrew/zh-Hans.lproj/Localizable.strings",
+    "CakebrewTests/BPBrewfileTests.m",
+    "CakebrewUITests/CakebrewUITests.m"
+  ],
+  "sessions": [
+    {
+      "metadata": "/06/6a97843032/0/metadata.json",
+      "transcript": "/06/6a97843032/0/full.jsonl",
+      "compact_transcript": "/06/6a97843032/0/transcript.jsonl",
+      "content_hash": "/06/6a97843032/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 120473,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 12473216,
+    "output_tokens": 27329,
+    "api_call_count": 134
+  }
+}
