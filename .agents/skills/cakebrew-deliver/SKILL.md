@@ -1,25 +1,12 @@
 ---
 name: cakebrew-deliver
-description: Commit, publish, review, merge, and clean up a fully verified Cakebrew slice when the user explicitly requests the applicable delivery actions.
+description: Deliver a verified Cakebrew slice when the user authorizes committing, publishing, opening a PR or merging; coordinate any required remediation through the workflow.
 ---
 
-# Cakebrew Deliver
+# Cakebrew Delivery
 
-Read `AGENTS.md` completely. Delivery does not grant authority: perform only the
-commit, push, PR or merge actions the user requested.
+Read the repository's `AGENTS.md` completely before acting. It is the sole
+project authority; this skill is a routing adapter. Follow its **Delivery**
+section and the assigned role's evidence contract, not a separate checklist here.
 
-- Confirm UI review when applicable, complete verification, and expert approval
-  all correspond to the current source state.
-- Reinspect the entire workspace and stage only the intended slice. Preserve
-  unrelated modifications and untracked files.
-- Create the atomic Conventional Commit required by `AGENTS.md`, including why
-  the change exists and what the test covers.
-- Open a ready PR with `gh` only when requested, reporting all verification and
-  any genuine gaps.
-- Wait for both CI jobs and every assigned human or automated review. Never
-  bypass pending, failing or requested-change gates.
-- Squash merge and clean up only with explicit merge authorization, including
-  the stacked-PR precaution in `AGENTS.md`.
-
-Stop and report any stale gate evidence, changed head, failed CI, unresolved
-review, authentication issue or authorization boundary.
+Apply only the authorized delivery stages in AGENTS.md. Check source-matched gate evidence before mutation, and use its CI, assigned-review, stacked-PR and cleanup rules. Route stale evidence or in-scope findings back through $cakebrew-workflow; hold the affected delivery stage. Report genuine authority or environment blockers without silently bypassing gates.
