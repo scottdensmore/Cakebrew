@@ -1,5 +1,1 @@
-Make sure that the workflow allows running work in parallel and also you can squash merge without stopping. You can just work until you are finished when I give you a goal
-
----
-
 Make sure to poing all coding agent instruction files at AGENTS.md
