@@ -1,0 +1,41 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "6061cbb26877",
+  "strategy": "manual-commit",
+  "branch": "chore/localization-debt",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".agents/skills/cakebrew-code-review/SKILL.md",
+    ".agents/skills/cakebrew-deliver/SKILL.md",
+    ".agents/skills/cakebrew-implement/SKILL.md",
+    ".agents/skills/cakebrew-plan/SKILL.md",
+    ".agents/skills/cakebrew-ui-review/SKILL.md",
+    ".agents/skills/cakebrew-verify/SKILL.md",
+    ".agents/skills/cakebrew-workflow/SKILL.md",
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "Cakebrew.xcodeproj/project.pbxproj",
+    "Cakebrew/Controllers/BPHomebrewViewController.m",
+    "Cakebrew/Controllers/BPSearchCoordinator.h",
+    "Cakebrew/Controllers/BPSearchCoordinator.m",
+    "CakebrewTests/BPSearchCoordinatorTests.m",
+    "CakebrewUITests/CakebrewUITests.m",
+    "scripts/tests/localization-debt-tests.rb"
+  ],
+  "sessions": [
+    {
+      "metadata": "/60/61cbb26877/0/metadata.json",
+      "transcript": "/60/61cbb26877/0/full.jsonl",
+      "compact_transcript": "/60/61cbb26877/0/transcript.jsonl",
+      "content_hash": "/60/61cbb26877/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 179015,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 18608512,
+    "output_tokens": 41665,
+    "api_call_count": 146
+  }
+}
