@@ -1026,7 +1026,8 @@
 // three characters landed in the formula namespace looking at an empty table.
 - (void)testSearchingFindsCasksAndKeepsTheSidebarSelection
 {
-	[self launchWithArguments:@[ @"-BPMockBrew" ]];
+	[self launchWithArguments:@[@"-BPMockBrew", @"-BPMockWarmNotificationTarget", @"casks"]];
+	[self waitForNotificationLaunchReloadToFinish];
 	XCUIElement *sidebar = [self sidebar];
 
 	[[self sidebarRow:@"sidebar.casks.all"] click];
@@ -1034,13 +1035,23 @@
 				  @"All Casks should list the mock casks");
 	NSInteger rowBefore = [self selectedSidebarRow:sidebar];
 
-	// Typing needs a key window, which CI never has, so drive the search the
-	// way the field's delegate does.
+	// The existing mock menu drives the same search entry point without typing,
+	// which needs a key window unavailable on CI.
 	XCUIElement *searchField = self.app.searchFields.firstMatch;
 	XCTAssertTrue([searchField waitForExistenceWithTimeout:15.0], @"the toolbar should offer a search field");
+	[self clickNotificationTestMenuItem:@"Search Mock Packages"];
+	// mockvscode was already in All Casks. Wait for a nonmatching cask to
+	// disappear so that observing it now proves the debounced search finished.
+	XCTAssertTrue([[self formulaCellWithName:@"mockchrome"] waitForNonExistenceWithTimeout:15.0]);
+	XCTAssertTrue([[self formulaCellWithName:@"mockvscode"] waitForExistenceWithTimeout:15.0],
+		@"the search must return the matching cask");
+	XCTAssertEqualObjects(searchField.value, @"mockvscode");
+	XCTAssertFalse([self formulaCellWithName:@"mockchrome"].exists);
+	XCTAssertFalse([self formulaCellWithName:@"mockwget"].exists);
+	[self assertSelectedSidebarIdentifier:@"sidebar.casks.all"];
 
 	XCTAssertEqual([self selectedSidebarRow:sidebar], rowBefore,
-				   @"browsing casks should not move the sidebar selection on its own");
+				   @"searching casks should preserve the sidebar selection");
 }
 
 /// Index of the selected sidebar row, or -1.
