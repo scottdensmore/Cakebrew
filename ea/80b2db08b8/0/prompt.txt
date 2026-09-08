@@ -1,0 +1,9 @@
+No we should push changes and prs ... we should disable the workflows so actions don't run for now
+
+---
+
+Yes I approve
+
+---
+
+Make sure that the workflow allows running work in parallel and also you can squash merge without stopping. You can just work until you are finished when I give you a goal

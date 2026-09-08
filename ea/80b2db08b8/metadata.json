@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.10.5",
+  "checkpoint_id": "ea80b2db08b8",
+  "strategy": "manual-commit",
+  "branch": "docs/agent-workflow",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".agents/skills/cakebrew-deliver/SKILL.md",
+    ".agents/skills/cakebrew-workflow/SKILL.md",
+    "AGENTS.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/ea/80b2db08b8/0/metadata.json",
+      "transcript": "/ea/80b2db08b8/0/full.jsonl",
+      "compact_transcript": "/ea/80b2db08b8/0/transcript.jsonl",
+      "content_hash": "/ea/80b2db08b8/0/content_hash.txt",
+      "prompt": "/ea/80b2db08b8/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 33674,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 1806720,
+    "output_tokens": 4969,
+    "api_call_count": 16
+  }
+}
