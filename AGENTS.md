@@ -300,6 +300,11 @@ output; fixtures alone cannot detect upstream drift.
   run `plutil -lint`. Use English placeholders until translated; keep Homebrew
   terms such as "Casks" untranslated. Base-internationalized xib menu titles
   do not need `.strings` churn. Use SF Symbols for UI chrome, not bundled icons.
+  Translation debt is reported by `ruby scripts/localization-debt.rb` in CI
+  logs and the job summary; classifications live in
+  `scripts/localization-debt.json`. Keep uncertain English matches unreviewed
+  rather than labeling them as confirmed placeholders. Debt counts are
+  informational; malformed input or invalid classification metadata is an error.
 
 ## Distribution and platform constraints
 
