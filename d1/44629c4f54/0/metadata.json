@@ -1,0 +1,66 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "d144629c4f54",
+  "session_id": "01a07efb-e28b-7712-98b0-a7eac8497c2d",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-08T18:34:05.543737Z",
+  "branch": "docs/actions-minutes-exception",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "AGENTS.md"
+  ],
+  "agent": "Codex",
+  "model": "gpt-6-astra",
+  "turn_id": "c36eb8fdaca8",
+  "checkpoint_transcript_start": 2681,
+  "transcript_lines_at_start": 2681,
+  "compact_transcript_start": 278,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": -38814336,
+    "output_tokens": -75323,
+    "api_call_count": 14
+  },
+  "session_metrics": {
+    "turn_count": 2
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-08T18:34:05.246327Z",
+    "agent_lines": 18,
+    "agent_removed": 2,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 18,
+    "total_lines_changed": 20,
+    "agent_percentage": 100,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 3154,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".codex/config.toml": 2,
+        ".worktrees/actions-runtime-deprecation-issue.md": 32,
+        ".worktrees/ci-warning-cleanup-pr.md": 49,
+        ".worktrees/issue-148-pr.md": 41,
+        ".worktrees/issue-155-codex-review.txt": 1,
+        ".worktrees/issue-155-snapshot-reply.txt": 7,
+        ".worktrees/recovery-148-original/Cakebrew/BPAppDelegate.h": 113,
+        ".worktrees/recovery-148-original/Cakebrew/BPAppDelegate.m": 470,
+        ".worktrees/recovery-148-original/Cakebrew/BPBackgroundUpdater.h": 70,
+        ".worktrees/recovery-148-original/Cakebrew/BPBackgroundUpdater.m": 271,
+        ".worktrees/recovery-148-original/Cakebrew/Controllers/BPHomebrewViewController.h": 78,
+        ".worktrees/recovery-148-original/Cakebrew/Controllers/BPHomebrewViewController.m": 1402,
+        ".worktrees/recovery-148-original/CakebrewTests/BPBackgroundTaskGuardTests.m": 325,
+        ".worktrees/recovery-148-original/CakebrewTests/BPBackgroundUpdaterTests.m": 165,
+        "workflow.md": 128
+      }
+    }
+  ]
+}
