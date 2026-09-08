@@ -1,0 +1,9 @@
+Lets look through the issus and code and see what we can work on next in parallel
+
+---
+
+Ok lets get started
+
+---
+
+We can go ahead and merge. I have disabled actions because I am out of actions minutes. Lets create an issue to remember to enable them in a month. Also if needed we can update the AGENTS.md and then make a note in the issue to update that file when actions are reenabled.
