@@ -9,6 +9,7 @@
 #import "BPServiceDetails.h"
 #import "BPCleanupPreview.h"
 #import "BPAutoremovePreview.h"
+#import "BPUpgradePlan.h"
 
 // Debug only. The mock must live inside the app binary — XCUITest drives the
 // app out of process and cannot inject a class, so +sharedInterface finds it
@@ -258,6 +259,18 @@
 - (BOOL)upgradeCasks:(NSArray *)casks withReturnBlock:(void (^)(NSString *))block
 {
 	return YES;
+}
+
+- (BOOL)upgradeSelectedFormulae:(NSArray<BPFormula *> *)formulae
+                      progress:(NSProgress *)progress
+               withReturnBlock:(void (^)(NSString *))block
+{
+    BPUpgradePlan *plan = [[BPUpgradePlan alloc] initWithSelection:formulae];
+    return [plan executeWithProgress:progress runner:^BOOL(NSArray<NSString *> *arguments) {
+        if (block) block([NSString stringWithFormat:@"MOCK_UPGRADE_OK\nMOCK_UPGRADE_ARGUMENTS: %@\nUpgraded 0 packages.\n",
+                          [arguments componentsJoinedByString:@" "]]);
+        return YES;
+    }];
 }
 
 - (BOOL)installCask:(NSString *)cask withReturnBlock:(void (^)(NSString *))block

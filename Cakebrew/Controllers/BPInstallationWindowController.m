@@ -34,6 +34,7 @@
 @property (weak) IBOutlet NSButton *okButton;
 @property (weak) IBOutlet NSButton *cancelButton;
 @property (nonatomic) BOOL wasCancelled;
+@property (strong, nonatomic) NSProgress *upgradeProgress;
 @property (weak) IBOutlet NSProgressIndicator *progressIndicator;
 
 @property (nonatomic) BPWindowOperation windowOperation;
@@ -47,6 +48,11 @@
 @end
 
 @implementation BPInstallationWindowController
+
++ (BPAppDelegate *)applicationDelegate
+{
+	return BPAppDelegateRef;
+}
 
 + (NSDictionary*)sharedTaskMessagesMap
 {
@@ -126,16 +132,16 @@
 										  completion:(void (^)(BOOL))completionBlock
 {
 	BPInstallationWindowController *operationWindowController;
-	operationWindowController = [[BPInstallationWindowController alloc] initWithWindowNibName:@"BPInstallationWindow"];
+	operationWindowController = [[self alloc] initWithWindowNibName:@"BPInstallationWindow"];
 	operationWindowController.windowOperation = windowOperation;
 	operationWindowController.formulae = formulae;
 	operationWindowController.options = options;
 	operationWindowController.completionBlock = completionBlock;
-	[BPAppDelegateRef setRunningBackgroundTask:YES];
+	[[self applicationDelegate] setRunningBackgroundTask:YES];
 	
 	
 	NSWindow *operationWindow = operationWindowController.window;
-	[[NSApp mainWindow] beginSheet:operationWindow completionHandler:^(NSModalResponse returnCode) {
+	[[self applicationDelegate].window beginSheet:operationWindow completionHandler:^(NSModalResponse returnCode) {
 		[operationWindowController cleanupAfterTask];
 	}];
 	[operationWindowController executeInstallation];
@@ -145,7 +151,7 @@
 
 - (void)cleanupAfterTask
 {
-	[BPAppDelegateRef setRunningBackgroundTask:NO];
+	[[self.class applicationDelegate] setRunningBackgroundTask:NO];
 	
 	if (self.completionBlock)
 	{
@@ -162,6 +168,11 @@
 {
 	[self.okButton setEnabled:NO];
 	[self.progressIndicator startAnimation:nil];
+	if (self.windowOperation == kBPWindowOperationUpgrade && self.formulae) {
+		// Created before dispatch so Cancel also covers queued work and gaps
+		// between namespace batches, when there is no current task to cancel.
+		self.upgradeProgress = [NSProgress progressWithTotalUnitCount:1];
+	}
 	
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
 		__weak BPInstallationWindowController *weakSelf = self;
@@ -205,19 +216,9 @@
 		{
 			if (self.formulae)
 			{
-				NSArray *names = [self namesOfAllFormulae];
-				// A selection is homogeneous (casks live in their own list),
-				// so the first entry decides the dispatch.
-				if ([(BPFormula *)[self.formulae firstObject] cask])
-				{
-					self.operationStatus = [homebrewInterface upgradeCasks:names
-														   withReturnBlock:displayTerminalOutput];
-				}
-				else
-				{
-					self.operationStatus = [homebrewInterface upgradeFormulae:names
-															  withReturnBlock:displayTerminalOutput];
-				}
+				self.operationStatus = [homebrewInterface upgradeSelectedFormulae:self.formulae
+																 progress:self.upgradeProgress
+														  withReturnBlock:displayTerminalOutput];
 			}
 			else
 			{
@@ -302,14 +303,20 @@
 	[self.recordTextView appendOutput:[NSString stringWithFormat:@"\n%@\n",
 									   NSLocalizedString(@"Installation_Window_Cancelled", nil)]];
 
-	[[BPHomebrewInterface sharedInterface] cancelCurrentOperation];
+	[self.upgradeProgress cancel];
+	BPHomebrewInterface *interface = [BPHomebrewInterface sharedInterface];
+	// A selected direct upgrade cancels its own task, even if another operation
+	// has since occupied the shared slot. The optional helper retains its API.
+	if (!self.upgradeProgress || interface.brewTransport == kBPBrewTransportHelper) {
+		[interface cancelCurrentOperation];
+	}
 }
 
 - (IBAction)okAction:(id)sender
 {
 	self.recordTextView.string = @"";
 	
-	NSWindow *mainWindow = [NSApp mainWindow];
+	NSWindow *mainWindow = self.window.sheetParent;
 	
 	[mainWindow endSheet:self.window];
 }

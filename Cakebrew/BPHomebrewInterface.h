@@ -152,6 +152,13 @@ typedef NS_ENUM(NSInteger, BPListMode) {
  */
 - (BOOL)upgradeFormulae:(NSArray*)formulae withReturnBlock:(void (^)(NSString*))block;
 
+/// Blocking selected upgrade, with explicit formula/cask namespaces. Empty
+/// selections run nothing. Refreshes once after all attempted batches exit,
+/// including failure/cancellation. The token owns direct-task cancellation.
+- (BOOL)upgradeSelectedFormulae:(NSArray<BPFormula *> *)formulae
+                      progress:(NSProgress *)progress
+               withReturnBlock:(void (^)(NSString *))block;
+
 /**
  *  The argv for upgrading `formulae`, or for upgrading everything when the
  *  list is nil/empty.

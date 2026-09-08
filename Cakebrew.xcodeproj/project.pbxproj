@@ -7,10 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CB1471000000000000000001 /* BPInstallationWindowControllerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1471000000000000000002; };
+		CB1471000000000000000003 /* BPInstallationWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC431B3F999A00163767; };
 		CB1430000000000000000003 /* BPSearchCoordinator.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1430000000000000000005 /* BPSearchCoordinator.m */; };
 		CB1430000000000000000004 /* BPSearchCoordinator.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1430000000000000000005 /* BPSearchCoordinator.m */; };
 		CB1430000000000000000007 /* BPTimedDispatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 15D28A111AE1BD27005C8A3E /* BPTimedDispatch.m */; };
 		CB1430000000000000000001 /* BPSearchCoordinatorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1430000000000000000002 /* BPSearchCoordinatorTests.m */; };
+		CB1470000000000000000003 /* BPUpgradePlan.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1470000000000000000005 /* BPUpgradePlan.m */; };
+		CB1470000000000000000004 /* BPUpgradePlan.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1470000000000000000005 /* BPUpgradePlan.m */; };
+		CB1470000000000000000001 /* BPUpgradePlanTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1470000000000000000002 /* BPUpgradePlanTests.m */; };
 		CB1440000000000000000003 /* BPFormulaeTableAction.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1440000000000000000005 /* BPFormulaeTableAction.m */; };
 		CB1440000000000000000004 /* BPFormulaeTableAction.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1440000000000000000005 /* BPFormulaeTableAction.m */; };
 		CB1440000000000000000001 /* BPFormulaeTableActionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1440000000000000000002 /* BPFormulaeTableActionTests.m */; };
@@ -257,9 +262,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		CB1471000000000000000002 /* BPInstallationWindowControllerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BPInstallationWindowControllerTests.m; sourceTree = "<group>"; };
 		CB1430000000000000000005 /* BPSearchCoordinator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPSearchCoordinator.m; path = Controllers/BPSearchCoordinator.m; sourceTree = "<group>"; };
 		CB1430000000000000000006 /* BPSearchCoordinator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPSearchCoordinator.h; path = Controllers/BPSearchCoordinator.h; sourceTree = "<group>"; };
 		CB1430000000000000000002 /* BPSearchCoordinatorTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BPSearchCoordinatorTests.m; sourceTree = "<group>"; };
+		CB1470000000000000000005 /* BPUpgradePlan.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPUpgradePlan.m; path = Models/BPUpgradePlan.m; sourceTree = "<group>"; };
+		CB1470000000000000000006 /* BPUpgradePlan.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPUpgradePlan.h; path = Models/BPUpgradePlan.h; sourceTree = "<group>"; };
+		CB1470000000000000000002 /* BPUpgradePlanTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BPUpgradePlanTests.m; sourceTree = "<group>"; };
 		CB1440000000000000000005 /* BPFormulaeTableAction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPFormulaeTableAction.m; path = Models/BPFormulaeTableAction.m; sourceTree = "<group>"; };
 		CB1440000000000000000006 /* BPFormulaeTableAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPFormulaeTableAction.h; path = Models/BPFormulaeTableAction.h; sourceTree = "<group>"; };
 		CB1440000000000000000002 /* BPFormulaeTableActionTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BPFormulaeTableActionTests.m; sourceTree = "<group>"; };
@@ -742,6 +751,8 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				CB1520000000000000000005 /* BPServiceDetails.m */,
 				CB1440000000000000000005 /* BPFormulaeTableAction.m */,
 				CB1440000000000000000006 /* BPFormulaeTableAction.h */,
+				CB1470000000000000000005 /* BPUpgradePlan.m */,
+				CB1470000000000000000006 /* BPUpgradePlan.h */,
 				CB1520000000000000000006 /* BPServiceDetails.h */,
 				B6830022477FCFE425D036B9 /* BPBrewError.h */,
 				9356C8197EA740C1A1896614 /* BPBrewfile.h */,
@@ -901,6 +912,8 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				CB1520000000000000000002 /* BPServiceDetailsTests.m */,
 				CB1440000000000000000002 /* BPFormulaeTableActionTests.m */,
 				CB1430000000000000000002 /* BPSearchCoordinatorTests.m */,
+				CB1470000000000000000002 /* BPUpgradePlanTests.m */,
+				CB1471000000000000000002 /* BPInstallationWindowControllerTests.m */,
 				CB1520000000000000000009 /* BPServiceDetailsControllerTests.m */,
 				A8052362C08CE3FF3945ABAD /* BPPreferencesTests.m */,
 				18EB9DD2D58391DD9AEC5AE5 /* BPBackgroundUpdaterTests.m */,
@@ -1211,6 +1224,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				0E5E1AFEFC2EB5ACFC76A355 /* BPService.m in Sources */,
 				CB1520000000000000000003 /* BPServiceDetails.m in Sources */,
 				CB1440000000000000000003 /* BPFormulaeTableAction.m in Sources */,
+				CB1470000000000000000003 /* BPUpgradePlan.m in Sources */,
 				3F479CBF6D5CDB2B5BCDCD4B /* BPBrewError.m in Sources */,
 				3756CA844C65481380A89A1A /* BPBrewfile.m in Sources */,
     CB1510000000000000000001 /* BPBrewfilePlan.m in Sources */,
@@ -1264,11 +1278,15 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				CB1430000000000000000001 /* BPSearchCoordinatorTests.m in Sources */,
 				CB1430000000000000000004 /* BPSearchCoordinator.m in Sources */,
 				CB1430000000000000000007 /* BPTimedDispatch.m in Sources */,
+				CB1470000000000000000001 /* BPUpgradePlanTests.m in Sources */,
+				CB1471000000000000000001 /* BPInstallationWindowControllerTests.m in Sources */,
+				CB1471000000000000000003 /* BPInstallationWindowController.m in Sources */,
 				CB1520000000000000000007 /* BPServicesViewController.m in Sources */,
 				CB1520000000000000000008 /* BPServiceDetailsControllerTests.m in Sources */,
 				4403EFA806C14981AAB4D830 /* BPService.m in Sources */,
 				CB1520000000000000000004 /* BPServiceDetails.m in Sources */,
 				CB1440000000000000000004 /* BPFormulaeTableAction.m in Sources */,
+				CB1470000000000000000004 /* BPUpgradePlan.m in Sources */,
 				F9A912776646B62D5BF57F40 /* BPBrewError.m in Sources */,
 				600B9A88F67B4B23955FC662 /* BPBrewfile.m in Sources */,
     CB1510000000000000000002 /* BPBrewfilePlan.m in Sources */,

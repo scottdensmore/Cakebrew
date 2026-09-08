@@ -34,6 +34,7 @@
               @"listServicesForRemovalRefresh",
               @"removeUnusedFormulae:progress:output:",
 			  @"upgradeFormulae:withReturnBlock:",
+              @"upgradeSelectedFormulae:progress:withReturnBlock:",
 			  @"upgradeCasks:withReturnBlock:",
 			  @"installFormula:withOptions:andReturnBlock:",
 			  @"installCask:withReturnBlock:",

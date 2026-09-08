@@ -263,6 +263,51 @@
 	}
 }
 
+- (void)testConfirmedSelectedFormulaAndCaskUpgradesComplete
+{
+	[self launchWithArguments:@[@"-BPMockBrew"]];
+	NSArray *rows = @[@"sidebar.formulae.outdated", @"sidebar.casks.outdated"];
+	NSArray *names = @[@"mockgit", @"mockchrome"];
+	NSArray *commands = @[@"MOCK_UPGRADE_ARGUMENTS: upgrade --formula mockgit",
+						  @"MOCK_UPGRADE_ARGUMENTS: upgrade --cask mockchrome"];
+	for (NSUInteger index = 0; index < rows.count; index++) {
+		[[self sidebarRow:rows[index]] click];
+		XCUIElement *formula = [self formulaCellWithName:names[index]];
+		XCTAssertTrue([formula waitForExistenceWithTimeout:15]);
+		[formula doubleClick];
+		XCUIElement *yes = self.app.sheets.firstMatch.buttons[@"Yes"];
+		XCTAssertTrue([yes waitForExistenceWithTimeout:15]);
+		[yes click];
+
+		XCUIElement *sheet = self.app.sheets.firstMatch;
+		NSPredicate *transcript = [NSPredicate predicateWithFormat:@"value CONTAINS %@ AND value CONTAINS %@",
+								  @"MOCK_UPGRADE_OK", commands[index]];
+		XCUIElement *output = [sheet.textViews matchingPredicate:transcript].firstMatch;
+		BOOL appeared = [output waitForExistenceWithTimeout:15];
+		if (!appeared) NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+		XCTAssertTrue(appeared, @"Confirmed selection must execute in its own namespace");
+		XCUIElement *ok = sheet.buttons[@"OK"];
+		XCTAssertTrue([ok waitForExistenceWithTimeout:15]);
+		XCTNSPredicateExpectation *finished = [[XCTNSPredicateExpectation alloc]
+			initWithPredicate:[NSPredicate predicateWithFormat:@"enabled == YES"] object:ok];
+		XCTAssertEqual([XCTWaiter waitForExpectations:@[finished] timeout:15], XCTWaiterResultCompleted);
+		XCTAssertFalse(sheet.buttons[@"Cancel"].enabled);
+		[ok click];
+		XCTAssertTrue([sheet waitForNonExistenceWithTimeout:10]);
+		XCTAssertTrue(formula.exists, @"Mock upgrade leaves the selected fixture available");
+	}
+	// A new confirmation after the final dismissal proves cleanup released
+	// the busy guard, rather than merely hiding the operation window.
+	[[self sidebarRow:@"sidebar.formulae.outdated"] click];
+	[[self formulaCellWithName:@"mockgit"] doubleClick];
+	XCUIElement *nextSheet = self.app.sheets.firstMatch;
+	BOOL nextActionReady = [nextSheet.buttons[@"Yes"] waitForExistenceWithTimeout:15];
+	if (!nextActionReady) NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	XCTAssertTrue(nextActionReady, @"Dismissal must permit another upgrade action");
+	[nextSheet.buttons[@"Cancel"] click];
+	XCTAssertTrue([nextSheet waitForNonExistenceWithTimeout:10]);
+}
+
 - (void)testDoubleClickAvailableCaskUsesInstallConfirmationAndCancel
 {
 	[self launchWithArguments:@[@"-BPMockBrew"]];

@@ -28,6 +28,7 @@
 #import "BPPreferences.h"
 #import "BPHelperClient.h"
 #import "BPBrewError.h"
+#import "BPUpgradePlan.h"
 
 #define kDEBUG_WARNING @"\
 User Shell: %@\n\
@@ -712,6 +713,25 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 	BOOL val = [self performBrewCommandWithArguments:[BPHomebrewInterface argumentsForUpgradingFormulae:formulae] dataReturnBlock:block];
 	[self sendDelegateFormulaeUpdatedCallForCommand:@"upgrade"];
 	return val;
+}
+
+- (BOOL)upgradeSelectedFormulae:(NSArray<BPFormula *> *)formulae
+                      progress:(NSProgress *)progress
+               withReturnBlock:(void (^)(NSString *))block
+{
+    BPUpgradePlan *plan = [[BPUpgradePlan alloc] initWithSelection:formulae];
+    __block BOOL attempted = NO;
+    BOOL succeeded = [plan executeWithProgress:progress runner:^BOOL(NSArray<NSString *> *arguments) {
+        attempted = YES;
+        return [self performAsyncBrewCommandWithArguments:arguments
+                                 wrapsSynchronousRequest:NO
+                                                progress:progress
+                                         dataReturnBlock:block];
+    }];
+    // A per-batch reload can overlap the next upgrade and steal the optional
+    // helper's shared cancellation slot. Also refresh partial changes on error.
+    if (attempted) [self sendDelegateFormulaeUpdatedCallForCommand:@"upgrade"];
+    return succeeded;
 }
 
 - (BOOL)upgradeCasks:(NSArray*)casks withReturnBlock:(void (^)(NSString*output))block
