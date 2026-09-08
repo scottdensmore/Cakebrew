@@ -120,7 +120,8 @@ unrelated destructive actions, releases or host/account configuration changes.
 10. **Ready PR using `gh`.** No web UI; no draft unless requested. Explain
     what changed, why, red-first or mutation evidence, verification results
     and any unverified behavior with its reason.
-11. **Gated squash merge.** All required CI must be green, including both
+11. **Gated squash merge.** Except for the explicitly scoped temporary
+    exception below, all required CI must be green, including both
     **Build & Test** and **UI Tests**, for the current PR head. Wait for every
     assigned human or automated review to approve and resolve actionable
     feedback. Never bypass pending, failing or requested-change gates.
@@ -135,7 +136,22 @@ Respect an explicit pause or resource constraint. If Actions is intentionally
 disabled, keep it disabled until the user authorizes re-enabling it; continue
 permitted local work and publication, but do not treat absent CI as green.
 When required gates cannot run under that constraint, report the blocker and
-remaining work rather than claiming completion or bypassing the merge gate.
+remaining work rather than claiming completion or bypassing the merge gate,
+unless the explicit temporary exception below applies.
+
+**Temporary Actions-minutes exception (expires October 8, 2026).** The owner
+authorized squash-merging PRs #166, #167, #169 and #170, plus the documentation
+PR recording this exception, while Actions is disabled for exhausted minutes.
+Only the absent hosted-CI gate is waived for that batch. Keep Actions disabled;
+retain source-matched local verification, independent reviews and resolution
+of actionable feedback. Record the exception and actual local evidence in
+each PR; do not report missing CI as successful. This does not waive failing
+checks or authorize later PRs without another explicit owner exception.
+Track restoration in [issue #171](https://github.com/scottdensmore/Cakebrew/issues/171):
+review available minutes on October 8, re-enable Actions when authorized and
+remove this paragraph through a reviewed documentation PR. The exception
+expires on that date even if restoration is delayed; otherwise it ends as
+soon as Actions is re-enabled. Never change repository protections to apply it.
 
 For a CI UI failure, read the assertion and `CAKEBREW_UI_TREE_*` dump in the
 job log before calling it flaky. Rerun once only when evidence indicates
