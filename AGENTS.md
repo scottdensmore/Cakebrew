@@ -96,8 +96,22 @@ or instructions likewise need fresh applicable validation and review.
 
 ### Delivery — steps 9–11
 
-The primary agent owns delivery. Perform only the commit, publish, PR and merge
-actions the user has authorized; completing a stage does not authorize the next.
+The primary agent owns delivery. A user-assigned implementation or delivery
+goal authorizes the in-scope lifecycle through commits, pushes, ready PRs,
+gated squash merges and cleanup. Do not ask for renewed permission at each
+stage or stop at an intermediate handoff when the goal remains unfinished.
+An explicit limit such as "plan only", "review only", "do not push" or
+"leave the PR open" overrides this default; questions and diagnosis alone
+do not authorize implementation or delivery.
+
+Continue through the goal's scoped slices, resolve in-scope findings and repeat
+invalidated gates until its acceptance criteria and authorized delivery are
+complete. Once current-head checks and assigned reviews pass, squash merge
+without a second confirmation. Use the available wait/monitor mechanism for
+pending external gates; pending CI alone is not a reason to hand the task back.
+Keep the user informed without turning progress updates into approval prompts.
+Goal authority does not expand scope, override execution permissions or permit
+unrelated destructive actions, releases or host/account configuration changes.
 
 9. **Atomic Conventional Commit.** Stage only the verified, reviewed slice.
    Use `<type>(<scope>): <imperative summary>` with type `feat`, `fix`,
@@ -116,6 +130,12 @@ the fix loop; hold publication or merge until its gates pass. Stale evidence
 requires revalidation, not abandonment of the task. Stop for missing authority,
 credentials, required user interaction or scope expansion. Do not treat an
 environment failure as a product defect or silently waive a gate.
+
+Respect an explicit pause or resource constraint. If Actions is intentionally
+disabled, keep it disabled until the user authorizes re-enabling it; continue
+permitted local work and publication, but do not treat absent CI as green.
+When required gates cannot run under that constraint, report the blocker and
+remaining work rather than claiming completion or bypassing the merge gate.
 
 For a CI UI failure, read the assertion and `CAKEBREW_UI_TREE_*` dump in the
 job log before calling it flaky. Rerun once only when evidence indicates
@@ -154,6 +174,13 @@ actions are explicitly their assignment. Gate agents never edit sources.
 Handoffs must identify the state examined: worktree, base/head and relevant
 uncommitted file state. Include concise observed results and log/artifact paths,
 not raw log floods. A result for another tree or stale binary is not evidence.
+
+**Parallel work is encouraged:** the primary agent should delegate independent
+slices, investigations and gate passes concurrently when useful. Identify
+dependencies first; do not wait for one independent slice to finish before
+starting another. Preserve lifecycle order within each slice, and integrate
+dependent slices in order. The primary agent coordinates shared resources,
+collects every handoff and owns delivery; parallelism does not allow self-review.
 
 **Safe concurrency:** use isolated worktrees for independent mutating work.
 Never change sources while a verifier or reviewer examines that workspace.
