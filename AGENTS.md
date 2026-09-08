@@ -379,6 +379,11 @@ because fixture tests cannot notice upstream drift.
   English text in every locale until translated. Homebrew terms ("Casks") stay
   untranslated. Xib menu titles are Base-internationalized literals — no
   `.strings` churn for new menu items.
+  Translation debt is reported by `ruby scripts/localization-debt.rb` in CI
+  logs and the job summary; classifications live in
+  `scripts/localization-debt.json`. Keep uncertain English matches unreviewed
+  rather than labeling them as confirmed placeholders. Debt counts are
+  informational; malformed input or invalid classification metadata is an error.
 - Icons are SF Symbols (`imageWithSystemSymbolName:`); no bundled image assets
   for UI chrome.
 

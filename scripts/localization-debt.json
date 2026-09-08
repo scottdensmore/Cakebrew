@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "placeholders": [
+    { "key": "Remove Unused Dependencies", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "Unused dependency review shipped English placeholders under AGENTS.md localization policy." },
+    { "key": "Checking unused dependencies…", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "Unused dependency review shipped English placeholders under AGENTS.md localization policy." },
+    { "key": "Remove Reviewed Dependencies", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "Unused dependency review shipped English placeholders under AGENTS.md localization policy." }
+  ],
+  "intentional": [
+    { "key": "Cakebrew", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "Application product name." },
+    { "key": "Casks", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "Homebrew term kept untranslated by AGENTS.md." },
+    { "key": "Mac App Store", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "Apple storefront product name." },
+    { "key": "VS Code", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "Editor product name." }
+  ]
+}

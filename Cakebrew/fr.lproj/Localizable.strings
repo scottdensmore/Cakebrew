@@ -383,7 +383,6 @@
 "Line %lu: unsupported syntax or invalid package name. Nothing will be installed." = "Line %lu: unsupported syntax or invalid package name. Nothing will be installed.";
 "Choose a readable UTF-8 Brewfile smaller than 1 MiB. Nothing was installed." = "Choose a readable UTF-8 Brewfile smaller than 1 MiB. Nothing was installed.";
 "%lu installed • %lu missing • %lu not checked" = "%lu installed • %lu missing • %lu not checked";
-"Formulae" = "Formulae";
 "Casks" = "Casks";
 "Taps" = "Taps";
 "Mac App Store" = "Mac App Store";
