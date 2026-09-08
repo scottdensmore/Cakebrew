@@ -317,7 +317,8 @@ typedef NS_ENUM(NSInteger, BPListMode) {
  *
  *  @param path The path where to export the dump file.
  *
- *  @return `nil` on success (no output), or the error in case something goes wrong.
+ *  @return `nil` when the command succeeds, or an error when it fails.
+ *  Blocking: callers must execute this method off the main thread.
  */
 - (NSError*)runBrewExportToolWithPath:(NSString*)path;
 

@@ -434,3 +434,5 @@
 "Removal cancelled. Packages may have been partially removed. The formula and service lists will be refreshed." = "Removal cancelled. Packages may have been partially removed. The formula and service lists will be refreshed.";
 "Unused dependency removal requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported." = "Unused dependency removal requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported.";
 "\nHomebrew exit status: %d\n" = "\nHomebrew exit status: %d\n";
+
+"Homebrew could not export the Brewfile. Check the destination and try again." = "Homebrew could not export the Brewfile. Check the destination and try again.";

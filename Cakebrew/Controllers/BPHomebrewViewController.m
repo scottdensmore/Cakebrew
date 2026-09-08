@@ -41,6 +41,7 @@
 #import "BPLoadingView.h"
 #import "BPDisabledView.h"
 #import "BPBundleWindowController.h"
+#import "BPBrewfileExportOperation.h"
 #import "BPAutoremoveWindowController.h"
 #import "BPTask.h"
 #import "BPMainWindowController.h"
@@ -1394,22 +1395,32 @@ NSOpenSavePanelDelegate>
 
 - (IBAction)runHomebrewExport:(id)sender
 {
-	NSSavePanel *savePanel = [NSSavePanel savePanel];
-	[savePanel setNameFieldLabel:NSLocalizedString(@"Panel_Export_Message", nil)];
-	[savePanel setPrompt:NSLocalizedString(@"Panel_Export_Button", nil)];
-	[savePanel setNameFieldStringValue:[BPBrewfile defaultFilename]];
-	
-	[savePanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:^(NSInteger result) {
-		NSURL *fileURL = [savePanel URL];
-		
-		if (fileURL && result)
-		{
-			dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
-						   dispatch_get_main_queue(), ^{
-							   self.operationWindowController = [BPBundleWindowController runExportOperationWithFile:fileURL];
-						   });
-		}
-	}];
+ if ([self hasBlockingBackgroundTask] || _appDelegate.window.attachedSheet) return;
+ _appDelegate.runningBackgroundTask = YES;
+ void (^completion)(NSModalResponse, NSURL *) = ^(NSModalResponse response, NSURL *url) {
+  NSURL *destination = [BPBrewfileExportOperation exportURLForSaveResponse:response URL:url];
+  if (!destination) { self->_appDelegate.runningBackgroundTask = NO; return; }
+  // Let AppKit finish dismissing the save sheet, while retaining the busy guard.
+  dispatch_async(dispatch_get_main_queue(), ^{
+   self.operationWindowController = [BPBundleWindowController runExportOperationWithFile:destination];
+  });
+ };
+#ifdef DEBUG
+ NSArray *arguments = NSProcessInfo.processInfo.arguments;
+ NSUInteger index = [arguments indexOfObject:@"-BPMockExportURL"];
+ if ([arguments containsObject:@"-BPMockBrew"] && index != NSNotFound && index + 1 < arguments.count) {
+  completion([arguments containsObject:@"-BPMockExportCancel"] ? NSModalResponseCancel : NSModalResponseOK,
+   [NSURL fileURLWithPath:arguments[index + 1]]);
+  return;
+ }
+#endif
+ NSSavePanel *savePanel = [NSSavePanel savePanel];
+ savePanel.nameFieldLabel = NSLocalizedString(@"Panel_Export_Message", nil);
+ savePanel.prompt = NSLocalizedString(@"Panel_Export_Button", nil);
+ savePanel.nameFieldStringValue = [BPBrewfile defaultFilename];
+ [savePanel beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse response) {
+  completion(response, savePanel.URL);
+ }];
 }
 
 /// A Brewfile arriving from outside the app — a Finder double-click, "Open
