@@ -58,6 +58,7 @@
 - (NSInteger)endSearchReturningSidebarRow
 {
 	NSAssert(NSThread.isMainThread, @"Search coordination must run on the main thread");
+	self.generation += 1;
 	self.searching = NO;
 	self.cancelSearch();
 	return self.originalSidebarRow;

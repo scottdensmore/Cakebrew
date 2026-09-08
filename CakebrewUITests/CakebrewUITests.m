@@ -1018,6 +1018,36 @@
 	XCTAssertTrue(appeared, @"the operation window should stream the mock's install output");
 }
 
+- (void)testClearingQueuedSearchKeepsInstalledFormulaeVisible
+{
+	[self launchWithArguments:@[@"-BPMockBrew", @"-BPMockWarmNotificationTarget", @"casks"]];
+	[self waitForNotificationLaunchReloadToFinish];
+	[self assertSelectedSidebarIdentifier:@"sidebar.formulae.installed"];
+	XCTAssertTrue([self formulaCellWithName:@"mockwget"].exists);
+	XCTAssertTrue([self formulaCellWithName:@"mockgit"].exists);
+	XCTAssertFalse([self formulaCellWithName:@"mockvscode"].exists);
+
+	// Queue and clear within one main event, before the 150 ms debounce fires.
+	// The mock menu drives the toolbar text-change path without keyboard focus.
+	[self clickNotificationTestMenuItem:@"Search Then Clear Mock Search"];
+	XCTAssertEqualObjects(self.app.searchFields.firstMatch.value, @"");
+	XCTNSPredicateExpectation *noLateSearch = [[XCTNSPredicateExpectation alloc]
+		initWithPredicate:[NSPredicate predicateWithFormat:@"exists == YES"]
+		object:[self formulaCellWithName:@"mockvscode"]];
+	noLateSearch.inverted = YES;
+	XCTWaiterResult result = [XCTWaiter waitForExpectations:@[noLateSearch] timeout:1.0];
+	if (result != XCTWaiterResultCompleted) {
+		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
+	}
+	XCTAssertEqual(result, XCTWaiterResultCompleted,
+		@"clearing before debounce must not display late search results");
+	[self assertSelectedSidebarIdentifier:@"sidebar.formulae.installed"];
+	XCTAssertEqualObjects(self.app.searchFields.firstMatch.value, @"");
+	XCTAssertTrue([self formulaCellWithName:@"mockwget"].exists);
+	XCTAssertTrue([self formulaCellWithName:@"mockgit"].exists);
+	XCTAssertFalse([self formulaCellWithName:@"mockvscode"].exists);
+}
+
 // Journey: searching finds casks, and does not move the user out of the list
 // they were browsing.
 //

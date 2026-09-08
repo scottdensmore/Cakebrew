@@ -301,8 +301,10 @@ NSOpenSavePanelDelegate>
 	NSMenuItem *root = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Notification Test", nil) action:NULL keyEquivalent:@""];
 	NSMenu *menu = [[NSMenu alloc] initWithTitle:root.title];
 	NSArray<NSString *> *titles = @[NSLocalizedString(@"Search Mock Packages", nil),
-		NSLocalizedString(@"Open Mock Notification", nil), NSLocalizedString(@"Search Then Open Mock Notification", nil)];
-	SEL actions[] = {@selector(beginMockNotificationSearch:), @selector(openMockNotification:), @selector(openMockNotificationDuringSearch:)};
+		NSLocalizedString(@"Open Mock Notification", nil), NSLocalizedString(@"Search Then Open Mock Notification", nil),
+		NSLocalizedString(@"Search Then Clear Mock Search", nil)];
+	SEL actions[] = {@selector(beginMockNotificationSearch:), @selector(openMockNotification:),
+		@selector(openMockNotificationDuringSearch:), @selector(clearMockSearchBeforeDebounce:)};
 	for (NSUInteger index = 0; index < titles.count; index++)
 	{
 		NSMenuItem *item = [menu addItemWithTitle:titles[index] action:actions[index] keyEquivalent:@""];
@@ -328,6 +330,16 @@ NSOpenSavePanelDelegate>
 {
 	[self beginMockNotificationSearch:sender];
 	[self openMockNotification:sender];
+}
+
+- (void)clearMockSearchBeforeDebounce:(id)sender
+{
+	NSSearchField *field = self.toolbar.searchField;
+	NSNotification *change = [NSNotification notificationWithName:NSControlTextDidChangeNotification object:field];
+	field.stringValue = BPNotificationSearchFixtureIdentifier();
+	[field.delegate controlTextDidChange:change];
+	field.stringValue = @"";
+	[field.delegate controlTextDidChange:change];
 }
 #endif
 
