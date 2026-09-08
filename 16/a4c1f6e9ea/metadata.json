@@ -1,0 +1,24 @@
+{
+  "cli_version": "0.10.3",
+  "checkpoint_id": "16a4c1f6e9ea",
+  "strategy": "manual-commit",
+  "branch": "fix/search-clear-cancellation",
+  "checkpoints_count": 7,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/16/a4c1f6e9ea/0/metadata.json",
+      "transcript": "/16/a4c1f6e9ea/0/full.jsonl",
+      "compact_transcript": "/16/a4c1f6e9ea/0/transcript.jsonl",
+      "content_hash": "/16/a4c1f6e9ea/0/content_hash.txt",
+      "prompt": "/16/a4c1f6e9ea/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1232,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 309760,
+    "output_tokens": 461,
+    "api_call_count": 2
+  }
+}
