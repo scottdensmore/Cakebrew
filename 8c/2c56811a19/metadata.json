@@ -1,0 +1,24 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "8c2c56811a19",
+  "strategy": "manual-commit",
+  "branch": "test/deterministic-reload-cancellation",
+  "checkpoints_count": 4,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/8c/2c56811a19/0/metadata.json",
+      "transcript": "/8c/2c56811a19/0/full.jsonl",
+      "compact_transcript": "/8c/2c56811a19/0/transcript.jsonl",
+      "content_hash": "/8c/2c56811a19/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 568033,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 49762560,
+    "output_tokens": 164895,
+    "api_call_count": 609
+  }
+}
