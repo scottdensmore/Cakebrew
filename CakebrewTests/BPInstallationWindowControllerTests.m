@@ -4,6 +4,7 @@
 
 @interface BPInstallationWindowController (SheetLifecycleTests)
 - (IBAction)okAction:(id)sender;
+- (IBAction)cancelAction:(id)sender;
 @end
 
 // These doubles record the actual controller's sheet calls without creating
@@ -95,6 +96,12 @@
 }
 @end
 
+@interface BPUpgradeButtonRecorder : NSObject
+@property BOOL enabled;
+@end
+@implementation BPUpgradeButtonRecorder
+@end
+
 @interface BPInstallationWindowControllerTests : XCTestCase
 @property (strong) NSApplication *previousApplication;
 @property (strong) BPSheetApplicationRecorder *application;
@@ -183,5 +190,20 @@
 	XCTAssertFalse(self.application.delegate.runningBackgroundTask);
 	XCTAssertEqual(self.application.delegate.busyFinishes, 1u);
 	XCTAssertEqual(completions, 1u);
+}
+- (void)testCancelledUpgradeCannotDismissOrReleaseBusyStateBeforeWorkerFinishes
+{
+    BPInertInstallationWindowController *controller = (BPInertInstallationWindowController *)
+        [BPInertInstallationWindowController runWithOperation:kBPWindowOperationUpgrade formulae:@[] options:nil];
+    NSProgress *progress = [NSProgress progressWithTotalUnitCount:1];
+    [controller setValue:progress forKey:@"upgradeProgress"];
+    BPUpgradeButtonRecorder *ok = [BPUpgradeButtonRecorder new];
+    [controller setValue:ok forKey:@"okButton"];
+    [controller cancelAction:nil];
+    XCTAssertTrue(progress.cancelled);
+    XCTAssertFalse(ok.enabled, @"Cancellation request is not worker completion");
+    [controller okAction:nil];
+    XCTAssertTrue(self.application.delegate.runningBackgroundTask);
+    XCTAssertEqual(self.parent.endCount, 0u, @"No second operation while the owned worker unwinds");
 }
 @end

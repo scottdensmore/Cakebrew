@@ -442,3 +442,21 @@
 "Homebrew could not export the Brewfile. Check the destination and try again." = "Homebrew could not export the Brewfile. Check the destination and try again.";
 
 "Complete Mock Catalog" = "Complete Mock Catalog";
+
+/* Exact-snapshot Upgrade All */
+"Updates_Confirm_Title" = "Upgrade all available updates?";
+"Updates_Confirm_Action" = "Upgrade";
+"Updates_Formula_Targets" = "Formulae: %@";
+"Updates_Cask_Targets" = "Casks: %@";
+"Updates_Pinned_Formula_Exclusions" = "Pinned formulae will be skipped: %@";
+"Updates_Pinned_Cask_Exclusions" = "Pinned Casks will be skipped: %@";
+"Updates_Changed_Title" = "Updates changed";
+"Updates_Changed_Body" = "The update inventory changed while you reviewed it. Choose Upgrade All Updates again to review the current targets.";
+"Updates_Command_Succeeded" = "Command succeeded: brew %@";
+"Updates_Command_Failed" = "Command failed; some packages may have changed: brew %@";
+"Updates_Command_Cancelled" = "Command cancelled; some packages may have changed: brew %@";
+"Updates_Command_Unattempted" = "Command not attempted: brew %@";
+"Updates_Task_Cancelled" = "Homebrew task cancelled";
+"Updates_Review_Body" = "Review the exact targets below. Pinned items are excluded.";
+"Updates_Review_Targets" = "Update targets and pinned exclusions";
+"Updates_Cancelling" = "Cancelling… Waiting for the active command to finish.";

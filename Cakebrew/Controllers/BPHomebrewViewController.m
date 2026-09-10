@@ -19,6 +19,7 @@
 //	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#import "BPUpdatesSnapshot.h"
 #import "BPHomebrewViewController.h"
 #import "BPFormula.h"
 #import "BPFormulaeTableAction.h"
@@ -147,6 +148,9 @@ NSOpenSavePanelDelegate>
 - (void)commonInit
 {
 	_homebrewManager = [BPHomebrewManager sharedManager];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(updatesSnapshotChanged:)
+        name:BPHomebrewManagerUpdatesSnapshotDidChangeNotification object:_homebrewManager];
+    self.enableUpgradeAllMenu = _homebrewManager.updatesSnapshot.hasEligibleUpdates;
 	[_homebrewManager setDelegate:self];
 	
 	self.selectedFormulaeViewController = [[BPSelectedFormulaViewController alloc] init];
@@ -156,6 +160,11 @@ NSOpenSavePanelDelegate>
 
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didReceiveBackgroundActivityNotification:) name:kDidBeginBackgroundActivityNotification object:nil];
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didReceiveBackgroundActivityNotification:) name:kDidEndBackgroundActivityNotification object:nil];
+}
+
+- (void)updatesSnapshotChanged:(NSNotification *)notification
+{
+    self.enableUpgradeAllMenu = _homebrewManager.updatesSnapshot.hasEligibleUpdates;
 }
 
 - (void)didReceiveBackgroundActivityNotification:(NSNotification*)notification
@@ -1184,23 +1193,53 @@ NSOpenSavePanelDelegate>
 
 - (IBAction)upgradeAllOutdatedFormulae:(id)sender
 {
-	if ([self hasBlockingBackgroundTask]) return;
+    if ([self hasBlockingBackgroundTask]) return;
+    BPUpdatesSnapshot *snapshot = _homebrewManager.updatesSnapshot;
+    if (!snapshot.hasEligibleUpdates) return; // Also guards the Dock action.
 
-	NSAlert *alert = [[NSAlert alloc] init];
-	[alert setMessageText:NSLocalizedString(@"Message_Update_All_Outdated_Title", nil)];
-	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Yes", nil)];
-	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Cancel", nil)];
-	[alert setInformativeText:NSLocalizedString(@"Message_Update_All_Outdated_Body", nil)];
+    NSMutableArray *sections = [NSMutableArray array];
+    if (snapshot.eligibleFormulae.count) [sections addObject:[NSString stringWithFormat:NSLocalizedString(@"Updates_Formula_Targets", nil), [snapshot.eligibleFormulae componentsJoinedByString:@", "]]];
+    if (snapshot.eligibleCasks.count) [sections addObject:[NSString stringWithFormat:NSLocalizedString(@"Updates_Cask_Targets", nil), [snapshot.eligibleCasks componentsJoinedByString:@", "]]];
+    if (snapshot.excludedFormulae.count) [sections addObject:[NSString stringWithFormat:NSLocalizedString(@"Updates_Pinned_Formula_Exclusions", nil), [snapshot.excludedFormulae componentsJoinedByString:@", "]]];
+    if (snapshot.excludedCasks.count) [sections addObject:[NSString stringWithFormat:NSLocalizedString(@"Updates_Pinned_Cask_Exclusions", nil), [snapshot.excludedCasks componentsJoinedByString:@", "]]];
 
-	// Present as a sheet rather than an app-modal runModal (non-blocking,
-	// UI-testable, standard macOS style), matching the other confirmations here.
-	[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
-		if (returnCode == NSAlertFirstButtonReturn) {
-			self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationUpgrade
-																					 formulae:nil
-																					  options:nil];
-		}
-	}];
+    NSAlert *alert = [[NSAlert alloc] init];
+    alert.messageText = NSLocalizedString(@"Updates_Confirm_Title", nil);
+    alert.informativeText = NSLocalizedString(@"Updates_Review_Body", nil);
+    NSScrollView *review = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 440, 180)];
+    review.hasVerticalScroller = YES;
+    review.borderType = NSBezelBorder;
+    NSTextView *targets = [[NSTextView alloc] initWithFrame:review.contentView.bounds];
+    targets.editable = NO;
+    targets.selectable = YES;
+    targets.font = [NSFont systemFontOfSize:NSFont.systemFontSize];
+    targets.textContainerInset = NSMakeSize(8, 8);
+    targets.textContainer.widthTracksTextView = YES;
+    targets.autoresizingMask = NSViewWidthSizable;
+    targets.verticallyResizable = YES;
+    targets.horizontallyResizable = NO;
+    targets.maxSize = NSMakeSize(CGFLOAT_MAX, CGFLOAT_MAX);
+    targets.string = [sections componentsJoinedByString:@"\n\n"];
+    targets.accessibilityIdentifier = @"updates.targets";
+    targets.accessibilityLabel = NSLocalizedString(@"Updates_Review_Targets", nil);
+    review.documentView = targets;
+    alert.accessoryView = review;
+    [alert addButtonWithTitle:NSLocalizedString(@"Updates_Confirm_Action", nil)];
+    [alert addButtonWithTitle:NSLocalizedString(@"Generic_Cancel", nil)];
+    alert.buttons.firstObject.accessibilityIdentifier = @"updates.confirm";
+    [alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse response) {
+        if (response != NSAlertFirstButtonReturn || [self hasBlockingBackgroundTask]) return;
+        NSArray *selection = [self->_homebrewManager selectionForConfirmedUpdatesSnapshot:snapshot];
+        if (!selection.count) {
+            NSAlert *changed = [[NSAlert alloc] init];
+            changed.messageText = NSLocalizedString(@"Updates_Changed_Title", nil);
+            changed.informativeText = NSLocalizedString(@"Updates_Changed_Body", nil);
+            [changed addButtonWithTitle:NSLocalizedString(@"Generic_OK", nil)];
+            [changed beginSheetModalForWindow:self->_appDelegate.window completionHandler:nil];
+            return;
+        }
+        self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationUpgrade formulae:selection options:nil];
+    }];
 }
 
 - (IBAction)tapRepository:(id)sender

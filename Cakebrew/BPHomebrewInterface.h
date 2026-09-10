@@ -79,6 +79,7 @@ typedef NS_ENUM(NSInteger, BPListMode) {
 
 @end
 
+@class BPUpgradeResult;
 @interface BPHomebrewInterface : NSObject <BPFormulaDataProvider>
 
 + (instancetype)sharedInterface;
@@ -155,6 +156,10 @@ typedef NS_ENUM(NSInteger, BPListMode) {
 /// Blocking selected upgrade, with explicit formula/cask namespaces. Empty
 /// selections run nothing. Refreshes once after all attempted batches exit,
 /// including failure/cancellation. The token owns direct-task cancellation.
+- (BPUpgradeResult *)upgradeSelectionReporting:(NSArray<BPFormula *> *)formulae
+    progress:(NSProgress *)progress withReturnBlock:(void (^)(NSString *))block;
+/// Namespace-specific pin inventory; nil means the query failed.
+- (NSArray<BPFormula *> *)listPinnedCasks;
 - (BOOL)upgradeSelectedFormulae:(NSArray<BPFormula *> *)formulae
                       progress:(NSProgress *)progress
                withReturnBlock:(void (^)(NSString *))block;

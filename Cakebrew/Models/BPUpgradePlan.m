@@ -1,6 +1,29 @@
 #import "BPUpgradePlan.h"
 #import "BPFormula.h"
 
+@interface BPUpgradeBatchResult ()
+@property (nonatomic, copy) NSArray<NSString *> *arguments;
+@property (nonatomic) BPUpgradeBatchStatus status;
+@end
+@implementation BPUpgradeBatchResult
+@end
+@interface BPUpgradeResult ()
+@property (nonatomic, copy) NSArray<BPUpgradeBatchResult *> *batches;
+@property (nonatomic) BOOL cancelled;
+@end
+@implementation BPUpgradeResult
+- (BOOL)succeeded
+{
+    if (!self.batches.count || self.cancelled) return NO;
+    for (BPUpgradeBatchResult *batch in self.batches) if (batch.status != BPUpgradeBatchSucceeded) return NO;
+    return YES;
+}
+- (BOOL)attempted
+{
+    for (BPUpgradeBatchResult *batch in self.batches) if (batch.status != BPUpgradeBatchUnattempted) return YES;
+    return NO;
+}
+@end
 @interface BPUpgradePlan ()
 @property (copy) NSArray<NSArray<NSString *> *> *batches;
 @end
@@ -27,10 +50,26 @@
 
 - (BOOL)executeWithProgress:(NSProgress *)progress runner:(BOOL (^)(NSArray<NSString *> *))runner
 {
-    if (!self.batches.count || progress.cancelled) return NO;
+    return [self executeReportingWithProgress:progress runner:runner].succeeded;
+}
+- (BPUpgradeResult *)executeReportingWithProgress:(NSProgress *)progress runner:(BOOL (^)(NSArray<NSString *> *))runner
+{
+    NSMutableArray *results = [NSMutableArray array];
+    BOOL stopped = progress.cancelled;
     for (NSArray<NSString *> *arguments in self.batches) {
-        if (progress.cancelled || !runner(arguments)) return NO;
+        BPUpgradeBatchResult *batch = [[BPUpgradeBatchResult alloc] init];
+        batch.arguments = arguments;
+        batch.status = BPUpgradeBatchUnattempted;
+        if (!stopped && !progress.cancelled) {
+            BOOL succeeded = runner(arguments);
+            batch.status = progress.cancelled ? BPUpgradeBatchCancelled : (succeeded ? BPUpgradeBatchSucceeded : BPUpgradeBatchFailed);
+            stopped = batch.status != BPUpgradeBatchSucceeded;
+        }
+        [results addObject:batch];
     }
-    return !progress.cancelled;
+    BPUpgradeResult *result = [[BPUpgradeResult alloc] init];
+    result.batches = results;
+    result.cancelled = progress.cancelled;
+    return result;
 }
 @end

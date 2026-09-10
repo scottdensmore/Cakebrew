@@ -19,6 +19,7 @@
 //	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#import "BPUpdatesSnapshot.h"
 #import "BPHomebrewManager.h"
 #import "BPHomebrewInterface.h"
 #import "BPAppDelegate.h"
@@ -30,6 +31,7 @@ NSString *const kBPCacheCasksDataKey = @"BPCacheCasksDataKey";
 NSString *const kBPCacheVersionKey = @"BPCacheVersionKey";
 NSString *const kBPCacheStoredDateKey = @"BPCacheStoredDateKey";
 
+NSNotificationName const BPHomebrewManagerUpdatesSnapshotDidChangeNotification = @"BPHomebrewManagerUpdatesSnapshotDidChangeNotification";
 NSNotificationName const BPHomebrewManagerDidPublishOutdatedSnapshotNotification = @"BPHomebrewManagerDidPublishOutdatedSnapshotNotification";
 NSString *const BPOutdatedSnapshotFormulaeCountKey = @"formulae-count";
 NSString *const BPOutdatedSnapshotCaskCountKey = @"cask-count";
@@ -49,6 +51,9 @@ static const NSInteger kBPCacheVersion = 2;
 	BOOL _reloadRequestedWhileRunning;
 	NSUInteger _reloadGeneration;
 	BOOL _pendingRebuildCache;
+    NSUInteger _updatesGeneration;
+    NSMutableDictionary<NSString *, NSArray *> *_updatesInputs;
+    BPUpdatesSnapshot *_updatesSnapshot;
 	NSUInteger _outdatedSnapshotGeneration;
 	NSNumber *_outdatedSnapshotFormulaeCount;
 	NSNumber *_outdatedSnapshotCaskCount;
@@ -115,6 +120,55 @@ static const NSInteger kBPCacheVersion = 2;
 	}
 }
 
+- (BPUpdatesSnapshot *)updatesSnapshot
+{
+    @synchronized (self) {
+        return _updatesSnapshot.generation == _reloadGeneration ? _updatesSnapshot : nil;
+    }
+}
+- (NSArray<BPFormula *> *)selectionForConfirmedUpdatesSnapshot:(BPUpdatesSnapshot *)snapshot
+{
+    @synchronized (self) {
+        if (!snapshot || snapshot != self.updatesSnapshot || snapshot.generation != _reloadGeneration) return nil;
+        return [snapshot eligibleSelection];
+    }
+}
+- (void)notifyUpdatesSnapshotChanged
+{
+    if (!NSThread.isMainThread) {
+        dispatch_async(dispatch_get_main_queue(), ^{ [self notifyUpdatesSnapshotChanged]; });
+        return;
+    }
+    [NSNotificationCenter.defaultCenter postNotificationName:BPHomebrewManagerUpdatesSnapshotDidChangeNotification object:self];
+}
+- (void)publishUpdatesInput:(NSArray *)input key:(NSString *)key generation:(NSUInteger)generation
+{
+    if (!NSThread.isMainThread) {
+        dispatch_async(dispatch_get_main_queue(), ^{ [self publishUpdatesInput:input key:key generation:generation]; });
+        return;
+    }
+    @synchronized (self) {
+        if (generation != _reloadGeneration) return;
+        if (!_updatesInputs || _updatesGeneration != generation) {
+            _updatesGeneration = generation;
+            _updatesInputs = [NSMutableDictionary dictionary];
+            _updatesSnapshot = nil;
+        }
+        // Each input is frozen before publication; never recover from live arrays.
+        if (input) _updatesInputs[key] = input;
+        else [_updatesInputs removeObjectForKey:key];
+        _updatesSnapshot = [[BPUpdatesSnapshot alloc] initWithGeneration:generation
+            formulaItems:_updatesInputs[@"formulae"] caskItems:_updatesInputs[@"casks"]
+            pinnedFormulaNames:_updatesInputs[@"formulaPins"] pinnedCaskNames:_updatesInputs[@"caskPins"]];
+    }
+    [self notifyUpdatesSnapshotChanged];
+}
+- (void)publishPinnedCasks:(NSArray<BPFormula *> *)casks generation:(NSUInteger)generation
+{
+    NSArray *names = casks ? [[NSArray alloc] initWithArray:[casks valueForKey:@"name"] copyItems:YES] : nil;
+    [self publishUpdatesInput:names key:@"caskPins" generation:generation];
+}
+
 - (void)cancelReload
 {
 	@synchronized (self)
@@ -125,6 +179,8 @@ static const NSInteger kBPCacheVersion = 2;
 		_reloadRequestedWhileRunning = NO;
 		_pendingRebuildCache = NO;
 	}
+
+	[self notifyUpdatesSnapshotChanged];
 
 	// A reload fans out ten concurrent brew calls, so -cancelCurrentOperation
 	// is not enough: that one covers the single operation task.
@@ -159,6 +215,17 @@ static const NSInteger kBPCacheVersion = 2;
 
 - (void)publishList:(NSArray *)list forMode:(BPListMode)mode generation:(NSUInteger)generation
 {
+    NSString *key = nil;
+    NSArray *frozen = nil;
+    if (mode == kBPListOutdated || mode == kBPListOutdatedCasks) {
+        key = mode == kBPListOutdated ? @"formulae" : @"casks";
+        frozen = list ? [BPUpdateItem itemsFromFormulae:list cask:mode == kBPListOutdatedCasks] : nil;
+    } else if (mode == kBPListPinned) {
+        key = @"formulaPins";
+        frozen = list ? [[NSArray alloc] initWithArray:[list valueForKey:@"name"] copyItems:YES] : nil;
+    }
+    if (key) [self publishUpdatesInput:frozen key:key generation:generation];
+
 	if (![BPHomebrewManager shouldPublishReloadGeneration:generation current:self.currentReloadGeneration])
 	{
 		// A superseded reload still has calls in flight. Publishing all at once
@@ -169,10 +236,16 @@ static const NSInteger kBPCacheVersion = 2;
 	if (![NSThread isMainThread])
 	{
 		dispatch_async(dispatch_get_main_queue(), ^{
-			[self publishList:list forMode:mode generation:generation];
+			[self publishListOnMain:list forMode:mode generation:generation];
 		});
 		return;
 	}
+
+    [self publishListOnMain:list forMode:mode generation:generation];
+}
+- (void)publishListOnMain:(NSArray *)list forMode:(BPListMode)mode generation:(NSUInteger)generation
+{
+    if (generation != self.currentReloadGeneration) return;
 
 	switch (mode)
 	{
@@ -251,12 +324,22 @@ static const NSInteger kBPCacheVersion = 2;
 		_reloadInFlight = YES;
 		// Carry only a known successful cask result into this partial generation.
 		NSNumber *caskCount = _outdatedSnapshotGeneration == _reloadGeneration ? _outdatedSnapshotCaskCount : nil;
+        BPUpdatesSnapshot *baseline = self.updatesSnapshot;
 		generation = ++_reloadGeneration;
+        _updatesGeneration = generation;
+        _updatesSnapshot = nil;
+        _updatesInputs = [NSMutableDictionary dictionary];
+        if (baseline) {
+            _updatesInputs[@"casks"] = baseline.casks;
+            _updatesInputs[@"formulaPins"] = baseline.pinnedFormulaNames;
+            _updatesInputs[@"caskPins"] = baseline.pinnedCaskNames;
+        }
 		_outdatedSnapshotGeneration = generation;
 		_outdatedSnapshotFormulaeCount = nil;
 		_outdatedSnapshotCaskCount = caskCount;
 		_didPublishOutdatedSnapshot = NO;
 	}
+    [self notifyUpdatesSnapshotChanged];
 	BPHomebrewInterface *interface = [self homebrewInterface];
 	dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
 		NSArray *installed = [interface listModeForRemovalRefresh:kBPListInstalled];
@@ -332,6 +415,7 @@ static const NSInteger kBPCacheVersion = 2;
 		needsDiscovery = _discoveryResult != BPHomebrewDiscoveryAvailable;
 		_discoveryInFlight = needsDiscovery;
 	}
+    [self notifyUpdatesSnapshotChanged];
 	if (needsDiscovery) {
 		dispatch_async(dispatch_get_main_queue(), ^{
 			if ([self.delegate respondsToSelector:@selector(homebrewManagerDidBeginDiscovery:)])
@@ -417,6 +501,9 @@ static const NSInteger kBPCacheVersion = 2;
 		BP_FETCH_LIST(kBPListOutdated)
 		BP_FETCH_LIST(kBPListRepositories)
 		BP_FETCH_LIST(kBPListPinned)
+        dispatch_group_async(group, fanOut, ^{
+            [self publishPinnedCasks:[interface listPinnedCasks] generation:generation];
+        });
 		BP_FETCH_LIST(kBPListInstalledCasks)
 		BP_FETCH_LIST(kBPListOutdatedCasks)
 

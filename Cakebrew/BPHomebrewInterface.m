@@ -66,6 +66,8 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 
 @interface BPHomebrewInterfaceListCallPinned : BPHomebrewInterfaceListCall
 @end
+@interface BPHomebrewInterfaceListCallPinnedCasks : BPHomebrewInterfaceListCall
+@end
 
 @interface BPHomebrewInterfaceListCallInstalledCasks : BPHomebrewInterfaceListCallInstalled
 @end
@@ -493,6 +495,14 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 	return [regex numberOfMatchesInString:trimmed options:0 range:range] == 1;
 }
 
+- (NSArray<BPFormula *> *)listPinnedCasks
+{
+    BPHomebrewInterfaceListCall *call = [[BPHomebrewInterfaceListCallPinnedCasks alloc] init];
+    NSString *output;
+    BOOL succeeded = [self performCleanReadOnlyBrewCommandWithArguments:call.arguments output:&output];
+    return succeeded && output ? [call parseData:output] : nil;
+}
+
 - (NSArray<BPFormula *> *)listMode:(BPListMode)mode
 {
 	BPHomebrewInterfaceListCall *listCall = nil;
@@ -537,6 +547,12 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 		default:
 			return nil;
 	}
+
+    if (mode == kBPListOutdated || mode == kBPListOutdatedCasks || mode == kBPListPinned) {
+        NSString *output;
+        BOOL succeeded = [self performCleanReadOnlyBrewCommandWithArguments:listCall.arguments output:&output];
+        return succeeded && output ? [listCall parseData:output] : nil;
+    }
 
 	NSString *string = [self performSyncBrewCommandWithArguments:listCall.arguments];
 
@@ -719,9 +735,15 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
                       progress:(NSProgress *)progress
                withReturnBlock:(void (^)(NSString *))block
 {
+    return [self upgradeSelectionReporting:formulae progress:progress withReturnBlock:block].succeeded;
+}
+
+- (BPUpgradeResult *)upgradeSelectionReporting:(NSArray<BPFormula *> *)formulae
+    progress:(NSProgress *)progress withReturnBlock:(void (^)(NSString *))block
+{
     BPUpgradePlan *plan = [[BPUpgradePlan alloc] initWithSelection:formulae];
     __block BOOL attempted = NO;
-    BOOL succeeded = [plan executeWithProgress:progress runner:^BOOL(NSArray<NSString *> *arguments) {
+    BPUpgradeResult *result = [plan executeReportingWithProgress:progress runner:^BOOL(NSArray<NSString *> *arguments) {
         attempted = YES;
         return [self performAsyncBrewCommandWithArguments:arguments
                                  wrapsSynchronousRequest:NO
@@ -731,7 +753,7 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
     // A per-batch reload can overlap the next upgrade and steal the optional
     // helper's shared cancellation slot. Also refresh partial changes on error.
     if (attempted) [self sendDelegateFormulaeUpdatedCallForCommand:@"upgrade"];
-    return succeeded;
+    return result;
 }
 
 - (BOOL)upgradeCasks:(NSArray*)casks withReturnBlock:(void (^)(NSString*output))block
@@ -992,7 +1014,7 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 
 - (instancetype)init
 {
-	return (BPHomebrewInterfaceListCallUpgradeable *)[super initWithArguments:@[@"outdated", @"--verbose"]];
+	return (BPHomebrewInterfaceListCallUpgradeable *)[super initWithArguments:@[@"outdated", @"--formula", @"--verbose"]];
 }
 
 - (BPFormula *)parseFormulaItem:(NSString *)item
@@ -1043,9 +1065,22 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 
 - (instancetype)init
 {
-	return (BPHomebrewInterfaceListCallPinned *)[super initWithArguments:@[@"list", @"--pinned"]];
+	return (BPHomebrewInterfaceListCallPinned *)[super initWithArguments:@[@"list", @"--formula", @"--pinned"]];
 }
 
+@end
+
+@implementation BPHomebrewInterfaceListCallPinnedCasks
+- (instancetype)init
+{
+    return [super initWithArguments:@[@"list", @"--cask", @"--pinned"]];
+}
+- (BPFormula *)parseFormulaItem:(NSString *)item
+{
+    BPFormula *formula = [super parseFormulaItem:item];
+    formula.cask = YES;
+    return formula;
+}
 @end
 
 @implementation BPHomebrewInterfaceListCallInstalledCasks

@@ -1979,4 +1979,97 @@
 	XCTAssertTrue(importPresent, @"Tools should offer Import Brew Installation");
 }
 
+- (XCUIElement *)openUpgradeAllWithArguments:(NSArray *)arguments
+{
+    [self launchWithArguments:[@[@"-BPMockBrew"] arrayByAddingObjectsFromArray:arguments]];
+    [self.app.menuBars.menuBarItems[@"Formula"] click];
+    XCUIElement *upgrade = self.app.menuItems[@"Upgrade All Updates…"];
+    XCTAssertTrue([upgrade waitForExistenceWithTimeout:15]);
+    XCTNSPredicateExpectation *enabled = [[XCTNSPredicateExpectation alloc] initWithPredicate:[NSPredicate predicateWithFormat:@"enabled == YES"] object:upgrade];
+    XCTAssertEqual([XCTWaiter waitForExpectations:@[enabled] timeout:15], XCTWaiterResultCompleted);
+    [upgrade click];
+    XCUIElement *confirm = self.app.sheets.firstMatch.buttons[@"updates.confirm"];
+    XCTAssertTrue([confirm waitForExistenceWithTimeout:15]);
+    return confirm;
+}
+- (void)testUpgradeAllKeyboardShortcutAndEscapeRunsNothing
+{
+    [self launchWithArguments:@[@"-BPMockBrew", @"-BPMockMixedUpdates"]];
+    BOOL ready = self.app.windows.firstMatch.exists && [self formulaCellWithName:@"mockwget"].exists &&
+        !self.app.sheets.firstMatch.exists;
+    XCUIApplicationState initialState = self.app.state;
+    XCTAssertTrue(ready);
+    XCTAssertEqual(initialState, XCUIApplicationStateRunningForeground);
+    if (!ready || initialState != XCUIApplicationStateRunningForeground) return;
+
+    [self.app typeKey:@"u" modifierFlags:XCUIKeyModifierCommand | XCUIKeyModifierOption];
+    XCUIElement *sheet = self.app.sheets.firstMatch;
+    XCUIElement *confirm = sheet.buttons[@"updates.confirm"];
+    XCTAssertTrue([confirm waitForExistenceWithTimeout:15]);
+    XCUIElement *targets = [sheet.textViews matchingPredicate:[NSPredicate predicateWithFormat:
+        @"identifier == 'updates.targets' AND value CONTAINS 'Formulae: mockgit' AND value CONTAINS 'Casks: mockchrome'"]].firstMatch;
+    BOOL expectedConfirmation = confirm.exists && targets.exists;
+    XCUIApplicationState confirmationState = self.app.state;
+    XCTAssertTrue(expectedConfirmation);
+    XCTAssertEqual(confirmationState, XCUIApplicationStateRunningForeground);
+    if (!expectedConfirmation || confirmationState != XCUIApplicationStateRunningForeground) return;
+
+    [self.app typeKey:XCUIKeyboardKeyEscape modifierFlags:XCUIKeyModifierNone];
+    XCTAssertTrue([self.app.sheets.firstMatch waitForNonExistenceWithTimeout:10]);
+    XCUIElement *output = [self.app.textViews matchingPredicate:[NSPredicate predicateWithFormat:
+        @"value CONTAINS 'MOCK_UPGRADE_' OR value CONTAINS 'brew upgrade'"]].firstMatch;
+    XCTAssertFalse(output.exists);
+}
+- (void)testUpgradeAllPinnedExclusionAndCancelRunsNothing
+{
+    [self openUpgradeAllWithArguments:@[]];
+    XCUIElement *sheet = self.app.sheets.firstMatch;
+    XCUIElement *summary = [sheet.textViews matchingPredicate:[NSPredicate predicateWithFormat:@"identifier == 'updates.targets' AND value CONTAINS 'Casks: mockchrome' AND value CONTAINS 'Pinned formulae will be skipped: mockgit'"]].firstMatch;
+    XCTAssertTrue(summary.exists);
+    [sheet.buttons[@"Cancel"] click];
+    XCTAssertTrue([sheet waitForNonExistenceWithTimeout:10]);
+    XCTAssertFalse([self.app.textViews matchingPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS 'MOCK_UPGRADE_OK'"]].firstMatch.exists);
+}
+- (void)testUpgradeAllMixedConfirmationRunsExactNamesAndShowsCommandOutcomes
+{
+    XCUIElement *confirm = [self openUpgradeAllWithArguments:@[@"-BPMockMixedUpdates"]];
+    XCUIElement *summary = [self.app.sheets.firstMatch.textViews matchingPredicate:[NSPredicate predicateWithFormat:@"identifier == 'updates.targets' AND value CONTAINS 'Formulae: mockgit' AND value CONTAINS 'Casks: mockchrome'"]].firstMatch;
+    XCTAssertTrue(summary.exists);
+    [confirm click];
+    XCUIElement *output = [self.app.sheets.firstMatch.textViews matchingPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS 'Command succeeded: brew upgrade --formula mockgit' AND value CONTAINS 'Command succeeded: brew upgrade --cask mockchrome'"]].firstMatch;
+    XCTAssertTrue([output waitForExistenceWithTimeout:15]);
+    [self.app.sheets.firstMatch.buttons[@"OK"] click];
+}
+- (void)testUpgradeAllLaterFailurePreservesFirstCommandSuccess
+{
+    XCUIElement *confirm = [self openUpgradeAllWithArguments:@[@"-BPMockMixedUpdates", @"-BPMockFailedCaskUpgrade"]];
+    [confirm click];
+    XCUIElement *output = [self.app.sheets.firstMatch.textViews matchingPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS 'Command succeeded: brew upgrade --formula mockgit' AND value CONTAINS 'Command failed; some packages may have changed: brew upgrade --cask mockchrome'"]].firstMatch;
+    XCTAssertTrue([output waitForExistenceWithTimeout:15]);
+    [self.app.sheets.firstMatch.buttons[@"OK"] click];
+}
+- (void)testUpgradeAllCaskOnlyEnablesWithNoOutdatedFormulae
+{
+    XCUIElement *confirm = [self openUpgradeAllWithArguments:@[@"-BPMockEmptyOutdated"]];
+    [confirm click];
+    XCUIElement *output = [self.app.sheets.firstMatch.textViews matchingPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS 'Command succeeded: brew upgrade --cask mockchrome'"]].firstMatch;
+    XCTAssertTrue([output waitForExistenceWithTimeout:15]);
+    XCTAssertFalse([output.value containsString:@"--formula"]);
+    [self.app.sheets.firstMatch.buttons[@"OK"] click];
+}
+- (void)testUpgradeAllCancellationReportsActiveAndUnattemptedCommands
+{
+    XCUIElement *confirm = [self openUpgradeAllWithArguments:@[@"-BPMockMixedUpdates", @"-BPMockSlowUpgrade"]];
+    [confirm click];
+    XCUIElement *started = [self.app.sheets.firstMatch.textViews matchingPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS 'MOCK_UPGRADE_STARTED'"]].firstMatch;
+    XCTAssertTrue([started waitForExistenceWithTimeout:15]);
+    [self.app.sheets.firstMatch.buttons[@"Cancel"] click];
+    XCUIElement *cancelling = [self.app.sheets.firstMatch.textViews matchingPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS 'MOCK_UPGRADE_CANCELLING'"]].firstMatch;
+    XCTAssertTrue([cancelling waitForExistenceWithTimeout:10]);
+    XCTAssertFalse(self.app.sheets.firstMatch.buttons[@"OK"].enabled);
+    XCUIElement *output = [self.app.sheets.firstMatch.textViews matchingPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS 'Command cancelled; some packages may have changed: brew upgrade --formula mockgit' AND value CONTAINS 'Command not attempted: brew upgrade --cask mockchrome'"]].firstMatch;
+    XCTAssertTrue([output waitForExistenceWithTimeout:15]);
+    XCTAssertTrue([self.app.sheets.firstMatch.staticTexts matchingPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS 'Homebrew task cancelled'"]].firstMatch.exists);
+    [self.app.sheets.firstMatch.buttons[@"OK"] click];
+}
 @end
