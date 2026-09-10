@@ -149,4 +149,69 @@
 				   [problems componentsJoinedByString:@"\n"]);
 }
 
+// Resolve the real resources through NSBundle; a source parser alone cannot
+// establish the value presented by NSLocalizedString.
+- (NSBundle *)bundleForLocale:(NSString *)locale
+{
+ return [NSBundle bundleWithPath:[[self localizationsDirectory] stringByAppendingPathComponent:[locale stringByAppendingString:@".lproj"]]];
+}
+
+- (void)testGermanBrewfileResourcesAreTranslated
+{
+ NSBundle *german = [self bundleForLocale:@"de"];
+ NSBundle *english = [self bundleForLocale:@"en"];
+ XCTAssertNotNil(german);
+ XCTAssertNotNil(english);
+ NSString *missing = @"__CAKEBREW_MISSING_TRANSLATION__";
+ XCTAssertEqualObjects([german localizedStringForKey:@"__unknown_brewfile_key__" value:missing table:@"Localizable"], missing);
+ NSArray *keys = @[
+ @"Line %lu: unsupported syntax or invalid package name. Nothing will be installed.",
+ @"Choose a readable UTF-8 Brewfile smaller than 1 MiB. Nothing was installed.",
+ @"%lu installed • %lu missing • %lu not checked", @"Installed", @"Missing", @"Not checked",
+ @"No supported package entries. Nothing will be installed.",
+ @"Reviewed import requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported.",
+ @"Review Brewfile",
+ @"Direct entries only, not a dependency or upgrade plan. Installed means present in the current inventory, not up to date. Homebrew may upgrade packages, install dependencies and required tools, and run package installation scripts. Only the reviewed literal entries will be submitted.",
+ @"Install Reviewed Entries", @"Cancel", @"Close", @"Import Brewfile",
+ @"Import cancelled. Some changes may already have been made.", @"Import finished.",
+ @"Import failed. Review the output for details.", @"Cancelling… Waiting for Homebrew to exit.",
+ @"Brewfile_Export_Failed", @"Homebrew could not export the Brewfile. Check the destination and try again."
+ ];
+ for (NSString *key in keys) {
+  NSString *translated = [german localizedStringForKey:key value:missing table:@"Localizable"];
+  NSString *original = [english localizedStringForKey:key value:missing table:@"Localizable"];
+  XCTAssertNotEqualObjects(translated, missing, @"%@", key);
+  XCTAssertNotEqualObjects(original, missing, @"%@", key);
+  XCTAssertGreaterThan([translated stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet].length, 0u, @"%@", key);
+  XCTAssertNotEqualObjects(translated, original, @"German Brewfile text still uses English: %@", key);
+ }
+}
+
+- (void)testGermanBrewfileFormatsPreserveUnsignedArguments
+{
+ NSBundle *german = [self bundleForLocale:@"de"];
+ NSBundle *english = [self bundleForLocale:@"en"];
+ NSArray *keys = @[@"Line %lu: unsupported syntax or invalid package name. Nothing will be installed.",
+                   @"%lu installed • %lu missing • %lu not checked"];
+ for (NSString *key in keys) {
+  NSString *format = [german localizedStringForKey:key value:@"MISSING" table:@"Localizable"];
+  NSString *original = [english localizedStringForKey:key value:@"MISSING" table:@"Localizable"];
+  // Removing the only supported conversion also catches stray or changed % tokens.
+  NSArray *parts = [format componentsSeparatedByString:@"%lu"];
+  NSArray *originalParts = [original componentsSeparatedByString:@"%lu"];
+  XCTAssertEqual(parts.count, originalParts.count);
+  XCTAssertFalse([[parts componentsJoinedByString:@""] containsString:@"%"]);
+  if (parts.count != originalParts.count || [[parts componentsJoinedByString:@""] containsString:@"%"]) continue;
+  NSString *rendered = parts.count == 2 ? [NSString stringWithFormat:format, (unsigned long)23] :
+      [NSString stringWithFormat:format, (unsigned long)2, (unsigned long)3, (unsigned long)5];
+  XCTAssertFalse([rendered containsString:@"%"]);
+  NSRegularExpression *numbers = [NSRegularExpression regularExpressionWithPattern:@"[0-9]+" options:0 error:NULL];
+  NSMutableArray *values = [NSMutableArray array];
+  for (NSTextCheckingResult *match in [numbers matchesInString:rendered options:0 range:NSMakeRange(0, rendered.length)]) {
+   [values addObject:[rendered substringWithRange:match.range]];
+  }
+  XCTAssertEqualObjects(values, parts.count == 2 ? (@[@"23"]) : (@[@"2", @"3", @"5"]));
+ }
+}
+
 @end

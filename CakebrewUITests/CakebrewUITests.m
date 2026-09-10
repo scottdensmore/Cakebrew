@@ -432,6 +432,141 @@
  [self.app.sheets.firstMatch.buttons[@"brewfile.import.action"] click];
 }
 
+- (NSArray *)germanBrewfileArguments
+{
+ return @[@"-AppleLanguages", @"(de)", @"-AppleLocale", @"de_DE"];
+}
+
+- (void)testGermanBrewfileReviewAndCancel
+{
+ [self openBrewfileReviewWithContents:@"brew 'mockwget'\ncask 'missingapp'\ntap 'owner/tap'\nmas 'App', id: 123\nvscode 'pub.ext'" extraArguments:[self germanBrewfileArguments]];
+ XCUIElement *sheet = self.app.sheets.firstMatch;
+ NSString *review = sheet.textViews[@"brewfile.review.entries"].value;
+ XCTAssertTrue([review containsString:@"mockwget — Installiert"]);
+ XCTAssertTrue([review containsString:@"missingapp — Fehlt"]);
+ XCTAssertTrue([review containsString:@"Nicht geprüft"]);
+ XCTAssertTrue([review containsString:@"Mac App Store"]);
+ XCTAssertTrue(sheet.staticTexts[@"Brewfile prüfen"].exists);
+ NSPredicate *warning = [NSPredicate predicateWithFormat:@"value CONTAINS %@", @"Installationsskripte ausführen"];
+ XCTAssertTrue([sheet.staticTexts matchingPredicate:warning].firstMatch.exists);
+ XCTAssertEqualObjects(sheet.buttons[@"brewfile.review.install"].title, @"Geprüfte Einträge installieren");
+ XCTAssertEqualObjects(sheet.buttons[@"brewfile.review.cancel"].title, @"Abbrechen");
+ [sheet.buttons[@"brewfile.review.cancel"] click];
+ XCTAssertFalse(self.app.sheets.firstMatch.exists);
+ XCTAssertFalse(self.app.textViews[@"brewfile.import.output"].exists);
+}
+
+- (void)testGermanBrewfileReviewEscapeRunsNothing
+{
+ [self openBrewfileReviewWithContents:@"brew 'mockwget'" extraArguments:[self germanBrewfileArguments]];
+ XCUIElement *sheet = self.app.sheets.firstMatch;
+ XCUIElement *cancel = sheet.buttons[@"brewfile.review.cancel"];
+ BOOL localizedReview = sheet.staticTexts[@"Brewfile prüfen"].exists &&
+  [sheet.textViews[@"brewfile.review.entries"].value containsString:@"mockwget — Installiert"] &&
+  [cancel.title isEqualToString:@"Abbrechen"];
+ XCUIApplicationState applicationState = self.app.state;
+ XCTAssertTrue(localizedReview);
+ XCTAssertEqual(applicationState, XCUIApplicationStateRunningForeground);
+ if (!localizedReview || applicationState != XCUIApplicationStateRunningForeground) return;
+
+ [self.app typeKey:XCUIKeyboardKeyEscape modifierFlags:XCUIKeyModifierNone];
+ [self expectationForPredicate:[NSPredicate predicateWithFormat:@"exists == NO"]
+  evaluatedWithObject:self.app.sheets.firstMatch handler:nil];
+ [self waitForExpectationsWithTimeout:5 handler:nil];
+ XCTAssertFalse(self.app.sheets.firstMatch.exists);
+ XCTAssertFalse(self.app.textViews[@"brewfile.import.output"].exists);
+ XCTAssertFalse(self.app.staticTexts[@"brewfile.import.status"].exists);
+}
+
+- (void)testGermanBrewfileUnsupportedWarning
+{
+ [self openBrewfileReviewWithContents:@"brew 'mockwget'\nsystem('unsafe')" extraArguments:[self germanBrewfileArguments]];
+ XCUIElement *sheet = self.app.sheets.firstMatch;
+ XCTAssertFalse(sheet.buttons[@"brewfile.review.install"].enabled);
+ NSString *review = sheet.textViews[@"brewfile.review.entries"].value;
+ XCTAssertTrue([review containsString:@"Zeile 2:"]);
+ XCTAssertTrue([review containsString:@"Es wird nichts installiert."]);
+ [sheet.buttons[@"brewfile.review.cancel"] click];
+}
+
+- (void)assertGermanImportWithArguments:(NSArray *)arguments expectedStatus:(NSString *)expected outputMarker:(NSString *)marker cancel:(BOOL)cancel
+{
+ [self openBrewfileReviewWithContents:@"brew 'mockwget'" extraArguments:[[self germanBrewfileArguments] arrayByAddingObjectsFromArray:arguments]];
+ [self.app.sheets.firstMatch.buttons[@"brewfile.review.install"] click];
+ XCUIElement *action = self.app.sheets.firstMatch.buttons[@"brewfile.import.action"];
+ XCTAssertTrue([action waitForExistenceWithTimeout:5]);
+ if (cancel) {
+  XCTAssertEqualObjects(action.title, @"Abbrechen");
+  [action click];
+ }
+ XCUIElement *status = self.app.staticTexts[@"brewfile.import.status"];
+ [self expectationForPredicate:[NSPredicate predicateWithFormat:@"value == %@", expected] evaluatedWithObject:status handler:nil];
+ [self waitForExpectationsWithTimeout:10 handler:nil];
+ XCTAssertEqualObjects(action.title, @"Schließen");
+ NSString *output = self.app.textViews[@"brewfile.import.output"].value;
+ if (cancel) {
+  XCTAssertTrue([output containsString:@"MOCK_IMPORT_STARTED"]);
+  XCTAssertTrue([output containsString:@"MOCK_IMPORT_CANCELLED"]);
+  XCTAssertFalse([output containsString:@"MOCK_IMPORT_OK"]);
+ }
+ else XCTAssertTrue([output containsString:marker]);
+ [action click];
+ XCTAssertFalse(self.app.sheets.firstMatch.exists);
+}
+
+- (void)testGermanBrewfileConfirmedImport
+{
+ [self assertGermanImportWithArguments:@[] expectedStatus:@"Import abgeschlossen." outputMarker:@"MOCK_IMPORT_OK" cancel:NO];
+}
+
+- (void)testGermanBrewfileFailedImport
+{
+ [self assertGermanImportWithArguments:@[@"-BPMockBrewfileImportFails"] expectedStatus:@"Import fehlgeschlagen. Weitere Informationen finden Sie in der Ausgabe." outputMarker:@"MOCK_IMPORT_FAILED" cancel:NO];
+}
+
+- (void)testGermanBrewfileCancelledImport
+{
+ [self assertGermanImportWithArguments:@[@"-BPMockHoldBrewfileImportUntilCancelled"] expectedStatus:@"Import abgebrochen. Es können bereits Änderungen vorgenommen worden sein." outputMarker:nil cancel:YES];
+}
+
+- (void)openGermanMockExportWithArguments:(NSArray *)arguments
+{
+ [self launchWithArguments:[[@[@"-BPMockBrew", @"-BPMockExportURL", @"/fixture/Brewfile"] arrayByAddingObjectsFromArray:[self germanBrewfileArguments]] arrayByAddingObjectsFromArray:arguments]];
+ // AppKit exposes the existing German submenu title (Tools) in the menu bar.
+ [self.app.menuBars.menuBarItems[@"Tools"] click];
+ [self.app.menuItems[@"Exportiere Brew Installation..."] click];
+}
+
+- (void)testGermanBrewfileSlowAndSuccessfulExport
+{
+ [self openGermanMockExportWithArguments:@[@"-BPMockSlowExport"]];
+ XCUIElement *close = self.app.sheets.firstMatch.buttons[@"brewfile.export.close"];
+ XCTAssertTrue([close waitForExistenceWithTimeout:10]);
+ XCTAssertEqualObjects(close.title, @"Schließen");
+ XCTAssertFalse(close.enabled);
+ XCTAssertTrue([self.app descendantsMatchingType:XCUIElementTypeAny][@"brewfile.export.progress"].exists);
+ XCTAssertTrue(self.app.sheets.firstMatch.staticTexts[@"Bitte warten, während die Datei generiert wird."].exists);
+ [self expectationForPredicate:[NSPredicate predicateWithFormat:@"enabled == YES"] evaluatedWithObject:close handler:nil];
+ [self waitForExpectationsWithTimeout:15 handler:nil];
+ XCTAssertEqualObjects(self.app.staticTexts[@"brewfile.export.status"].value, @"Export erfolgreich");
+ [close click];
+ XCTAssertFalse(self.app.sheets.firstMatch.exists);
+}
+
+- (void)testGermanBrewfileFailedExport
+{
+ [self openGermanMockExportWithArguments:@[@"-BPMockExportFails"]];
+ XCUIElement *status = self.app.staticTexts[@"brewfile.export.status"];
+ XCTAssertTrue([status waitForExistenceWithTimeout:10]);
+ XCTAssertEqualObjects(status.value, @"Export fehlgeschlagen");
+ XCTAssertTrue([self.app.staticTexts[@"brewfile.export.detail"].value containsString:@"MOCK_EXPORT_FAILED"]);
+ XCUIElement *close = self.app.sheets.firstMatch.buttons[@"brewfile.export.close"];
+ XCTAssertEqualObjects(close.title, @"Schließen");
+ XCTAssertTrue(close.enabled);
+ [close click];
+ XCTAssertFalse(self.app.sheets.firstMatch.exists);
+}
+
 // Smoke test: the app launches and presents its main window.
 - (void)testAppLaunchesAndShowsMainWindow
 {
