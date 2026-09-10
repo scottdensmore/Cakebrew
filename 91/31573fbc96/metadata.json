@@ -1,0 +1,24 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "9131573fbc96",
+  "strategy": "manual-commit",
+  "branch": "feat/upgrade-all-updates",
+  "checkpoints_count": 4,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/91/31573fbc96/0/metadata.json",
+      "transcript": "/91/31573fbc96/0/full.jsonl",
+      "compact_transcript": "/91/31573fbc96/0/transcript.jsonl",
+      "content_hash": "/91/31573fbc96/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 136338,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 12952320,
+    "output_tokens": 31998,
+    "api_call_count": 108
+  }
+}
