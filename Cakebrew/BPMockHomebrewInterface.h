@@ -13,4 +13,8 @@
 // Activated by the -BPMockBrew launch argument (checked in
 // +[BPHomebrewInterface sharedInterface]).
 @interface BPMockHomebrewInterface : BPHomebrewInterface
+#if DEBUG
+/// Complete explicitly held catalogs normally, without cancelling the reload.
+- (void)releaseHeldCatalogs:(id)sender;
+#endif
 @end

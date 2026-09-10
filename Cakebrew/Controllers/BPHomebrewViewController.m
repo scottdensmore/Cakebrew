@@ -51,6 +51,7 @@
 #import "BPEmptyStateView.h"
 #if DEBUG
 #import "BPBackgroundUpdater.h"
+#import "BPMockHomebrewInterface.h"
 
 // Package identifiers are intentionally untranslated. This is Clang's targeted
 // false-positive annotation for a fixed test fixture, not user-facing text.
@@ -293,24 +294,32 @@ NSOpenSavePanelDelegate>
 {
 	NSArray<NSString *> *arguments = NSProcessInfo.processInfo.arguments;
 	NSUInteger targetIndex = [arguments indexOfObject:@"-BPMockWarmNotificationTarget"];
-	if (![arguments containsObject:@"-BPMockBrew"] || targetIndex == NSNotFound
-		|| targetIndex + 1 >= arguments.count)
-	{
-		return;
-	}
+	BOOL hasWarmTarget = targetIndex != NSNotFound && targetIndex + 1 < arguments.count;
+	BOOL holdsCatalog = [arguments containsObject:@"-BPMockHoldCatalogUntilReleased"];
+	if (![arguments containsObject:@"-BPMockBrew"] || (!hasWarmTarget && !holdsCatalog)) return;
 
 	NSMenuItem *root = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Notification Test", nil) action:NULL keyEquivalent:@""];
 	NSMenu *menu = [[NSMenu alloc] initWithTitle:root.title];
-	NSArray<NSString *> *titles = @[NSLocalizedString(@"Search Mock Packages", nil),
-		NSLocalizedString(@"Open Mock Notification", nil), NSLocalizedString(@"Search Then Open Mock Notification", nil),
-		NSLocalizedString(@"Search Then Clear Mock Search", nil)];
-	SEL actions[] = {@selector(beginMockNotificationSearch:), @selector(openMockNotification:),
-		@selector(openMockNotificationDuringSearch:), @selector(clearMockSearchBeforeDebounce:)};
-	for (NSUInteger index = 0; index < titles.count; index++)
+	if (hasWarmTarget)
 	{
-		NSMenuItem *item = [menu addItemWithTitle:titles[index] action:actions[index] keyEquivalent:@""];
-		item.target = self;
-		item.representedObject = arguments[targetIndex + 1];
+		NSArray<NSString *> *titles = @[NSLocalizedString(@"Search Mock Packages", nil),
+			NSLocalizedString(@"Open Mock Notification", nil), NSLocalizedString(@"Search Then Open Mock Notification", nil),
+			NSLocalizedString(@"Search Then Clear Mock Search", nil)];
+		SEL actions[] = {@selector(beginMockNotificationSearch:), @selector(openMockNotification:),
+			@selector(openMockNotificationDuringSearch:), @selector(clearMockSearchBeforeDebounce:)};
+		for (NSUInteger index = 0; index < titles.count; index++)
+		{
+			NSMenuItem *item = [menu addItemWithTitle:titles[index] action:actions[index] keyEquivalent:@""];
+			item.target = self;
+			item.representedObject = arguments[targetIndex + 1];
+		}
+	}
+	if (holdsCatalog && [[BPHomebrewInterface sharedInterface] isKindOfClass:[BPMockHomebrewInterface class]])
+	{
+		NSMenuItem *item = [menu addItemWithTitle:NSLocalizedString(@"Complete Mock Catalog", nil)
+			action:@selector(releaseHeldCatalogs:) keyEquivalent:@""];
+		item.identifier = @"mock.catalog.complete";
+		item.target = [BPHomebrewInterface sharedInterface];
 	}
 	root.submenu = menu;
 	[NSApp.mainMenu addItem:root];

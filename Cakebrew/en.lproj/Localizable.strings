@@ -302,3 +302,5 @@
 "\nHomebrew exit status: %d\n" = "\nHomebrew exit status: %d\n";
 
 "Homebrew could not export the Brewfile. Check the destination and try again." = "Homebrew could not export the Brewfile. Check the destination and try again.";
+
+"Complete Mock Catalog" = "Complete Mock Catalog";
