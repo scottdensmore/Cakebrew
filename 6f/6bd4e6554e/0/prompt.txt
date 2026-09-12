@@ -1,0 +1,73 @@
+Lets look through the issus and code and see what we can work on next in parallel
+
+---
+
+Ok lets get started
+
+---
+
+We can go ahead and merge. I have disabled actions because I am out of actions minutes. Lets create an issue to remember to enable them in a month. Also if needed we can update the AGENTS.md and then make a note in the issue to update that file when actions are reenabled.
+
+---
+
+I have disabled actions because I am out of actions minutes. Lets create an issue to remember to enable them in a month. Also if needed we can update the AGENTS.md and then make a note in the issue to update that file when actions are reenabled.
+
+---
+
+What is the next thing we should work on? We can pick up as much in parallel as we can. We should also create an issue to move to SwiftUI and Swift 6. During this transition we should work on modernizing the list and popovers and look to match macOS hig
+
+---
+
+Ok pick up whatever else you think we should work on and do as much in parallel as possible
+
+---
+
+Is there any open prs ? Nothing appeared or I missed it.
+
+---
+
+Try ui testing again
+
+---
+
+Ok so what should we dod next?
+
+---
+
+I have disabled actions because I am out of actions minutes. Lets create an issue to&#x20;
+emember to enable them in a month. Also if needed we can update the AGENTS.md&#x20;
+and then make a note in the issue to update that file when actions are reenabled.
+
+---
+
+Ok so lets merge the prs
+
+---
+
+<send_user_message_question_reply>
+[{"questionItemId":"[\"request_user_input_async\",\"REDACTED\",0]","question":"The last UI run recorded a Terminal window interrupting test clicks. Can you leave the Mac idle and pause other tests for the next UI run while I prepare the fixes?","answer":"Yes, the Mac can stay idle"}]
+</send_user_message_question_reply>
+
+---
+
+Keep going
+
+---
+
+<send_user_message_question_reply>
+[{"questionItemId":"[\"request_user_input_async\",\"call_qB7uUtN8SlHK5llaKmGGtRNd\",0]","question":"The test Cakebrew window is open with information for “mockwget,” but it lost keyboard focus. Choose “Ready” here first, then click inside that Cakebrew information popover and leave it frontmost so I can test Escape and text selection.","answer":"Ready — I’ll click Cakebrew now"}]
+</send_user_message_question_reply>
+
+---
+
+<send_user_message_question_reply>
+[{"questionItemId":"[\"request_user_input_async\",\"call_MEpQ0m73fbodiwV4EPpEphVG\",0]","question":"Cakebrew is now focused and text selection works, but the synthetic Escape key didn’t dismiss the popover. Choose “Ready” here, then return to the open “mockwget” popover and press Escape yourself. I’ll observe the result; no reply afterward is needed.","answer":"Ready — I’ll press Escape in Cakebrew"}]
+</send_user_message_question_reply>
+
+---
+
+What is left after I ran out of credits
+
+---
+
+Ok lets finish up that work. Make sure you are using luna high
