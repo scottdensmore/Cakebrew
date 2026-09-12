@@ -173,6 +173,8 @@
               @"removeUnusedFormulae:progress:output:",
 			  @"upgradeFormulae:withReturnBlock:",
               @"upgradeSelectedFormulae:progress:withReturnBlock:",
+              @"upgradeSelectionReporting:progress:withReturnBlock:",
+              @"listPinnedCasks",
 			  @"upgradeCasks:withReturnBlock:",
 			  @"installFormula:withOptions:andReturnBlock:",
 			  @"installCask:withReturnBlock:",

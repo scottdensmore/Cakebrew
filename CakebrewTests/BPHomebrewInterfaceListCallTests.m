@@ -37,6 +37,9 @@
 - (instancetype)init;
 @end
 
+@interface BPHomebrewInterfaceListCallPinnedCasks : BPHomebrewInterfaceListCall
+@end
+
 @interface BPHomebrewInterfaceListCallInstalledCasks : BPHomebrewInterfaceListCallInstalled
 - (instancetype)init;
 @end
@@ -154,7 +157,7 @@
 - (void)testPinnedCallUsesListPinnedArguments
 {
 	BPHomebrewInterfaceListCallPinned *call = [BPHomebrewInterfaceListCallPinned new];
-	XCTAssertEqualObjects(call.arguments, (@[ @"list", @"--pinned" ]));
+	XCTAssertEqualObjects(call.arguments, (@[ @"list", @"--formula", @"--pinned" ]));
 }
 
 - (void)testPinnedParserReturnsNameOnlyFormulae
@@ -371,4 +374,16 @@
 	XCTAssertTrue([BPHomebrewInterface isValidTapName:@"  user/repo  "]);
 }
 
+- (void)testPinnedCaskQueryAndParserUseCaskNamespace
+{
+    BPHomebrewInterfaceListCallPinnedCasks *call = [BPHomebrewInterfaceListCallPinnedCasks new];
+    XCTAssertEqualObjects(call.arguments, (@[@"list", @"--cask", @"--pinned"]));
+    NSArray *items = [call parseData:@"browser\n"];
+    XCTAssertEqualObjects([items.firstObject name], @"browser");
+    XCTAssertTrue([items.firstObject cask]);
+}
+- (void)testOutdatedFormulaQueryUsesExplicitFormulaNamespace
+{
+    XCTAssertEqualObjects([BPHomebrewInterfaceListCallUpgradeable new].arguments, (@[@"outdated", @"--formula", @"--verbose"]));
+}
 @end

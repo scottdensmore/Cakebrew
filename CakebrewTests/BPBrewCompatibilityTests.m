@@ -161,7 +161,7 @@
 - (void)testOutdatedListStillParses
 {
 	// May legitimately be empty; parsing must not blow up either way.
-	NSString *output = [self brew:@[@"outdated", @"--verbose"]];
+	NSString *output = [self brew:@[@"outdated", @"--formula", @"--verbose"]];
 	NSArray<BPFormula *> *formulae = [[[BPHomebrewInterfaceListCallUpgradeable alloc] init] parseData:output];
 
 	for (BPFormula *formula in formulae)

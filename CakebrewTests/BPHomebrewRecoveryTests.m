@@ -42,6 +42,11 @@
 	@synchronized (self) { self.listCalls++; }
 	return @[[BPFormula formulaWithName:@"recovered"]];
 }
+- (NSArray *)listPinnedCasks
+{
+    @synchronized (self) { self.listCalls++; }
+    return @[];
+}
 - (NSArray *)listServices
 {
 	@synchronized (self) { self.listCalls++; }
@@ -228,7 +233,7 @@
 	XCTAssertEqual(self.manager.discoveryResult, BPHomebrewDiscoveryAvailable);
 	XCTAssertFalse(self.manager.checkingHomebrew);
 	XCTAssertEqual(self.manager.fixture.discoveryCalls, 2u);
-	XCTAssertEqual(self.manager.fixture.listCalls, 10u);
+	XCTAssertEqual(self.manager.fixture.listCalls, 11u);
 	XCTAssertEqual(self.finishes, 1u);
 	XCTAssertEqualObjects(self.manager.installedFormulae.firstObject.name, @"recovered");
 }

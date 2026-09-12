@@ -3,6 +3,7 @@
 #import "BPAutoremovePreview.h"
 #import "BPAutoremoveOperation.h"
 #import "BPHomebrewManager.h"
+#import "BPUpdatesSnapshot.h"
 #import "BPService.h"
 #import <objc/runtime.h>
 
@@ -117,8 +118,8 @@
 	CB150Manager *manager = [class_createInstance(CB150Manager.class, 0) initUniqueInstance];
 	CB150RefreshShellInterface *interface = [self refreshShellInterface];
 	manager.fixtureInterface = interface;
-	interface.outputs = @{@"leaves": @"freshleaf\n", @"outdated --verbose": @"partial (1) < 2\n"};
-	interface.statuses = @{@"list --versions": @7, @"outdated --verbose": @8, @"services list --json": @9};
+	interface.outputs = @{@"leaves": @"freshleaf\n", @"outdated --formula --verbose": @"partial (1) < 2\n"};
+	interface.statuses = @{@"list --versions": @7, @"outdated --formula --verbose": @8, @"services list --json": @9};
 	NSArray *kept = @[[BPFormula formulaWithName:@"kept"]];
 	manager.installedFormulae = kept; manager.leavesFormulae = kept;
 	[manager publishList:kept forMode:kBPListOutdated generation:manager.currentReloadGeneration];
@@ -136,13 +137,13 @@
 	XCTAssertEqualObjects(manager.services, services);
 	XCTAssertEqualObjects(manager.leavesFormulae.firstObject.name, @"freshleaf");
 	XCTAssertEqual(snapshots, 0u, @"A failed outdated query cannot publish a new zero or partial count");
-	XCTAssertEqualObjects(interface.commands, (@[@"list --versions", @"leaves", @"outdated --verbose", @"services list --json"]));
+	XCTAssertEqualObjects(interface.commands, (@[@"list --versions", @"leaves", @"outdated --formula --verbose", @"services list --json"]));
 }
 
 - (void)testAutoremoveRefreshReadsPreserveProcessFailureAndSuccessfulEmptyResults
 {
 	CB150RefreshShellInterface *interface = [self refreshShellInterface];
-	NSArray *keys = @[@"list --versions", @"leaves", @"outdated --verbose"];
+	NSArray *keys = @[@"list --versions", @"leaves", @"outdated --formula --verbose"];
 	NSArray *modes = @[@(kBPListInstalled), @(kBPListLeaves), @(kBPListOutdated)];
 	NSArray *samples = @[@"newformula 1.2\n", @"newleaf\n", @"newformula (1.0) < 2.0\n"];
 	for (NSUInteger i = 0; i < keys.count; i++) {
@@ -420,4 +421,34 @@
 	XCTAssertFalse([BPAutoremovePreview previewWithOutput:@"" succeeded:NO].valid);
 }
 
+- (void)testRemovalRefreshCarriesOnlyCompleteImmutableCurrentUpdatesBaseline
+{
+    for (NSNumber *complete in @[@0, @1, @2]) {
+        CB150Manager *manager = [class_createInstance(CB150Manager.class, 0) initUniqueInstance];
+        CB150RefreshInterface *interface = [[CB150RefreshInterface allocWithZone:NULL] initUniqueInstance];
+        interface.modes = [NSMutableArray array]; manager.fixtureInterface = interface;
+        NSUInteger generation = manager.currentReloadGeneration;
+        BPFormula *cask = [BPFormula formulaWithName:@"browser"];
+        [manager publishList:@[cask] forMode:kBPListOutdatedCasks generation:generation];
+        [manager publishList:@[] forMode:kBPListOutdated generation:generation];
+        [manager publishList:@[] forMode:kBPListPinned generation:generation];
+        if (complete.boolValue) [manager publishPinnedCasks:@[] generation:generation];
+        if (complete.integerValue == 2) [manager setValue:@(generation + 1) forKey:@"reloadGeneration"];
+        manager.outdatedCasks = @[]; // Live arrays must never supply the baseline.
+        XCTestExpectation *done = [self expectationWithDescription:@"partial refresh"];
+        [manager refreshFormulaStateAfterRemovalWithCompletion:^(BOOL ok) { XCTAssertTrue(ok); [done fulfill]; }];
+        XCTAssertNil(manager.updatesSnapshot);
+        [self waitForExpectations:@[done] timeout:5];
+        if (complete.integerValue == 1) {
+            XCTAssertEqualObjects(manager.updatesSnapshot.eligibleCasks, @[@"browser"]);
+            XCTAssertEqualObjects(manager.updatesSnapshot.eligibleFormulae, @[]);
+            XCTAssertEqual(manager.updatesSnapshot.generation, generation + 1);
+        } else XCTAssertNil(manager.updatesSnapshot);
+        interface.fail = YES;
+        done = [self expectationWithDescription:@"failed partial refresh"];
+        [manager refreshFormulaStateAfterRemovalWithCompletion:^(BOOL ok) { XCTAssertFalse(ok); [done fulfill]; }];
+        [self waitForExpectations:@[done] timeout:5];
+        XCTAssertNil(manager.updatesSnapshot);
+    }
+}
 @end

@@ -19,6 +19,7 @@
 //	along with this program.	If not, see <http://www.gnu.org/licenses/>.
 //
 
+#import "BPUpgradePlan.h"
 #import "BPInstallationWindowController.h"
 #import "BPHomebrewInterface.h"
 #import "BPHomebrewManager.h"
@@ -42,6 +43,8 @@
 @property (strong, nonatomic) NSArray *options;
 
 @property BOOL operationStatus;
+@property (nonatomic, strong) BPUpgradeResult *upgradeResult;
+@property (nonatomic) BOOL upgradeWorkerFinished;
 @property (nonatomic) BOOL zapCask;
 @property (nonatomic, copy) void (^completionBlock)(BOOL);
 
@@ -214,19 +217,22 @@
 		}
 		else if (self.windowOperation == kBPWindowOperationUpgrade)
 		{
-			if (self.formulae)
-			{
-				self.operationStatus = [homebrewInterface upgradeSelectedFormulae:self.formulae
-																 progress:self.upgradeProgress
-														  withReturnBlock:displayTerminalOutput];
-			}
-			else
-			{
-				// No operands: bare `brew upgrade` upgrades everything outdated.
-				self.operationStatus = [homebrewInterface upgradeFormulae:nil
-														  withReturnBlock:displayTerminalOutput];
-			}
+            self.upgradeResult = [homebrewInterface upgradeSelectionReporting:self.formulae ?: @[]
+                progress:self.upgradeProgress withReturnBlock:displayTerminalOutput];
+            self.operationStatus = self.upgradeResult.succeeded;
+            for (BPUpgradeBatchResult *batch in self.upgradeResult.batches) {
+                NSString *statusKey;
+                switch (batch.status) {
+                    case BPUpgradeBatchSucceeded: statusKey = @"Updates_Command_Succeeded"; break;
+                    case BPUpgradeBatchFailed: statusKey = @"Updates_Command_Failed"; break;
+                    case BPUpgradeBatchCancelled: statusKey = @"Updates_Command_Cancelled"; break;
+                    case BPUpgradeBatchUnattempted: statusKey = @"Updates_Command_Unattempted"; break;
+                }
+                displayTerminalOutput([NSString stringWithFormat:@"\n%@\n",
+                    [NSString stringWithFormat:NSLocalizedString(statusKey, nil), [batch.arguments componentsJoinedByString:@" "]]]);
+            }
 		}
+
 		else if (self.windowOperation == kBPWindowOperationTap)
 		{
 			if (self.formulae)
@@ -257,6 +263,7 @@
 - (void)finishTask
 {
 	dispatch_async(dispatch_get_main_queue(), ^(){
+        self.upgradeWorkerFinished = YES;
 		[self.progressIndicator stopAnimation:nil];
 		[self.okButton setEnabled:YES];
 		[self.cancelButton setEnabled:NO];
@@ -264,18 +271,18 @@
 		// operationStatus was written on every path and read by nobody, so a
 		// failed install announced itself exactly like a successful one.
 		BOOL succeeded = self.operationStatus && !self.wasCancelled;
-		NSString *title = succeeded
-			? NSLocalizedString(@"Homebrew_Task_Finished", nil)
-			: NSLocalizedString(@"Homebrew_Task_Failed", nil);
+		BOOL cancelled = self.wasCancelled || self.upgradeResult.cancelled;
+        NSString *failureTitle = NSLocalizedString(cancelled ? @"Updates_Task_Cancelled" : @"Homebrew_Task_Failed", nil);
+        NSString *title = succeeded ? NSLocalizedString(@"Homebrew_Task_Finished", nil) : failureTitle;
 		NSString *desc = [NSString stringWithFormat:@"%@ %@",
 						  self.windowTitleLabel.stringValue,
 						  self.formulaNameLabel.stringValue];
 
-		self.windowTitleLabel.stringValue = succeeded
+		self.windowTitleLabel.stringValue = cancelled ? title : succeeded
 			? self.windowTitleLabel.stringValue
 			: [NSString stringWithFormat:@"%@ — %@",
 			   self.windowTitleLabel.stringValue,
-			   NSLocalizedString(@"Homebrew_Task_Failed", nil)];
+			   failureTitle];
 
 		[BPAppDelegateRef requestUserAttentionWithMessageTitle:title andDescription:desc];
 
@@ -293,15 +300,15 @@
 
 - (IBAction)cancelAction:(id)sender
 {
-	// Terminal immediately: the user asked to stop, so the sheet becomes
-	// dismissible now rather than when brew gets around to dying. The log is
-	// left in place so they can see how far it got.
+    // Token-owned upgrades remain busy until every attempted command exits.
+    // Preserve the existing cancellation behavior for unrelated operations.
 	self.wasCancelled = YES;
 	[self.cancelButton setEnabled:NO];
-	[self.okButton setEnabled:YES];
+	[self.okButton setEnabled:self.upgradeProgress == nil];
+    if (self.upgradeProgress) self.windowTitleLabel.stringValue = NSLocalizedString(@"Updates_Cancelling", nil);
 
 	[self.recordTextView appendOutput:[NSString stringWithFormat:@"\n%@\n",
-									   NSLocalizedString(@"Installation_Window_Cancelled", nil)]];
+									   NSLocalizedString(self.upgradeProgress ? @"Updates_Cancelling" : @"Installation_Window_Cancelled", nil)]];
 
 	[self.upgradeProgress cancel];
 	BPHomebrewInterface *interface = [BPHomebrewInterface sharedInterface];
@@ -314,6 +321,7 @@
 
 - (IBAction)okAction:(id)sender
 {
+    if (self.upgradeProgress && !self.upgradeWorkerFinished) return;
 	self.recordTextView.string = @"";
 	
 	NSWindow *mainWindow = self.window.sheetParent;

@@ -250,11 +250,11 @@ CA
                                     <binding destination="547" name="enabled" keyPath="self.enableUpgradeFormulasMenu" id="ngn-Rt-iDY"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Upgrade All Formulae" alternate="YES" keyEquivalent="u" id="DdP-fd-ccO">
+                            <menuItem title="Upgrade All Updates…" keyEquivalent="u" id="DdP-fd-ccO">
                                 <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                                 <connections>
                                     <action selector="upgradeAllOutdatedFormulae:" target="547" id="aHB-0Y-WgM"/>
-                                    <binding destination="547" name="enabled" keyPath="self.enableUpgradeFormulasMenu" id="Ldn-FC-8V8"/>
+                                    <binding destination="547" name="enabled" keyPath="self.enableUpgradeAllMenu" id="Ldn-FC-8V8"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Search for Formula" keyEquivalent="f" id="DpP-yi-xdi">

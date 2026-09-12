@@ -122,7 +122,7 @@
 "DNi-yY-5Ha.title" = "Utiliser la sélection pour la recherche";
 
 /* Class = "NSMenuItem"; title = "Upgrade All Formulae"; ObjectID = "DdP-fd-ccO"; */
-"DdP-fd-ccO.title" = "Mettre à jour toutes les formules";
+"DdP-fd-ccO.title" = "Mettre à jour toutes les formules et tous les Casks…";
 
 /* Class = "NSMenuItem"; title = "Substitutions"; ObjectID = "Dki-FU-69n"; */
 "Dki-FU-69n.title" = "Substitutions";

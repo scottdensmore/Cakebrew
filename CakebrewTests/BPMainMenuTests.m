@@ -245,4 +245,31 @@ static NSString *BPSearchPackageInput(BOOL cask)
 				   @"the title should say what the item does, since it opens a web page");
 }
 
+- (void)testLocalizedUpgradeAllResourceDescribesBothNamespacesAndConfirmation
+{
+    NSString *repoRoot = [[@(__FILE__) stringByDeletingLastPathComponent] stringByDeletingLastPathComponent];
+    NSString *resources = [repoRoot stringByAppendingPathComponent:@"Cakebrew"];
+    NSString *appPath = NSProcessInfo.processInfo.environment[@"CAKEBREW_TEST_APP_BUNDLE"];
+    if (appPath) {
+        NSBundle *app = [NSBundle bundleWithPath:appPath];
+        XCTAssertNotNil(app, @"Explicit packaged-app validation must never fall back to source resources");
+        if (!app) return;
+        resources = app.resourcePath;
+    }
+    NSDictionary *formulaTerms = @{@"de": @"Formeln", @"fr": @"formules", @"it": @"formule",
+        @"pt": @"Fórmulas", @"zh-Hans": @"Formulae"};
+    for (NSString *locale in formulaTerms) {
+        NSString *path = [resources stringByAppendingPathComponent:[locale stringByAppendingString:@".lproj"]];
+        NSBundle *localized = [NSBundle bundleWithPath:path];
+        XCTAssertNotNil(localized, @"Missing localized resources for %@", locale);
+        // Resolve the real table through Foundation. The Base xib already had
+        // the correct title while these localized overrides still hid Casks.
+        NSString *title = [localized localizedStringForKey:@"DdP-fd-ccO.title" value:@"MISSING" table:@"MainMenu"];
+        XCTAssertNotEqualObjects(title, @"MISSING", @"%@ must resolve its own menu override", locale);
+        XCTAssertTrue([title localizedCaseInsensitiveContainsString:formulaTerms[locale]], @"%@ title must retain formula scope: %@", locale, title);
+        XCTAssertTrue([title containsString:@"Casks"], @"%@ title must include the cask scope: %@", locale, title);
+        XCTAssertTrue([title hasSuffix:@"…"], @"%@ action opens confirmation before running: %@", locale, title);
+    }
+}
+
 @end

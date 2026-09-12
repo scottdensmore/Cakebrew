@@ -78,11 +78,18 @@ typedef NS_ENUM(NSInteger, BPFormulaStatus) {
 
 @end
 
+@class BPUpdatesSnapshot;
+extern NSNotificationName const BPHomebrewManagerUpdatesSnapshotDidChangeNotification;
+
 @interface BPHomebrewManager : NSObject
 
 /// The reload currently allowed to publish. A reload carries the generation it
 /// started with; anything older has been superseded and must stay silent.
 @property (readonly) NSUInteger currentReloadGeneration;
+/// nil until all four successful update inputs belong to the current reload.
+@property (readonly, strong) BPUpdatesSnapshot *updatesSnapshot;
+- (NSArray<BPFormula *> *)selectionForConfirmedUpdatesSnapshot:(BPUpdatesSnapshot *)snapshot;
+- (void)publishPinnedCasks:(NSArray<BPFormula *> *)casks generation:(NSUInteger)generation;
 @property (readonly) BPHomebrewDiscoveryResult discoveryResult;
 @property (readonly) BOOL checkingHomebrew;
 /// A retry during discovery or the recovered reload is ignored.

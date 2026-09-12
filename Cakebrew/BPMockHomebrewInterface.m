@@ -118,6 +118,8 @@
 // Serve deterministic fixture lists instead of running brew. installed / outdated
 // / leaves / repositories are fetched fresh (not cached), so these drive the UI
 // reproducibly.
+- (NSArray<BPFormula *> *)listPinnedCasks { return @[]; }
+
 - (NSArray<BPFormula *> *)listMode:(BPListMode)mode
 {
     if (mode == kBPListAll || mode == kBPListAllCasks) {
@@ -163,6 +165,7 @@
 					  [BPFormula formulaWithName:@"homebrew/cask"] ];
 
 		case kBPListPinned:
+            if ([NSProcessInfo.processInfo.arguments containsObject:@"-BPMockMixedUpdates"]) return @[];
 			return @[ [BPFormula formulaWithName:@"mockgit"] ];
 
 		case kBPListInstalledCasks:
@@ -308,10 +311,25 @@
                       progress:(NSProgress *)progress
                withReturnBlock:(void (^)(NSString *))block
 {
+    return [self upgradeSelectionReporting:formulae progress:progress withReturnBlock:block].succeeded;
+}
+- (BPUpgradeResult *)upgradeSelectionReporting:(NSArray<BPFormula *> *)formulae
+    progress:(NSProgress *)progress withReturnBlock:(void (^)(NSString *))block
+{
     BPUpgradePlan *plan = [[BPUpgradePlan alloc] initWithSelection:formulae];
-    return [plan executeWithProgress:progress runner:^BOOL(NSArray<NSString *> *arguments) {
+    return [plan executeReportingWithProgress:progress runner:^BOOL(NSArray<NSString *> *arguments) {
+        if ([NSProcessInfo.processInfo.arguments containsObject:@"-BPMockSlowUpgrade"]) {
+            if (block) block(@"MOCK_UPGRADE_STARTED\n");
+            for (NSUInteger tick = 0; tick < 100 && !progress.cancelled; tick++) [NSThread sleepForTimeInterval:0.1];
+            if (progress.cancelled) {
+                if (block) block(@"MOCK_UPGRADE_CANCELLING\n");
+                [NSThread sleepForTimeInterval:5.0]; // Observe the owned worker unwinding.
+                return NO;
+            }
+        }
         if (block) block([NSString stringWithFormat:@"MOCK_UPGRADE_OK\nMOCK_UPGRADE_ARGUMENTS: %@\nUpgraded 0 packages.\n",
                           [arguments componentsJoinedByString:@" "]]);
+        if ([NSProcessInfo.processInfo.arguments containsObject:@"-BPMockFailedCaskUpgrade"] && [arguments containsObject:@"--cask"]) return NO;
         return YES;
     }];
 }
