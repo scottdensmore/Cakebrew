@@ -38,6 +38,6 @@ the areas most worth attention are:
 * Cakebrew is deliberately **not** App-Sandboxed — a sandboxed process cannot
   execute `brew` at all, and the exceptions that would allow it redirect the
   user's home directory, breaking `brew services` in ways that fail silently.
-  AGENTS.md records the measurements behind that decision. Reports arguing that
-  the app should be sandboxed are a design discussion, not a vulnerability.
+  Reports arguing that the app should be sandboxed are a design discussion,
+  not a vulnerability.
 * Anything requiring the attacker to already have code execution as the user.

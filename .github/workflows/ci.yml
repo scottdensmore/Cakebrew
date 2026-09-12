@@ -34,7 +34,7 @@ jobs:
       - name: Report localization debt
         run: ruby scripts/localization-debt.rb --summary "$GITHUB_STEP_SUMMARY"
 
-      # AGENTS.md makes "zero warnings" a hard gate; nothing enforced it, so a
+      # Zero warnings is enforced as a hard gate; nothing enforced it, so a
       # build emitting fifty warnings passed identically to a clean one.
       # Warnings-as-errors is passed on the command line rather than baked into
       # the project, so local incremental work stays ergonomic.

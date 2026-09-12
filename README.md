@@ -85,9 +85,7 @@ Debug-only.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow, and
-[AGENTS.md](AGENTS.md) for the full working agreement — it is written for both
-human contributors and coding agents, and it is the authoritative version.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details on contributing to Cakebrew.
 
 ## Security
 

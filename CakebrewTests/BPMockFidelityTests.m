@@ -2,7 +2,7 @@
 //  BPMockFidelityTests.m
 //  CakebrewTests
 //
-//  AGENTS.md states the invariant: every interface method gets a mock override
+//  The testing invariant: every interface method gets a mock override
 //  so UI tests never shell out to real brew. It was quietly false for most
 //  formula-side mutating operations, which inherited the real implementations
 //  and would have executed brew for real.
