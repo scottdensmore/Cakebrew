@@ -1,0 +1,52 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "6f6bd4e6554e",
+  "session_id": "01a07efb-e28b-7712-98b0-a7eac8497c2d",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-12T02:20:30.082331Z",
+  "branch": "feat/swiftui-info-popover",
+  "checkpoints_count": 1,
+  "files_touched": [],
+  "agent": "Codex",
+  "model": "gpt-5.6-luna",
+  "turn_id": "c33367cd21fd",
+  "checkpoint_transcript_start": 13691,
+  "transcript_lines_at_start": 13691,
+  "compact_transcript_start": 1446,
+  "token_usage": {
+    "input_tokens": 117652,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 4300416,
+    "output_tokens": 8657,
+    "api_call_count": 67
+  },
+  "session_metrics": {
+    "turn_count": 5
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 3154,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".codex/config.toml": 2,
+        ".worktrees/actions-runtime-deprecation-issue.md": 32,
+        ".worktrees/ci-warning-cleanup-pr.md": 49,
+        ".worktrees/issue-148-pr.md": 41,
+        ".worktrees/issue-155-codex-review.txt": 1,
+        ".worktrees/issue-155-snapshot-reply.txt": 7,
+        ".worktrees/recovery-148-original/Cakebrew/BPAppDelegate.h": 113,
+        ".worktrees/recovery-148-original/Cakebrew/BPAppDelegate.m": 470,
+        ".worktrees/recovery-148-original/Cakebrew/BPBackgroundUpdater.h": 70,
+        ".worktrees/recovery-148-original/Cakebrew/BPBackgroundUpdater.m": 271,
+        ".worktrees/recovery-148-original/Cakebrew/Controllers/BPHomebrewViewController.h": 78,
+        ".worktrees/recovery-148-original/Cakebrew/Controllers/BPHomebrewViewController.m": 1402,
+        ".worktrees/recovery-148-original/CakebrewTests/BPBackgroundTaskGuardTests.m": 325,
+        ".worktrees/recovery-148-original/CakebrewTests/BPBackgroundUpdaterTests.m": 165,
+        "workflow.md": 128
+      }
+    }
+  ]
+}
