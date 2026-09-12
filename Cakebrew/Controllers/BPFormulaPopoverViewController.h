@@ -23,6 +23,6 @@ typedef NS_ENUM(NSInteger, BPFormulaInfoType) {
 @property (weak) IBOutlet NSPopover *formulaPopover;
 @property (weak) IBOutlet NSProgressIndicator *progressIndicator;
 
-@property BPFormulaInfoType infoType;
+@property (nonatomic) BPFormulaInfoType infoType;
 
 @end

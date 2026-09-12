@@ -322,3 +322,7 @@
 "Updates_Review_Body" = "Review the exact targets below. Pinned items are excluded.";
 "Updates_Review_Targets" = "Update targets and pinned exclusions";
 "Updates_Cancelling" = "Cancelling… Waiting for the active command to finish.";
+
+/* Package information popover */
+"Information_Title" = "Information for %@";
+"Information_Unavailable" = "No information is available for this package.";

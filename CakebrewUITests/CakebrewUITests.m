@@ -200,7 +200,7 @@
 {
 	[self launchWithArguments:@[@"-BPMockBrew"]];
 	[[self formulaCellWithName:@"mockwget"] doubleClick];
-	XCUIElement *info = [self.app.textViews matchingPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS %@", @"A mock formula"]].firstMatch;
+	XCUIElement *info = [[[self.app descendantsMatchingType:XCUIElementTypeAny] matchingIdentifier:@"formula.information.text"] matchingPredicate:[NSPredicate predicateWithFormat:@"label CONTAINS %@ OR value CONTAINS %@", @"A mock formula", @"A mock formula"]].firstMatch;
 	BOOL appeared = [info waitForExistenceWithTimeout:15];
 	if (!appeared) NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
 	XCTAssertTrue(appeared);
@@ -214,7 +214,7 @@
 	XCUIElement *cask = [self formulaCellWithName:@"mockchrome"];
 	XCTAssertTrue([cask waitForExistenceWithTimeout:15]);
 	[cask doubleClick];
-	XCUIElement *info = [self.app.textViews matchingPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS %@", @"A mock cask"]].firstMatch;
+	XCUIElement *info = [[[self.app descendantsMatchingType:XCUIElementTypeAny] matchingIdentifier:@"formula.information.text"] matchingPredicate:[NSPredicate predicateWithFormat:@"label CONTAINS %@ OR value CONTAINS %@", @"A mock cask", @"A mock cask"]].firstMatch;
 	BOOL appeared = [info waitForExistenceWithTimeout:15];
 	if (!appeared) NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
 	XCTAssertTrue(appeared);
@@ -1737,6 +1737,40 @@
 
 #pragma mark - Formula info journey
 
+// A transient successful frame is not enough: the previous close animation can
+// still complete after a replacement popover has already rendered its content.
+- (void)assertMockInformationSurvivesPopoverAnimation
+{
+    XCTestExpectation *settled = [self expectationWithDescription:@"popover close animation completed"];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        [settled fulfill];
+    });
+    [self waitForExpectationsWithTimeout:5.0 handler:nil];
+    XCUIElement *title = [[self.app descendantsMatchingType:XCUIElementTypeAny]
+        matchingIdentifier:@"formula.information.title"].firstMatch;
+    XCUIElement *information = [[self.app descendantsMatchingType:XCUIElementTypeAny]
+        matchingIdentifier:@"formula.information.text"].firstMatch;
+    XCTAssertTrue(title.exists);
+    XCTAssertTrue([title.label containsString:@"mockwget"]);
+    NSPredicate *content = [NSPredicate predicateWithFormat:@"label CONTAINS %@ OR value CONTAINS %@",
+        @"A mock formula", @"A mock formula"];
+    XCTAssertTrue(information.exists);
+    XCTAssertTrue([content evaluateWithObject:information]);
+}
+
+- (void)testMoreInformationWhileOpenKeepsSelectedPackageContent
+{
+    [self launchWithArguments:@[@"-BPMockBrew"]];
+    [[self formulaCellWithName:@"mockwget"] click];
+    XCUIElement *infoButton = self.app.buttons[@"More Information"];
+    [infoButton click];
+    XCUIElement *information = [[self.app descendantsMatchingType:XCUIElementTypeAny]
+        matchingIdentifier:@"formula.information.text"].firstMatch;
+    XCTAssertTrue([information waitForExistenceWithTimeout:15.0]);
+    [infoButton click];
+    [self assertMockInformationSurvivesPopoverAnimation];
+}
+
 // Journey: More Information shows the selected formula's details in a popover.
 - (void)testMoreInformationShowsFormulaInfoPopover
 {
@@ -1751,13 +1785,95 @@
 	[infoButton click];
 
 	// The popover shows the formula's info (served by the mock interface).
-	NSPredicate *predicate = [NSPredicate predicateWithFormat:@"value CONTAINS %@", @"A mock formula"];
-	XCUIElement *infoText = [[self.app.textViews matchingPredicate:predicate] firstMatch];
+	XCUIElement *infoText = [[self.app descendantsMatchingType:XCUIElementTypeAny]
+        matchingIdentifier:@"formula.information.text"].firstMatch;
 	BOOL appeared = [infoText waitForExistenceWithTimeout:15.0];
 	if (!appeared) {
 		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
 	}
 	XCTAssertTrue(appeared, @"More Information should show the formula info in a popover");
+    NSPredicate *content = [NSPredicate predicateWithFormat:@"label CONTAINS %@ OR value CONTAINS %@",
+        @"A mock formula", @"A mock formula"];
+    [self expectationForPredicate:content evaluatedWithObject:infoText handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
+    XCTAssertGreaterThan(infoText.frame.size.width, 100.0);
+    XCTAssertGreaterThan(infoText.frame.size.height, 20.0);
+    XCUIElement *title = [[self.app descendantsMatchingType:XCUIElementTypeAny]
+        matchingIdentifier:@"formula.information.title"].firstMatch;
+    XCTAssertTrue([title.label containsString:@"mockwget"]);
+
+    // An outside click dismisses the transient popover and keeps the selection.
+    [wget click];
+    NSPredicate *dismissed = [NSPredicate predicateWithFormat:@"exists == NO"];
+    [self expectationForPredicate:dismissed evaluatedWithObject:infoText handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
+    [infoButton click];
+    XCTAssertTrue([infoText waitForExistenceWithTimeout:10.0], @"the same selection can reopen information");
+}
+
+- (void)testMoreInformationEscapeDismissesAndReopensSelectedPackage
+{
+    [self launchWithArguments:@[@"-BPMockBrew"]];
+    [[self formulaCellWithName:@"mockwget"] click];
+    XCUIElement *infoButton = self.app.buttons[@"More Information"];
+    XCTAssertTrue([infoButton waitForExistenceWithTimeout:15]);
+    [infoButton click];
+
+    XCUIElement *popover = self.app.popovers.firstMatch;
+    XCTAssertTrue([popover waitForExistenceWithTimeout:15]);
+    XCUIElement *title = [[popover descendantsMatchingType:XCUIElementTypeAny]
+        matchingIdentifier:@"formula.information.title"].firstMatch;
+    XCUIElement *information = [[popover descendantsMatchingType:XCUIElementTypeAny]
+        matchingIdentifier:@"formula.information.text"].firstMatch;
+    XCTAssertTrue([information waitForExistenceWithTimeout:15]);
+    NSPredicate *content = [NSPredicate predicateWithFormat:@"label CONTAINS %@ OR value CONTAINS %@",
+        @"A mock formula", @"A mock formula"];
+    BOOL loadedPopover = self.app.popovers.count == 1 && title.exists &&
+        [title.label containsString:@"mockwget"] && [content evaluateWithObject:information];
+    XCUIApplicationState applicationState = self.app.state;
+    XCTAssertTrue(loadedPopover);
+    XCTAssertEqual(applicationState, XCUIApplicationStateRunningForeground);
+    if (!loadedPopover || applicationState != XCUIApplicationStateRunningForeground) return;
+
+    XCTAttachment *beforeEscape = [XCTAttachment attachmentWithString:self.app.debugDescription];
+    beforeEscape.name = @"Loaded information before Escape";
+    beforeEscape.lifetime = XCTAttachmentLifetimeKeepAlways;
+    [self addAttachment:beforeEscape];
+    [self.app typeKey:XCUIKeyboardKeyEscape modifierFlags:XCUIKeyModifierNone];
+    BOOL dismissed = [popover waitForNonExistenceWithTimeout:10];
+    XCTAssertTrue(dismissed, @"Escape must dismiss the actual popover container");
+    if (!dismissed) return;
+    XCTAssertFalse(title.exists);
+    XCTAssertFalse(information.exists);
+
+    [infoButton click];
+    XCTAssertTrue([popover waitForExistenceWithTimeout:10]);
+    XCTAssertTrue([information waitForExistenceWithTimeout:10], @"Reopening must restore the selected package information");
+    [self assertMockInformationSurvivesPopoverAnimation];
+    XCTAssertFalse(self.app.sheets.firstMatch.exists);
+}
+
+// Moving between hosted information and the existing AppKit dependents view keeps both routes usable.
+- (void)testInformationAndInstalledDependentsUseTheirOwnContent
+{
+    [self launchWithArguments:@[@"-BPMockBrew"]];
+    XCUIElement *wget = [self formulaCellWithName:@"mockwget"];
+    [wget doubleClick];
+    XCUIElement *information = [[self.app descendantsMatchingType:XCUIElementTypeAny]
+        matchingIdentifier:@"formula.information.text"].firstMatch;
+    XCTAssertTrue([information waitForExistenceWithTimeout:15.0]);
+    [wget click];
+    [self.app.menuBars.menuBarItems[@"Formula"] click];
+    [self.app.menuItems[@"List Installed Dependents"] click];
+    XCUIElement *dependentsTitle = self.app.staticTexts[@"Installed Dependents of Formula: mockwget"];
+    XCTAssertTrue([dependentsTitle waitForExistenceWithTimeout:15.0]);
+    XCTAssertFalse(information.exists);
+    XCTAssertTrue(self.app.textViews.firstMatch.exists);
+    [wget click];
+    [self.app.buttons[@"More Information"] click];
+    XCTAssertTrue([information waitForExistenceWithTimeout:15.0]);
+    [self assertMockInformationSurvivesPopoverAnimation];
+    XCTAssertFalse(dependentsTitle.exists);
 }
 
 #pragma mark - Tools journeys

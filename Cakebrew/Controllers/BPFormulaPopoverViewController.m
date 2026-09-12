@@ -11,10 +11,12 @@
 #import "BPHomebrewInterface.h"
 #import "BPTimedDispatch.h"
 #import "BPStyle.h"
+#import "BPFormulaInformation-Swift.h"
 
 @interface BPFormulaPopoverViewController ()
 
 @property (strong) BPTimedDispatch *timedDispatch;
+@property (strong) BPFormulaInformationHost *informationHost;
 
 @end
 
@@ -29,85 +31,71 @@
 	[self setTimedDispatch:[BPTimedDispatch new]];
 	[self.formulaTitleLabel setTextColor:[BPStyle popoverTitleColor]];
 	[self setInfoType:kBPFormulaInfoTypeGeneral];
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(informationPopoverWillClose:)
+		name:NSPopoverWillCloseNotification object:self.formulaPopover];
+}
+
+- (void)setInfoType:(BPFormulaInfoType)infoType
+{
+    _infoType = infoType;
+    [self.informationHost close];
+    self.formulaPopover.behavior = infoType == kBPFormulaInfoTypeGeneral
+        ? NSPopoverBehaviorTransient : NSPopoverBehaviorSemitransient;
+}
+
+- (void)informationPopoverWillClose:(NSNotification *)notification
+{
+    // Invalidate before the closing animation. DidClose arrives after animation
+    // and can belong to an old presentation when the same popover is reopened.
+    [self.informationHost close];
 }
 
 - (void)setFormula:(BPFormula *)formula
 {
-	if (_formula)
-	{
-		[[NSNotificationCenter defaultCenter] removeObserver:self
-														name:BPFormulaDidUpdateNotification
-													  object:_formula];
-	}
-	
-	_formula = formula;
-	[_formulaTextView setString:@""];
-	
-	switch ([self infoType])
-	{
-		case kBPFormulaInfoTypeGeneral:
-		{
-			NSString *titleFormat = NSLocalizedString(@"Formula_Popover_Title", nil);
-			[self.formulaTitleLabel setStringValue:[NSString stringWithFormat:titleFormat, [formula name]]];
+    _formula = formula;
+    [self.informationHost close];
+    [self.formulaTextView setString:@""];
 
-			[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(updateView:)
-														 name:BPFormulaDidUpdateNotification
-													   object:formula];
+    if (self.infoType != kBPFormulaInfoTypeGeneral) {
+        [self.formulaPopover setContentViewController:self];
+        [self displayDependentsInformationForFormula];
+        return;
+    }
+    if (!formula) { return; }
 
-			dispatch_async(dispatch_get_main_queue(), ^{
-				[self displayConsoleInformationForFormula];
-			});
+    if (!self.informationHost) {
+        self.informationHost = [BPFormulaInformationHost new];
+    }
+    [self.progressIndicator stopAnimation:nil];
+    NSString *name = [formula.name copy];
+    BOOL cask = formula.cask;
+    uint64_t generation = [self.informationHost beginWithName:name cask:cask];
+    [self.formulaPopover setContentViewController:self.informationHost.viewController];
 
-			dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0);
+    if (formula.information) {
+        [self.informationHost receiveInformation:[formula.information copy] website:[formula.website copy]
+            name:name cask:cask generation:generation];
+        return;
+    }
 
-			[self.timedDispatch scheduleDispatchAfterTimeInterval:0.3 inQueue:bgQueue ofBlock:
-				^{
-					[formula setNeedsInformation:YES];
-				}];
-		}
-		break;
-
-		case kBPFormulaInfoTypeInstalledDependents:
-		case kBPFormulaInfoTypeAllDependents:
-			[self displayDependentsInformationForFormula];
-			break;
-	}
-	
+    // BPFormula remains behind the Objective-C boundary. Its synchronous information
+    // load runs off the main queue; only copied values are delivered to the Swift UI.
+    __weak typeof(self) weakSelf = self;
+    [self.timedDispatch scheduleDispatchAfterTimeInterval:0.3
+        inQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0) ofBlock:^{
+        [formula setNeedsInformation:YES];
+        NSString *information = [formula.information copy];
+        NSURL *website = [formula.website copy];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf.informationHost receiveInformation:information website:website
+                name:name cask:cask generation:generation];
+        });
+    }];
 }
 
 - (NSString *)nibName
 {
-	return @"BPFormulaPopoverView";
-}
-
-- (void)updateView:(NSNotification *)notification
-{
-	dispatch_async(dispatch_get_main_queue(), ^{
-		[self displayConsoleInformationForFormula];
-	});
-}
-
-- (void)displayConsoleInformationForFormula
-{
-	NSString *string = self.formula.information;
-	if (string) {
-		[self.progressIndicator stopAnimation:nil];
-		[self.formulaTextView setString:string];
-		
-		// Detect only links without invoking AppKit's document-wide text checking.
-		NSTextStorage *storage = self.formulaTextView.textStorage;
-		NSRange range = NSMakeRange(0, string.length);
-		[storage removeAttribute:NSLinkAttributeName range:range];
-		NSDataDetector *detector = [NSDataDetector dataDetectorWithTypes:NSTextCheckingTypeLink error:NULL];
-		for (NSTextCheckingResult *match in [detector matchesInString:string options:0 range:range]) {
-			if (match.URL) {
-				[storage addAttribute:NSLinkAttributeName value:match.URL range:match.range];
-			}
-		}
-		[self.formulaTextView setEditable:NO];
-		
-		[self.formulaTextView scrollToBeginningOfDocument:nil];
-	}
+    return @"BPFormulaPopoverView";
 }
 
 - (void)displayDependentsInformationForFormula
