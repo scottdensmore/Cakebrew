@@ -16,7 +16,6 @@ name: Release
 #
 # Cakebrew is distributed with Developer ID + hardened runtime and is NOT
 # sandboxed — it drives the local `brew` CLI, which the App Sandbox blocks.
-# See AGENTS.md ("Distribution & sandboxing") for the measurements behind that.
 
 on:
   push:

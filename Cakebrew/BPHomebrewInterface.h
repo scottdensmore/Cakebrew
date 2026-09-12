@@ -182,7 +182,7 @@ typedef NS_ENUM(NSInteger, BPListMode) {
  *  which are installed.
  *
  *  Only these justify refetching the full catalogs (`brew formulae` and
- *  `brew casks`), which AGENTS.md documents as 80+ seconds cold. Installing,
+ *  `brew casks`), which can take 80+ seconds cold. Installing,
  *  uninstalling, upgrading, pinning and Doctor all leave catalog membership
  *  untouched. Unknown commands are treated as cheap, so a new operation that
  *  forgets to opt in cannot silently reintroduce the stall.

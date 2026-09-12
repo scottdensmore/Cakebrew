@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Repository policy lives in AGENTS.md. Uses macOS plutil, not a second .strings decoder.
+# Uses macOS plutil, not a second .strings decoder.
 require 'json'
 require 'open3'
 require 'optparse'

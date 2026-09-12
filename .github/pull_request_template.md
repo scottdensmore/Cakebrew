@@ -8,8 +8,6 @@
 
 ## Checklist
 
-The workflow lives in [AGENTS.md](../AGENTS.md); this is the short form.
-
 - [ ] Branched off latest `main` with a `feat/` `fix/` `refactor/` `docs/` `chore/` `test/` `perf/` prefix
 - [ ] One thin vertical slice — unrelated changes are on their own branch
 - [ ] Test written **first** and seen to fail for the right reason; if test and code were written together, the test was proven to bite by mutation
