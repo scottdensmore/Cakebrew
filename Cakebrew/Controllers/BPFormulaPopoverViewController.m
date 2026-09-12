@@ -94,9 +94,16 @@
 		[self.progressIndicator stopAnimation:nil];
 		[self.formulaTextView setString:string];
 		
-		// Recognize links in info text
-		[self.formulaTextView setEditable:YES];
-		[self.formulaTextView checkTextInDocument:nil];
+		// Detect only links without invoking AppKit's document-wide text checking.
+		NSTextStorage *storage = self.formulaTextView.textStorage;
+		NSRange range = NSMakeRange(0, string.length);
+		[storage removeAttribute:NSLinkAttributeName range:range];
+		NSDataDetector *detector = [NSDataDetector dataDetectorWithTypes:NSTextCheckingTypeLink error:NULL];
+		for (NSTextCheckingResult *match in [detector matchesInString:string options:0 range:range]) {
+			if (match.URL) {
+				[storage addAttribute:NSLinkAttributeName value:match.URL range:match.range];
+			}
+		}
 		[self.formulaTextView setEditable:NO];
 		
 		[self.formulaTextView scrollToBeginningOfDocument:nil];

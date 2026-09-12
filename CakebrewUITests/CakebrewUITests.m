@@ -402,16 +402,22 @@
 
 - (void)testBrewfileImportCanBeCancelledWhileStreaming
 {
- [self openBrewfileReviewWithContents:@"brew 'mockwget'" extraArguments:@[@"-BPMockSlowBrewfileImport"]];
+ [self openBrewfileReviewWithContents:@"brew 'mockwget'" extraArguments:@[@"-BPMockHoldBrewfileImportUntilCancelled"]];
  [self.app.sheets.firstMatch.buttons[@"brewfile.review.install"] click];
  XCUIElement *action = self.app.sheets.firstMatch.buttons[@"brewfile.import.action"];
  XCTAssertTrue([action waitForExistenceWithTimeout:5]);
+ XCTAssertEqualObjects(action.title, @"Cancel");
  [action click];
  XCUIElement *status = self.app.staticTexts[@"brewfile.import.status"];
- [self expectationForPredicate:[NSPredicate predicateWithFormat:@"value BEGINSWITH %@", @"Import cancelled."] evaluatedWithObject:status handler:nil];
+ [self expectationForPredicate:[NSPredicate predicateWithFormat:@"value == %@", @"Import cancelled. Some changes may already have been made."] evaluatedWithObject:status handler:nil];
  [self waitForExpectationsWithTimeout:10 handler:nil];
- XCTAssertFalse([self.app.textViews[@"brewfile.import.output"].value containsString:@"MOCK_IMPORT_OK"]);
+ XCTAssertEqualObjects(action.title, @"Close");
+ NSString *output = self.app.textViews[@"brewfile.import.output"].value;
+ XCTAssertTrue([output containsString:@"MOCK_IMPORT_STARTED"]);
+ XCTAssertTrue([output containsString:@"MOCK_IMPORT_CANCELLED"]);
+ XCTAssertFalse([output containsString:@"MOCK_IMPORT_OK"]);
  [action click];
+ XCTAssertFalse(self.app.sheets.firstMatch.exists);
 }
 
 - (void)testBrewfileImportFailureRemainsVisible
@@ -486,7 +492,7 @@
 // cannot use the shared helper's Installed-list settle wait.
 - (void)launchWithPendingNotificationTarget:(NSString *)target
 {
-	self.app.launchArguments = @[ @"-BPMockBrew", @"-BPMockSlowCatalog",
+	self.app.launchArguments = @[ @"-BPMockBrew", @"-BPMockHoldCatalogUntilReleased",
 		@"-BPMockNotificationTarget", target, @"-BPLastSelectedSidebarRow", @"1",
 		@"-BPSortColumnIdentifier", @"" ];
 	[self.app launch];
@@ -497,13 +503,15 @@
 
 - (void)assertSelectedSidebarIdentifier:(NSString *)identifier
 {
-	XCUIElement *row = [[self sidebar].outlineRows containingType:XCUIElementTypeStaticText
+	XCUIElement *row = [self.app.outlines.firstMatch.outlineRows containingType:XCUIElementTypeStaticText
 		identifier:identifier].firstMatch;
-	BOOL selected = row.exists && row.isSelected;
-	if (!selected) {
+	XCTNSPredicateExpectation *selected = [[XCTNSPredicateExpectation alloc]
+		initWithPredicate:[NSPredicate predicateWithFormat:@"exists == YES AND selected == YES"] object:row];
+	XCTWaiterResult result = [XCTWaiter waitForExpectations:@[selected] timeout:30.0];
+	if (result != XCTWaiterResultCompleted) {
 		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
 	}
-	XCTAssertTrue(selected, @"%@ should be the selected sidebar destination", identifier);
+	XCTAssertEqual(result, XCTWaiterResultCompleted, @"%@ should be the selected sidebar destination", identifier);
 }
 
 - (void)waitForNotificationLaunchReloadToFinish
@@ -519,6 +527,8 @@
 {
 	[self launchWithPendingNotificationTarget:target];
 	[self assertSelectedSidebarIdentifier:identifier];
+	XCTAssertTrue(self.app.buttons[@"Stop Reloading"].exists, @"selection must be observed before normal completion");
+	[self clickNotificationTestMenuItem:@"mock.catalog.complete"];
 	[self waitForNotificationLaunchReloadToFinish];
 	[self assertSelectedSidebarIdentifier:identifier];
 	XCTAssertTrue([[self formulaCellWithName:fixtureName] waitForExistenceWithTimeout:15.0],
@@ -551,7 +561,11 @@
 {
 	[self launchWithPendingNotificationTarget:@"casks"];
 	[self assertSelectedSidebarIdentifier:@"sidebar.casks.outdated"];
+	XCTAssertTrue(self.app.buttons[@"Stop Reloading"].exists, @"navigation must start while the reload is held");
 	[[self sidebarRow:@"sidebar.formulae.installed"] click];
+	[self assertSelectedSidebarIdentifier:@"sidebar.formulae.installed"];
+	XCTAssertTrue(self.app.buttons[@"Stop Reloading"].exists, @"user navigation must precede normal completion");
+	[self clickNotificationTestMenuItem:@"mock.catalog.complete"];
 	[self waitForNotificationLaunchReloadToFinish];
 	[self assertSelectedSidebarIdentifier:@"sidebar.formulae.installed"];
 	XCTAssertTrue([[self formulaCellWithName:@"mockwget"] waitForExistenceWithTimeout:15.0],
@@ -1670,11 +1684,11 @@
 //
 // Deliberately not on the loading overlay: that comes down on the first
 // published list, about two seconds in, while the catalog fetch worth stopping
-// runs for the minute after. -BPMockSlowCatalog holds the mock's catalog calls
-// long enough for the control to be observable.
+// can take much longer. Hold the mock catalogs until cancellation so the
+// Stop control cannot disappear while the journey is locating it.
 - (void)testAReloadCanBeStopped
 {
-	[self launchWithArguments:@[ @"-BPMockBrew", @"-BPMockSlowCatalog" ]];
+	[self launchWithArguments:@[ @"-BPMockBrew", @"-BPMockHoldCatalogUntilCancelled" ]];
 
 	XCUIElement *stop = self.app.buttons[@"Stop Reloading"];
 	BOOL appeared = [stop waitForExistenceWithTimeout:30.0];

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CB1D37000000000000000001 /* BPFormulaPopoverViewControllerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1D37000000000000000002 /* BPFormulaPopoverViewControllerTests.m */; };
+		CB1D37000000000000000003 /* BPFormulaPopoverViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC3D1B3F999A00163767 /* BPFormulaPopoverViewController.m */; };
 		CB1471000000000000000001 /* BPInstallationWindowControllerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1471000000000000000002; };
 		CB1471000000000000000003 /* BPInstallationWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC431B3F999A00163767; };
 		CB1430000000000000000003 /* BPSearchCoordinator.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1430000000000000000005 /* BPSearchCoordinator.m */; };
@@ -262,6 +264,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		CB1D37000000000000000002 /* BPFormulaPopoverViewControllerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BPFormulaPopoverViewControllerTests.m; sourceTree = "<group>"; };
 		CB1471000000000000000002 /* BPInstallationWindowControllerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BPInstallationWindowControllerTests.m; sourceTree = "<group>"; };
 		CB1430000000000000000005 /* BPSearchCoordinator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPSearchCoordinator.m; path = Controllers/BPSearchCoordinator.m; sourceTree = "<group>"; };
 		CB1430000000000000000006 /* BPSearchCoordinator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPSearchCoordinator.h; path = Controllers/BPSearchCoordinator.h; sourceTree = "<group>"; };
@@ -889,6 +892,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 		D261C9C11B852FA300409803 /* CakebrewTests */ = {
 			isa = PBXGroup;
 			children = (
+				CB1D37000000000000000002 /* BPFormulaPopoverViewControllerTests.m */,
 				D212A5871B853069003000ED /* BPFormulaTests.m */,
 				CB7E57A001000001000000F1 /* BPHomebrewInterfaceListCallTests.m */,
 				CB7E57A001000001000000F3 /* BPHomebrewManagerTests.m */,
@@ -1257,6 +1261,8 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB1D37000000000000000001 /* BPFormulaPopoverViewControllerTests.m in Sources */,
+				CB1D37000000000000000003 /* BPFormulaPopoverViewController.m in Sources */,
 				D2682D021B8532B6003DE3D8 /* BPHomebrewInterface.m in Sources */,
 				D2682D011B8532B0003DE3D8 /* BPHomebrewManager.m in Sources */,
 				D228335A1BA71B9900E44C82 /* BPTask.m in Sources */,

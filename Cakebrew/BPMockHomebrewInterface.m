@@ -17,12 +17,51 @@
 // fixture interface, or honouring -BPMockBrew in a user's hands.
 #if DEBUG
 
+@interface BPHomebrewInterface (MockInitialization)
+- (instancetype)initUniqueInstance;
+@end
+
 @interface BPMockHomebrewInterface ()
 @property NSUInteger discoveryAttempts;
 @property NSUInteger autoremovePreviews;
+@property (strong) NSCondition *catalogCondition;
+@property BOOL catalogHoldReleased;
 @end
 
 @implementation BPMockHomebrewInterface
+
+- (instancetype)initUniqueInstance
+{
+    self = [super initUniqueInstance];
+    if (self) _catalogCondition = [self makeCatalogCondition];
+    return self;
+}
+
+- (NSCondition *)makeCatalogCondition
+{
+    return [NSCondition new];
+}
+
+- (BOOL)mockArgumentEnabled:(NSString *)argument
+{
+    return [NSProcessInfo.processInfo.arguments containsObject:argument];
+}
+
+- (void)releaseHeldCatalogs:(id)sender
+{
+    [self.catalogCondition lock];
+    // One shot for this instance: release also covers workers that
+    // arrive late, and later reloads must not unexpectedly wait again.
+    self.catalogHoldReleased = YES;
+    [self.catalogCondition broadcast];
+    [self.catalogCondition unlock];
+}
+
+- (void)cancelAllRunningTasks
+{
+    [self releaseHeldCatalogs:nil];
+    [super cancelAllRunningTasks];
+}
 
 - (NSArray<BPFormula *> *)listModeForRemovalRefresh:(BPListMode)mode
 {
@@ -81,14 +120,18 @@
 // reproducibly.
 - (NSArray<BPFormula *> *)listMode:(BPListMode)mode
 {
-	// -BPMockSlowCatalog holds the two catalog fetches long enough for a
-	// journey to see the progress message they trigger. Real brew takes 80+
-	// seconds here cold; the mock is instant, which makes the message
-	// unobservable without this.
-	if ((mode == kBPListAll || mode == kBPListAllCasks)
-		&& [[[NSProcessInfo processInfo] arguments] containsObject:@"-BPMockSlowCatalog"]) {
-		[NSThread sleepForTimeInterval:6.0];
-	}
+    if (mode == kBPListAll || mode == kBPListAllCasks) {
+        if ([self mockArgumentEnabled:@"-BPMockHoldCatalogUntilCancelled"] ||
+            [self mockArgumentEnabled:@"-BPMockHoldCatalogUntilReleased"]) {
+            [self.catalogCondition lock];
+            while (!self.catalogHoldReleased) [self.catalogCondition wait];
+            [self.catalogCondition unlock];
+        } else if ([self mockArgumentEnabled:@"-BPMockSlowCatalog"]) {
+            // Preserve the timed fixture for journeys that do not opt into
+            // explicit cancellation or normal completion.
+            [NSThread sleepForTimeInterval:6.0];
+        }
+    }
 
 	switch (mode) {
 		case kBPListInstalled:
@@ -376,16 +419,29 @@
 	return YES;
 }
 
+- (NSDate *)brewfileImportDeadline
+{
+ return [NSDate dateWithTimeIntervalSinceNow:5];
+}
+
+- (void)pauseBrewfileImport
+{
+ [NSThread sleepForTimeInterval:0.05];
+}
+
 - (BOOL)runBrewImportToolWithPath:(NSString *)path progress:(NSProgress *)progress withReturnsBlock:(void (^)(NSString *))block
 {
  if (progress.cancelled) return NO;
  if (block) block(@"MOCK_IMPORT_STARTED\n");
- if ([[NSProcessInfo processInfo].arguments containsObject:@"-BPMockSlowBrewfileImport"]) {
-  NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:5];
-  while (!progress.cancelled && deadline.timeIntervalSinceNow > 0) [NSThread sleepForTimeInterval:0.05];
+ BOOL holdUntilCancelled = [self mockArgumentEnabled:@"-BPMockHoldBrewfileImportUntilCancelled"];
+ if (holdUntilCancelled || [self mockArgumentEnabled:@"-BPMockSlowBrewfileImport"]) {
+  NSDate *deadline = [self brewfileImportDeadline];
+  // Each import owns its progress. XCTest click delivery may take longer than
+  // a slow fixture's deadline, so cancellation journeys have no expiry.
+  while (!progress.cancelled && (holdUntilCancelled || deadline.timeIntervalSinceNow > 0)) [self pauseBrewfileImport];
  }
  if (progress.cancelled) { if (block) block(@"MOCK_IMPORT_CANCELLED\n"); return NO; }
- if ([[NSProcessInfo processInfo].arguments containsObject:@"-BPMockBrewfileImportFails"]) { if (block) block(@"MOCK_IMPORT_FAILED\n"); return NO; }
+ if ([self mockArgumentEnabled:@"-BPMockBrewfileImportFails"]) { if (block) block(@"MOCK_IMPORT_FAILED\n"); return NO; }
  if (block) block(@"MOCK_IMPORT_OK\n");
  return YES;
 }
