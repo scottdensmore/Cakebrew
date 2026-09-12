@@ -367,7 +367,7 @@
 
 /* Detail values and Brewfile export errors */
 "Info_View_Empty_Value" = "--";
-"Brewfile_Export_Failed" = "Export Failed";
+"Brewfile_Export_Failed" = "Export fehlgeschlagen";
 
 /* Homebrew discovery and recovery */
 "Try Again" = "Try Again";
@@ -381,28 +381,28 @@
 "Homebrew couldn’t be checked" = "Homebrew couldn’t be checked";
 "Your login shell didn’t return a usable Homebrew executable. Check its startup configuration and PATH, then choose Try Again. Installation instructions are available at brew.sh." = "Your login shell didn’t return a usable Homebrew executable. Check its startup configuration and PATH, then choose Try Again. Installation instructions are available at brew.sh.";
 /* Reviewed Brewfile import. */
-"Line %lu: unsupported syntax or invalid package name. Nothing will be installed." = "Line %lu: unsupported syntax or invalid package name. Nothing will be installed.";
-"Choose a readable UTF-8 Brewfile smaller than 1 MiB. Nothing was installed." = "Choose a readable UTF-8 Brewfile smaller than 1 MiB. Nothing was installed.";
-"%lu installed • %lu missing • %lu not checked" = "%lu installed • %lu missing • %lu not checked";
+"Line %lu: unsupported syntax or invalid package name. Nothing will be installed." = "Zeile %lu: Nicht unterstützte Syntax oder ungültiger Paketname. Es wird nichts installiert.";
+"Choose a readable UTF-8 Brewfile smaller than 1 MiB. Nothing was installed." = "Wählen Sie eine lesbare Brewfile-Datei im UTF-8-Format mit weniger als 1 MiB. Es wurde nichts installiert.";
+"%lu installed • %lu missing • %lu not checked" = "%lu installiert • %lu fehlend • %lu nicht geprüft";
 "Casks" = "Casks";
 "Taps" = "Taps";
 "Mac App Store" = "Mac App Store";
 "VS Code" = "VS Code";
-"Installed" = "Installed";
-"Missing" = "Missing";
-"Not checked" = "Not checked";
-"No supported package entries. Nothing will be installed." = "No supported package entries. Nothing will be installed.";
-"Reviewed import requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported." = "Reviewed import requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported.";
-"Review Brewfile" = "Review Brewfile";
-"Direct entries only, not a dependency or upgrade plan. Installed means present in the current inventory, not up to date. Homebrew may upgrade packages, install dependencies and required tools, and run package installation scripts. Only the reviewed literal entries will be submitted." = "Direct entries only, not a dependency or upgrade plan. Installed means present in the current inventory, not up to date. Homebrew may upgrade packages, install dependencies and required tools, and run package installation scripts. Only the reviewed literal entries will be submitted.";
-"Install Reviewed Entries" = "Install Reviewed Entries";
-"Cancel" = "Cancel";
-"Close" = "Close";
-"Import Brewfile" = "Import Brewfile";
-"Import cancelled. Some changes may already have been made." = "Import cancelled. Some changes may already have been made.";
-"Import finished." = "Import finished.";
-"Import failed. Review the output for details." = "Import failed. Review the output for details.";
-"Cancelling… Waiting for Homebrew to exit." = "Cancelling… Waiting for Homebrew to exit.";
+"Installed" = "Installiert";
+"Missing" = "Fehlt";
+"Not checked" = "Nicht geprüft";
+"No supported package entries. Nothing will be installed." = "Keine unterstützten Paketeinträge. Es wird nichts installiert.";
+"Reviewed import requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported." = "Für den Import geprüfter Einträge ist die reguläre Cakebrew-App ohne Sandbox erforderlich. Die Ausführung über den Hilfsprozess wird nicht unterstützt.";
+"Review Brewfile" = "Brewfile prüfen";
+"Direct entries only, not a dependency or upgrade plan. Installed means present in the current inventory, not up to date. Homebrew may upgrade packages, install dependencies and required tools, and run package installation scripts. Only the reviewed literal entries will be submitted." = "Angezeigt werden nur direkte Einträge, kein Plan für Abhängigkeiten oder Aktualisierungen. „Installiert“ bedeutet im aktuellen Bestand vorhanden, nicht auf dem neuesten Stand. Homebrew kann Pakete aktualisieren, Abhängigkeiten und erforderliche Werkzeuge installieren sowie Installationsskripte ausführen. Nur die hier geprüften, ausdrücklich angegebenen Einträge werden übergeben.";
+"Install Reviewed Entries" = "Geprüfte Einträge installieren";
+"Cancel" = "Abbrechen";
+"Close" = "Schließen";
+"Import Brewfile" = "Brewfile importieren";
+"Import cancelled. Some changes may already have been made." = "Import abgebrochen. Es können bereits Änderungen vorgenommen worden sein.";
+"Import finished." = "Import abgeschlossen.";
+"Import failed. Review the output for details." = "Import fehlgeschlagen. Weitere Informationen finden Sie in der Ausgabe.";
+"Cancelling… Waiting for Homebrew to exit." = "Abbruch läuft… Warten auf das Ende von Homebrew.";
 "Brewfile Test" = "Brewfile Test";
 "Review Mock Brewfile" = "Review Mock Brewfile";
 
@@ -439,6 +439,6 @@
 "Unused dependency removal requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported." = "Unused dependency removal requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported.";
 "\nHomebrew exit status: %d\n" = "\nHomebrew exit status: %d\n";
 
-"Homebrew could not export the Brewfile. Check the destination and try again." = "Homebrew could not export the Brewfile. Check the destination and try again.";
+"Homebrew could not export the Brewfile. Check the destination and try again." = "Homebrew konnte die Brewfile-Datei nicht exportieren. Prüfen Sie das Ziel und versuchen Sie es erneut.";
 
 "Complete Mock Catalog" = "Complete Mock Catalog";
