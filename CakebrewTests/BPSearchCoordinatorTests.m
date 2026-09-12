@@ -105,6 +105,9 @@
 	XCTAssertEqual(cancellations, 1u);
 	XCTAssertFalse(coordinator.isSearching);
 	XCTAssertNotNil(pending);
+	if (!pending) {
+		return;
+	}
 	pending();
 	XCTAssertEqual(performed, 0u, @"clearing must invalidate already queued search work");
 	XCTAssertFalse(coordinator.isSearching, @"old results must not reopen the cleared search");
