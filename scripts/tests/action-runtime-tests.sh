@@ -24,12 +24,6 @@ check_actions ci.yml \
   actions/checkout@v5 \
   actions/upload-artifact@v6 \
   actions/upload-artifact@v6
-check_actions brew-compat.yml \
-  actions/checkout@v5 \
-  actions/upload-artifact@v6
-check_actions release.yml \
-  actions/checkout@v5 \
-  actions/upload-artifact@v6 \
-  softprops/action-gh-release@v3
-
-printf '3 workflow action-runtime checks passed (10 references)\n'
+# Only CI is restored. The owner-deleted live Homebrew and release workflows
+# are intentionally outside this build/test change.
+printf '1 workflow action-runtime check passed (5 references)\n'

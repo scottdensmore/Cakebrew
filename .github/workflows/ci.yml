@@ -1,0 +1,152 @@
+name: CI
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          xcrun --sdk macosx --show-sdk-version
+
+      - name: Test warning gate
+        run: bash scripts/tests/check-warnings-tests.sh
+
+      - name: Test action runtimes
+        run: bash scripts/tests/action-runtime-tests.sh
+
+      - name: Test localization report
+        run: ruby scripts/tests/localization-debt-tests.rb
+
+      - name: Report localization debt
+        run: ruby scripts/localization-debt.rb --summary "$GITHUB_STEP_SUMMARY"
+
+      # Zero warnings is enforced as a hard gate; nothing enforced it, so a
+      # build emitting fifty warnings passed identically to a clean one.
+      # Warnings-as-errors is passed on the command line rather than baked into
+      # the project, so local incremental work stays ergonomic.
+      - name: Build app (Debug)
+        run: |
+          bash scripts/check-warnings.sh build-debug.log xcodebuild build \
+            -workspace Cakebrew.xcworkspace \
+            -scheme Cakebrew \
+            -configuration Debug \
+            -destination "platform=macOS,arch=$(uname -m)" \
+            GCC_TREAT_WARNINGS_AS_ERRORS=YES \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+
+      # Release was only ever built by a v* tag, so a Release-only warning
+      # stayed invisible until a release was already being cut.
+      - name: Build app (Release)
+        run: |
+          bash scripts/check-warnings.sh build-release.log xcodebuild build \
+            -workspace Cakebrew.xcworkspace \
+            -scheme Cakebrew \
+            -configuration Release \
+            -destination "platform=macOS,arch=$(uname -m)" \
+            GCC_TREAT_WARNINGS_AS_ERRORS=YES \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+
+      # The analyzer's retain-count and null-dereference checks target exactly
+      # the bug class this codebase reaches users with: NSTask subprocesses,
+      # XPC connections and manual KVO teardown.
+      - name: Static analyzer
+        run: |
+          bash scripts/check-warnings.sh analyze.log xcodebuild analyze \
+            -workspace Cakebrew.xcworkspace \
+            -scheme Cakebrew \
+            -configuration Debug \
+            -destination "platform=macOS,arch=$(uname -m)" \
+            CLANG_ANALYZER_OUTPUT=text \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+
+      - name: Run unit tests
+        run: |
+          bash scripts/check-warnings.sh unit-tests.log xcodebuild test \
+            -workspace Cakebrew.xcworkspace \
+            -scheme CakebrewTests \
+            -destination "platform=macOS,arch=$(uname -m)" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+
+      - name: Upload build and analyzer logs
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: build-and-analyzer-logs
+          path: |
+            build-debug.log
+            build-release.log
+            analyze.log
+            unit-tests.log
+          if-no-files-found: ignore
+          retention-days: 3
+
+  ui-tests:
+    name: UI Tests
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Run UI tests
+        run: |
+          # UI tests must launch the app, so it has to be (ad-hoc) signed.
+          # Force ad-hoc signing so no developer team / provisioning profile is needed.
+          bash scripts/check-warnings.sh ui-tests.log xcodebuild test \
+            -scheme CakebrewUITests \
+            -destination "platform=macOS,arch=$(uname -m)" \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=YES \
+            DEVELOPMENT_TEAM="" \
+            PROVISIONING_PROFILE_SPECIFIER=""
+
+      - name: Upload UI test log
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: ui-test-log
+          path: ui-tests.log
+          if-no-files-found: ignore
+          retention-days: 3
+
+      - name: Collect crash logs
+        if: failure()
+        run: |
+          mkdir -p /tmp/uitest-diagnostics
+          cp -R "$HOME/Library/Logs/DiagnosticReports/." /tmp/uitest-diagnostics/ 2>/dev/null || true
+          ls -la /tmp/uitest-diagnostics || true
+
+      - name: Upload crash logs
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: ui-test-crash-logs
+          path: /tmp/uitest-diagnostics
+          if-no-files-found: ignore
+          retention-days: 3
