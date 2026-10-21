@@ -769,7 +769,7 @@ NSOpenSavePanelDelegate>
 /// currentFormula and the detail pane.
 - (void)restoreSelectedFormula:(BPFormula *)formula
 {
-	NSInteger row = formula ? [self.formulaeDataSource indexOfFormulaNamed:formula.name] : -1;
+	NSInteger row = formula ? [self.formulaeDataSource indexOfFormulaNamed:formula.name cask:formula.cask] : -1;
 
 	if (row < 0)
 	{

@@ -260,6 +260,9 @@
 
 - (NSString *)dependantsForFormulaName:(NSString *)name onlyInstalled:(BOOL)onlyInstalled
 {
+	if ([name isEqualToString:@"mockwget"]) {
+		return onlyInstalled ? @"mockcurl\n" : @"mockcurl\nmockhtop\n";
+	}
 	return @"";
 }
 

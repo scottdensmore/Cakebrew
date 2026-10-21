@@ -790,6 +790,7 @@ static const NSInteger kBPCacheVersion = 2;
 
 - (BOOL)isFormulaPinned:(BPFormula*)formula
 {
+	if (!formula || formula.cask) return NO;
 	return [self searchForFormula:formula inArray:self.pinnedFormulae] >= 0;
 }
 

@@ -23,6 +23,7 @@
  *  Used to put the user's selection back after a reload.
  */
 - (NSInteger)indexOfFormulaNamed:(NSString *)name;
+- (NSInteger)indexOfFormulaNamed:(NSString *)name cask:(BOOL)cask;
 
 /**
  *  `formulae` ordered by the table's sort descriptors.

@@ -153,13 +153,18 @@
 
 - (NSInteger)indexOfFormulaNamed:(NSString *)name
 {
+	return [self indexOfFormulaNamed:name cask:NO];
+}
+
+- (NSInteger)indexOfFormulaNamed:(NSString *)name cask:(BOOL)cask
+{
 	if (name.length == 0)
 	{
 		return -1;
 	}
 
 	NSUInteger index = [self.formulaeArray indexOfObjectPassingTest:^BOOL(BPFormula *formula, NSUInteger idx, BOOL *stop) {
-		return [formula.name isEqualToString:name];
+		return [formula isKindOfClass:[BPFormula class]] && formula.cask == cask && [formula.name isEqualToString:name];
 	}];
 
 	return (index == NSNotFound) ? -1 : (NSInteger)index;

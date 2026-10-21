@@ -24,5 +24,6 @@ typedef NS_ENUM(NSInteger, BPFormulaInfoType) {
 @property (weak) IBOutlet NSProgressIndicator *progressIndicator;
 
 @property (nonatomic) BPFormulaInfoType infoType;
+@property (copy, nonatomic) NSString *(^dependentsProvider)(NSString *name, BOOL onlyInstalled);
 
 @end

@@ -151,6 +151,24 @@
 	XCTAssertEqual([dataSource indexOfFormulaNamed:nil], -1);
 }
 
+- (void)testIndexOfFormulaNamedCaskDistinguishesSameNamedFormulaAndCask
+{
+	BPFormula *formula = [BPFormula formulaWithName:@"tap/tools/shared"];
+	BPFormula *cask = [BPFormula formulaWithName:@"tap/tools/shared"];
+	cask.cask = YES;
+
+	BPHomebrewManager *manager = [BPHomebrewManager sharedManager];
+	manager.searchFormulae = @[ formula, cask ];
+
+	BPFormulaeDataSource *dataSource = [[BPFormulaeDataSource alloc] initWithMode:kBPListSearch];
+	[dataSource refreshBackingArray];
+
+	XCTAssertEqual([dataSource indexOfFormulaNamed:@"tap/tools/shared" cask:NO], 0);
+	XCTAssertEqual([dataSource indexOfFormulaNamed:@"tap/tools/shared" cask:YES], 1);
+	XCTAssertEqual([dataSource indexOfFormulaNamed:@"missing" cask:YES], -1);
+	XCTAssertEqual([dataSource indexOfFormulaNamed:@"" cask:YES], -1);
+}
+
 
 #pragma mark - sorting (clickable column headers)
 
