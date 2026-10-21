@@ -958,7 +958,8 @@
 }
 
 // Journey: selecting a formula shows the "Required by" (dependents) row in the
-// detail pane. Guards that the new BPSelectedFormula.xib row loads at runtime.
+// detail pane. Guards that the SwiftUI inspector renders both metadata and
+// asynchronous dependents.
 - (void)testDetailPaneShowsRequiredByRow
 {
 	[self launchWithArguments:@[ @"-BPMockBrew" ]];
@@ -973,6 +974,14 @@
 		NSLog(@"CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", self.app.debugDescription);
 	}
 	XCTAssertTrue(appeared, @"the detail pane should show the Required by row");
+
+	XCUIElement *requiredByValue = [[self.app descendantsMatchingType:XCUIElementTypeAny]
+		matchingIdentifier:@"formula.detail.requiredBy"].firstMatch;
+	XCTAssertTrue([requiredByValue waitForExistenceWithTimeout:15.0]);
+	NSPredicate *requiredByContent = [NSPredicate predicateWithFormat:@"label CONTAINS %@ OR value CONTAINS %@",
+		@"mockcurl", @"mockcurl"];
+	[self expectationForPredicate:requiredByContent evaluatedWithObject:requiredByValue handler:nil];
+	[self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 // Journey: selecting a pinned formula shows the "Pinned" row in the detail pane.
@@ -1853,7 +1862,7 @@
     XCTAssertFalse(self.app.sheets.firstMatch.exists);
 }
 
-// Moving between hosted information and the existing AppKit dependents view keeps both routes usable.
+// Moving between hosted information and hosted dependents views keeps both routes usable.
 - (void)testInformationAndInstalledDependentsUseTheirOwnContent
 {
     [self launchWithArguments:@[@"-BPMockBrew"]];
@@ -1865,10 +1874,17 @@
     [wget click];
     [self.app.menuBars.menuBarItems[@"Formula"] click];
     [self.app.menuItems[@"List Installed Dependents"] click];
-    XCUIElement *dependentsTitle = self.app.staticTexts[@"Installed Dependents of Formula: mockwget"];
+    XCUIElement *dependentsTitle = [[self.app descendantsMatchingType:XCUIElementTypeAny]
+        matchingIdentifier:@"formula.dependents.title"].firstMatch;
+    XCUIElement *dependentsText = [[self.app descendantsMatchingType:XCUIElementTypeAny]
+        matchingIdentifier:@"formula.dependents.text"].firstMatch;
     XCTAssertTrue([dependentsTitle waitForExistenceWithTimeout:15.0]);
+    XCTAssertTrue([dependentsTitle.label containsString:@"Installed Dependents of Formula: mockwget"]);
+    XCTAssertTrue([dependentsText waitForExistenceWithTimeout:15.0]);
+    NSPredicate *depContent = [NSPredicate predicateWithFormat:@"label CONTAINS %@ OR value CONTAINS %@",
+        @"mockcurl", @"mockcurl"];
+    XCTAssertTrue([depContent evaluateWithObject:dependentsText]);
     XCTAssertFalse(information.exists);
-    XCTAssertTrue(self.app.textViews.firstMatch.exists);
     [wget click];
     [self.app.buttons[@"More Information"] click];
     XCTAssertTrue([information waitForExistenceWithTimeout:15.0]);

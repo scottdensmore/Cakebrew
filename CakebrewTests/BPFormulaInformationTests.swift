@@ -84,4 +84,84 @@ final class BPFormulaInformationTests: XCTestCase {
         }
     }
 
+    func testChangingPopoverModeForSamePackageRejectsEarlierModeResponse() {
+        var state = BPFormulaInformationState()
+        let general = state.begin(name: "wget", cask: false, mode: .general)
+        let installedDependents = state.begin(name: "wget", cask: false, mode: .installedDependents)
+        XCTAssertNotEqual(general.identity, installedDependents.identity)
+        XCTAssertFalse(state.receive(request: general, information: "general info", website: nil))
+        XCTAssertTrue(state.receive(request: installedDependents, information: "git\ncurl\n", website: nil))
+        XCTAssertEqual(state.information, "git\ncurl\n")
+
+        let allDependents = state.begin(name: "wget", cask: false, mode: .allDependents)
+        XCTAssertNotEqual(installedDependents.identity, allDependents.identity)
+        XCTAssertFalse(state.receive(request: installedDependents, information: "stale installed", website: nil))
+        XCTAssertTrue(state.receive(request: allDependents, information: "git\ncurl\nhtop\n", website: nil))
+        XCTAssertEqual(state.information, "git\ncurl\nhtop\n")
+    }
+
+    func testSelectedFormulaStateEmptyAndMultipleSelectionValues() {
+        var state = BPSelectedFormulaState()
+        XCTAssertEqual(state.selection, .none)
+        XCTAssertFalse(state.showsPinnedRow)
+
+        let request = state.beginSingle(BPSelectedFormulaSnapshot(
+            name: "wget", cask: false, isInstalled: true, isPinned: true,
+            installPath: "/opt/homebrew/Cellar/wget/1.24", latestVersion: "1.24",
+            dependencies: "openssl", conflicts: nil, shortDescription: "Internet file retriever"))
+        XCTAssertTrue(state.showsPinnedRow)
+
+        state.selectMultiple()
+        XCTAssertEqual(state.selection, .multiple)
+        XCTAssertFalse(state.showsPinnedRow)
+        XCTAssertFalse(state.receiveDependents(["git"], for: request))
+
+        state.clear()
+        XCTAssertEqual(state.selection, .none)
+        XCTAssertFalse(state.receiveDependents(["git"], for: request))
+    }
+
+    func testSelectedFormulaStateSameNameDifferentNamespaceRejectsStaleUpdatesAndDependents() {
+        var state = BPSelectedFormulaState()
+        let formulaSnapshot = BPSelectedFormulaSnapshot(
+            name: "tap/tools/shared", cask: false, isInstalled: true, isPinned: true,
+            installPath: "/opt/homebrew/Cellar/shared/1.0", latestVersion: "1.0",
+            dependencies: "openssl", conflicts: "legacy-shared", shortDescription: "Shared formula")
+        let caskSnapshot = BPSelectedFormulaSnapshot(
+            name: "tap/tools/shared", cask: true, isInstalled: false, isPinned: true,
+            installPath: nil, latestVersion: "2.0",
+            dependencies: nil, conflicts: nil, shortDescription: "Shared cask")
+
+        let formulaRequest = state.beginSingle(formulaSnapshot)
+        XCTAssertTrue(state.showsPinnedRow)
+
+        let caskRequest = state.beginSingle(caskSnapshot)
+        XCTAssertNotEqual(formulaRequest.identity, caskRequest.identity)
+        XCTAssertFalse(state.showsPinnedRow, "Casks must never display the Pinned row even if passed isPinned=true")
+        XCTAssertFalse(state.receiveDependents(["git"], for: formulaRequest))
+        XCTAssertFalse(state.receiveDependents(["git"], for: caskRequest), "Casks do not accept brew uses dependents")
+        XCTAssertFalse(state.updateSingle(formulaSnapshot), "Stale formula update must not overwrite same-named cask")
+    }
+
+    func testSelectedFormulaStateMetadataUpdatePreservesActiveGenerationAndDependents() {
+        var state = BPSelectedFormulaState()
+        let initial = BPSelectedFormulaSnapshot(
+            name: "wget", cask: false, isInstalled: true, isPinned: false,
+            installPath: nil, latestVersion: "1.24",
+            dependencies: nil, conflicts: nil, shortDescription: nil)
+        let request = state.beginSingle(initial)
+        XCTAssertTrue(state.receiveDependents(["curl", "git"], for: request))
+        XCTAssertEqual(state.dependents, ["curl", "git"])
+
+        let enriched = BPSelectedFormulaSnapshot(
+            name: "wget", cask: false, isInstalled: true, isPinned: true,
+            installPath: "/opt/homebrew/Cellar/wget/1.24", latestVersion: "1.24 (bottled)",
+            dependencies: "gettext, libidn2, openssl@3", conflicts: "wget-devel",
+            shortDescription: "Internet file retriever")
+        XCTAssertTrue(state.updateSingle(enriched))
+        XCTAssertEqual(state.dependents, ["curl", "git"])
+        XCTAssertTrue(state.showsPinnedRow)
+        XCTAssertEqual(state.currentSnapshot, enriched)
+    }
+
 }

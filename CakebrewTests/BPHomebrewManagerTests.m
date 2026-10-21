@@ -215,6 +215,14 @@
 	XCTAssertTrue([self.manager isFormulaPinned:[BPFormula formulaWithName:@"git"]]);
 }
 
+- (void)testIsFormulaPinnedReturnsNoForSameNamedCask
+{
+	self.manager.pinnedFormulae = @[ [BPFormula formulaWithName:@"shared"] ];
+	XCTAssertTrue([self.manager isFormulaPinned:[BPFormula formulaWithName:@"shared"]]);
+	XCTAssertFalse([self.manager isFormulaPinned:[self caskWithName:@"shared"]],
+				   @"A pinned formula must never mark a same-named cask as pinned");
+}
+
 
 #pragma mark - search covers casks
 

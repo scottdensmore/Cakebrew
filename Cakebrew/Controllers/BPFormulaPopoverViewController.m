@@ -55,26 +55,44 @@
     _formula = formula;
     [self.informationHost close];
     [self.formulaTextView setString:@""];
-
-    if (self.infoType != kBPFormulaInfoTypeGeneral) {
-        [self.formulaPopover setContentViewController:self];
-        [self displayDependentsInformationForFormula];
-        return;
-    }
+    [self.progressIndicator stopAnimation:nil];
     if (!formula) { return; }
 
     if (!self.informationHost) {
         self.informationHost = [BPFormulaInformationHost new];
     }
-    [self.progressIndicator stopAnimation:nil];
     NSString *name = [formula.name copy];
     BOOL cask = formula.cask;
-    uint64_t generation = [self.informationHost beginWithName:name cask:cask];
+    BPFormulaInfoType infoType = self.infoType;
+    uint64_t generation = [self.informationHost beginWithName:name cask:cask infoType:infoType];
     [self.formulaPopover setContentViewController:self.informationHost.viewController];
+
+    if (infoType != kBPFormulaInfoTypeGeneral) {
+        if (cask) {
+            [self.informationHost receiveInformation:nil website:nil
+                name:name cask:cask infoType:infoType generation:generation];
+            return;
+        }
+        BOOL onlyInstalled = (infoType == kBPFormulaInfoTypeInstalledDependents);
+        NSString *(^provider)(NSString *, BOOL) = self.dependentsProvider;
+        __weak typeof(self) weakSelf = self;
+        [self.timedDispatch scheduleDispatchAfterTimeInterval:0.0
+            inQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0) ofBlock:^{
+            NSString *dependents = provider
+                ? provider(name, onlyInstalled)
+                : [[BPHomebrewInterface sharedInterface] dependantsForFormulaName:name onlyInstalled:onlyInstalled];
+            NSString *copiedDependents = [dependents copy];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [weakSelf.informationHost receiveInformation:copiedDependents website:nil
+                    name:name cask:cask infoType:infoType generation:generation];
+            });
+        }];
+        return;
+    }
 
     if (formula.information) {
         [self.informationHost receiveInformation:[formula.information copy] website:[formula.website copy]
-            name:name cask:cask generation:generation];
+            name:name cask:cask infoType:infoType generation:generation];
         return;
     }
 
@@ -88,7 +106,7 @@
         NSURL *website = [formula.website copy];
         dispatch_async(dispatch_get_main_queue(), ^{
             [weakSelf.informationHost receiveInformation:information website:website
-                name:name cask:cask generation:generation];
+                name:name cask:cask infoType:infoType generation:generation];
         });
     }];
 }
@@ -96,46 +114,6 @@
 - (NSString *)nibName
 {
     return @"BPFormulaPopoverView";
-}
-
-- (void)displayDependentsInformationForFormula
-{
-	NSString *name = [self.formula name];
-
-	[self.formulaTextView setString:@""];
-	[self.progressIndicator startAnimation:nil];
-
-	if (self.infoType == kBPFormulaInfoTypeInstalledDependents)
-	{
-		[self.formulaTitleLabel setStringValue:[NSString stringWithFormat:NSLocalizedString(@"Formula_Installed_Dependents_Title", nil), name]];
-
-		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-			NSString *string = [[BPHomebrewInterface sharedInterface] dependantsForFormulaName:name onlyInstalled:YES];
-
-			dispatch_async(dispatch_get_main_queue(), ^{
-				[self.progressIndicator stopAnimation:nil];
-				[self.formulaTextView setString:string];
-				[self.formulaTextView scrollToBeginningOfDocument:nil];
-				[self.formulaTextView setNeedsDisplay:YES];
-			});
-		});
-	}
-	else if (self.infoType == kBPFormulaInfoTypeAllDependents)
-	{
-		[self.formulaTitleLabel setStringValue:[NSString stringWithFormat:NSLocalizedString(@"Formula_All_Dependents_Title", nil), name]];
-
-		dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-			NSString *string = [[BPHomebrewInterface sharedInterface] dependantsForFormulaName:name onlyInstalled:NO];
-
-			dispatch_async(dispatch_get_main_queue(), ^{
-				[self.progressIndicator stopAnimation:nil];
-				[self.formulaTextView setString:string];
-				[self.formulaTextView scrollToBeginningOfDocument:nil];
-				[self.formulaTextView setNeedsDisplay:YES];
-			});
-
-		});
-	}
 }
 
 - (void)dealloc

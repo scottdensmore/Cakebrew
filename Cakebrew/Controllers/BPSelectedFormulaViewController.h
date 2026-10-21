@@ -21,6 +21,7 @@
 @property (strong, nonatomic) NSArray *formulae;
 
 @property (weak) id<BPSelectedFormulaViewControllerDelegate> delegate;
+@property (copy, nonatomic) NSString *(^dependentsProvider)(NSString *name, BOOL onlyInstalled);
 
 @property (weak) IBOutlet NSTextField *formulaDescriptionLabel;
 @property (weak) IBOutlet NSTextField *formulaPathLabel;

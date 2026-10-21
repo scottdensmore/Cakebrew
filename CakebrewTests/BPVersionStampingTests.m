@@ -72,6 +72,11 @@
 {
 	// Without this the workflow archives whatever the checked-in settings say,
 	// so a tagged release can publish the previous version's number.
+	NSString *repoRoot = [[@(__FILE__) stringByDeletingLastPathComponent] stringByDeletingLastPathComponent];
+	NSString *workflowPath = [repoRoot stringByAppendingPathComponent:@".github/workflows/release.yml"];
+	XCTSkipIf(![[NSFileManager defaultManager] fileExistsAtPath:workflowPath],
+			  @".github/workflows/release.yml is not present in this checkout");
+
 	NSString *workflow = [self contentsOfRepoFile:@".github/workflows/release.yml"];
 
 	XCTAssertGreaterThan([self countOf:@"MARKETING_VERSION=" in:workflow], 0u,
