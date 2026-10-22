@@ -1,7 +1,60 @@
 #import <XCTest/XCTest.h>
 #import "BPFormulaPopoverViewController.h"
 #import "BPSelectedFormulaViewController.h"
+#import "BPHomebrewViewController.h"
+#import "BPHomebrewManager.h"
+#import "BPHomebrewInterface.h"
+#import "BPMockHomebrewInterface.h"
+#import "BPSideBarController.h"
+#import "BPFormulaeDataSource.h"
+#import "BPFormulaeTableView.h"
+#import "BPToolbar.h"
+#import "BPDoctorViewController.h"
+#import "BPUpdateViewController.h"
+#import "BPServicesViewController.h"
+#import "BPInstallationWindowController.h"
+#import "BPFormulaOptionsWindowController.h"
+#import "BPAutoremoveWindowController.h"
+#import "BPBundleWindowController.h"
+#import "BPBrewfilePlan.h"
+#import "BPDisabledView.h"
+#import "BPLoadingView.h"
+#import "BPEmptyState.h"
+#import "BPEmptyStateView.h"
+#import "BPPreferences.h"
+#import "BPPreferencesWindowController.h"
+#import "BPAutoScrollTextView.h"
 #import "BPFormulaInformation-Swift.h"
+
+@interface BPHomebrewInterface (BPTestingInjection)
++ (void)setSharedInterfaceForTesting:(BPHomebrewInterface *)interface;
+- (instancetype)initUniqueInstance;
+@end
+
+@interface BPToolbar (BPTestingAccess)
+@property (assign) BPToolbarMode currentMode;
+@end
+
+@interface BPHomebrewViewController (BPTestingAccess)
+- (BPFormula *)selectedFormula;
+- (void)performSearchWithString:(NSString *)searchPhrase;
+- (BOOL)isSearching;
+@end
+
+@interface BPInstallationWindowController (BPTestingAccess)
+@property (nonatomic) BPWindowOperation windowOperation;
+@property (strong, nonatomic) NSArray *formulae;
+@property (strong, nonatomic) NSArray *options;
+@property (nonatomic) BOOL zapCask;
+- (void)cleanupAfterTask;
+@end
+
+@interface BPFormulaOptionsWindowController (BPTestingAccess)
+@property (nonatomic, strong) NSMutableArray *availableOptions;
+@property (strong) BPFormula *formula;
+@property (strong, nonatomic) BPFormulaOptionsHost *optionsHost;
+- (NSArray *)allSelectedOptions;
+@end
 
 // Model loads and AppKit animations are replaced at the boundary. The production
 // controller still registers and receives real NSNotificationCenter events.
@@ -487,6 +540,679 @@
     [listHost selectClickedRowIfNeeded];
     XCTAssertEqual(listHost.selectedRow, 0);
     XCTAssertEqualObjects(listHost.selectedPackageName, @"ack");
+}
+
+@end
+
+// MARK: - End-to-End In-Process Feature Journey Suite
+
+@interface BPEndToEndFeatureJourneyTests : XCTestCase
+@property (strong) BPMockHomebrewInterface *mockInterface;
+@property (strong) BPSideBarController *retainedSidebarController;
+@property (strong) NSMenu *retainedFormulaMenu;
+@property (copy) NSString *savedSortColumn;
+@property BOOL savedSortAscending;
+@property NSInteger savedSidebarRow;
+@property BOOL savedBackgroundCheck;
+@property NSTimeInterval savedBackgroundInterval;
+@property BOOL savedGreedy;
+@property BOOL savedAutoAppUpdates;
+@end
+
+@implementation BPEndToEndFeatureJourneyTests
+
+- (void)setUp
+{
+    [super setUp];
+    self.savedSortColumn = [BPPreferences sortColumnIdentifier];
+    self.savedSortAscending = [BPPreferences sortAscending];
+    self.savedSidebarRow = [BPPreferences lastSelectedSidebarRow];
+    self.savedBackgroundCheck = [BPPreferences backgroundCheckEnabled];
+    self.savedBackgroundInterval = [BPPreferences backgroundCheckInterval];
+    self.savedGreedy = [BPPreferences greedyCaskUpgrades];
+    self.savedAutoAppUpdates = [BPPreferences automaticAppUpdateCheckEnabled];
+
+    [BPPreferences setSortColumnIdentifier:nil];
+    [BPPreferences setSortAscending:YES];
+    [BPPreferences setLastSelectedSidebarRow:FormulaeSideBarItemInstalled];
+
+    self.mockInterface = [(BPMockHomebrewInterface *)[NSClassFromString(@"BPMockHomebrewInterface") alloc] initUniqueInstance];
+    [BPHomebrewInterface setSharedInterfaceForTesting:self.mockInterface];
+    [BPAppDelegateRef setRunningBackgroundTask:NO];
+    [[BPHomebrewManager sharedManager] setValue:@NO forKey:@"reloadInFlight"];
+    [[BPHomebrewManager sharedManager] setValue:@NO forKey:@"discoveryInFlight"];
+    [self populateMockHomebrewCatalog];
+}
+
+- (void)tearDown
+{
+    [BPAppDelegateRef setRunningBackgroundTask:NO];
+    [BPHomebrewInterface setSharedInterfaceForTesting:nil];
+    self.mockInterface = nil;
+    self.retainedSidebarController = nil;
+    self.retainedFormulaMenu = nil;
+
+    [BPPreferences setSortColumnIdentifier:self.savedSortColumn];
+    [BPPreferences setSortAscending:self.savedSortAscending];
+    [BPPreferences setLastSelectedSidebarRow:self.savedSidebarRow];
+    [BPPreferences setBackgroundCheckEnabled:self.savedBackgroundCheck];
+    [BPPreferences setBackgroundCheckInterval:self.savedBackgroundInterval];
+    [BPPreferences setGreedyCaskUpgrades:self.savedGreedy];
+    [BPPreferences setAutomaticAppUpdateCheckEnabled:self.savedAutoAppUpdates];
+    [super tearDown];
+}
+
+- (void)populateMockHomebrewCatalog
+{
+    BPHomebrewManager *manager = [BPHomebrewManager sharedManager];
+    NSArray<BPFormula *> *installed = [self.mockInterface listMode:kBPListInstalled];
+    NSArray<BPFormula *> *installedCasks = [self.mockInterface listMode:kBPListInstalledCasks];
+    NSArray<BPFormula *> *leaves = [self.mockInterface listMode:kBPListLeaves];
+    NSArray<BPFormula *> *pinned = [self.mockInterface listMode:kBPListPinned];
+    NSArray<BPFormula *> *outdated = [self.mockInterface listMode:kBPListOutdated];
+    NSArray<BPFormula *> *outdatedCasks = [self.mockInterface listMode:kBPListOutdatedCasks];
+    NSArray<BPFormula *> *allFormulae = [self.mockInterface listMode:kBPListAll];
+    NSArray<BPFormula *> *allCasks = [self.mockInterface listMode:kBPListAllCasks];
+    NSArray<BPFormula *> *repos = [self.mockInterface listMode:kBPListRepositories];
+
+    [manager setValue:installed forKey:@"installedFormulae"];
+    [manager setValue:installedCasks forKey:@"installedCasks"];
+    [manager setValue:leaves forKey:@"leavesFormulae"];
+    [manager setValue:pinned forKey:@"pinnedFormulae"];
+    [manager setValue:outdated forKey:@"outdatedFormulae"];
+    [manager setValue:outdatedCasks forKey:@"outdatedCasks"];
+    [manager setValue:allFormulae forKey:@"allFormulae"];
+    [manager setValue:allCasks forKey:@"allCasks"];
+    [manager setValue:repos forKey:@"repositoriesFormulae"];
+    [manager setValue:@[] forKey:@"searchFormulae"];
+}
+
+- (BPHomebrewViewController *)makeWiredHomebrewViewControllerInWindow:(NSWindow * __autoreleasing *)outWindow
+{
+    NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 1000, 680)
+                                                   styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable)
+                                                     backing:NSBackingStoreBuffered
+                                                       defer:NO];
+    BPHomebrewViewController *vc = [[BPHomebrewViewController alloc] init];
+    NSView *rootView = [[NSView alloc] initWithFrame:window.contentView.bounds];
+    vc.view = rootView;
+    [window.contentView addSubview:rootView];
+
+    NSSplitView *formulaeSplitView = [[NSSplitView alloc] initWithFrame:NSMakeRect(0, 0, 800, 600)];
+    NSScrollView *scrollView = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 120, 800, 480)];
+    BPFormulaeTableView *tableView = [[BPFormulaeTableView alloc] initWithFrame:scrollView.bounds];
+    scrollView.documentView = tableView;
+    NSView *selectedFormulaContainer = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 800, 120)];
+    [formulaeSplitView addSubview:scrollView];
+    [formulaeSplitView addSubview:selectedFormulaContainer];
+
+    NSTabView *tabView = [[NSTabView alloc] initWithFrame:NSMakeRect(0, 0, 800, 600)];
+    for (NSUInteger idx = 0; idx < 4; idx++) {
+        NSTabViewItem *item = [[NSTabViewItem alloc] initWithIdentifier:@(idx)];
+        [tabView addTabViewItem:item];
+    }
+    [rootView addSubview:tabView];
+
+    NSTextField *infoLabel = [NSTextField labelWithString:@""];
+    [rootView addSubview:infoLabel];
+    NSMenu *formulaMenu = [[NSMenu alloc] initWithTitle:@"Formula"];
+    for (NSString *title in @[@"Install Formula", @"Uninstall Formula", @"Update Formula",
+                              @"More Information", @"Formula Website", @"Pin Formula",
+                              @"Unpin Formula", @"Install Formula with Options..."]) {
+        [formulaMenu addItemWithTitle:title action:NULL keyEquivalent:@""];
+    }
+    self.retainedFormulaMenu = formulaMenu;
+
+    BPSideBarController *sidebarController = [[BPSideBarController alloc] init];
+    self.retainedSidebarController = sidebarController;
+    NSOutlineView *outline = [[NSOutlineView alloc] initWithFrame:NSMakeRect(0, 0, 200, 600)];
+    NSTableColumn *col = [[NSTableColumn alloc] initWithIdentifier:@"MainColumn"];
+    [outline addTableColumn:col];
+    outline.outlineTableColumn = col;
+    [rootView addSubview:outline];
+    sidebarController.sidebar = outline;
+    outline.dataSource = sidebarController;
+    outline.delegate = sidebarController;
+    [outline reloadData];
+    [outline expandItem:nil expandChildren:YES];
+
+    [vc setValue:formulaeSplitView forKey:@"formulaeSplitView"];
+    vc.scrollView_formulae = scrollView;
+    vc.formulaeTableView = tableView;
+    [vc setValue:selectedFormulaContainer forKey:@"selectedFormulaView"];
+    vc.tabView = tabView;
+    vc.label_information = infoLabel;
+    vc.menu_formula = formulaMenu;
+    vc.sidebarController = sidebarController;
+
+    [vc viewDidLoad];
+    [(id<BPHomebrewManagerDelegate>)vc homebrewManagerFinishedUpdating:[BPHomebrewManager sharedManager]];
+
+    if (outWindow) {
+        *outWindow = window;
+    }
+    return vc;
+}
+
+- (void)testEndToEndAllTenPackageListModesAndSearchThroughHomebrewViewController
+{
+    NSWindow *window = nil;
+    BPHomebrewViewController *vc = [self makeWiredHomebrewViewControllerInWindow:&window];
+    BPInstalledPackageListHost *listHost = [vc valueForKey:@"installedPackageListHost"];
+    BPToolbar *toolbar = [vc valueForKey:@"toolbar"];
+    XCTAssertNotNil(listHost);
+    XCTAssertNotNil(toolbar);
+    XCTAssertNil([vc valueForKey:@"loadingView"], @"Loading overlay must be dismissed when catalog finishes updating");
+
+    struct {
+        FormulaeSideBarItem row;
+        NSInteger expectedCount;
+        __unsafe_unretained NSString *sampleName;
+        BOOL isCask;
+        BPToolbarMode expectedToolbarModeWhenSelected;
+    } modes[] = {
+        { FormulaeSideBarItemInstalled, 3, @"mockwget", NO, BPToolbarModeUninstall },
+        { FormulaeSideBarItemInstalledCasks, 2, @"mockchrome", YES, BPToolbarModeUninstall },
+        { FormulaeSideBarItemOutdated, 1, @"mockgit", NO, BPToolbarModeUpdateSingle },
+        { FormulaeSideBarItemOutdatedCasks, 1, @"mockchrome", YES, BPToolbarModeUpdateSingle },
+        { FormulaeSideBarItemAll, 4, @"mockhtop", NO, BPToolbarModeInstall },
+        { FormulaeSideBarItemAllCasks, 3, @"mockfirefox", YES, BPToolbarModeInstall },
+        { FormulaeSideBarItemLeaves, 1, @"mockwget", NO, BPToolbarModeUninstall },
+        { FormulaeSideBarItemPinned, 1, @"mockgit", NO, BPToolbarModeUninstall },
+        { FormulaeSideBarItemRepositories, 2, @"homebrew/core", NO, BPToolbarModeUntap },
+    };
+
+    for (size_t i = 0; i < sizeof(modes) / sizeof(modes[0]); i++) {
+        NSInteger sidebarRow = modes[i].row;
+        [vc.sidebarController.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:(NSUInteger)sidebarRow]
+                                  byExtendingSelection:NO];
+        [(id<BPSideBarControllerDelegate>)vc sourceListSelectionDidChange];
+
+        XCTAssertEqual(listHost.rowCount, modes[i].expectedCount,
+                       @"Row count mismatch for sidebar row %ld", (long)sidebarRow);
+        XCTAssertGreaterThan(vc.label_information.stringValue.length, 0u);
+
+        if (sidebarRow == FormulaeSideBarItemRepositories) {
+            [listHost deselectAll];
+            XCTAssertEqual(toolbar.currentMode, BPToolbarModeTap);
+        }
+
+        XCTAssertTrue([listHost selectPackageNamed:modes[i].sampleName cask:modes[i].isCask],
+                      @"Expected package %@ in sidebar row %ld", modes[i].sampleName, (long)sidebarRow);
+        if (sidebarRow == FormulaeSideBarItemRepositories) {
+            BPFormula *selectedRepo = [vc selectedFormula];
+            XCTAssertEqualObjects(selectedRepo.name, modes[i].sampleName);
+        } else {
+            XCTAssertEqualObjects(vc.currentFormula.name, modes[i].sampleName);
+        }
+        XCTAssertEqual(toolbar.currentMode, modes[i].expectedToolbarModeWhenSelected,
+                       @"Unexpected toolbar mode for sidebar row %ld", (long)sidebarRow);
+    }
+
+    // 10th mode: Search across formulae and casks
+    [[BPHomebrewManager sharedManager] setValue:nil forKey:@"searchFormulae"];
+    [vc performSearchWithString:@"mock"];
+    NSDate *searchDeadline = [NSDate dateWithTimeIntervalSinceNow:1.5];
+    while ([BPHomebrewManager sharedManager].searchFormulae.count == 0 && searchDeadline.timeIntervalSinceNow > 0) {
+        [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.05]];
+    }
+    [(id<BPHomebrewManagerDelegate>)vc homebrewManager:[BPHomebrewManager sharedManager]
+                               didUpdateSearchResults:[BPHomebrewManager sharedManager].searchFormulae];
+    XCTAssertGreaterThan(listHost.rowCount, 0, @"Search mode must populate BPInstalledPackageListHost");
+    XCTAssertTrue([listHost selectPackageNamed:@"mockwget" cask:NO]);
+    XCTAssertEqualObjects(vc.currentFormula.name, @"mockwget");
+
+    // Exercise Formula Info Popover from BPHomebrewViewController
+    [vc showFormulaInfo:nil];
+    BPFormulaPopoverViewController *popoverVC = [vc valueForKey:@"formulaPopoverViewController"];
+    XCTAssertNotNil(popoverVC);
+    XCTAssertEqualObjects(popoverVC.formula.name, @"mockwget");
+
+    // Clear search and verify restoration of previous sidebar row
+    [vc performSearchWithString:@""];
+    XCTAssertFalse([vc isSearching]);
+}
+
+- (void)testEndToEndPinAndUnpinFormulaThroughHomebrewViewController
+{
+    NSWindow *window = nil;
+    BPHomebrewViewController *vc = [self makeWiredHomebrewViewControllerInWindow:&window];
+    BPInstalledPackageListHost *listHost = [vc valueForKey:@"installedPackageListHost"];
+
+    [vc.sidebarController.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:FormulaeSideBarItemInstalled]
+                              byExtendingSelection:NO];
+    [(id<BPSideBarControllerDelegate>)vc sourceListSelectionDidChange];
+    XCTAssertTrue([listHost selectPackageNamed:@"mockwget" cask:NO]);
+    XCTAssertFalse(vc.currentFormulaPinned);
+
+    [vc pinSelectedFormula:nil];
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.20]];
+    XCTAssertFalse(BPAppDelegateRef.isRunningBackgroundTask);
+
+    XCTAssertTrue([listHost selectPackageNamed:@"mockgit" cask:NO]);
+    XCTAssertTrue(vc.currentFormulaPinned);
+    [vc unpinSelectedFormula:nil];
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.20]];
+    XCTAssertFalse(BPAppDelegateRef.isRunningBackgroundTask);
+}
+
+- (void)testEndToEndUnifiedUpdatesDashboardFilteringSelectionAndActions
+{
+    // Add an unpinned outdated formula alongside pinned mockgit and outdated cask mockchrome
+    BPHomebrewManager *manager = [BPHomebrewManager sharedManager];
+    BPFormula *outdatedGit = [BPFormula formulaWithName:@"mockgit" version:@"2.43.0" andLatestVersion:@"2.44.0"];
+    BPFormula *outdatedNode = [BPFormula formulaWithName:@"mocknode" version:@"20.0.0" andLatestVersion:@"21.0.0"];
+    BPFormula *outdatedChrome = [BPFormula formulaWithName:@"mockchrome" version:@"120.0" andLatestVersion:@"121.0"];
+    outdatedChrome.cask = YES;
+    [manager setValue:@[outdatedGit, outdatedNode] forKey:@"outdatedFormulae"];
+    [manager setValue:@[outdatedChrome] forKey:@"outdatedCasks"];
+
+    NSWindow *window = nil;
+    BPHomebrewViewController *vc = [self makeWiredHomebrewViewControllerInWindow:&window];
+    BPUnifiedUpdatesHost *updatesHost = [vc valueForKey:@"unifiedUpdatesHost"];
+    BPToolbar *toolbar = [vc valueForKey:@"toolbar"];
+    XCTAssertNotNil(updatesHost);
+    XCTAssertNotNil(toolbar);
+
+    [vc showUnifiedUpdates:nil];
+    XCTAssertEqual(vc.sidebarController.sidebar.selectedRow, FormulaeSideBarItemUnifiedUpdates);
+    XCTAssertFalse(updatesHost.isEmpty);
+    XCTAssertTrue(updatesHost.hasEligibleUpdates);
+    XCTAssertTrue(updatesHost.hasFormulaUpdates);
+    XCTAssertTrue(updatesHost.hasCaskUpdates);
+    XCTAssertEqual(updatesHost.rowCount, 3);
+
+    // Select All Eligible skips pinned mockgit and selects mocknode + mockchrome
+    [updatesHost selectAllEligible];
+    XCTAssertEqual(updatesHost.selectedCount, 2);
+    XCTAssertEqualObjects(updatesHost.selectedFormulaNames, @[@"mocknode"]);
+    XCTAssertEqualObjects(updatesHost.selectedCaskNames, @[@"mockchrome"]);
+    XCTAssertEqual(toolbar.currentMode, BPToolbarModeUpdateMany);
+
+    // Group selection buttons
+    [updatesHost selectFormulaGroup];
+    XCTAssertEqualObjects(updatesHost.selectedFormulaNames, @[@"mocknode"]);
+    XCTAssertEqual(updatesHost.selectedCaskNames.count, 0u);
+    XCTAssertEqual(toolbar.currentMode, BPToolbarModeUpdateSingle);
+
+    [updatesHost selectCaskGroup];
+    XCTAssertEqual(updatesHost.selectedFormulaNames.count, 0u);
+    XCTAssertEqualObjects(updatesHost.selectedCaskNames, @[@"mockchrome"]);
+    XCTAssertEqual(toolbar.currentMode, BPToolbarModeUpdateSingle);
+
+    // Filter query
+    updatesHost.filterQuery = @"chrome";
+    XCTAssertEqualObjects(updatesHost.filterQuery, @"chrome");
+    updatesHost.filterQuery = @"";
+
+    // Clear selection
+    [updatesHost clearSelection];
+    XCTAssertEqual(updatesHost.selectedCount, 0);
+    XCTAssertEqual(toolbar.currentMode, BPToolbarModeDefault);
+}
+
+- (void)testEndToEndDoctorAndUpdateConsoleToolsRunStreamAndClear
+{
+    BPDoctorViewController *doctorVC = [[BPDoctorViewController alloc] initWithNibName:nil bundle:nil];
+    __unused NSView *doctorView = doctorVC.view;
+    BPConsoleToolHost *doctorHost = [doctorVC valueForKey:@"consoleHost"];
+    BPAutoScrollTextView *doctorTextView = [doctorVC valueForKey:@"doctorTextView"];
+    XCTAssertNotNil(doctorHost);
+    XCTAssertNotNil(doctorTextView);
+
+    doctorHost.onRun();
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.25]];
+    [doctorTextView flushPendingOutput];
+    XCTAssertFalse(doctorHost.isRunning);
+    XCTAssertTrue([doctorTextView.string containsString:@"MOCK_DOCTOR_OK"]);
+    XCTAssertTrue([doctorTextView.string containsString:@"Checking for common problems..."]);
+    XCTAssertTrue([doctorTextView.string containsString:@"MOCK_DOCTOR_DONE"]);
+
+    doctorHost.onClear();
+    XCTAssertEqualObjects(doctorTextView.string, @"");
+
+    BPUpdateViewController *updateVC = [[BPUpdateViewController alloc] initWithNibName:nil bundle:nil];
+    __unused NSView *updateView = updateVC.view;
+    BPConsoleToolHost *updateHost = [updateVC valueForKey:@"consoleHost"];
+    BPAutoScrollTextView *updateTextView = [updateVC valueForKey:@"updateTextView"];
+    XCTAssertNotNil(updateHost);
+    XCTAssertNotNil(updateTextView);
+
+    updateHost.onRun();
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.25]];
+    [updateTextView flushPendingOutput];
+    XCTAssertFalse(updateHost.isRunning);
+    XCTAssertTrue([updateTextView.string containsString:@"MOCK_UPDATE_OK"]);
+
+    updateHost.onClear();
+    XCTAssertEqualObjects(updateTextView.string, @"");
+}
+
+- (void)testEndToEndServicesControllerStartStopRestartDetailsAndCopyOutput
+{
+    BPServicesViewController *servicesVC = [[BPServicesViewController alloc] initWithNibName:nil bundle:nil];
+    __unused NSView *servicesView = servicesVC.view;
+    BPServicesHost *servicesHost = [servicesVC valueForKey:@"servicesHost"];
+    NSTableView *tableView = [servicesVC valueForKey:@"tableView"];
+    NSTextView *detailsText = [servicesVC valueForKey:@"detailsText"];
+    XCTAssertNotNil(servicesHost);
+    XCTAssertNotNil(tableView);
+    XCTAssertNotNil(detailsText);
+
+    [servicesVC refreshServices];
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.20]];
+    XCTAssertEqual(tableView.numberOfRows, 2);
+
+    // Select running service mockpostgres (row 0)
+    [tableView selectRowIndexes:[NSIndexSet indexSetWithIndex:0] byExtendingSelection:NO];
+    [[NSNotificationCenter defaultCenter] postNotificationName:NSTableViewSelectionDidChangeNotification object:tableView];
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.20]];
+
+    XCTAssertTrue([detailsText.string containsString:@"mockpostgres"]);
+    XCTAssertTrue([detailsText.string containsString:@"/cakebrew-mock-missing/service.plist"]);
+
+    // Copy raw output to pasteboard
+    [NSPasteboard.generalPasteboard clearContents];
+    servicesHost.onCopyOutput();
+    NSString *copied = [NSPasteboard.generalPasteboard stringForType:NSPasteboardTypeString];
+    XCTAssertTrue([copied containsString:@"\"name\":\"mockpostgres\""]);
+
+    // Stop, Restart, and Start operations through SwiftUI host callbacks
+    servicesHost.onStop();
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.25]];
+    XCTAssertFalse([[servicesVC valueForKey:@"operationInFlight"] boolValue]);
+
+    [tableView selectRowIndexes:[NSIndexSet indexSetWithIndex:0] byExtendingSelection:NO];
+    [[NSNotificationCenter defaultCenter] postNotificationName:NSTableViewSelectionDidChangeNotification object:tableView];
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.15]];
+
+    servicesHost.onRestart();
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.25]];
+    XCTAssertFalse([[servicesVC valueForKey:@"operationInFlight"] boolValue]);
+
+    // Select stopped service mockredis (row 1) and start it
+    [tableView selectRowIndexes:[NSIndexSet indexSetWithIndex:1] byExtendingSelection:NO];
+    [[NSNotificationCenter defaultCenter] postNotificationName:NSTableViewSelectionDidChangeNotification object:tableView];
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.15]];
+
+    servicesHost.onStart();
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.25]];
+    XCTAssertFalse([[servicesVC valueForKey:@"operationInFlight"] boolValue]);
+}
+
+- (void)runSingleInstallationOperation:(BPWindowOperation)op
+                              formulae:(NSArray<BPFormula *> *)formulae
+                               options:(NSArray<NSString *> *)options
+                                   zap:(BOOL)zap
+                        expectedMarker:(NSString *)expectedMarker
+{
+    BPInstallationWindowController *wc = [[BPInstallationWindowController alloc] initWithWindowNibName:@"BPInstallationWindow"];
+    wc.windowOperation = op;
+    wc.formulae = formulae;
+    wc.options = options;
+    wc.zapCask = zap;
+
+    __unused NSWindow *win = wc.window;
+    [wc windowDidLoad];
+    BPInstallationHost *installHost = [wc valueForKey:@"installationHost"];
+    BPAutoScrollTextView *recordTextView = [wc valueForKey:@"recordTextView"];
+    XCTAssertNotNil(installHost);
+    XCTAssertNotNil(recordTextView);
+
+    __block BOOL completedFlag = NO;
+    [wc setCompletionBlock:^(BOOL completed) {
+        completedFlag = completed;
+    }];
+    [wc executeInstallation];
+
+    NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
+    while ([[wc valueForKey:@"isRunningTask"] boolValue] && deadline.timeIntervalSinceNow > 0) {
+        [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.05]];
+    }
+    XCTAssertFalse([[wc valueForKey:@"isRunningTask"] boolValue], @"Installation task must finish");
+    [recordTextView flushPendingOutput];
+    [wc cleanupAfterTask];
+    XCTAssertTrue(completedFlag, @"Operation %@ should report completion=YES", expectedMarker);
+    XCTAssertTrue([recordTextView.string containsString:expectedMarker],
+                  @"Expected '%@' in transcript, got: %@", expectedMarker, recordTextView.string);
+}
+
+- (void)testEndToEndInstallationWindowControllerAllOperations
+{
+    BPFormula *firefoxCask = [BPFormula formulaWithName:@"mockfirefox"];
+    firefoxCask.cask = YES;
+    BPFormula *chromeCask = [BPFormula formulaWithName:@"mockchrome"];
+    chromeCask.cask = YES;
+
+    [self runSingleInstallationOperation:kBPWindowOperationInstall
+                                formulae:@[[BPFormula formulaWithName:@"mockhtop"]]
+                                 options:@[@"--with-debug"]
+                                     zap:NO
+                          expectedMarker:@"MOCK_INSTALL_OK"];
+
+    [self runSingleInstallationOperation:kBPWindowOperationInstall
+                                formulae:@[firefoxCask]
+                                 options:nil
+                                     zap:NO
+                          expectedMarker:@"MOCK_INSTALL_CASK_OK"];
+
+    [self runSingleInstallationOperation:kBPWindowOperationUninstall
+                                formulae:@[[BPFormula formulaWithName:@"mockwget"]]
+                                 options:nil
+                                     zap:NO
+                          expectedMarker:@"MOCK_UNINSTALL_OK"];
+
+    [self runSingleInstallationOperation:kBPWindowOperationUninstall
+                                formulae:@[chromeCask]
+                                 options:nil
+                                     zap:NO
+                          expectedMarker:@"MOCK_UNINSTALL_CASK_OK"];
+
+    [self runSingleInstallationOperation:kBPWindowOperationUninstall
+                                formulae:@[chromeCask]
+                                 options:nil
+                                     zap:YES
+                          expectedMarker:@"MOCK_UNINSTALL_CASK_ZAP_OK"];
+
+    [self runSingleInstallationOperation:kBPWindowOperationUpgrade
+                                formulae:@[[BPFormula formulaWithName:@"mockgit"]]
+                                 options:nil
+                                     zap:NO
+                          expectedMarker:@"MOCK_UPGRADE_OK"];
+
+    [self runSingleInstallationOperation:kBPWindowOperationTap
+                                formulae:@[[BPFormula formulaWithName:@"homebrew/cask-fonts"]]
+                                 options:nil
+                                     zap:NO
+                          expectedMarker:@"MOCK_TAP_OK"];
+
+    [self runSingleInstallationOperation:kBPWindowOperationUntap
+                                formulae:@[[BPFormula formulaWithName:@"homebrew/core"]]
+                                 options:nil
+                                     zap:NO
+                          expectedMarker:@"MOCK_UNTAP_OK"];
+
+    [self runSingleInstallationOperation:kBPWindowOperationCleanup
+                                formulae:nil
+                                 options:nil
+                                     zap:NO
+                          expectedMarker:@"MOCK_CLEANUP_OK"];
+}
+
+- (void)testEndToEndFormulaOptionsWindowControllerLoadsOptionsTogglesAndReturnsSelection
+{
+    BPFormula *formula = [BPFormula formulaWithName:@"mockwget"];
+    [formula setNeedsInformation:YES];
+    NSArray *options = [formula options];
+    XCTAssertEqual(options.count, 2u, @"Mock formula info must parse --with-debug and --HEAD options");
+
+    BPFormulaOptionsWindowController *wc = [[BPFormulaOptionsWindowController alloc] initWithWindowNibName:@"BPFormulaOptionsWindow"];
+    wc.formula = formula;
+    NSMutableArray *availableOptions = [NSMutableArray array];
+    for (BPFormulaOption *option in options) {
+        [availableOptions addObject:[@{
+            @"formulaOptionCommand": option.name,
+            @"isFormulaOptionCommandApplied": @NO,
+            @"formulaOptionDescription": option.explanation ?: @""
+        } mutableCopy]];
+    }
+    wc.availableOptions = availableOptions;
+    __unused NSWindow *window = wc.window;
+
+    XCTAssertNotNil(wc.optionsHost);
+    XCTAssertEqual(wc.allSelectedOptions.count, 0u);
+
+    [wc.optionsHost setApplied:YES forOptionNamed:@"--with-debug"];
+    [wc.optionsHost setApplied:YES forOptionNamed:@"--HEAD"];
+    XCTAssertEqualObjects(wc.allSelectedOptions, (@[@"--with-debug", @"--HEAD"]));
+
+    [wc.optionsHost setApplied:NO forOptionNamed:@"--HEAD"];
+    XCTAssertEqualObjects(wc.allSelectedOptions, @[@"--with-debug"]);
+}
+
+- (void)testEndToEndAutoremoveWindowControllerPreviewAndReviewedRemoval
+{
+    NSWindow *parent = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 800, 600)
+                                                   styleMask:NSWindowStyleMaskTitled
+                                                     backing:NSBackingStoreBuffered
+                                                       defer:NO];
+    BPAutoremoveWindowController *controller = [BPAutoremoveWindowController presentForWindow:parent
+                                                                                    interface:self.mockInterface
+                                                                                      manager:[BPHomebrewManager sharedManager]];
+    XCTAssertNotNil(controller);
+    BPAutoremoveHost *host = [controller valueForKey:@"autoremoveHost"];
+    BPAutoScrollTextView *outputView = [controller valueForKey:@"outputView"];
+    NSTextField *statusLabel = [controller valueForKey:@"statusLabel"];
+    NSButton *removeButton = [controller valueForKey:@"removeButton"];
+    XCTAssertNotNil(host);
+
+    // Wait for previewAutoremoveWithProgress: to complete
+    NSDate *previewDeadline = [NSDate dateWithTimeIntervalSinceNow:2.0];
+    while ([[controller valueForKey:@"busy"] boolValue] && previewDeadline.timeIntervalSinceNow > 0) {
+        [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.05]];
+    }
+    XCTAssertTrue(removeButton.enabled);
+    XCTAssertTrue([outputView.string containsString:@"mockunused"]);
+
+    // Trigger reviewed removal via SwiftUI host callback
+    host.onRemove();
+    NSDate *removeDeadline = [NSDate dateWithTimeIntervalSinceNow:2.0];
+    while ([[controller valueForKey:@"busy"] boolValue] && removeDeadline.timeIntervalSinceNow > 0) {
+        [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.05]];
+    }
+    [outputView flushPendingOutput];
+    XCTAssertTrue([outputView.string containsString:@"MOCK_AUTOREMOVE_OK"]);
+    XCTAssertTrue([statusLabel.stringValue containsString:@"removed"]);
+
+    // Close the sheet
+    host.onCancelOrClose();
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.10]];
+    XCTAssertFalse(BPAppDelegateRef.isRunningBackgroundTask);
+}
+
+- (void)testEndToEndBundleWindowControllerImportAndExportFlows
+{
+    NSURL *tempDir = [[NSURL fileURLWithPath:NSTemporaryDirectory()] URLByAppendingPathComponent:NSUUID.UUID.UUIDString];
+    XCTAssertTrue([[NSFileManager defaultManager] createDirectoryAtURL:tempDir withIntermediateDirectories:YES attributes:nil error:NULL]);
+    NSURL *brewfileURL = [tempDir URLByAppendingPathComponent:@"Brewfile"];
+    NSString *brewfileContents = @"brew \"mockwget\"\ncask \"mockchrome\"\ntap \"homebrew/core\"\n";
+    XCTAssertTrue([brewfileContents writeToURL:brewfileURL atomically:YES encoding:NSUTF8StringEncoding error:NULL]);
+
+    NSError *planError = nil;
+    BPBrewfilePlan *plan = [BPBrewfilePlan planWithURL:brewfileURL
+                                           inventories:@{
+                                               @"formulae": [NSSet setWithObject:@"mockwget"],
+                                               @"casks": [NSSet set],
+                                               @"taps": [NSSet setWithObject:@"homebrew/core"]
+                                           }
+                                                 error:&planError];
+    XCTAssertNil(planError);
+    XCTAssertNotNil(plan);
+    XCTAssertTrue(plan.canInstall);
+
+    // 1. Run Brewfile Import flow
+    BPBundleWindowController *importWC = [[BPBundleWindowController alloc] initWithWindowNibName:@"BPBundleWindow"];
+    __unused NSWindow *importWindow = importWC.window;
+    [importWC windowDidLoad];
+    [importWC performSelector:@selector(runImportOperationWithPlan:) withObject:plan];
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.35]];
+
+    BPAutoScrollTextView *importTextView = [importWC valueForKey:@"textViewImport"];
+    [importTextView flushPendingOutput];
+    XCTAssertTrue([importTextView.string containsString:@"MOCK_IMPORT_OK"],
+                  @"Expected MOCK_IMPORT_OK in import output, got: %@", importTextView.string);
+
+    // 2. Run Brewfile Export flow
+    NSURL *exportURL = [tempDir URLByAppendingPathComponent:@"ExportedBrewfile"];
+    BPBundleWindowController *exportWC = [[BPBundleWindowController alloc] initWithWindowNibName:@"BPBundleWindow"];
+    __unused NSWindow *exportWindow = exportWC.window;
+    [exportWC windowDidLoad];
+    [exportWC performSelector:@selector(runExportOperationWithFile:) withObject:exportURL];
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.35]];
+
+    NSButton *exportCloseButton = [exportWC valueForKey:@"buttonClose"];
+    BPBundleOperationHost *exportHost = [exportWC valueForKey:@"bundleHost"];
+    XCTAssertTrue(exportCloseButton.enabled);
+    XCTAssertNotNil(exportHost);
+    XCTAssertFalse([[exportWC valueForKey:@"exportOperation"] isRunning]);
+
+    [[NSFileManager defaultManager] removeItemAtURL:tempDir error:NULL];
+}
+
+- (void)testEndToEndOverlaysDisabledLoadingEmptyStateAndPreferencesHost
+{
+    // 1. BPDisabledView + BPDisabledHost
+    BPDisabledView *disabledView = [[BPDisabledView alloc] initWithFrame:NSMakeRect(0, 0, 500, 360)];
+    __block NSInteger retryCount = 0;
+    disabledView.retryHandler = ^{
+        retryCount++;
+    };
+    [disabledView showDiscoveryResult:BPHomebrewDiscoveryMissing checking:YES];
+    [disabledView showDiscoveryResult:BPHomebrewDiscoveryMissing checking:NO];
+    [disabledView showDiscoveryResult:BPHomebrewDiscoveryInvalidShell checking:NO];
+    [disabledView showDiscoveryResult:BPHomebrewDiscoveryCheckFailed checking:NO];
+    BPDisabledHost *disabledHost = [disabledView valueForKey:@"disabledHost"];
+    XCTAssertNotNil(disabledHost);
+    disabledHost.onRetry();
+    XCTAssertEqual(retryCount, 1);
+
+    // 2. BPLoadingView + BPLoadingHost
+    BPLoadingView *loadingView = [[BPLoadingView alloc] initWithFrame:NSMakeRect(0, 0, 500, 360)];
+    BPLoadingHost *loadingHost = [loadingView valueForKey:@"loadingHost"];
+    XCTAssertNotNil(loadingHost);
+    XCTAssertNotNil(loadingHost.viewController.view);
+
+    // 3. BPEmptyStateView + BPEmptyStateHost
+    NSView *container = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 500, 360)];
+    BPEmptyState *emptyState = [BPEmptyState stateForSidebarRow:FormulaeSideBarItemOutdated searching:NO];
+    [BPEmptyStateView presentState:emptyState overView:container];
+    XCTAssertEqual(container.subviews.count, 1u);
+    [BPEmptyStateView presentState:nil overView:container];
+    XCTAssertEqual(container.subviews.count, 0u);
+
+    // 4. BPPreferencesWindowController + BPPreferencesHost
+    BPPreferencesWindowController *prefsWC = [[BPPreferencesWindowController alloc] init];
+    BPPreferencesHost *prefsHost = [prefsWC valueForKey:@"preferencesHost"];
+    XCTAssertNotNil(prefsHost);
+    prefsHost.onBackgroundCheckChanged(NO);
+    XCTAssertFalse([BPPreferences backgroundCheckEnabled]);
+    prefsHost.onIntervalChanged(86400.0);
+    XCTAssertEqualWithAccuracy([BPPreferences backgroundCheckInterval], 86400.0, 0.1);
+    prefsHost.onGreedyChanged(YES);
+    XCTAssertTrue([BPPreferences greedyCaskUpgrades]);
+    prefsHost.onAutomaticAppUpdateCheckChanged(NO);
+    XCTAssertFalse([BPPreferences automaticAppUpdateCheckEnabled]);
+
+    // 5. BPAppUpdateHost
+    BPAppUpdateHost *updateHost = [[BPAppUpdateHost alloc] initWithCurrentVersion:@"2.0.0" automaticCheckEnabled:YES];
+    XCTAssertNotNil(updateHost);
+    XCTAssertNotNil(updateHost.window);
+    XCTAssertEqualObjects(updateHost.currentVersionString, @"2.0.0");
+    uint64_t gen = [updateHost beginCheckWithCurrentVersion:@"2.0.0"];
+    XCTAssertTrue(updateHost.isChecking);
+    XCTAssertTrue([updateHost receiveFeedUnavailableForGeneration:gen]);
+    XCTAssertFalse(updateHost.isChecking);
+    XCTAssertFalse(updateHost.isUpdateAvailable);
 }
 
 @end

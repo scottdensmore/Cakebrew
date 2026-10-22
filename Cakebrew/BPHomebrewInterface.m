@@ -87,12 +87,30 @@ static NSString *cakebrewOutputIdentifier = @"+++++Cakebrew+++++";
 
 @end
 
+#if DEBUG
+static BPHomebrewInterface *sTestingSharedInterface = nil;
+#endif
+
 @implementation BPHomebrewInterface
+
+#if DEBUG
++ (void)setSharedInterfaceForTesting:(BPHomebrewInterface *)interface
+{
+	@synchronized(self) {
+		sTestingSharedInterface = interface;
+	}
+}
+#endif
 
 + (instancetype)sharedInterface
 {
 	@synchronized(self)
 	{
+#if DEBUG
+		if (sTestingSharedInterface) {
+			return sTestingSharedInterface;
+		}
+#endif
 		static dispatch_once_t once;
 		static BPHomebrewInterface *instance;
 		dispatch_once(&once, ^ {

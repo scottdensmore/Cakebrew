@@ -77,6 +77,19 @@
 	return taskMessages;
 }
 
+- (void)loadWindow
+{
+	if ([NSBundle.mainBundle pathForResource:@"BPInstallationWindow" ofType:@"nib"]) {
+		[super loadWindow];
+	} else {
+		self.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 480, 320)
+												  styleMask:NSWindowStyleMaskTitled
+													backing:NSBackingStoreBuffered
+													  defer:NO];
+		[self setupUI];
+	}
+}
+
 - (void)awakeFromNib
 {
 	[self setupUI];
@@ -88,6 +101,18 @@
 	NSFont *font = [BPStyle defaultFixedWidthFont];
 	if (!self.recordTextView) {
 		self.recordTextView = [[BPAutoScrollTextView alloc] initWithFrame:NSMakeRect(0, 0, 344, 162)];
+	}
+	if (!self.windowTitleLabel) {
+		self.windowTitleLabel = [NSTextField labelWithString:@""];
+	}
+	if (!self.formulaNameLabel) {
+		self.formulaNameLabel = [NSTextField labelWithString:@""];
+	}
+	if (!self.okButton) {
+		self.okButton = [NSButton buttonWithTitle:NSLocalizedString(@"Generic_OK", nil) target:self action:@selector(okAction:)];
+	}
+	if (!self.cancelButton) {
+		self.cancelButton = [NSButton buttonWithTitle:NSLocalizedString(@"Generic_Cancel", nil) target:self action:@selector(cancelAction:)];
 	}
 	[self.recordTextView setFont:font];
 	self.progressIndicator.accessibilityLabel = NSLocalizedString(@"VoiceOver_Operation_Progress", nil);

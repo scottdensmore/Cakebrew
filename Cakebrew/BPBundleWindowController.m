@@ -100,11 +100,26 @@
 	return [[BPBundleWindowController alloc] initWithWindowNibName:@"BPBundleWindow"];
 }
 
+- (void)loadWindow
+{
+	if ([NSBundle.mainBundle pathForResource:@"BPBundleWindow" ofType:@"nib"]) {
+		[super loadWindow];
+	} else {
+		self.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 413, 289)
+												  styleMask:NSWindowStyleMaskTitled
+													backing:NSBackingStoreBuffered
+													  defer:NO];
+	}
+}
+
 - (void)windowDidLoad
 {
 	[super windowDidLoad];
 	if (!self.textViewImport) {
 		self.textViewImport = [[BPAutoScrollTextView alloc] initWithFrame:NSMakeRect(0, 0, 373, 197)];
+	}
+	if (!self.buttonClose) {
+		self.buttonClose = [[NSButton alloc] initWithFrame:NSMakeRect(0, 0, 80, 28)];
 	}
 	self.textViewImport.editable = NO;
 	self.textViewImport.selectable = YES;

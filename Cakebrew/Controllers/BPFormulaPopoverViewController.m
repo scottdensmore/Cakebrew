@@ -17,10 +17,25 @@
 
 @property (strong) BPTimedDispatch *timedDispatch;
 @property (strong) BPFormulaInformationHost *informationHost;
+@property (strong) NSPopover *retainedPopover;
 
 @end
 
 @implementation BPFormulaPopoverViewController
+
+- (void)loadView
+{
+	if ([NSBundle.mainBundle pathForResource:@"BPFormulaPopoverView" ofType:@"nib"]) {
+		[super loadView];
+	} else {
+		self.view = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 420, 280)];
+		if (!self.formulaPopover) {
+			self.retainedPopover = [[NSPopover alloc] init];
+			self.formulaPopover = self.retainedPopover;
+		}
+		[self awakeFromNib];
+	}
+}
 
 - (void)awakeFromNib
 {

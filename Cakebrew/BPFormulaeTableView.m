@@ -15,16 +15,23 @@ NSString * const kColumnIdentifierName = @"Name";
 
 unichar SPACE_CHARACTER = 0x0020;
 
+@interface BPFormulaeTableView ()
+@property (assign, nonatomic) BOOL isObservingMode;
+@end
+
 @implementation BPFormulaeTableView
 
 - (void)awakeFromNib
 {
 	self.target = self;
 	self.doubleAction = @selector(performDoubleClickAction:);
-	[self addObserver:self
-		   forKeyPath:NSStringFromSelector(@selector(mode))
-			  options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
-			  context:BPFormulaeTableViewContext];
+	if (!self.isObservingMode) {
+		[self addObserver:self
+			   forKeyPath:NSStringFromSelector(@selector(mode))
+				  options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
+				  context:BPFormulaeTableViewContext];
+		self.isObservingMode = YES;
+	}
 }
 
 - (instancetype)initWithFrame:(NSRect)frameRect
@@ -210,9 +217,11 @@ unichar SPACE_CHARACTER = 0x0020;
 
 - (void)dealloc
 {
-	[self removeObserver:self
-			  forKeyPath:NSStringFromSelector(@selector(mode))
-				 context:BPFormulaeTableViewContext];
+	if (self.isObservingMode) {
+		[self removeObserver:self
+				  forKeyPath:NSStringFromSelector(@selector(mode))
+					 context:BPFormulaeTableViewContext];
+	}
 }
 
 @end
