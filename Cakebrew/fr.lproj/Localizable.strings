@@ -464,3 +464,5 @@
 /* Package information popover */
 "Information_Title" = "Informations sur %@";
 "Information_Unavailable" = "Aucune information n’est disponible pour ce paquet.";
+"Sidebar_Item_Unified_Updates" = "Mises à jour";
+"Sidebar_Info_Unified_Updates" = "Formules et casks obsolètes disposant d’une version plus récente.";

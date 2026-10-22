@@ -47,6 +47,7 @@
 		@(FormulaeSideBarItemDoctor):         @"Sidebar_Info_Doctor",
 		@(FormulaeSideBarItemUpdate):         @"Sidebar_Info_Update",
 		@(FormulaeSideBarItemServices):       @"Sidebar_Info_Services",
+		@(FormulaeSideBarItemUnifiedUpdates): @"Sidebar_Info_Unified_Updates",
 	};
 
 	[expected enumerateKeysAndObjectsUsingBlock:^(NSNumber *row, NSString *key, BOOL *stop) {

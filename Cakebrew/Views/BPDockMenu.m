@@ -84,7 +84,7 @@
 			return @selector(upgradeAllOutdatedFormulae:);
 
 		case BPDockMenuItemShowOutdated:
-			return @selector(showOutdatedFormulae:);
+			return @selector(showUnifiedUpdates:);
 	}
 
 	return NULL;

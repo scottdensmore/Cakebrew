@@ -38,12 +38,14 @@ typedef NS_ENUM(NSUInteger, BPNotificationNavigationAction) {
 	BPNotificationNavigationActionNone,
 	BPNotificationNavigationActionOutdatedFormulae,
 	BPNotificationNavigationActionOutdatedCasks,
+	BPNotificationNavigationActionUnifiedUpdates,
 };
 
 /// The main-window destinations a notification response can navigate to.
 @protocol BPNotificationNavigation <NSObject>
 - (void)showOutdatedFormulae:(id)sender;
 - (void)showOutdatedCasks:(id)sender;
+- (void)showUnifiedUpdates:(id)sender;
 @end
 
 /// The AppKit presentation every notification response requires, regardless of

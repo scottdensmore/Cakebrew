@@ -38,7 +38,7 @@ typedef NS_ENUM(NSInteger, BPDockMenuItem) {
 @protocol BPDockMenuActions <NSObject>
 - (IBAction)updateHomebrew:(id)sender;
 - (IBAction)upgradeAllOutdatedFormulae:(id)sender;
-- (IBAction)showOutdatedFormulae:(id)sender;
+- (IBAction)showUnifiedUpdates:(id)sender;
 @end
 
 /// What the Dock menu sends its actions to. Kept separate from the actions

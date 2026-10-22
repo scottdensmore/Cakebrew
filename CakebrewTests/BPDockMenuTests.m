@@ -149,4 +149,10 @@
 	XCTAssertTrue([BPDockMenu controllerActionForItem:(BPDockMenuItem)9999] == NULL);
 }
 
+- (void)testShowOutdatedItemRoutesToUnifiedUpdates
+{
+	XCTAssertEqual([BPDockMenu controllerActionForItem:BPDockMenuItemShowOutdated],
+				   @selector(showUnifiedUpdates:));
+}
+
 @end

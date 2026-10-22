@@ -68,6 +68,7 @@ typedef NS_ENUM(NSUInteger, BPWindowOperation) {
 /// the Dock menu fires it, and a Dock item carries its own tag.
 - (IBAction)showOutdatedFormulae:(id)sender;
 - (IBAction)showOutdatedCasks:(id)sender;
+- (IBAction)showUnifiedUpdates:(id)sender;
 - (IBAction)openSelectedFormulaWebsite:(id)sender;
 - (IBAction)beginFormulaSearch:(id)sender;
 - (IBAction)runHomebrewCleanup:(id)sender;

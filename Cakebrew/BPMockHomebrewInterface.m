@@ -174,6 +174,9 @@
 					   [BPFormula formulaWithName:@"mockvscode" andVersion:@"1.85.0"] ]];
 
 		case kBPListOutdatedCasks:
+			if ([[[NSProcessInfo processInfo] arguments] containsObject:@"-BPMockEmptyOutdatedCasks"]) {
+				return @[];
+			}
 			return [BPMockHomebrewInterface casksFromFormulae:
 					@[ [BPFormula formulaWithName:@"mockchrome" version:@"120.0" andLatestVersion:@"121.0"] ]];
 

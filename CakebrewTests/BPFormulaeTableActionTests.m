@@ -1,6 +1,8 @@
 #import <XCTest/XCTest.h>
 #import "BPFormulaeTableView.h"
 #import "BPFormulaeTableAction.h"
+#import "BPCleanupPreview.h"
+#import "BPUpdatesSnapshot.h"
 
 @interface BPFormulaeTableView (ActionTesting)
 - (void)performDoubleClickAction:(id)sender;
@@ -302,6 +304,21 @@
                            BPToolbarModeDefault);
         }
     }
+
+    for (NSInteger status = kBPFormulaNotInstalled; status <= kBPFormulaOutdated; status++) {
+        XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:FormulaeSideBarItemUnifiedUpdates
+                                                          selectedCount:0
+                                                  selectedFormulaStatus:(BPFormulaStatus)status],
+                       BPToolbarModeDefault);
+        XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:FormulaeSideBarItemUnifiedUpdates
+                                                          selectedCount:1
+                                                  selectedFormulaStatus:(BPFormulaStatus)status],
+                       BPToolbarModeUpdateSingle);
+        XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:FormulaeSideBarItemUnifiedUpdates
+                                                          selectedCount:2
+                                                  selectedFormulaStatus:(BPFormulaStatus)status],
+                       BPToolbarModeUpdateMany);
+    }
 }
 - (void)testShouldShowFormulaInfoHidesDetailOnlyOnRepositoriesRow
 {
@@ -364,5 +381,184 @@
             }
         }
     }
+}
+- (void)testShouldSyncUnifiedUpdatesForPublishedMode
+{
+    for (NSInteger published = kBPListAll; published <= kBPListAllCasks; published++) {
+        BOOL isUpdatesMode = (published == kBPListOutdated
+                              || published == kBPListOutdatedCasks
+                              || published == kBPListPinned);
+        for (NSNumber *loading in @[@NO, @YES]) {
+            for (NSNumber *hosted in @[@NO, @YES]) {
+                BOOL expected = !loading.boolValue && hosted.boolValue && isUpdatesMode;
+                XCTAssertEqual([BPFormulaeTableActions shouldSyncUnifiedUpdatesForPublishedMode:(BPListMode)published
+                                                                                      isLoading:loading.boolValue
+                                                                      isUsingUnifiedUpdatesHost:hosted.boolValue],
+                               expected);
+            }
+        }
+    }
+}
+
+#pragma mark - BPPackageOperationPresenter
+
+- (void)testPresenterInstallAndUninstallAlertsAndZapCheckbox
+{
+    XCTAssertNil([BPPackageOperationPresenter installAlertForFormula:nil]);
+    XCTAssertNil([BPPackageOperationPresenter installAlertForFormula:[BPFormula formulaWithName:@""]]);
+
+    BPFormula *formula = [BPFormula formulaWithName:@"wget"];
+    NSAlert *installAlert = [BPPackageOperationPresenter installAlertForFormula:formula];
+    XCTAssertNotNil(installAlert);
+    XCTAssertEqual(installAlert.buttons.count, 2u);
+    XCTAssertTrue([installAlert.informativeText containsString:@"wget"]);
+
+    XCTAssertNil([BPPackageOperationPresenter uninstallAlertForFormula:nil initialZapState:YES zapCheckbox:NULL]);
+    NSButton *formulaCheckbox = nil;
+    NSAlert *uninstallFormulaAlert = [BPPackageOperationPresenter uninstallAlertForFormula:formula
+                                                                           initialZapState:YES
+                                                                               zapCheckbox:&formulaCheckbox];
+    XCTAssertNotNil(uninstallFormulaAlert);
+    XCTAssertNil(formulaCheckbox);
+    XCTAssertNil(uninstallFormulaAlert.accessoryView);
+    XCTAssertTrue([uninstallFormulaAlert.informativeText containsString:@"wget"]);
+
+    BPFormula *cask = [BPFormula formulaWithName:@"firefox"];
+    cask.cask = YES;
+    NSButton *caskCheckboxOn = nil;
+    NSAlert *uninstallCaskAlertOn = [BPPackageOperationPresenter uninstallAlertForFormula:cask
+                                                                          initialZapState:YES
+                                                                              zapCheckbox:&caskCheckboxOn];
+    XCTAssertNotNil(uninstallCaskAlertOn);
+    XCTAssertNotNil(caskCheckboxOn);
+    XCTAssertEqual(caskCheckboxOn.state, NSControlStateValueOn);
+    XCTAssertEqual(uninstallCaskAlertOn.accessoryView, caskCheckboxOn);
+
+    NSButton *caskCheckboxOff = nil;
+    [BPPackageOperationPresenter uninstallAlertForFormula:cask
+                                          initialZapState:NO
+                                              zapCheckbox:&caskCheckboxOff];
+    XCTAssertEqual(caskCheckboxOff.state, NSControlStateValueOff);
+}
+
+- (void)testPresenterUpgradeSelectedAndUpgradeAllAlertsAndSummaries
+{
+    XCTAssertNil([BPPackageOperationPresenter upgradeAlertForFormulae:nil]);
+    XCTAssertNil([BPPackageOperationPresenter upgradeAlertForFormulae:@[]]);
+    XCTAssertNil([BPPackageOperationPresenter upgradeAlertForFormulae:@[[BPFormula formulaWithName:@""]]]);
+
+    BPFormula *git = [BPFormula formulaWithName:@"git"];
+    BPFormula *iterm = [BPFormula formulaWithName:@"iterm2"];
+    iterm.cask = YES;
+    NSAlert *upgradeAlert = [BPPackageOperationPresenter upgradeAlertForFormulae:@[git, iterm]];
+    XCTAssertNotNil(upgradeAlert);
+    XCTAssertEqual(upgradeAlert.buttons.count, 2u);
+    XCTAssertTrue([upgradeAlert.informativeText containsString:@"git, iterm2"]);
+
+    XCTAssertNil([BPPackageOperationPresenter updatesReviewSummaryForSnapshot:nil]);
+    XCTAssertNil([BPPackageOperationPresenter upgradeAllAlertForSnapshot:nil]);
+
+    BPUpdatesSnapshot *emptySnapshot = [[BPUpdatesSnapshot alloc]
+        initWithGeneration:1
+        formulaItems:@[]
+        caskItems:@[]
+        pinnedFormulaNames:@[]
+        pinnedCaskNames:@[]];
+    XCTAssertNil([BPPackageOperationPresenter updatesReviewSummaryForSnapshot:emptySnapshot]);
+    XCTAssertNil([BPPackageOperationPresenter upgradeAllAlertForSnapshot:emptySnapshot]);
+
+    BPFormula *pinnedFormula = [BPFormula formulaWithName:@"openssl"];
+    BPFormula *pinnedCask = [BPFormula formulaWithName:@"docker"];
+    pinnedCask.cask = YES;
+    BPUpdatesSnapshot *mixedSnapshot = [[BPUpdatesSnapshot alloc]
+        initWithGeneration:2
+        formulae:@[git, pinnedFormula]
+        casks:@[iterm, pinnedCask]
+        pinnedFormulae:@[pinnedFormula]
+        pinnedCasks:@[pinnedCask]];
+    NSString *summary = [BPPackageOperationPresenter updatesReviewSummaryForSnapshot:mixedSnapshot];
+    XCTAssertNotNil(summary);
+    XCTAssertTrue([summary containsString:@"git"]);
+    XCTAssertTrue([summary containsString:@"iterm2"]);
+    XCTAssertTrue([summary containsString:@"openssl"]);
+    XCTAssertTrue([summary containsString:@"docker"]);
+
+    NSAlert *upgradeAllAlert = [BPPackageOperationPresenter upgradeAllAlertForSnapshot:mixedSnapshot];
+    XCTAssertNotNil(upgradeAllAlert);
+    XCTAssertEqual(upgradeAllAlert.buttons.count, 2u);
+    XCTAssertEqualObjects(upgradeAllAlert.buttons.firstObject.accessibilityIdentifier, @"updates.confirm");
+    XCTAssertTrue([upgradeAllAlert.accessoryView isKindOfClass:NSScrollView.class]);
+
+    NSAlert *changedAlert = [BPPackageOperationPresenter updatesChangedAlert];
+    XCTAssertNotNil(changedAlert);
+    XCTAssertEqual(changedAlert.buttons.count, 1u);
+}
+
+- (void)testPresenterTapUntapCleanupBrewfileInventoriesAndResolvedSelection
+{
+    NSTextField *inputField = nil;
+    NSAlert *tapAlert = [BPPackageOperationPresenter tapInputAlertWithInputField:&inputField];
+    XCTAssertNotNil(tapAlert);
+    XCTAssertNotNil(inputField);
+    XCTAssertEqual(tapAlert.accessoryView, inputField);
+    XCTAssertEqual(tapAlert.buttons.count, 2u);
+
+    NSAlert *invalidTap = [BPPackageOperationPresenter invalidTapAlert];
+    XCTAssertNotNil(invalidTap);
+    XCTAssertEqual(invalidTap.buttons.count, 1u);
+
+    XCTAssertNil([BPPackageOperationPresenter untapAlertForFormula:nil]);
+    BPFormula *repo = [BPFormula formulaWithName:@"homebrew/cask"];
+    NSAlert *untapAlert = [BPPackageOperationPresenter untapAlertForFormula:repo];
+    XCTAssertNotNil(untapAlert);
+    XCTAssertTrue([untapAlert.informativeText containsString:@"homebrew/cask"]);
+
+    BPCleanupPreview *emptyPreview = [BPCleanupPreview previewFromOutput:@""];
+    NSAlert *emptyCleanupAlert = [BPPackageOperationPresenter cleanupAlertForPreview:emptyPreview];
+    XCTAssertEqual(emptyCleanupAlert.buttons.count, 1u);
+
+    BPCleanupPreview *noSizePreview = [BPCleanupPreview previewFromOutput:@"Would remove: /tmp/a\n"];
+    NSString *noSizeBody = [BPPackageOperationPresenter cleanupConfirmationBodyForPreview:noSizePreview];
+    XCTAssertGreaterThan(noSizeBody.length, 0u);
+    NSAlert *nonEmptyCleanupAlert = [BPPackageOperationPresenter cleanupAlertForPreview:noSizePreview];
+    XCTAssertEqual(nonEmptyCleanupAlert.buttons.count, 2u);
+
+    BPCleanupPreview *sizedPreview = [BPCleanupPreview previewFromOutput:
+        @"Would remove: /tmp/a (10KB)\nWould remove: /tmp/b (20KB)\n==> This operation would free approximately 100MB of disk space.\n"];
+    NSString *sizedBody = [BPPackageOperationPresenter cleanupConfirmationBodyForPreview:sizedPreview];
+    XCTAssertGreaterThan(sizedBody.length, 0u);
+
+    BPFormula *brewPkg = [BPFormula formulaWithName:@"wget"];
+    BPFormula *caskPkg = [BPFormula formulaWithName:@"firefox"];
+    caskPkg.cask = YES;
+    NSDictionary<NSString *, NSArray<NSString *> *> *inventories =
+        [BPPackageOperationPresenter brewfileInventoriesForInstalledFormulae:@[brewPkg]
+                                                              installedCasks:@[caskPkg]
+                                                                repositories:@[repo]];
+    XCTAssertEqualObjects(inventories[@"brew"], @[@"wget"]);
+    XCTAssertEqualObjects(inventories[@"cask"], @[@"firefox"]);
+    XCTAssertEqualObjects(inventories[@"tap"], @[@"homebrew/cask"]);
+    XCTAssertEqualObjects(([BPPackageOperationPresenter brewfileInventoriesForInstalledFormulae:nil
+                                                                                 installedCasks:nil
+                                                                                   repositories:nil]), @{});
+
+    // Heterogeneous resolution preserves namespace flags and uses live manager models when present
+    BPFormula *sharedFormula = [BPFormula formulaWithName:@"shared" andVersion:@"1.0"];
+    BPFormula *sharedCask = [BPFormula formulaWithName:@"shared" andVersion:@"2.0"];
+    sharedCask.cask = YES;
+    NSArray<BPFormula *> *resolved = [BPPackageOperationPresenter
+        resolvedSelectionForFormulaNames:@[@"shared", @"fallback-formula"]
+                               caskNames:@[@"shared", @"fallback-cask"]
+                        outdatedFormulae:@[sharedFormula]
+                           outdatedCasks:@[sharedCask]];
+    XCTAssertEqual(resolved.count, 4u);
+    XCTAssertEqual(resolved[0], sharedFormula);
+    XCTAssertFalse(resolved[0].cask);
+    XCTAssertEqualObjects(resolved[1].name, @"fallback-formula");
+    XCTAssertFalse(resolved[1].cask);
+    XCTAssertEqual(resolved[2], sharedCask);
+    XCTAssertTrue(resolved[2].cask);
+    XCTAssertEqualObjects(resolved[3].name, @"fallback-cask");
+    XCTAssertTrue(resolved[3].cask);
 }
 @end

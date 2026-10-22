@@ -418,6 +418,10 @@ public struct BPUnifiedUpdatesState: Equatable, Sendable {
         formulaRows.isEmpty && caskRows.isEmpty
     }
 
+    public var eligibleRowIDs: Set<BPFormulaInformationIdentity> {
+        Self.eligibleIDSet(formulaRows: formulaRows, caskRows: caskRows)
+    }
+
     public var selectedFormulaNames: [String] {
         formulaRows
             .filter { !$0.cask && $0.isEligible && selectedIDs.contains($0.id) }
