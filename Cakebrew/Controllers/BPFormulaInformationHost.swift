@@ -431,6 +431,7 @@ private final class BPInstalledPackageListPresentation: ObservableObject {
     weak var tableView: NSTableView?
     var contextMenu: NSMenu?
     var bridgeCoordinator: BPInstalledTableBridgeCoordinator?
+    var isSyncingTableSelection = false
     var onSelectionChanged: ((String?, Bool) -> Void)?
     var onSortChanged: ((String?, Bool) -> Void)?
     var onTableAction: ((Int) -> Void)?
@@ -678,6 +679,8 @@ public final class BPInstalledPackageListHost: NSObject {
 
     @objc public func deselectAll() {
         presentation.state.select(id: nil)
+        presentation.isSyncingTableSelection = true
+        defer { presentation.isSyncingTableSelection = false }
         presentation.ensureTableViewAttached()?.deselectAll(nil)
         presentation.notifySelectionChanged()
     }
@@ -688,6 +691,8 @@ public final class BPInstalledPackageListHost: NSObject {
         guard clicked >= 0 && clicked < presentation.state.displayedRows.count else { return }
         if !presentation.state.selectedRowIndexes.contains(clicked) {
             if presentation.state.selectRow(at: clicked) {
+                presentation.isSyncingTableSelection = true
+                defer { presentation.isSyncingTableSelection = false }
                 tableView.selectRowIndexes(IndexSet(integer: clicked), byExtendingSelection: false)
                 presentation.notifySelectionChanged()
             }
@@ -710,6 +715,8 @@ public final class BPInstalledPackageListHost: NSObject {
 
     private func syncUnderlyingTableSelection() {
         guard let tableView = presentation.ensureTableViewAttached() else { return }
+        presentation.isSyncingTableSelection = true
+        defer { presentation.isSyncingTableSelection = false }
         let indexes = presentation.state.selectedRowIndexes
         if !indexes.isEmpty {
             let validIndexes = IndexSet(indexes.filter { $0 >= 0 && $0 < tableView.numberOfRows })
@@ -981,6 +988,7 @@ private struct BPInstalledPackageListView: View {
         Binding(
             get: { presentation.state.selectedIDs },
             set: { newValue in
+                guard !presentation.isSyncingTableSelection else { return }
                 let oldSelection = presentation.state.selectedIDs
                 presentation.state.select(ids: newValue)
                 if presentation.state.selectedIDs != oldSelection {
@@ -3012,6 +3020,12 @@ public final class BPFormulaOptionsHost: NSObject {
             selectedOptionID: rows.first?.id
         )
     }
+
+    @objc(setApplied:forOptionNamed:)
+    public func setApplied(_ applied: Bool, forOptionNamed name: String) {
+        presentation.state.setApplied(applied, forOptionID: name)
+        presentation.onOptionToggled?(name, applied)
+    }
 }
 
 @MainActor
@@ -3045,6 +3059,7 @@ private struct BPFormulaOptionsView: View {
                 Text(presentation.state.formulaName)
                     .font(.system(size: 15, weight: .semibold))
                     .accessibilityValue(presentation.state.formulaName)
+                    .accessibilityIdentifier("formula.options.formulaName")
             }
 
             List(presentation.state.options, selection: selectionBinding) { row in
@@ -3052,6 +3067,7 @@ private struct BPFormulaOptionsView: View {
                     Toggle("", isOn: toggleBinding(for: row))
                         .labelsHidden()
                         .toggleStyle(.checkbox)
+                        .accessibilityIdentifier("formula.options.toggle.\(row.name)")
                     Text(row.name)
                         .font(.system(.body, design: .monospaced))
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -3090,6 +3106,7 @@ private struct BPFormulaOptionsView: View {
                     presentation.onCancel?()
                 }
                 .keyboardShortcut(.cancelAction)
+                .accessibilityIdentifier("formula.options.cancel")
 
                 Spacer()
 
@@ -3106,6 +3123,7 @@ private struct BPFormulaOptionsView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
+                .accessibilityIdentifier("formula.options.install")
             }
         }
         .padding(20)

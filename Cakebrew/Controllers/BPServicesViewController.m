@@ -217,7 +217,11 @@ static NSString * const kServiceColumnUser   = @"User";
 {
 	BPService *service = self.details.service ?: [self selectedService];
 	NSString *unknown = NSLocalizedString(@"Services_Details_Not_Available", nil);
-	NSString *text = [NSString stringWithFormat:NSLocalizedString(@"Services_Details_Format", nil),
+	NSString *format = NSLocalizedString(@"Services_Details_Format", nil);
+	if ([format isEqualToString:@"Services_Details_Format"]) {
+		format = @"Service: %@\nStatus: %@\nPID: %@\nUser: %@\nFile: %@\nLoaded file: %@\nLog: %@\nError log: %@\nExit code: %@";
+	}
+	NSString *text = [NSString stringWithFormat:format,
 		service.name ?: unknown, [BPService localizedNameForStatus:service.status], service.pid.stringValue ?: unknown,
 		service.user ?: unknown, self.details.serviceFile ?: unknown, self.details.loadedFile ?: unknown, self.details.logPath ?: unknown,
 		self.details.errorLogPath ?: unknown, self.details.exitCode.stringValue ?: unknown];

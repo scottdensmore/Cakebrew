@@ -2250,4 +2250,81 @@
     XCTAssertTrue([upToDate waitForExistenceWithTimeout:15.0],
                   @"Unified Updates should show the Everything is Up to Date empty state");
 }
+
+- (void)testLeavesSidebarRowListsLeafFormulae
+{
+    [self launchWithArguments:@[@"-BPMockBrew"]];
+    [[self sidebarRow:@"sidebar.formulae.leaves"] click];
+    [self assertSelectedSidebarIdentifier:@"sidebar.formulae.leaves"];
+    XCTAssertTrue([[self formulaCellWithName:@"mockack"] waitForExistenceWithTimeout:15.0],
+                  @"Leaves should list mockack");
+    XCTAssertTrue([[self formulaCellWithName:@"mockwget"] waitForExistenceWithTimeout:15.0],
+                  @"Leaves should list mockwget");
+}
+
+- (void)testInstallFormulaWithOptionsSheetDisplaysOptionsAndCancels
+{
+    [self launchWithArguments:@[@"-BPMockBrew"]];
+    [[self sidebarRow:@"sidebar.formulae.all"] click];
+    XCUIElement *htop = [self formulaCellWithName:@"mockhtop"];
+    XCTAssertTrue([htop waitForExistenceWithTimeout:15.0]);
+    [htop click];
+
+    [self.app.menuBars.menuBarItems[@"Formula"] click];
+    XCUIElement *installWithOptions = self.app.menuItems[@"Install Formula with Options..."];
+    XCTAssertTrue([installWithOptions waitForExistenceWithTimeout:10.0]);
+    [installWithOptions click];
+
+    XCUIElement *cancelButton = self.app.sheets.firstMatch.buttons[@"formula.options.cancel"];
+    XCTAssertTrue([cancelButton waitForExistenceWithTimeout:15.0],
+                  @"Install with Options should present the SwiftUI options sheet");
+    [cancelButton click];
+    XCTAssertTrue([self.app.sheets.firstMatch waitForNonExistenceWithTimeout:10.0]);
+}
+
+- (void)testCheckForAppUpdatesMenuItemOpensUpdateWindowAndCloses
+{
+    [self launchWithArguments:@[@"-BPMockBrew"]];
+    [self.app.menuBars.menuBarItems[@"Cakebrew"] click];
+    XCUIElement *checkItem = self.app.menuItems[@"menu.app.checkForUpdates"];
+    XCTAssertTrue([checkItem waitForExistenceWithTimeout:10.0]);
+    [checkItem click];
+
+    XCUIElement *closeButton = self.app.buttons[@"app.update.close"];
+    XCTAssertTrue([closeButton waitForExistenceWithTimeout:15.0],
+                  @"Check for Updates should open the SwiftUI update discovery window");
+    [closeButton click];
+}
+
+- (void)testDoctorAndUpdateClearLogButtonsClearTranscript
+{
+    [self launchWithArguments:@[@"-BPMockBrew"]];
+
+    [[self sidebarRow:@"sidebar.tools.doctor"] click];
+    XCUIElement *runDoctor = self.app.buttons[@"Run Doctor"];
+    XCTAssertTrue([runDoctor waitForExistenceWithTimeout:15.0]);
+    [runDoctor click];
+
+    NSPredicate *doctorDone = [NSPredicate predicateWithFormat:@"value CONTAINS %@", @"MOCK_DOCTOR_DONE"];
+    XCUIElement *doctorOutput = [[self.app.textViews matchingPredicate:doctorDone] firstMatch];
+    XCTAssertTrue([doctorOutput waitForExistenceWithTimeout:15.0]);
+
+    XCUIElement *clearButton = self.app.buttons[@"Clear Log"];
+    XCTAssertTrue(clearButton.exists);
+    [clearButton click];
+    XCTAssertFalse(doctorOutput.exists);
+
+    [[self sidebarRow:@"sidebar.tools.update"] click];
+    XCUIElement *runUpdate = [self.app.groups.buttons[@"Update Homebrew"] firstMatch];
+    if (!runUpdate.exists) {
+        runUpdate = [self.app.buttons matchingIdentifier:@"Update Homebrew"].firstMatch;
+    }
+    [runUpdate click];
+
+    NSPredicate *updateDone = [NSPredicate predicateWithFormat:@"value CONTAINS %@", @"MOCK_UPDATE_OK"];
+    XCUIElement *updateOutput = [[self.app.textViews matchingPredicate:updateDone] firstMatch];
+    XCTAssertTrue([updateOutput waitForExistenceWithTimeout:15.0]);
+    [self.app.buttons[@"Clear Log"] click];
+    XCTAssertFalse(updateOutput.exists);
+}
 @end

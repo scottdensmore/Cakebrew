@@ -10,6 +10,17 @@
 		CB1730000000000000000030 /* BPFormulaInformationLifecycleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1730000000000000000031; };
 		CB1730000000000000000032 /* BPFormulaPopoverViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC3D1B3F999A00163767; };
 		CB1730000000000000000033 /* BPSelectedFormulaViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC471B3F999A00163767; };
+		CB1730000000000000000040 /* BPHomebrewViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC3F1B3F999A00163767 /* BPHomebrewViewController.m */; };
+		CB1730000000000000000041 /* BPDoctorViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC391B3F999A00163767 /* BPDoctorViewController.m */; };
+		CB1730000000000000000042 /* BPUpdateViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC4B1B3F999A00163767 /* BPUpdateViewController.m */; };
+		CB1730000000000000000043 /* BPFormulaOptionsWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC3B1B3F999A00163767 /* BPFormulaOptionsWindowController.m */; };
+		CB1730000000000000000044 /* BPBundleWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 15715F631C78053300AE0E66 /* BPBundleWindowController.m */; };
+		CB1730000000000000000045 /* BPAutoremoveWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = CB150000000000000000000C; };
+		CB1730000000000000000046 /* BPLoadingView.m in Sources */ = {isa = PBXBuildFile; fileRef = 15CEFC621AB335B2005CF54A /* BPLoadingView.m */; };
+		CB1730000000000000000047 /* BPDisabledView.m in Sources */ = {isa = PBXBuildFile; fileRef = D2C427881B8E055B001C1F80 /* BPDisabledView.m */; };
+		CB1730000000000000000048 /* BPBackgroundView.m in Sources */ = {isa = PBXBuildFile; fileRef = 15BBA18D1BD031C9002C0127 /* BPBackgroundView.m */; };
+		CB1730000000000000000049 /* BPWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 15EC1B0625CED52C00C93861 /* BPWindow.m */; };
+		CB173000000000000000004A /* NSLayoutConstraint+Shims.m in Sources */ = {isa = PBXBuildFile; fileRef = 15A89D3825F2F467003D33F5 /* NSLayoutConstraint+Shims.m */; };
 		CB1730000000000000000015 /* BPFormulaInformationHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB173000000000000000000B; };
 		CB173000000000000000001F /* BPFormulaInformationHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB173000000000000000000B; };
 		CB1730000000000000000014 /* BPFormulaInformationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB173000000000000000000A; };
@@ -1379,6 +1390,17 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				14A490C109F54C69A7728156 /* BPDockMenu.m in Sources */,
 				1ED78A300C6AD6B948573401 /* BPHelperRegistration.m in Sources */,
 				D5A4E97BA98E72BCC344B615 /* BPHelperRegistrationTests.m in Sources */,
+				CB1730000000000000000040 /* BPHomebrewViewController.m in Sources */,
+				CB1730000000000000000041 /* BPDoctorViewController.m in Sources */,
+				CB1730000000000000000042 /* BPUpdateViewController.m in Sources */,
+				CB1730000000000000000043 /* BPFormulaOptionsWindowController.m in Sources */,
+				CB1730000000000000000044 /* BPBundleWindowController.m in Sources */,
+				CB1730000000000000000045 /* BPAutoremoveWindowController.m in Sources */,
+				CB1730000000000000000046 /* BPLoadingView.m in Sources */,
+				CB1730000000000000000047 /* BPDisabledView.m in Sources */,
+				CB1730000000000000000048 /* BPBackgroundView.m in Sources */,
+				CB1730000000000000000049 /* BPWindow.m in Sources */,
+				CB173000000000000000004A /* NSLayoutConstraint+Shims.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

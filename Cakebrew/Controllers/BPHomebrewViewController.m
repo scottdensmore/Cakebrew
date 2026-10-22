@@ -388,7 +388,7 @@ NSOpenSavePanelDelegate>
 	disabledView.translatesAutoresizingMaskIntoConstraints = NO;
 	[self.view addSubview:disabledView];
 
-	NSView *referenceView = self.mainWindowController.windowContentView;
+	NSView *referenceView = self.mainWindowController.windowContentView ?: self.view;
 
 	[NSLayoutConstraint activate:@[
 		[NSLayoutConstraint constraintWithItem:referenceView attribute:NSLayoutAttributeLeading
@@ -414,7 +414,7 @@ NSOpenSavePanelDelegate>
 	loadingView.translatesAutoresizingMaskIntoConstraints = NO;
 	[self.view addSubview:loadingView];
 
-	NSView *referenceView = self.mainWindowController.windowContentView;
+	NSView *referenceView = self.mainWindowController.windowContentView ?: self.view;
 
 	[NSLayoutConstraint activate:@[
 		[NSLayoutConstraint constraintWithItem:referenceView attribute:NSLayoutAttributeLeading
@@ -754,7 +754,9 @@ NSOpenSavePanelDelegate>
 														   selectedFormulaStatus:selectedStatus];
 	[self.toolbar configureForMode:toolbarMode];
 
-	if ([BPFormulaeTableActions shouldShowFormulaInfoForSidebarRow:selectedSidebarRow])
+	if ([self isSearching]
+		|| self.formulaeDataSource.mode == kBPListSearch
+		|| [BPFormulaeTableActions shouldShowFormulaInfoForSidebarRow:selectedSidebarRow])
 	{
 		[self.selectedFormulaView setHidden:NO];
 		[self.selectedFormulaeViewController setFormulae:selectedFormulae];

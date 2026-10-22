@@ -258,7 +258,12 @@
 			@"%@: stable 1.0.0\n"
 			@"A mock formula used for Cakebrew UI tests.\n"
 			@"https://example.com\n"
-			@"Not installed\n", name];
+			@"Not installed\n"
+			@"==> Options\n"
+			@"--with-debug\n"
+			@"\tBuild with debug symbols\n"
+			@"--HEAD\n"
+			@"\tInstall HEAD version\n", name];
 }
 
 - (NSString *)dependantsForFormulaName:(NSString *)name onlyInstalled:(BOOL)onlyInstalled
@@ -285,6 +290,9 @@
 // Pin/unpin are no-ops under the mock so UI tests never shell out to real brew.
 - (BOOL)pinFormula:(NSString *)formula withReturnBlock:(void (^)(NSString *))block
 {
+	if (block) {
+		block(@"MOCK_PIN_OK\n");
+	}
 	return YES;
 }
 
@@ -295,6 +303,9 @@
 
 - (BOOL)uninstallCask:(NSString *)cask zap:(BOOL)zap withReturnBlock:(void (^)(NSString *))block
 {
+	if (block) {
+		block(zap ? @"MOCK_UNINSTALL_CASK_ZAP_OK\n" : @"MOCK_UNINSTALL_CASK_OK\n");
+	}
 	return YES;
 }
 
@@ -342,6 +353,9 @@
 
 - (BOOL)installCask:(NSString *)cask withReturnBlock:(void (^)(NSString *))block
 {
+	if (block) {
+		block(@"MOCK_INSTALL_CASK_OK\n");
+	}
 	return YES;
 }
 
@@ -355,6 +369,9 @@
 
 - (BOOL)startService:(NSString *)name withReturnBlock:(void (^)(NSString *))block
 {
+	if (block) {
+		block(@"MOCK_SERVICE_START_OK\n");
+	}
 	return YES;
 }
 
@@ -375,16 +392,25 @@
 
 - (BOOL)stopService:(NSString *)name withReturnBlock:(void (^)(NSString *))block
 {
+	if (block) {
+		block(@"MOCK_SERVICE_STOP_OK\n");
+	}
 	return YES;
 }
 
 - (BOOL)restartService:(NSString *)name withReturnBlock:(void (^)(NSString *))block
 {
+	if (block) {
+		block(@"MOCK_SERVICE_RESTART_OK\n");
+	}
 	return YES;
 }
 
 - (BOOL)unpinFormula:(NSString *)formula withReturnBlock:(void (^)(NSString *))block
 {
+	if (block) {
+		block(@"MOCK_UNPIN_OK\n");
+	}
 	return YES;
 }
 
