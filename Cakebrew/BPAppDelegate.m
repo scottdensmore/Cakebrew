@@ -26,15 +26,18 @@
 #import "BPPreferencesWindowController.h"
 #import "BPBackgroundUpdater.h"
 #import "BPBrewfile.h"
+#import "BPFormulaInformation-Swift.h"
 #import <UserNotifications/UserNotifications.h>
 
 NSString *const kBP_HOMEBREW_WEBSITE = @"https://www.cakebrew.com";
 NSString *const kBP_CAKEBREW_DOCUMENTATION = @"https://github.com/scottdensmore/Cakebrew#readme";
+NSString *const kBP_CAKEBREW_RELEASES_URL = @"https://github.com/scottdensmore/Cakebrew/releases";
 
 
 @interface BPAppDelegate () <UNUserNotificationCenterDelegate>
 @property (strong, nonatomic) BPPreferencesWindowController *preferencesWindowController;
 @property (strong, nonatomic) BPBackgroundUpdater *backgroundUpdater;
+@property (strong, nonatomic) BPAppUpdateHost *appUpdateHost;
 
 @property (nonatomic, strong) DCOAboutWindowController *aboutWindowController;
 
@@ -69,6 +72,12 @@ NSString *const kBP_CAKEBREW_DOCUMENTATION = @"https://github.com/scottdensmore/
 {
 	[BPPreferences registerDefaults];
 	[self setupSignalHandler];
+
+	NSMenu *appMenu = NSApp.mainMenu.itemArray.firstObject.submenu;
+	if (appMenu)
+	{
+		[BPAppDelegate installCheckForUpdatesMenuItemInApplicationMenu:appMenu target:self];
+	}
 
 	self.backgroundUpdater = [[BPBackgroundUpdater alloc] init];
 	[self.backgroundUpdater start];
@@ -428,6 +437,65 @@ NSString *const kBP_CAKEBREW_DOCUMENTATION = @"https://github.com/scottdensmore/
 	}
 	[self.preferencesWindowController showWindow:sender];
 	[NSApp activateIgnoringOtherApps:YES];
+}
+
++ (NSMenuItem *)installCheckForUpdatesMenuItemInApplicationMenu:(NSMenu *)appMenu target:(id)target
+{
+	if (!appMenu)
+	{
+		return nil;
+	}
+	NSInteger existingIndex = [appMenu indexOfItemWithTarget:target andAction:@selector(checkForAppUpdates:)];
+	if (existingIndex >= 0)
+	{
+		return [appMenu itemAtIndex:existingIndex];
+	}
+
+	NSString *title = NSLocalizedStringWithDefaultValue(
+		@"App_Update_Menu_Item",
+		nil,
+		NSBundle.mainBundle,
+		@"Check for Updates…",
+		@"Application menu item for in-app update discovery");
+	NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:title
+												  action:@selector(checkForAppUpdates:)
+										   keyEquivalent:@""];
+	item.target = target;
+	item.accessibilityIdentifier = @"menu.app.checkForUpdates";
+
+	NSInteger insertIndex = (appMenu.numberOfItems > 1) ? 1 : appMenu.numberOfItems;
+	[appMenu insertItem:item atIndex:insertIndex];
+	return item;
+}
+
+- (BPAppUpdateHost *)ensureAppUpdateHost
+{
+	if (!self.appUpdateHost)
+	{
+		NSString *version = [NSBundle.mainBundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
+		if (![version isKindOfClass:NSString.class] || version.length == 0)
+		{
+			version = @"1.0.0";
+		}
+		BPAppUpdateHost *host = [[BPAppUpdateHost alloc] initWithCurrentVersion:version
+														  automaticCheckEnabled:[BPPreferences automaticAppUpdateCheckEnabled]];
+		host.onToggleAutomaticCheck = ^(BOOL enabled) {
+			[BPPreferences setAutomaticAppUpdateCheckEnabled:enabled];
+		};
+		self.appUpdateHost = host;
+	}
+	else
+	{
+		self.appUpdateHost.automaticCheckEnabled = [BPPreferences automaticAppUpdateCheckEnabled];
+	}
+	return self.appUpdateHost;
+}
+
+- (IBAction)checkForAppUpdates:(id)sender
+{
+	BPAppUpdateHost *host = [self ensureAppUpdateHost];
+	[host performConfiguredCheck];
+	[host showWindow];
 }
 
 + (BOOL)shouldBlockOperationWhileRunningBackgroundTask:(BOOL)isRunningBackgroundTask

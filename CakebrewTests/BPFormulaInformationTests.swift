@@ -1,3 +1,4 @@
+import CryptoKit
 import XCTest
 
 final class BPFormulaInformationTests: XCTestCase {
@@ -482,6 +483,166 @@ final class BPFormulaInformationTests: XCTestCase {
         XCTAssertEqual(updatesHost.selectedFormulaNames, [])
         XCTAssertEqual(updatesHost.selectedCaskNames, [])
         XCTAssertEqual(updatesHost.selectedCount, 0)
+
+        updatesHost.filterQuery = "git"
+        XCTAssertEqual(updatesHost.filterQuery, "git")
+    }
+
+    func testInstalledPackageListStateTenThousandRowsSortAndLookupPerformance() {
+        var rows: [BPInstalledPackageRow] = []
+        rows.reserveCapacity(10_000)
+        for index in 0..<10_000 {
+            let name = String(format: "pkg-%05d", 9_999 - index)
+            let isCask = (index % 2 == 1)
+            let statusRank = index % 3
+            rows.append(BPInstalledPackageRow(
+                name: name,
+                cask: isCask,
+                version: "\(index % 20).\(index % 10).0",
+                latestVersion: "\(index % 20).\(index % 10).1",
+                statusRank: statusRank,
+                isPinned: index % 50 == 0))
+        }
+
+        var state = BPInstalledPackageListState()
+        state.replaceRows(rows, mode: .search)
+        XCTAssertEqual(state.displayedRows.count, 10_000)
+
+        // O(1) lookup before sorting
+        XCTAssertEqual(state.index(ofName: "pkg-09999", cask: false), 0)
+        XCTAssertEqual(state.index(ofName: "pkg-00000", cask: true), 9_999)
+
+        // Sort 10,000 rows by Name ascending
+        state.setSort(column: .name, ascending: true)
+        XCTAssertEqual(state.displayedRows.first?.name, "pkg-00000")
+        XCTAssertEqual(state.displayedRows.last?.name, "pkg-09999")
+        XCTAssertEqual(state.index(ofName: "pkg-00000", cask: true), 0)
+        XCTAssertEqual(state.index(ofName: "pkg-09999", cask: false), 9_999)
+
+        // Selection and O(1) selectedRowIndex after sort
+        XCTAssertTrue(state.select(name: "pkg-05000", cask: true))
+        XCTAssertEqual(state.selectedRowIndex, 5_000)
+        XCTAssertEqual(state.selectedRow?.name, "pkg-05000")
+    }
+
+    func testAppVersionParsingAndSemanticOrdering() {
+        let v1_2 = BPAppVersion(parsing: "v1.2")
+        let v1_2_0 = BPAppVersion(parsing: "1.2.0")
+        let v1_10_0 = BPAppVersion(parsing: "1.10.0")
+        let v2_0_beta1 = BPAppVersion(parsing: "2.0.0-beta.1")
+        let v2_0_beta2 = BPAppVersion(parsing: "2.0.0-beta.2+build99")
+        let v2_0_final = BPAppVersion(parsing: "V2.0.0")
+
+        XCTAssertNotNil(v1_2)
+        XCTAssertEqual(v1_2?.major, 1)
+        XCTAssertEqual(v1_2?.minor, 2)
+        XCTAssertEqual(v1_2?.patch, 0)
+        XCTAssertEqual(v1_2?.major, v1_2_0?.major)
+        XCTAssertFalse(v1_2! < v1_2_0!)
+        XCTAssertFalse(v1_2_0! < v1_2!)
+
+        XCTAssertTrue(v1_2_0! < v1_10_0!)
+        XCTAssertTrue(v1_10_0! < v2_0_beta1!)
+        XCTAssertTrue(v2_0_beta1! < v2_0_beta2!)
+        XCTAssertTrue(v2_0_beta2! < v2_0_final!)
+
+        XCTAssertNil(BPAppVersion(parsing: ""))
+        XCTAssertNil(BPAppVersion(parsing: "1"))
+        XCTAssertNil(BPAppVersion(parsing: "1.2.3.4"))
+        XCTAssertNil(BPAppVersion(parsing: "1.a.0"))
+        XCTAssertNil(BPAppVersion(parsing: "1.2.0-"))
+    }
+
+    func testAppUpdateVerifierSHA256AndEd25519SignatureVerification() throws {
+        let sampleArchive = Data("Cakebrew-2.1.0.dmg-binary-payload".utf8)
+        let digestHex = BPAppUpdateVerifier.sha256Hex(of: sampleArchive)
+        XCTAssertEqual(digestHex.count, 64)
+        XCTAssertTrue(BPAppUpdateVerifier.isValidSHA256Hex(digestHex))
+        XCTAssertTrue(BPAppUpdateVerifier.verifySHA256(data: sampleArchive, expectedHex: digestHex.uppercased()))
+        XCTAssertFalse(BPAppUpdateVerifier.verifySHA256(data: Data("tampered".utf8), expectedHex: digestHex))
+        XCTAssertFalse(BPAppUpdateVerifier.isValidSHA256Hex("short"))
+
+        let privateKey = Curve25519.Signing.PrivateKey()
+        let publicKeyBase64 = privateKey.publicKey.rawRepresentation.base64EncodedString()
+
+        let unsignedRelease = BPAppUpdateRelease(
+            version: BPAppVersion(parsing: "2.1.0")!,
+            title: "Cakebrew 2.1.0",
+            releaseNotes: "Swift 6 Tahoe modernization.",
+            downloadURL: URL(string: "https://github.com/scottdensmore/Cakebrew/releases/download/v2.1.0/Cakebrew-2.1.0.dmg")!,
+            sha256Hex: digestHex)
+        let signatureData = try privateKey.signature(for: unsignedRelease.canonicalSignedPayload)
+        let signatureBase64 = signatureData.base64EncodedString()
+
+        let validFeed: [String: Any] = [
+            "version": "2.1.0",
+            "title": "Cakebrew 2.1.0",
+            "releaseNotes": "Swift 6 Tahoe modernization.",
+            "downloadURL": "https://github.com/scottdensmore/Cakebrew/releases/download/v2.1.0/Cakebrew-2.1.0.dmg",
+            "sha256": digestHex,
+            "ed25519Signature": signatureBase64
+        ]
+        let feedData = try JSONSerialization.data(withJSONObject: validFeed)
+        let parsed = BPAppUpdateVerifier.parseFeed(data: feedData, publicKeyBase64: publicKeyBase64)
+        XCTAssertEqual(try parsed.get().version, BPAppVersion(parsing: "2.1.0"))
+
+        // Tampered URL or version must fail Ed25519 signature verification
+        var tamperedFeed = validFeed
+        tamperedFeed["downloadURL"] = "https://evil.example.com/Cakebrew-2.1.0.dmg"
+        let tamperedData = try JSONSerialization.data(withJSONObject: tamperedFeed)
+        XCTAssertEqual(
+            BPAppUpdateVerifier.parseFeed(data: tamperedData, publicKeyBase64: publicKeyBase64),
+            .failure(.invalidSignature))
+
+        // Non-HTTPS downloadURL must be rejected even without signature check
+        var insecureFeed = validFeed
+        insecureFeed["downloadURL"] = "http://github.com/scottdensmore/Cakebrew/releases/download/v2.1.0/Cakebrew.dmg"
+        let insecureData = try JSONSerialization.data(withJSONObject: insecureFeed)
+        XCTAssertEqual(
+            BPAppUpdateVerifier.parseFeed(data: insecureData, publicKeyBase64: nil),
+            .failure(.insecureDownloadURL))
+    }
+
+    @MainActor
+    func testAppUpdateStateAndHostsLifecycle() throws {
+        var state = BPAppUpdateState(currentVersionString: "1.5.0")
+        let staleGen = state.beginCheck(currentVersionString: "1.5.0")
+        let activeGen = state.beginCheck(currentVersionString: "1.5.0")
+        XCTAssertEqual(state.phase, .checking)
+
+        let digestHex = BPAppUpdateVerifier.sha256Hex(of: Data("archive".utf8))
+        let feedJSON: [String: Any] = [
+            "version": "2.0.0",
+            "title": "Cakebrew 2.0",
+            "releaseNotes": "Tahoe Redesign",
+            "downloadURL": "https://github.com/scottdensmore/Cakebrew/releases/download/v2.0.0/Cakebrew.dmg",
+            "sha256": digestHex
+        ]
+        let feedData = try JSONSerialization.data(withJSONObject: feedJSON)
+
+        XCTAssertFalse(state.receiveFeedData(feedData, publicKeyBase64: nil, generation: staleGen))
+        XCTAssertTrue(state.receiveFeedData(feedData, publicKeyBase64: nil, generation: activeGen))
+        if case .updateAvailable(let release, _) = state.phase {
+            XCTAssertEqual(release.version, BPAppVersion(parsing: "2.0.0"))
+        } else {
+            XCTFail("Expected updateAvailable phase, got \(state.phase)")
+        }
+
+        let host = BPAppUpdateHost(currentVersion: "2.0.0", automaticCheckEnabled: true)
+        let hostGen = host.beginCheck(currentVersion: "2.0.0")
+        XCTAssertTrue(host.isChecking)
+        XCTAssertTrue(host.receiveFeedData(feedData, publicKeyBase64: nil, generation: hostGen))
+        XCTAssertFalse(host.isUpdateAvailable, "Same version 2.0.0 must report upToDate, not updateAvailable")
+
+        let prefsHost = BPPreferencesHost()
+        prefsHost.sync(
+            backgroundCheckEnabled: true,
+            interval: 3600.0,
+            greedy: true,
+            automaticAppUpdates: true,
+            helperStatus: "Ready",
+            helperActionTitle: nil)
+        XCTAssertNotNil(prefsHost.viewController.view)
     }
 
 }

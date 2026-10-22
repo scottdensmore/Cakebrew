@@ -25,6 +25,7 @@ NSString *const kBPLastSelectedSidebarRowKey = @"BPLastSelectedSidebarRow";
 NSString *const kBPSortColumnIdentifierKey = @"BPSortColumnIdentifier";
 NSString *const kBPSortAscendingKey = @"BPSortAscending";
 NSString *const kBPZapCasksOnUninstallKey = @"BPZapCasksOnUninstall";
+NSString *const kBPAutomaticAppUpdateCheckEnabledKey = @"BPAutomaticAppUpdateCheckEnabled";
 
 @implementation BPPreferences
 
@@ -38,6 +39,7 @@ NSString *const kBPZapCasksOnUninstallKey = @"BPZapCasksOnUninstall";
 		kBPLastSelectedSidebarRowKey: @1,
 		kBPSortAscendingKey: @YES,
 		kBPZapCasksOnUninstallKey: @NO,
+		kBPAutomaticAppUpdateCheckEnabledKey: @YES,
 	}];
 }
 
@@ -114,6 +116,16 @@ NSString *const kBPZapCasksOnUninstallKey = @"BPZapCasksOnUninstall";
 + (void)setGreedyCaskUpgrades:(BOOL)greedy
 {
 	[[NSUserDefaults standardUserDefaults] setBool:greedy forKey:kBPGreedyCaskUpgradesKey];
+}
+
++ (BOOL)automaticAppUpdateCheckEnabled
+{
+	return [[NSUserDefaults standardUserDefaults] boolForKey:kBPAutomaticAppUpdateCheckEnabledKey];
+}
+
++ (void)setAutomaticAppUpdateCheckEnabled:(BOOL)enabled
+{
+	[[NSUserDefaults standardUserDefaults] setBool:enabled forKey:kBPAutomaticAppUpdateCheckEnabledKey];
 }
 
 @end

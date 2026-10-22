@@ -466,3 +466,9 @@
 "Information_Unavailable" = "Nessuna informazione disponibile per questo pacchetto.";
 "Sidebar_Item_Unified_Updates" = "Aggiornamenti";
 "Sidebar_Info_Unified_Updates" = "Formule e cask obsoleti con una versione più recente disponibile.";
+"App_Update_Menu_Item" = "Controlla aggiornamenti…";
+"App_Update_Auto_Check" = "Controlla automaticamente gli aggiornamenti di Cakebrew";
+"App_Update_Open_Releases" = "Visualizza le release su GitHub";
+"App_Update_Download" = "Scarica aggiornamento";
+"App_Update_Verified" = "SHA-256 e firma Ed25519 verificati";
+"App_Update_Feed_Unconfigured" = "Nessun feed di aggiornamento firmato configurato per questa build. Controlla GitHub Releases per il codice sorgente e lo stato dei rilasci.";

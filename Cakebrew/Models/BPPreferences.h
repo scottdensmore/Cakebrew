@@ -21,6 +21,7 @@
 extern NSString *const kBPBackgroundCheckEnabledKey;
 extern NSString *const kBPBackgroundCheckIntervalKey;
 extern NSString *const kBPGreedyCaskUpgradesKey;
+extern NSString *const kBPAutomaticAppUpdateCheckEnabledKey;
 
 /**
  *  User settings, backed by NSUserDefaults. Call +registerDefaults once at
@@ -60,5 +61,9 @@ extern NSString *const kBPGreedyCaskUpgradesKey;
 
 + (BOOL)greedyCaskUpgrades;
 + (void)setGreedyCaskUpgrades:(BOOL)greedy;
+
+/** Whether Cakebrew automatically checks for signed app updates (default YES). */
++ (BOOL)automaticAppUpdateCheckEnabled;
++ (void)setAutomaticAppUpdateCheckEnabled:(BOOL)enabled;
 
 @end

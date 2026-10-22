@@ -26,15 +26,22 @@ the background — without remembering a command for each of them.
   remove its preferences and support files too
 
 **Tools**
-* Services — start, stop and restart the background services brew manages
+* Updates — unified view of outdated formulae and casks with live filtering,
+  selective upgrades, and exact-snapshot batch upgrades that respect pinned exclusions
+* Services — start, stop and restart the background services brew manages, and
+  inspect service plists, PIDs and logs
 * Doctor — run `brew doctor` and read its report
 * Update — run `brew update`
-* Cleanup — reclaim disk space
-* Import and export a Brewfile
+* Cleanup — preview and reclaim disk space (`brew cleanup`)
+* Remove Unused Dependencies — preview and remove unused dependency formulae (`brew autoremove`)
+* Import and export a Brewfile with reviewed entry verification
 
 **Around the edges**
+* Built with Swift 6 and SwiftUI for macOS Tahoe
 * Optional background checking, with a Dock badge and a notification when
   something new goes out of date
+* In-app update discovery (`Cakebrew ▸ Check for Updates…`) with SHA-256 and
+  Ed25519 feed verification
 * Search across formulae and casks
 * Six localizations: English, German, French, Italian, Portuguese and
   Simplified Chinese
@@ -47,14 +54,10 @@ macOS 15 or later. Homebrew must already be installed — Cakebrew drives the
 Works with both Homebrew prefixes (`/usr/local` on Intel, `/opt/homebrew` on
 Apple silicon).
 
-## Installing
+## Installing & Building
 
-Download the latest build from
-[Releases](https://github.com/scottdensmore/Cakebrew/releases). Builds are
-signed with a Developer ID certificate, notarized and stapled, so they open
-without a Gatekeeper warning.
-
-## Building
+Cakebrew is built from source with Xcode (until a tagged binary release is
+published on [Releases](https://github.com/scottdensmore/Cakebrew/releases)):
 
 ```sh
 git clone https://github.com/scottdensmore/Cakebrew.git
@@ -62,16 +65,17 @@ cd Cakebrew
 open Cakebrew.xcworkspace
 ```
 
-Or from the command line:
+In Xcode, select the **Cakebrew** scheme and choose **Product ▸ Run** (`⌘R`), or
+build from the command line and copy `Cakebrew.app` to `/Applications`:
 
 ```sh
-# Build (must be warning-free)
+# Build a Release or Debug app bundle without requiring a signing certificate
 xcodebuild build -workspace Cakebrew.xcworkspace -scheme Cakebrew \
-  -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO
+  -configuration Release -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO
 
 # Unit tests — fast and hermetic
-xcodebuild test -workspace Cakebrew.xcworkspace -scheme CakebrewTests \
-  -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO
+xcodebuild test -project Cakebrew.xcodeproj -scheme Cakebrew \
+  -destination 'platform=macOS' -only-testing:CakebrewTests CODE_SIGNING_ALLOWED=NO
 
 # UI tests — journeys against a mock brew, no real Homebrew involved
 xcodebuild test -scheme CakebrewUITests -destination 'platform=macOS' \

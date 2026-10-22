@@ -19,6 +19,8 @@
 #import "BPPreferencesWindowController.h"
 #import "BPPreferences.h"
 #import "BPHelperRegistration.h"
+#import "BPAppDelegate.h"
+#import "BPFormulaInformation-Swift.h"
 
 @interface BPPreferencesWindowController ()
 
@@ -27,6 +29,7 @@
 @property (strong) NSButton *greedyCheckbox;
 @property (strong) NSTextField *helperStatusLabel;
 @property (strong) NSButton *helperActionButton;
+@property (strong, nonatomic) BPPreferencesHost *preferencesHost;
 
 @end
 
@@ -34,7 +37,7 @@
 
 - (instancetype)init
 {
-	NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 460, 250)
+	NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 480, 320)
 												   styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable)
 													 backing:NSBackingStoreBuffered
 													   defer:YES];
@@ -58,8 +61,6 @@
 														action:@selector(toggleBackgroundCheck:)];
 	self.backgroundCheckCheckbox.state = [BPPreferences backgroundCheckEnabled] ? NSControlStateValueOn : NSControlStateValueOff;
 
-	NSTextField *intervalLabel = [NSTextField labelWithString:NSLocalizedString(@"Preferences_Check_Interval", nil)];
-
 	self.intervalPopUp = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
 	NSArray<NSArray *> *intervals = @[
 		@[NSLocalizedString(@"Preferences_Interval_Hourly", nil), @(3600.0)],
@@ -79,50 +80,74 @@
 											   action:@selector(toggleGreedy:)];
 	self.greedyCheckbox.state = [BPPreferences greedyCaskUpgrades] ? NSControlStateValueOn : NSControlStateValueOff;
 
-	NSTextField *greedyNote = [NSTextField wrappingLabelWithString:NSLocalizedString(@"Preferences_Greedy_Casks_Note", nil)];
-	greedyNote.font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
-	greedyNote.textColor = [NSColor secondaryLabelColor];
-
-	NSTextField *helperLabel = [NSTextField labelWithString:NSLocalizedString(@"Preferences_Helper_Section", nil)];
 	self.helperStatusLabel = [NSTextField wrappingLabelWithString:@""];
-	self.helperStatusLabel.font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
-	self.helperStatusLabel.textColor = [NSColor secondaryLabelColor];
 	self.helperActionButton = [NSButton buttonWithTitle:@"" target:self action:@selector(helperAction:)];
 	self.helperActionButton.bezelStyle = NSBezelStyleRounded;
 
-	for (NSView *view in @[ self.backgroundCheckCheckbox, intervalLabel, self.intervalPopUp, self.greedyCheckbox, greedyNote,
-							helperLabel, self.helperStatusLabel, self.helperActionButton ]) {
-		view.translatesAutoresizingMaskIntoConstraints = NO;
-		[content addSubview:view];
-	}
+	BPPreferencesHost *host = [[BPPreferencesHost alloc] init];
+	__weak typeof(self) weakSelf = self;
+	host.onBackgroundCheckChanged = ^(BOOL enabled) {
+		typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		strongSelf.backgroundCheckCheckbox.state = enabled ? NSControlStateValueOn : NSControlStateValueOff;
+		[BPPreferences setBackgroundCheckEnabled:enabled];
+		[strongSelf updateIntervalEnabled];
+		[strongSelf syncSwiftUIHost];
+	};
+	host.onIntervalChanged = ^(double interval) {
+		typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		[BPPreferences setBackgroundCheckInterval:interval];
+		[strongSelf selectIntervalItemMatchingPreference];
+		[strongSelf syncSwiftUIHost];
+	};
+	host.onGreedyChanged = ^(BOOL greedy) {
+		typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		strongSelf.greedyCheckbox.state = greedy ? NSControlStateValueOn : NSControlStateValueOff;
+		[BPPreferences setGreedyCaskUpgrades:greedy];
+		[strongSelf syncSwiftUIHost];
+	};
+	host.onAutomaticAppUpdateCheckChanged = ^(BOOL enabled) {
+		typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		[BPPreferences setAutomaticAppUpdateCheckEnabled:enabled];
+		[strongSelf syncSwiftUIHost];
+	};
+	host.onCheckForAppUpdates = ^{
+		[BPAppDelegateRef checkForAppUpdates:nil];
+	};
+	host.onHelperAction = ^{
+		typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		[strongSelf helperAction:nil];
+	};
+	self.preferencesHost = host;
 
+	NSView *hostView = host.viewController.view;
+	hostView.translatesAutoresizingMaskIntoConstraints = NO;
+	[content addSubview:hostView];
 	[NSLayoutConstraint activateConstraints:@[
-		[self.backgroundCheckCheckbox.topAnchor constraintEqualToAnchor:content.topAnchor constant:20],
-		[self.backgroundCheckCheckbox.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:20],
-
-		[intervalLabel.centerYAnchor constraintEqualToAnchor:self.intervalPopUp.centerYAnchor],
-		[intervalLabel.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:38],
-		[self.intervalPopUp.topAnchor constraintEqualToAnchor:self.backgroundCheckCheckbox.bottomAnchor constant:10],
-		[self.intervalPopUp.leadingAnchor constraintEqualToAnchor:intervalLabel.trailingAnchor constant:8],
-
-		[self.greedyCheckbox.topAnchor constraintEqualToAnchor:self.intervalPopUp.bottomAnchor constant:18],
-		[self.greedyCheckbox.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:20],
-
-		[greedyNote.topAnchor constraintEqualToAnchor:self.greedyCheckbox.bottomAnchor constant:6],
-		[greedyNote.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:38],
-		[greedyNote.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-20],
-
-		[helperLabel.topAnchor constraintEqualToAnchor:greedyNote.bottomAnchor constant:18],
-		[helperLabel.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:20],
-		[self.helperStatusLabel.topAnchor constraintEqualToAnchor:helperLabel.bottomAnchor constant:4],
-		[self.helperStatusLabel.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:38],
-		[self.helperStatusLabel.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-20],
-		[self.helperActionButton.topAnchor constraintEqualToAnchor:self.helperStatusLabel.bottomAnchor constant:8],
-		[self.helperActionButton.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:36],
+		[hostView.topAnchor constraintEqualToAnchor:content.topAnchor],
+		[hostView.leadingAnchor constraintEqualToAnchor:content.leadingAnchor],
+		[hostView.trailingAnchor constraintEqualToAnchor:content.trailingAnchor],
+		[hostView.bottomAnchor constraintEqualToAnchor:content.bottomAnchor],
 	]];
 
 	[self updateIntervalEnabled];
 	[self refreshHelperStatus];
+}
+
+- (void)syncSwiftUIHost
+{
+	if (!self.preferencesHost) return;
+	NSString *actionTitle = self.helperActionButton.hidden ? nil : self.helperActionButton.title;
+	[self.preferencesHost syncWithBackgroundCheckEnabled:[BPPreferences backgroundCheckEnabled]
+												interval:[BPPreferences backgroundCheckInterval]
+												  greedy:[BPPreferences greedyCaskUpgrades]
+									 automaticAppUpdates:[BPPreferences automaticAppUpdateCheckEnabled]
+											helperStatus:self.helperStatusLabel.stringValue ?: @""
+									   helperActionTitle:actionTitle];
 }
 
 - (void)selectIntervalItemMatchingPreference
@@ -156,6 +181,7 @@
 	self.helperActionButton.title = offersLoginItems
 		? NSLocalizedString(@"Helper_Action_Open_Login_Items", nil)
 		: NSLocalizedString(@"Helper_Action_Install", nil);
+	[self syncSwiftUIHost];
 }
 
 - (void)helperAction:(id)sender
@@ -183,6 +209,7 @@
 {
 	[BPPreferences setBackgroundCheckEnabled:(self.backgroundCheckCheckbox.state == NSControlStateValueOn)];
 	[self updateIntervalEnabled];
+	[self syncSwiftUIHost];
 }
 
 - (void)intervalChanged:(id)sender
@@ -191,6 +218,7 @@
 	if (interval) {
 		[BPPreferences setBackgroundCheckInterval:interval.doubleValue];
 	}
+	[self syncSwiftUIHost];
 }
 
 - (void)showWindow:(id)sender
@@ -203,6 +231,7 @@
 {
 	// Takes effect on the next refresh of the outdated-casks list.
 	[BPPreferences setGreedyCaskUpgrades:(self.greedyCheckbox.state == NSControlStateValueOn)];
+	[self syncSwiftUIHost];
 }
 
 @end
