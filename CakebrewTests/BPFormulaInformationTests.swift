@@ -243,4 +243,228 @@ final class BPFormulaInformationTests: XCTestCase {
         XCTAssertEqual(state.selectedRowIndex, -1)
     }
 
+    func testPackageListModeColumnAndNamespaceProperties() {
+        XCTAssertEqual(BPPackageListMode.installedFormulae.rawValue, 0)
+        XCTAssertEqual(BPPackageListMode.outdatedFormulae.rawValue, 1)
+        XCTAssertEqual(BPPackageListMode.allFormulae.rawValue, 2)
+        XCTAssertEqual(BPPackageListMode.leaves.rawValue, 3)
+        XCTAssertEqual(BPPackageListMode.pinned.rawValue, 4)
+        XCTAssertEqual(BPPackageListMode.search.rawValue, 5)
+        XCTAssertEqual(BPPackageListMode.installedCasks.rawValue, 6)
+        XCTAssertEqual(BPPackageListMode.outdatedCasks.rawValue, 7)
+        XCTAssertEqual(BPPackageListMode.allCasks.rawValue, 8)
+        XCTAssertEqual(BPPackageListMode.repositories.rawValue, 9)
+        XCTAssertEqual(BPPackageListMode(rawMode: 999), .installedFormulae)
+
+        let allModes: [BPPackageListMode] = [
+            .installedFormulae, .outdatedFormulae, .allFormulae, .leaves, .pinned,
+            .search, .installedCasks, .outdatedCasks, .allCasks, .repositories
+        ]
+        for mode in allModes {
+            XCTAssertEqual(mode.showsVersionColumn, mode != .repositories)
+            XCTAssertEqual(mode.showsLatestVersionColumn, mode == .outdatedFormulae || mode == .outdatedCasks)
+            XCTAssertEqual(mode.showsStatusColumn, mode == .allFormulae || mode == .allCasks || mode == .search)
+            XCTAssertEqual(mode.isCaskMode, mode == .installedCasks || mode == .outdatedCasks || mode == .allCasks)
+        }
+    }
+
+    func testInstalledPackageListStateSupportsMultiModeAndMixedNamespaceSearch() {
+        var state = BPInstalledPackageListState()
+        XCTAssertEqual(state.mode, .installedFormulae)
+        XCTAssertFalse(state.isCaskList)
+
+        state.setMode(.outdatedCasks)
+        XCTAssertEqual(state.mode, .outdatedCasks)
+        XCTAssertTrue(state.isCaskList)
+
+        let searchRows = [
+            BPInstalledPackageRow(name: "shared", cask: false, version: "1.0", latestVersion: "1.1", statusRank: 2, isPinned: false),
+            BPInstalledPackageRow(name: "shared", cask: true, version: "2.0", latestVersion: "2.0", statusRank: 1, isPinned: false),
+            BPInstalledPackageRow(name: "wget", cask: false, version: "", latestVersion: "1.24", statusRank: 0, isPinned: false)
+        ]
+        state.replaceRows(searchRows, mode: .search)
+        XCTAssertEqual(state.mode, .search)
+        XCTAssertFalse(state.isCaskList)
+
+        XCTAssertEqual(state.index(ofName: "shared", cask: false), 0)
+        XCTAssertEqual(state.index(ofName: "shared", cask: true), 1)
+        XCTAssertTrue(state.select(name: "shared", cask: true))
+        XCTAssertEqual(state.selectedRowIndex, 1)
+        XCTAssertEqual(state.selectedRow?.cask, true)
+
+        // LatestVersion sort for outdated modes
+        let outdatedRows = [
+            BPInstalledPackageRow(name: "pkgA", cask: false, version: "1.0", latestVersion: "1.10.0", statusRank: 2, isPinned: false),
+            BPInstalledPackageRow(name: "pkgB", cask: false, version: "1.0", latestVersion: "1.2.0", statusRank: 2, isPinned: false)
+        ]
+        state.replaceRows(outdatedRows, mode: .outdatedFormulae)
+        state.setSort(column: .latestVersion, ascending: true)
+        XCTAssertEqual(state.displayedRows.map(\.name), ["pkgB", "pkgA"])
+    }
+
+    func testUnifiedUpdatesStateEmptyFormulaOnlyAndCaskOnly() {
+        var state = BPUnifiedUpdatesState()
+        XCTAssertTrue(state.isEmpty)
+        XCTAssertFalse(state.hasFormulaUpdates)
+        XCTAssertFalse(state.hasCaskUpdates)
+        XCTAssertEqual(state.selectedFormulaNames, [])
+        XCTAssertEqual(state.selectedCaskNames, [])
+
+        // Formula-only
+        let formulaOnly = [
+            BPUnifiedUpdateRow(name: "git", cask: false, version: "2.43", latestVersion: "2.44", isPinned: false),
+            BPUnifiedUpdateRow(name: "wget", cask: false, version: "1.23", latestVersion: "1.24", isPinned: false)
+        ]
+        state.replace(formulaRows: formulaOnly, caskRows: [])
+        XCTAssertFalse(state.isEmpty)
+        XCTAssertTrue(state.hasFormulaUpdates)
+        XCTAssertFalse(state.hasCaskUpdates)
+
+        state.selectAllEligible()
+        XCTAssertEqual(state.selectedFormulaNames, ["git", "wget"])
+        XCTAssertEqual(state.selectedCaskNames, [])
+
+        // Cask-only
+        let caskOnly = [
+            BPUnifiedUpdateRow(name: "iterm2", cask: true, version: "3.4", latestVersion: "3.5", isPinned: false)
+        ]
+        state.replace(formulaRows: [], caskRows: caskOnly)
+        XCTAssertFalse(state.isEmpty)
+        XCTAssertFalse(state.hasFormulaUpdates)
+        XCTAssertTrue(state.hasCaskUpdates)
+        XCTAssertEqual(state.selectedFormulaNames, [])
+        XCTAssertEqual(state.selectedCaskNames, [])
+
+        state.selectAllEligible()
+        XCTAssertEqual(state.selectedFormulaNames, [])
+        XCTAssertEqual(state.selectedCaskNames, ["iterm2"])
+    }
+
+    func testUnifiedUpdatesStateMixedPinnedExclusionsAndNamespaceSeparation() {
+        let formulaRows = [
+            BPUnifiedUpdateRow(name: "shared", cask: false, version: "1.0", latestVersion: "1.1", isPinned: false),
+            BPUnifiedUpdateRow(name: "pinned-formula", cask: false, version: "2.0", latestVersion: "2.1", isPinned: true),
+            BPUnifiedUpdateRow(name: "curl", cask: false, version: "8.0", latestVersion: "8.1", isPinned: false)
+        ]
+        let caskRows = [
+            BPUnifiedUpdateRow(name: "shared", cask: true, version: "4.0", latestVersion: "4.1", isPinned: false),
+            BPUnifiedUpdateRow(name: "pinned-cask", cask: true, version: "5.0", latestVersion: "5.1", isPinned: true),
+            BPUnifiedUpdateRow(name: "firefox", cask: true, version: "120.0", latestVersion: "121.0", isPinned: false)
+        ]
+
+        var state = BPUnifiedUpdatesState(formulaRows: formulaRows, caskRows: caskRows)
+        XCTAssertTrue(state.hasFormulaUpdates)
+        XCTAssertTrue(state.hasCaskUpdates)
+        XCTAssertFalse(state.isEmpty)
+
+        // Pinned rows are ineligible and excluded from selectAllEligible
+        state.selectAllEligible()
+        XCTAssertEqual(state.selectedFormulaNames, ["shared", "curl"])
+        XCTAssertEqual(state.selectedCaskNames, ["shared", "firefox"])
+
+        // Selecting only eligible formulae clears cask selection and never mixes namespaces
+        state.selectEligibleFormulae()
+        XCTAssertEqual(state.selectedFormulaNames, ["shared", "curl"])
+        XCTAssertEqual(state.selectedCaskNames, [])
+
+        // Selecting only eligible casks clears formula selection and never mixes namespaces
+        state.selectEligibleCasks()
+        XCTAssertEqual(state.selectedFormulaNames, [])
+        XCTAssertEqual(state.selectedCaskNames, ["shared", "firefox"])
+
+        // Clear selection
+        state.clearSelection()
+        XCTAssertEqual(state.selectedFormulaNames, [])
+        XCTAssertEqual(state.selectedCaskNames, [])
+
+        // Toggling a pinned item refuses selection
+        let pinnedFormulaID = BPFormulaInformationIdentity(name: "pinned-formula", cask: false)
+        XCTAssertFalse(state.toggleSelection(for: pinnedFormulaID))
+        XCTAssertTrue(state.selectedIDs.isEmpty)
+
+        // Toggling same-named formula does not select same-named cask
+        let sharedFormulaID = BPFormulaInformationIdentity(name: "shared", cask: false)
+        let sharedCaskID = BPFormulaInformationIdentity(name: "shared", cask: true)
+        XCTAssertTrue(state.toggleSelection(for: sharedFormulaID))
+        XCTAssertEqual(state.selectedFormulaNames, ["shared"])
+        XCTAssertEqual(state.selectedCaskNames, [])
+
+        XCTAssertTrue(state.toggleSelection(for: sharedCaskID))
+        XCTAssertEqual(state.selectedFormulaNames, ["shared"])
+        XCTAssertEqual(state.selectedCaskNames, ["shared"])
+
+        // Reloading preserves still-eligible selections and drops newly-pinned or removed items
+        let reloadedFormulae = [
+            BPUnifiedUpdateRow(name: "shared", cask: false, version: "1.0", latestVersion: "1.1", isPinned: true),
+            BPUnifiedUpdateRow(name: "curl", cask: false, version: "8.0", latestVersion: "8.1", isPinned: false)
+        ]
+        state.replace(formulaRows: reloadedFormulae, caskRows: caskRows)
+        XCTAssertEqual(state.selectedFormulaNames, [], "Newly pinned formula must be dropped from selection")
+        XCTAssertEqual(state.selectedCaskNames, ["shared"], "Still-eligible cask selection must be preserved")
+    }
+
+    @MainActor
+    func testInstalledPackageListHostMultiModeAndUnifiedUpdatesHostCallbacks() {
+        let listHost = BPInstalledPackageListHost()
+        XCTAssertEqual(listHost.listMode, BPPackageListMode.installedFormulae.rawValue)
+
+        listHost.updateRows(
+            names: ["shared", "shared"],
+            versions: ["1.0", "2.0"],
+            latestVersions: ["1.1", "2.0"],
+            statusRanks: [2, 1],
+            pinnedFlags: [false, false],
+            caskFlags: [false, true],
+            mode: BPPackageListMode.search.rawValue)
+        XCTAssertEqual(listHost.listMode, BPPackageListMode.search.rawValue)
+        XCTAssertEqual(listHost.rowCount, 2)
+        XCTAssertTrue(listHost.selectPackage(named: "shared", cask: true))
+        XCTAssertEqual(listHost.selectedRow, 1)
+        XCTAssertEqual(listHost.selectedPackageName, "shared")
+        XCTAssertTrue(listHost.selectedPackageCask)
+
+        let updatesHost = BPUnifiedUpdatesHost()
+        var selectionCallbacks = 0
+        var upgradedPairs: [([String], [String])] = []
+        updatesHost.onSelectionChanged = { selectionCallbacks += 1 }
+        updatesHost.onUpgradeSelected = { formulae, casks in
+            upgradedPairs.append((formulae, casks))
+        }
+
+        updatesHost.update(
+            formulaNames: ["git", "pinned-formula"],
+            formulaVersions: ["2.43", "1.0"],
+            formulaLatestVersions: ["2.44", "1.1"],
+            formulaPinnedFlags: [false, true],
+            caskNames: ["iterm2"],
+            caskVersions: ["3.4"],
+            caskLatestVersions: ["3.5"],
+            caskPinnedFlags: [false])
+        XCTAssertFalse(updatesHost.isEmpty)
+        XCTAssertTrue(updatesHost.hasFormulaUpdates)
+        XCTAssertTrue(updatesHost.hasCaskUpdates)
+
+        updatesHost.selectAllEligible()
+        XCTAssertEqual(updatesHost.selectedFormulaNames, ["git"])
+        XCTAssertEqual(updatesHost.selectedCaskNames, ["iterm2"])
+        XCTAssertEqual(selectionCallbacks, 1)
+
+        updatesHost.upgradeSelected()
+        XCTAssertEqual(upgradedPairs.count, 1)
+        XCTAssertEqual(upgradedPairs.first?.0, ["git"])
+        XCTAssertEqual(upgradedPairs.first?.1, ["iterm2"])
+
+        updatesHost.selectFormulaGroup()
+        XCTAssertEqual(updatesHost.selectedFormulaNames, ["git"])
+        XCTAssertEqual(updatesHost.selectedCaskNames, [])
+
+        updatesHost.selectCaskGroup()
+        XCTAssertEqual(updatesHost.selectedFormulaNames, [])
+        XCTAssertEqual(updatesHost.selectedCaskNames, ["iterm2"])
+
+        updatesHost.clearSelection()
+        XCTAssertEqual(updatesHost.selectedFormulaNames, [])
+        XCTAssertEqual(updatesHost.selectedCaskNames, [])
+    }
+
 }

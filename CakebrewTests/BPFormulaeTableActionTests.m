@@ -182,4 +182,187 @@
     NSEvent *event = [NSEvent keyEventWithType:NSEventTypeKeyDown location:NSZeroPoint modifierFlags:0 timestamp:0 windowNumber:0 context:nil characters:@"\r" charactersIgnoringModifiers:@"\r" isARepeat:NO keyCode:36];
     XCTAssertTrue([self.table performKeyEquivalent:event], @"Return should be handled locally by the focused selected formula table");
 }
+- (void)testToolbarModeForRepositoriesSidebarRow
+{
+    for (NSInteger status = kBPFormulaNotInstalled; status <= kBPFormulaOutdated; status++) {
+        XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:FormulaeSideBarItemRepositories
+                                                          selectedCount:0
+                                                  selectedFormulaStatus:(BPFormulaStatus)status],
+                       BPToolbarModeTap);
+        XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:FormulaeSideBarItemRepositories
+                                                          selectedCount:1
+                                                  selectedFormulaStatus:(BPFormulaStatus)status],
+                       BPToolbarModeUntap);
+        XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:FormulaeSideBarItemRepositories
+                                                          selectedCount:3
+                                                  selectedFormulaStatus:(BPFormulaStatus)status],
+                       BPToolbarModeUntap);
+    }
+}
+- (void)testToolbarModeForCaskSidebarRows
+{
+    NSArray<NSNumber *> *caskRows = @[
+        @(FormulaeSideBarItemInstalledCasks),
+        @(FormulaeSideBarItemOutdatedCasks),
+        @(FormulaeSideBarItemAllCasks)
+    ];
+    for (NSNumber *row in caskRows) {
+        for (NSInteger status = kBPFormulaNotInstalled; status <= kBPFormulaOutdated; status++) {
+            XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:row.integerValue
+                                                              selectedCount:0
+                                                      selectedFormulaStatus:(BPFormulaStatus)status],
+                           BPToolbarModeDefault);
+        }
+    }
+    for (NSInteger status = kBPFormulaNotInstalled; status <= kBPFormulaOutdated; status++) {
+        XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:FormulaeSideBarItemInstalledCasks
+                                                          selectedCount:1
+                                                  selectedFormulaStatus:(BPFormulaStatus)status],
+                       BPToolbarModeUninstall);
+        XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:FormulaeSideBarItemInstalledCasks
+                                                          selectedCount:2
+                                                  selectedFormulaStatus:(BPFormulaStatus)status],
+                       BPToolbarModeUninstall);
+        XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:FormulaeSideBarItemOutdatedCasks
+                                                          selectedCount:1
+                                                  selectedFormulaStatus:(BPFormulaStatus)status],
+                       BPToolbarModeUpdateSingle);
+        XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:FormulaeSideBarItemOutdatedCasks
+                                                          selectedCount:2
+                                                  selectedFormulaStatus:(BPFormulaStatus)status],
+                       BPToolbarModeUpdateMany);
+    }
+    XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:FormulaeSideBarItemAllCasks
+                                                      selectedCount:1
+                                              selectedFormulaStatus:kBPFormulaNotInstalled],
+                   BPToolbarModeInstall);
+    XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:FormulaeSideBarItemAllCasks
+                                                      selectedCount:1
+                                              selectedFormulaStatus:kBPFormulaInstalled],
+                   BPToolbarModeUninstall);
+    XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:FormulaeSideBarItemAllCasks
+                                                      selectedCount:1
+                                              selectedFormulaStatus:kBPFormulaOutdated],
+                   BPToolbarModeUninstall);
+}
+- (void)testToolbarModeForFormulaSidebarRowsToolsAndOutOfBounds
+{
+    NSArray<NSNumber *> *formulaRows = @[
+        @(FormulaeSideBarItemInstalled),
+        @(FormulaeSideBarItemOutdated),
+        @(FormulaeSideBarItemAll),
+        @(FormulaeSideBarItemLeaves),
+        @(FormulaeSideBarItemPinned)
+    ];
+    for (NSNumber *row in formulaRows) {
+        for (NSInteger status = kBPFormulaNotInstalled; status <= kBPFormulaOutdated; status++) {
+            XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:row.integerValue
+                                                              selectedCount:0
+                                                      selectedFormulaStatus:(BPFormulaStatus)status],
+                           BPToolbarModeDefault);
+            XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:row.integerValue
+                                                              selectedCount:2
+                                                      selectedFormulaStatus:(BPFormulaStatus)status],
+                           BPToolbarModeUpdateMany);
+        }
+        XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:row.integerValue
+                                                          selectedCount:1
+                                                  selectedFormulaStatus:kBPFormulaNotInstalled],
+                       BPToolbarModeInstall);
+        XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:row.integerValue
+                                                          selectedCount:1
+                                                  selectedFormulaStatus:kBPFormulaInstalled],
+                       BPToolbarModeUninstall);
+        BPToolbarMode expectedOutdated = row.integerValue == FormulaeSideBarItemOutdated
+            ? BPToolbarModeUpdateSingle
+            : BPToolbarModeUninstall;
+        XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:row.integerValue
+                                                          selectedCount:1
+                                                  selectedFormulaStatus:kBPFormulaOutdated],
+                       expectedOutdated);
+        XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:row.integerValue
+                                                          selectedCount:1
+                                                  selectedFormulaStatus:(BPFormulaStatus)99],
+                       BPToolbarModeDefault);
+    }
+
+    NSArray<NSNumber *> *nonFormulaRows = @[
+        @(-1),
+        @(-99),
+        @(FormulaeSideBarItemDoctor),
+        @(FormulaeSideBarItemUpdate),
+        @(FormulaeSideBarItemServices),
+        @(99)
+    ];
+    for (NSNumber *row in nonFormulaRows) {
+        for (NSNumber *count in @[@0, @1, @2]) {
+            XCTAssertEqual([BPFormulaeTableActions toolbarModeForSidebarRow:row.integerValue
+                                                              selectedCount:count.unsignedIntegerValue
+                                                      selectedFormulaStatus:kBPFormulaInstalled],
+                           BPToolbarModeDefault);
+        }
+    }
+}
+- (void)testShouldShowFormulaInfoHidesDetailOnlyOnRepositoriesRow
+{
+    for (NSInteger row = -1; row <= (NSInteger)FormulaeSideBarItemServices + 2; row++) {
+        BOOL expected = (row != FormulaeSideBarItemRepositories);
+        XCTAssertEqual([BPFormulaeTableActions shouldShowFormulaInfoForSidebarRow:row],
+                       expected,
+                       @"row=%ld", (long)row);
+    }
+}
+- (void)testFooterLocalizationKeyPrefersSearchAndDelegatesRowMapping
+{
+    for (NSInteger row = -1; row <= (NSInteger)FormulaeSideBarItemServices + 1; row++) {
+        XCTAssertEqualObjects([BPFormulaeTableActions footerLocalizationKeyForSidebarRow:row searching:YES],
+                              @"Sidebar_Info_SearchResults",
+                              @"row=%ld", (long)row);
+        XCTAssertEqualObjects([BPFormulaeTableActions footerLocalizationKeyForSidebarRow:row searching:NO],
+                              [BPSideBarController infoKeyForRow:row],
+                              @"row=%ld", (long)row);
+    }
+    XCTAssertNil([BPFormulaeTableActions footerLocalizationKeyForSidebarRow:FormulaeSideBarItemFormulaeCategory searching:NO]);
+    XCTAssertNil([BPFormulaeTableActions footerLocalizationKeyForSidebarRow:FormulaeSideBarItemCasksCategory searching:NO]);
+    XCTAssertNil([BPFormulaeTableActions footerLocalizationKeyForSidebarRow:FormulaeSideBarItemToolsCategory searching:NO]);
+    XCTAssertNil([BPFormulaeTableActions footerLocalizationKeyForSidebarRow:-1 searching:NO]);
+    XCTAssertEqualObjects([BPFormulaeTableActions footerLocalizationKeyForSidebarRow:FormulaeSideBarItemInstalled searching:NO],
+                          @"Sidebar_Info_Installed");
+}
+- (void)testShouldRefreshVisibleListRequiresLoadedMatchingMode
+{
+    for (NSInteger published = kBPListAll; published <= kBPListAllCasks; published++) {
+        for (NSInteger active = kBPListAll; active <= kBPListAllCasks; active++) {
+            XCTAssertFalse([BPFormulaeTableActions shouldRefreshVisibleListForPublishedMode:(BPListMode)published
+                                                                                 activeMode:(BPListMode)active
+                                                                                  isLoading:YES]);
+            XCTAssertEqual([BPFormulaeTableActions shouldRefreshVisibleListForPublishedMode:(BPListMode)published
+                                                                                 activeMode:(BPListMode)active
+                                                                                  isLoading:NO],
+                           published == active);
+        }
+    }
+}
+- (void)testShouldSyncInstalledHostMetadataOnlyForSecondaryMetadataListsWhenLoadedAndHosted
+{
+    for (NSInteger published = kBPListAll; published <= kBPListAllCasks; published++) {
+        for (NSInteger active = kBPListAll; active <= kBPListAllCasks; active++) {
+            BOOL isMetadataMode = (published == kBPListPinned
+                                   || published == kBPListOutdated
+                                   || published == kBPListOutdatedCasks);
+            for (NSNumber *loading in @[@NO, @YES]) {
+                for (NSNumber *hosted in @[@NO, @YES]) {
+                    BOOL expected = !loading.boolValue && hosted.boolValue && (active != published) && isMetadataMode;
+                    XCTAssertEqual([BPFormulaeTableActions shouldSyncInstalledHostMetadataForPublishedMode:(BPListMode)published
+                                                                                                activeMode:(BPListMode)active
+                                                                                                 isLoading:loading.boolValue
+                                                                                      isUsingInstalledHost:hosted.boolValue],
+                                   expected,
+                                   @"published=%ld active=%ld loading=%@ hosted=%@",
+                                   (long)published, (long)active, loading, hosted);
+                }
+            }
+        }
+    }
+}
 @end

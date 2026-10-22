@@ -1,41 +1,48 @@
 import Foundation
 
-enum BPFormulaInformationMode: Int, Hashable, Sendable {
+public enum BPFormulaInformationMode: Int, Hashable, Sendable {
     case general = 0
     case installedDependents = 1
     case allDependents = 2
 
-    init(rawInfoType: Int) {
+    public init(rawInfoType: Int) {
         self = BPFormulaInformationMode(rawValue: rawInfoType) ?? .general
     }
 }
 
 /// Values crossing the Objective-C model / Swift UI boundary never retain BPFormula.
-struct BPFormulaInformationIdentity: Hashable, Sendable {
-    let name: String
-    let cask: Bool
-    let mode: BPFormulaInformationMode
+public struct BPFormulaInformationIdentity: Hashable, Sendable {
+    public let name: String
+    public let cask: Bool
+    public let mode: BPFormulaInformationMode
 
-    init(name: String, cask: Bool, mode: BPFormulaInformationMode = .general) {
+    public init(name: String, cask: Bool, mode: BPFormulaInformationMode = .general) {
         self.name = name
         self.cask = cask
         self.mode = mode
     }
 }
 
-struct BPFormulaInformationRequest: Equatable, Sendable {
-    let identity: BPFormulaInformationIdentity
-    let generation: UInt64
+public struct BPFormulaInformationRequest: Equatable, Sendable {
+    public let identity: BPFormulaInformationIdentity
+    public let generation: UInt64
+
+    public init(identity: BPFormulaInformationIdentity, generation: UInt64) {
+        self.identity = identity
+        self.generation = generation
+    }
 }
 
-struct BPFormulaInformationState: Sendable {
-    private(set) var request: BPFormulaInformationRequest?
-    private(set) var information: String?
-    private(set) var website: URL?
-    private(set) var isLoading = false
+public struct BPFormulaInformationState: Sendable {
+    public private(set) var request: BPFormulaInformationRequest?
+    public private(set) var information: String?
+    public private(set) var website: URL?
+    public private(set) var isLoading = false
     private var generation: UInt64 = 0
 
-    mutating func begin(name: String, cask: Bool, mode: BPFormulaInformationMode = .general) -> BPFormulaInformationRequest {
+    public init() {}
+
+    public mutating func begin(name: String, cask: Bool, mode: BPFormulaInformationMode = .general) -> BPFormulaInformationRequest {
         generation += 1
         let next = BPFormulaInformationRequest(
             identity: BPFormulaInformationIdentity(name: name, cask: cask, mode: mode), generation: generation)
@@ -47,7 +54,7 @@ struct BPFormulaInformationState: Sendable {
     }
 
     @discardableResult
-    mutating func receive(request: BPFormulaInformationRequest, information: String?, website: URL?) -> Bool {
+    public mutating func receive(request: BPFormulaInformationRequest, information: String?, website: URL?) -> Bool {
         guard self.request == request else { return false }
         self.information = information.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
         self.website = website
@@ -55,7 +62,7 @@ struct BPFormulaInformationState: Sendable {
         return true
     }
 
-    mutating func close() {
+    public mutating func close() {
         request = nil
         information = nil
         website = nil
@@ -63,25 +70,25 @@ struct BPFormulaInformationState: Sendable {
     }
 }
 
-struct BPSelectedFormulaSnapshot: Equatable, Sendable {
-    let identity: BPFormulaInformationIdentity
-    let isInstalled: Bool
-    let isPinned: Bool
-    let installPath: String?
-    let latestVersion: String?
-    let dependencies: String?
-    let conflicts: String?
-    let shortDescription: String?
+public struct BPSelectedFormulaSnapshot: Equatable, Sendable {
+    public let identity: BPFormulaInformationIdentity
+    public let isInstalled: Bool
+    public let isPinned: Bool
+    public let installPath: String?
+    public let latestVersion: String?
+    public let dependencies: String?
+    public let conflicts: String?
+    public let shortDescription: String?
 
-    init(name: String,
-         cask: Bool,
-         isInstalled: Bool,
-         isPinned: Bool,
-         installPath: String?,
-         latestVersion: String?,
-         dependencies: String?,
-         conflicts: String?,
-         shortDescription: String?) {
+    public init(name: String,
+                cask: Bool,
+                isInstalled: Bool,
+                isPinned: Bool,
+                installPath: String?,
+                latestVersion: String?,
+                dependencies: String?,
+                conflicts: String?,
+                shortDescription: String?) {
         self.identity = BPFormulaInformationIdentity(name: name, cask: cask, mode: .general)
         self.isInstalled = isInstalled
         self.isPinned = isPinned && !cask
@@ -93,38 +100,40 @@ struct BPSelectedFormulaSnapshot: Equatable, Sendable {
     }
 }
 
-struct BPSelectedFormulaState: Sendable {
-    enum Selection: Equatable, Sendable {
+public struct BPSelectedFormulaState: Sendable {
+    public enum Selection: Equatable, Sendable {
         case none
         case single(BPSelectedFormulaSnapshot)
         case multiple
     }
 
-    private(set) var selection: Selection = .none
-    private(set) var request: BPFormulaInformationRequest?
-    private(set) var dependents: [String]?
+    public private(set) var selection: Selection = .none
+    public private(set) var request: BPFormulaInformationRequest?
+    public private(set) var dependents: [String]?
     private var generation: UInt64 = 0
 
-    var currentSnapshot: BPSelectedFormulaSnapshot? {
+    public init() {}
+
+    public var currentSnapshot: BPSelectedFormulaSnapshot? {
         if case .single(let snapshot) = selection {
             return snapshot
         }
         return nil
     }
 
-    var showsPinnedRow: Bool {
+    public var showsPinnedRow: Bool {
         guard case .single(let snapshot) = selection else { return false }
         return snapshot.isPinned && !snapshot.identity.cask
     }
 
-    mutating func clear() {
+    public mutating func clear() {
         generation += 1
         selection = .none
         request = nil
         dependents = nil
     }
 
-    mutating func selectMultiple() {
+    public mutating func selectMultiple() {
         generation += 1
         selection = .multiple
         request = nil
@@ -132,7 +141,7 @@ struct BPSelectedFormulaState: Sendable {
     }
 
     @discardableResult
-    mutating func beginSingle(_ snapshot: BPSelectedFormulaSnapshot) -> BPFormulaInformationRequest {
+    public mutating func beginSingle(_ snapshot: BPSelectedFormulaSnapshot) -> BPFormulaInformationRequest {
         generation += 1
         let next = BPFormulaInformationRequest(identity: snapshot.identity, generation: generation)
         selection = .single(snapshot)
@@ -142,7 +151,7 @@ struct BPSelectedFormulaState: Sendable {
     }
 
     @discardableResult
-    mutating func updateSingle(_ snapshot: BPSelectedFormulaSnapshot) -> Bool {
+    public mutating func updateSingle(_ snapshot: BPSelectedFormulaSnapshot) -> Bool {
         guard case .single(let current) = selection,
               current.identity == snapshot.identity else {
             return false
@@ -152,7 +161,7 @@ struct BPSelectedFormulaState: Sendable {
     }
 
     @discardableResult
-    mutating func receiveDependents(_ names: [String], for request: BPFormulaInformationRequest) -> Bool {
+    public mutating func receiveDependents(_ names: [String], for request: BPFormulaInformationRequest) -> Bool {
         guard self.request == request,
               case .single(let current) = selection,
               !current.identity.cask else {
@@ -163,30 +172,63 @@ struct BPSelectedFormulaState: Sendable {
     }
 }
 
-enum BPInstalledPackageSortColumn: String, Equatable, Sendable {
+public enum BPInstalledPackageSortColumn: String, Equatable, Sendable {
     case name = "Name"
     case version = "Version"
     case latestVersion = "LatestVersion"
     case status = "Status"
 }
 
-struct BPInstalledPackageRow: Identifiable, Equatable, Sendable {
-    let identity: BPFormulaInformationIdentity
-    let version: String
-    let latestVersion: String
-    let statusRank: Int
-    let isPinned: Bool
+public enum BPPackageListMode: Int, Sendable, Equatable {
+    case installedFormulae = 0
+    case outdatedFormulae = 1
+    case allFormulae = 2
+    case leaves = 3
+    case pinned = 4
+    case search = 5
+    case installedCasks = 6
+    case outdatedCasks = 7
+    case allCasks = 8
+    case repositories = 9
 
-    var id: BPFormulaInformationIdentity { identity }
-    var name: String { identity.name }
-    var cask: Bool { identity.cask }
+    public init(rawMode: Int) {
+        self = BPPackageListMode(rawValue: rawMode) ?? .installedFormulae
+    }
 
-    init(name: String,
-         cask: Bool,
-         version: String?,
-         latestVersion: String?,
-         statusRank: Int,
-         isPinned: Bool) {
+    public var showsVersionColumn: Bool {
+        self != .repositories
+    }
+
+    public var showsLatestVersionColumn: Bool {
+        self == .outdatedFormulae || self == .outdatedCasks
+    }
+
+    public var showsStatusColumn: Bool {
+        self == .allFormulae || self == .allCasks || self == .search
+    }
+
+    public var isCaskMode: Bool {
+        self == .installedCasks || self == .outdatedCasks || self == .allCasks
+    }
+}
+
+public struct BPInstalledPackageRow: Identifiable, Equatable, Sendable {
+    public let identity: BPFormulaInformationIdentity
+    public let version: String
+    public let latestVersion: String
+    public let statusRank: Int
+    public let isPinned: Bool
+
+    public var id: BPFormulaInformationIdentity { identity }
+    public var name: String { identity.name }
+    public var cask: Bool { identity.cask }
+
+    public init(name: String,
+                cask: Bool,
+                version: String?,
+                latestVersion: String?,
+                statusRank: Int,
+                isPinned: Bool) {
         self.identity = BPFormulaInformationIdentity(name: name, cask: cask, mode: .general)
         self.version = version ?? ""
         self.latestVersion = latestVersion ?? ""
@@ -195,20 +237,23 @@ struct BPInstalledPackageRow: Identifiable, Equatable, Sendable {
     }
 }
 
-struct BPInstalledPackageListState: Sendable {
-    private(set) var sourceRows: [BPInstalledPackageRow] = []
-    private(set) var displayedRows: [BPInstalledPackageRow] = []
-    private(set) var selectedID: BPFormulaInformationIdentity?
-    private(set) var isCaskList = false
-    private(set) var sortColumn: BPInstalledPackageSortColumn?
-    private(set) var sortAscending = true
+public struct BPInstalledPackageListState: Sendable {
+    public private(set) var sourceRows: [BPInstalledPackageRow] = []
+    public private(set) var displayedRows: [BPInstalledPackageRow] = []
+    public private(set) var selectedID: BPFormulaInformationIdentity?
+    public private(set) var isCaskList = false
+    public private(set) var mode: BPPackageListMode = .installedFormulae
+    public private(set) var sortColumn: BPInstalledPackageSortColumn?
+    public private(set) var sortAscending = true
 
-    var selectedRow: BPInstalledPackageRow? {
+    public init() {}
+
+    public var selectedRow: BPInstalledPackageRow? {
         guard let selectedID else { return nil }
         return displayedRows.first { $0.id == selectedID }
     }
 
-    var selectedRowIndex: Int {
+    public var selectedRowIndex: Int {
         guard let selectedID,
               let index = displayedRows.firstIndex(where: { $0.id == selectedID }) else {
             return -1
@@ -216,22 +261,42 @@ struct BPInstalledPackageListState: Sendable {
         return index
     }
 
-    mutating func replaceRows(_ rows: [BPInstalledPackageRow], isCaskList: Bool) {
+    public mutating func setMode(_ mode: BPPackageListMode) {
+        self.mode = mode
+        self.isCaskList = mode.isCaskMode
+    }
+
+    public mutating func replaceRows(_ rows: [BPInstalledPackageRow], isCaskList: Bool) {
         self.sourceRows = rows
         self.isCaskList = isCaskList
+        if isCaskList && !self.mode.isCaskMode {
+            self.mode = .installedCasks
+        } else if !isCaskList && self.mode.isCaskMode {
+            self.mode = .installedFormulae
+        }
         rebuildDisplayedRows()
         if let selectedID, !displayedRows.contains(where: { $0.id == selectedID }) {
             self.selectedID = nil
         }
     }
 
-    mutating func setSort(column: BPInstalledPackageSortColumn?, ascending: Bool) {
+    public mutating func replaceRows(_ rows: [BPInstalledPackageRow], mode: BPPackageListMode) {
+        self.mode = mode
+        self.isCaskList = mode.isCaskMode
+        self.sourceRows = rows
+        rebuildDisplayedRows()
+        if let selectedID, !displayedRows.contains(where: { $0.id == selectedID }) {
+            self.selectedID = nil
+        }
+    }
+
+    public mutating func setSort(column: BPInstalledPackageSortColumn?, ascending: Bool) {
         self.sortColumn = column
         self.sortAscending = ascending
         rebuildDisplayedRows()
     }
 
-    mutating func select(id: BPFormulaInformationIdentity?) {
+    public mutating func select(id: BPFormulaInformationIdentity?) {
         guard let id, displayedRows.contains(where: { $0.id == id }) else {
             selectedID = nil
             return
@@ -240,7 +305,7 @@ struct BPInstalledPackageListState: Sendable {
     }
 
     @discardableResult
-    mutating func select(name: String, cask: Bool) -> Bool {
+    public mutating func select(name: String, cask: Bool) -> Bool {
         let candidate = BPFormulaInformationIdentity(name: name, cask: cask, mode: .general)
         guard displayedRows.contains(where: { $0.id == candidate }) else {
             selectedID = nil
@@ -251,7 +316,7 @@ struct BPInstalledPackageListState: Sendable {
     }
 
     @discardableResult
-    mutating func selectRow(at index: Int) -> Bool {
+    public mutating func selectRow(at index: Int) -> Bool {
         guard index >= 0 && index < displayedRows.count else {
             selectedID = nil
             return false
@@ -260,7 +325,7 @@ struct BPInstalledPackageListState: Sendable {
         return true
     }
 
-    func index(ofName name: String, cask: Bool) -> Int {
+    public func index(ofName name: String, cask: Bool) -> Int {
         guard !name.isEmpty else { return -1 }
         let target = BPFormulaInformationIdentity(name: name, cask: cask, mode: .general)
         return displayedRows.firstIndex(where: { $0.id == target }) ?? -1
@@ -285,9 +350,9 @@ struct BPInstalledPackageListState: Sendable {
         displayedRows = sorted.map(\.element)
     }
 
-    static func compare(_ lhs: BPInstalledPackageRow,
-                        _ rhs: BPInstalledPackageRow,
-                        by column: BPInstalledPackageSortColumn) -> ComparisonResult {
+    public static func compare(_ lhs: BPInstalledPackageRow,
+                               _ rhs: BPInstalledPackageRow,
+                               by column: BPInstalledPackageSortColumn) -> ComparisonResult {
         switch column {
         case .name:
             return lhs.name.localizedCaseInsensitiveCompare(rhs.name)
@@ -302,5 +367,110 @@ struct BPInstalledPackageListState: Sendable {
             if rightValue.isEmpty { return .orderedDescending }
             return leftValue.localizedStandardCompare(rightValue)
         }
+    }
+}
+
+public struct BPUnifiedUpdateRow: Equatable, Hashable, Identifiable, Sendable {
+    public let id: BPFormulaInformationIdentity
+    public let version: String
+    public let latestVersion: String
+    public let isPinned: Bool
+
+    public var name: String { id.name }
+    public var cask: Bool { id.cask }
+    public var isEligible: Bool { !isPinned }
+
+    public init(name: String,
+                cask: Bool,
+                version: String?,
+                latestVersion: String?,
+                isPinned: Bool = false) {
+        self.id = BPFormulaInformationIdentity(name: name, cask: cask, mode: .general)
+        self.version = version ?? ""
+        self.latestVersion = latestVersion ?? ""
+        self.isPinned = isPinned
+    }
+}
+
+public struct BPUnifiedUpdatesState: Equatable, Sendable {
+    public private(set) var formulaRows: [BPUnifiedUpdateRow] = []
+    public private(set) var caskRows: [BPUnifiedUpdateRow] = []
+    public private(set) var selectedIDs: Set<BPFormulaInformationIdentity> = []
+
+    public init(formulaRows: [BPUnifiedUpdateRow] = [],
+                caskRows: [BPUnifiedUpdateRow] = [],
+                selectedIDs: Set<BPFormulaInformationIdentity> = []) {
+        self.formulaRows = formulaRows.filter { !$0.cask }
+        self.caskRows = caskRows.filter { $0.cask }
+        let validEligibleIDs = Self.eligibleIDSet(formulaRows: self.formulaRows, caskRows: self.caskRows)
+        self.selectedIDs = selectedIDs.intersection(validEligibleIDs)
+    }
+
+    public var hasFormulaUpdates: Bool {
+        !formulaRows.isEmpty
+    }
+
+    public var hasCaskUpdates: Bool {
+        !caskRows.isEmpty
+    }
+
+    public var isEmpty: Bool {
+        formulaRows.isEmpty && caskRows.isEmpty
+    }
+
+    public var selectedFormulaNames: [String] {
+        formulaRows
+            .filter { !$0.cask && $0.isEligible && selectedIDs.contains($0.id) }
+            .map(\.name)
+    }
+
+    public var selectedCaskNames: [String] {
+        caskRows
+            .filter { $0.cask && $0.isEligible && selectedIDs.contains($0.id) }
+            .map(\.name)
+    }
+
+    public mutating func replace(formulaRows: [BPUnifiedUpdateRow], caskRows: [BPUnifiedUpdateRow]) {
+        self.formulaRows = formulaRows.filter { !$0.cask }
+        self.caskRows = caskRows.filter { $0.cask }
+        let validEligibleIDs = Self.eligibleIDSet(formulaRows: self.formulaRows, caskRows: self.caskRows)
+        self.selectedIDs = self.selectedIDs.intersection(validEligibleIDs)
+    }
+
+    public mutating func selectAllEligible() {
+        selectedIDs = Self.eligibleIDSet(formulaRows: formulaRows, caskRows: caskRows)
+    }
+
+    public mutating func selectEligibleFormulae() {
+        selectedIDs = Set(formulaRows.filter { !$0.cask && $0.isEligible }.map(\.id))
+    }
+
+    public mutating func selectEligibleCasks() {
+        selectedIDs = Set(caskRows.filter { $0.cask && $0.isEligible }.map(\.id))
+    }
+
+    public mutating func clearSelection() {
+        selectedIDs.removeAll()
+    }
+
+    @discardableResult
+    public mutating func toggleSelection(for id: BPFormulaInformationIdentity) -> Bool {
+        if selectedIDs.contains(id) {
+            selectedIDs.remove(id)
+            return false
+        }
+        let validEligibleIDs = Self.eligibleIDSet(formulaRows: formulaRows, caskRows: caskRows)
+        guard validEligibleIDs.contains(id) else {
+            return false
+        }
+        selectedIDs.insert(id)
+        return true
+    }
+
+    private static func eligibleIDSet(formulaRows: [BPUnifiedUpdateRow],
+                                      caskRows: [BPUnifiedUpdateRow]) -> Set<BPFormulaInformationIdentity> {
+        let formulaIDs = formulaRows.filter { !$0.cask && $0.isEligible }.map(\.id)
+        let caskIDs = caskRows.filter { $0.cask && $0.isEligible }.map(\.id)
+        return Set(formulaIDs).union(caskIDs)
     }
 }

@@ -74,7 +74,7 @@
 "Homebrew_Task_Finished" = "任务完成";
 
 /* No comment provided by engineer. */
-"Homebrew_Task_Finished_At" = "at";
+"Homebrew_Task_Finished_At" = "于";
 
 /* No comment provided by engineer. */
 "Info_View_Formula_No_Conflicts" = "这个formula目前没有冲突.";
@@ -101,13 +101,13 @@
 "Installation_Window_Operation_Install" = "Formula安装中:";
 
 /* No comment provided by engineer. */
-"Installation_Window_Operation_Tap" = "Tapping Repo:";
+"Installation_Window_Operation_Tap" = "正在添加软件源:";
 
 /* No comment provided by engineer. */
 "Installation_Window_Operation_Uninstall" = "Formula卸载中:";
 
 /* No comment provided by engineer. */
-"Installation_Window_Operation_Untap" = "Untapping Repo:";
+"Installation_Window_Operation_Untap" = "正在移除软件源:";
 
 /* No comment provided by engineer. */
 "Installation_Window_Operation_Update" = "Formulae更新中:";
@@ -133,16 +133,16 @@
 "Message_Shell_Invalid_Title" = "没有找到有效的shell!";
 
 /* No comment provided by engineer. */
-"Message_Tap_Body" = "What repository would you like to tap?";
+"Message_Tap_Body" = "您想要添加 (tap) 哪个软件源仓库？";
 
 /* No comment provided by engineer. */
-"Message_Tap_Title" = "Tapping Repository";
+"Message_Tap_Title" = "正在添加软件源仓库";
 
 /* No comment provided by engineer. */
-"Message_Untap_Body" = "Are you sure you want to untap the repository '%@'?";
+"Message_Untap_Body" = "您确定要移除 (untap) 软件源仓库'%@'吗？";
 
 /* No comment provided by engineer. */
-"Message_Untap_Title" = "Untapping Repository";
+"Message_Untap_Title" = "正在移除软件源仓库";
 
 /* No comment provided by engineer. */
 "Message_Update_All_Outdated_Body" = "你确定想更新所有过期的 formulae 和 casks 吗?";
@@ -179,7 +179,7 @@
 "Sidebar_Info_Outdated" = "这些formulae已经安装，但有一个可用的更新.";
 
 /* No comment provided by engineer. */
-"Sidebar_Info_Repos" = "These are the repositories you have tapped.";
+"Sidebar_Info_Repos" = "这些是您已添加 (tap) 的软件源仓库。";
 "Sidebar_Info_Casks" = "这些是已安装在您系统中的 casks（应用程序）。";
 "Sidebar_Info_OutdatedCasks" = "这些 casks 有更新版本可用。自动更新的应用不会列出。";
 "Sidebar_Info_AllCasks" = "这些是所有可供安装的 casks（应用程序）。";
@@ -229,7 +229,7 @@
 "Sidebar_Item_Leaves" = "树叶";
 "Sidebar_Item_Pinned" = "已固定";
 "Sidebar_Item_Services" = "服务";
-"Sidebar_Item_AllCasks" = "All Casks";
+"Sidebar_Item_AllCasks" = "全部 Casks";
 
 /* No comment provided by engineer. */
 "Sidebar_Item_Outdated" = "过期";
@@ -256,13 +256,13 @@
 "Toolbar_Search" = "搜索Formulae";
 
 /* No comment provided by engineer. */
-"Toolbar_Tap_Repo" = "Tap Repository";
+"Toolbar_Tap_Repo" = "添加软件源仓库";
 
 /* No comment provided by engineer. */
 "Toolbar_Uninstall_Formula" = "卸载Formula";
 
 /* No comment provided by engineer. */
-"Toolbar_Untap_Repo" = "Untap Repository";
+"Toolbar_Untap_Repo" = "移除软件源仓库";
 
 /* No comment provided by engineer. */
 "Toolbar_Update_Formula" = "更新Formula";
@@ -283,8 +283,8 @@
 "Panel_Export_Button" = "导出";
 "Panel_Import_Message" = "导入自：";
 "Panel_Import_Button" = "导入";
-"Notification_Doctor" = "Homebrew Doctor";
-"Notification_Update" = "Update Homebrew";
+"Notification_Doctor" = "Homebrew 诊断";
+"Notification_Update" = "更新 Homebrew";
 "Formula_All_Dependents_Title" = "依赖此 formula 的全部项：%@";
 "Formula_Installed_Dependents_Title" = "已安装的依赖此 formula 的项：%@";
 "Confirmation_Uninstall_Cask_Zap" = "同时移除偏好设置和支持文件 (zap)";
@@ -292,67 +292,67 @@
 "Services_Operation_Failed_Title" = "无法更改服务“%@”";
 "Error_Brew_Failed_No_Output" = "Homebrew 以状态 %d 退出，且没有任何输出。";
 "Installation_Window_Cancelled" = "已取消。";
-"Empty_Search_Title" = "No Results";
-"Empty_Search_Message" = "No formula or cask matches your search.";
-"Empty_Outdated_Title" = "Everything Is Up to Date";
-"Empty_Outdated_Message" = "None of your installed formulae have a newer version available.";
-"Empty_OutdatedCasks_Title" = "Everything Is Up to Date";
-"Empty_OutdatedCasks_Message" = "None of your installed casks have a newer version available.";
-"Empty_Pinned_Title" = "No Pinned Formulae";
-"Empty_Pinned_Message" = "Pinning a formula holds it at its installed version, so upgrades skip it.";
-"Empty_Services_Title" = "No Services";
-"Empty_Services_Message" = "Formulae that run in the background, like databases, appear here once installed.";
-"Empty_Casks_Title" = "No Casks Installed";
-"Empty_Casks_Message" = "Casks are applications installed through Homebrew.";
-"Empty_Leaves_Title" = "No Leaves";
-"Empty_Leaves_Message" = "Leaves are formulae installed on their own, not as a dependency of something else.";
-"Empty_Generic_Title" = "Nothing Here";
-"Empty_Generic_Message" = "This list has no items.";
-"Sidebar_VoiceOver_Badge_Count" = "%@ items";
-"Sidebar_VoiceOver_Sidebar" = "Sidebar";
-"Detail_VoiceOver_Description" = "Description";
-"Detail_VoiceOver_Installed" = "Installed";
-"Detail_VoiceOver_Version" = "Version";
-"Detail_VoiceOver_Dependencies" = "Dependencies";
-"Detail_VoiceOver_Conflicts" = "Conflicts";
-"Detail_VoiceOver_RequiredBy" = "Required by";
-"VoiceOver_Operation_Progress" = "Operation in progress";
-"VoiceOver_Operation_Finished" = "Operation finished";
+"Empty_Search_Title" = "无结果";
+"Empty_Search_Message" = "没有与您的搜索匹配的 formula 或 cask。";
+"Empty_Outdated_Title" = "全部已是最新";
+"Empty_Outdated_Message" = "您已安装的 formulae 没有可用的新版本。";
+"Empty_OutdatedCasks_Title" = "全部已是最新";
+"Empty_OutdatedCasks_Message" = "您已安装的 casks 没有可用的新版本。";
+"Empty_Pinned_Title" = "无已固定的 Formulae";
+"Empty_Pinned_Message" = "固定 formula 会将其保持在当前已安装版本，升级时将跳过它。";
+"Empty_Services_Title" = "无服务";
+"Empty_Services_Message" = "在后台运行的 formulae（如数据库）安装后会显示在此处。";
+"Empty_Casks_Title" = "未安装 Casks";
+"Empty_Casks_Message" = "Casks 是通过 Homebrew 安装的应用程序。";
+"Empty_Leaves_Title" = "无独立 Formulae";
+"Empty_Leaves_Message" = "“树叶”是独立安装的 formulae，而不是作为其他包的依赖项安装的。";
+"Empty_Generic_Title" = "此处无内容";
+"Empty_Generic_Message" = "此列表没有任何项目。";
+"Sidebar_VoiceOver_Badge_Count" = "%@ 项";
+"Sidebar_VoiceOver_Sidebar" = "边栏";
+"Detail_VoiceOver_Description" = "描述";
+"Detail_VoiceOver_Installed" = "已安装";
+"Detail_VoiceOver_Version" = "版本";
+"Detail_VoiceOver_Dependencies" = "依赖项";
+"Detail_VoiceOver_Conflicts" = "冲突";
+"Detail_VoiceOver_RequiredBy" = "被依赖于";
+"VoiceOver_Operation_Progress" = "操作正在进行";
+"VoiceOver_Operation_Finished" = "操作已完成";
 
 /* Cleanup preview — brew cleanup --dry-run before deleting anything */
-"Cleanup_Nothing_Title" = "Nothing to Clean Up";
-"Cleanup_Nothing_Body" = "Homebrew has no cached downloads or outdated versions to remove.";
-"Cleanup_Item_Count_One" = "1 item";
-"Cleanup_Item_Count_Other" = "%lu items";
-"Confirmation_Cleanup" = "Homebrew will permanently remove %1$@, freeing about %2$@. This cannot be undone.";
-"Confirmation_Cleanup_No_Size" = "Homebrew will permanently remove %@. This cannot be undone.";
+"Cleanup_Nothing_Title" = "无需清理";
+"Cleanup_Nothing_Body" = "Homebrew 没有可移除的缓存下载或旧版本。";
+"Cleanup_Item_Count_One" = "1 项";
+"Cleanup_Item_Count_Other" = "%lu 项";
+"Confirmation_Cleanup" = "Homebrew 将永久移除 %1$@，释放约 %2$@ 空间。此操作无法撤销。";
+"Confirmation_Cleanup_No_Size" = "Homebrew 将永久移除 %@。此操作无法撤销。";
 
 /* Dock menu */
-"Dock_Check_For_Updates" = "Check for Updates";
-"Dock_Upgrade_All_Outdated" = "Upgrade All Outdated";
-"Dock_Show_Outdated" = "Show Outdated Formulae";
+"Dock_Check_For_Updates" = "检查更新";
+"Dock_Upgrade_All_Outdated" = "升级全部过期项";
+"Dock_Show_Outdated" = "显示过期的 Formulae";
 
 "Sidebar_VoiceOver_Separator" = ", ";
 
 /* Opening a Brewfile from Finder, or dropping one on the app */
-"Confirmation_Import_Brewfile" = "Install everything listed in “%@”? Homebrew will install any formulae and casks it names that are not already installed.";
-"Brewfile_Not_Recognized_Title" = "Not a Brewfile";
-"Brewfile_Not_Recognized_Body" = "“%@” is not named Brewfile, so Cakebrew will not run brew bundle against it.";
+"Confirmation_Import_Brewfile" = "要安装“%@”中列出的全部内容吗？Homebrew 将安装其中指定但尚未安装的 formulae 和 casks。";
+"Brewfile_Not_Recognized_Title" = "不是 Brewfile";
+"Brewfile_Not_Recognized_Body" = "“%@”的文件名不是 Brewfile，因此 Cakebrew 不会对其运行 brew bundle。";
 
 /* Loading overlay — which step of the reload is running */
-"Loading_Status_Default" = "Loading…";
-"Loading_Status_Installed" = "Reading installed formulae…";
-"Loading_Status_Outdated" = "Checking what is outdated…";
-"Loading_Status_Leaves" = "Finding leaves…";
-"Loading_Status_Pinned" = "Reading pinned formulae…";
-"Loading_Status_Repositories" = "Reading taps…";
-"Loading_Status_InstalledCasks" = "Reading installed casks…";
-"Loading_Status_OutdatedCasks" = "Checking which casks are outdated…";
-"Loading_Status_AllFormulae" = "Fetching the formula catalog — this can take a minute the first time…";
-"Loading_Status_AllCasks" = "Fetching the cask catalog — this can take a minute the first time…";
-"Loading_Cancel" = "Cancel";
+"Loading_Status_Default" = "正在加载…";
+"Loading_Status_Installed" = "正在读取已安装的 formulae…";
+"Loading_Status_Outdated" = "正在检查过期项…";
+"Loading_Status_Leaves" = "正在查找独立包…";
+"Loading_Status_Pinned" = "正在读取已固定的 formulae…";
+"Loading_Status_Repositories" = "正在读取 taps…";
+"Loading_Status_InstalledCasks" = "正在读取已安装的 casks…";
+"Loading_Status_OutdatedCasks" = "正在检查过期的 casks…";
+"Loading_Status_AllFormulae" = "正在获取 formula 目录 — 首次运行可能需要一分钟…";
+"Loading_Status_AllCasks" = "正在获取 cask 目录 — 首次运行可能需要一分钟…";
+"Loading_Cancel" = "取消";
 
-"Toolbar_Cancel_Reload" = "Stop Reloading";
+"Toolbar_Cancel_Reload" = "停止重新加载";
 
 /* Debug mock notification journeys */
 "Notification Test" = "Notification Test";
@@ -363,100 +363,100 @@
 
 /* Detail values and Brewfile export errors */
 "Info_View_Empty_Value" = "--";
-"Brewfile_Export_Failed" = "Export Failed";
+"Brewfile_Export_Failed" = "导出失败";
 
 /* Homebrew discovery and recovery */
-"Try Again" = "Try Again";
-"Open brew.sh" = "Open brew.sh";
-"Checking for Homebrew…" = "Checking for Homebrew…";
-"Checking your login shell for Homebrew. This may take a moment." = "Checking your login shell for Homebrew. This may take a moment.";
-"Homebrew wasn’t found" = "Homebrew wasn’t found";
-"Cakebrew couldn’t find Homebrew in your login shell’s PATH. Open brew.sh for installation instructions, or fix your shell configuration, then choose Try Again." = "Cakebrew couldn’t find Homebrew in your login shell’s PATH. Open brew.sh for installation instructions, or fix your shell configuration, then choose Try Again.";
-"Your login shell is unavailable" = "Your login shell is unavailable";
-"Cakebrew needs an executable login shell listed in /etc/shells. Check your shell configuration, then choose Try Again. Homebrew installation instructions are available at brew.sh." = "Cakebrew needs an executable login shell listed in /etc/shells. Check your shell configuration, then choose Try Again. Homebrew installation instructions are available at brew.sh.";
-"Homebrew couldn’t be checked" = "Homebrew couldn’t be checked";
-"Your login shell didn’t return a usable Homebrew executable. Check its startup configuration and PATH, then choose Try Again. Installation instructions are available at brew.sh." = "Your login shell didn’t return a usable Homebrew executable. Check its startup configuration and PATH, then choose Try Again. Installation instructions are available at brew.sh.";
+"Try Again" = "重试";
+"Open brew.sh" = "打开 brew.sh";
+"Checking for Homebrew…" = "正在检查 Homebrew…";
+"Checking your login shell for Homebrew. This may take a moment." = "正在您的登录 shell 中检查 Homebrew。这可能需要片刻时间。";
+"Homebrew wasn’t found" = "未找到 Homebrew";
+"Cakebrew couldn’t find Homebrew in your login shell’s PATH. Open brew.sh for installation instructions, or fix your shell configuration, then choose Try Again." = "Cakebrew 未能在您登录 shell 的 PATH 中找到 Homebrew。请打开 brew.sh 查看安装说明，或修复您的 shell 配置，然后选择“重试”。";
+"Your login shell is unavailable" = "您的登录 shell 不可用";
+"Cakebrew needs an executable login shell listed in /etc/shells. Check your shell configuration, then choose Try Again. Homebrew installation instructions are available at brew.sh." = "Cakebrew 需要列在 /etc/shells 中的可执行登录 shell。请检查您的 shell 配置，然后选择“重试”。您可在 brew.sh 查看 Homebrew 安装说明。";
+"Homebrew couldn’t be checked" = "无法检查 Homebrew";
+"Your login shell didn’t return a usable Homebrew executable. Check its startup configuration and PATH, then choose Try Again. Installation instructions are available at brew.sh." = "您的登录 shell 未返回可用的 Homebrew 可执行文件。请检查其启动配置和 PATH，然后选择“重试”。您可在 brew.sh 查看安装说明。";
 /* Reviewed Brewfile import. */
-"Line %lu: unsupported syntax or invalid package name. Nothing will be installed." = "Line %lu: unsupported syntax or invalid package name. Nothing will be installed.";
-"Choose a readable UTF-8 Brewfile smaller than 1 MiB. Nothing was installed." = "Choose a readable UTF-8 Brewfile smaller than 1 MiB. Nothing was installed.";
-"%lu installed • %lu missing • %lu not checked" = "%lu installed • %lu missing • %lu not checked";
+"Line %lu: unsupported syntax or invalid package name. Nothing will be installed." = "第 %lu 行：不支持的语法或无效的包名称。不会安装任何内容。";
+"Choose a readable UTF-8 Brewfile smaller than 1 MiB. Nothing was installed." = "请选择小于 1 MiB 的可读 UTF-8 Brewfile。未安装任何内容。";
+"%lu installed • %lu missing • %lu not checked" = "%lu 已安装 • %lu 缺失 • %lu 未检查";
 "Casks" = "Casks";
-"Taps" = "Taps";
+"Taps" = "Tap 软件源";
 "Mac App Store" = "Mac App Store";
 "VS Code" = "VS Code";
-"Installed" = "Installed";
-"Missing" = "Missing";
-"Not checked" = "Not checked";
-"No supported package entries. Nothing will be installed." = "No supported package entries. Nothing will be installed.";
-"Reviewed import requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported." = "Reviewed import requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported.";
-"Review Brewfile" = "Review Brewfile";
-"Direct entries only, not a dependency or upgrade plan. Installed means present in the current inventory, not up to date. Homebrew may upgrade packages, install dependencies and required tools, and run package installation scripts. Only the reviewed literal entries will be submitted." = "Direct entries only, not a dependency or upgrade plan. Installed means present in the current inventory, not up to date. Homebrew may upgrade packages, install dependencies and required tools, and run package installation scripts. Only the reviewed literal entries will be submitted.";
-"Install Reviewed Entries" = "Install Reviewed Entries";
-"Cancel" = "Cancel";
-"Close" = "Close";
-"Import Brewfile" = "Import Brewfile";
-"Import cancelled. Some changes may already have been made." = "Import cancelled. Some changes may already have been made.";
-"Import finished." = "Import finished.";
-"Import failed. Review the output for details." = "Import failed. Review the output for details.";
-"Cancelling… Waiting for Homebrew to exit." = "Cancelling… Waiting for Homebrew to exit.";
+"Installed" = "已安装";
+"Missing" = "缺失";
+"Not checked" = "未检查";
+"No supported package entries. Nothing will be installed." = "没有受支持的包条目。不会安装任何内容。";
+"Reviewed import requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported." = "审阅导入需要标准的非沙盒版 Cakebrew 应用。不支持辅助工具传输。";
+"Review Brewfile" = "审阅 Brewfile";
+"Direct entries only, not a dependency or upgrade plan. Installed means present in the current inventory, not up to date. Homebrew may upgrade packages, install dependencies and required tools, and run package installation scripts. Only the reviewed literal entries will be submitted." = "仅包含直接条目，并非依赖项或升级计划。“已安装”表示存在于当前清单中，不代表已是最新版本。Homebrew 可能会升级软件包、安装依赖项和所需工具，并运行软件包安装脚本。仅会提交经审阅的字面条目。";
+"Install Reviewed Entries" = "安装已审阅条目";
+"Cancel" = "取消";
+"Close" = "关闭";
+"Import Brewfile" = "导入 Brewfile";
+"Import cancelled. Some changes may already have been made." = "导入已取消。部分更改可能已生效。";
+"Import finished." = "导入完成。";
+"Import failed. Review the output for details." = "导入失败。请查看输出了解详情。";
+"Cancelling… Waiting for Homebrew to exit." = "正在取消… 正在等待 Homebrew 退出。";
 "Brewfile Test" = "Brewfile Test";
 "Review Mock Brewfile" = "Review Mock Brewfile";
 
 /* Selected service details */
-"Services_Details_Title" = "Service Details";
-"Services_Details_Select" = "Select a service to view its details.";
-"Services_Details_Loading" = "Loading details for %@…";
-"Services_Details_Not_Available" = "Not available";
-"Services_Details_Format" = "Service: %@\nStatus: %@\nPID: %@    User: %@\nService file: %@\nLoaded file: %@\nLog: %@\nError log: %@\nExit code: %@";
-"Services_Details_Failed" = "Could not load service details. Homebrew reported:";
-"Services_Details_Helper_Unavailable" = "Service details are unavailable with the unsupported helper transport. The service list remains available.";
-"Services_Reveal_File" = "Reveal File";
-"Services_Open_Logs" = "Open Logs";
-"Services_Copy_Output" = "Copy Output";
-"Services_File_Unavailable" = "The file is unavailable or could not be opened.";
+"Services_Details_Title" = "服务详情";
+"Services_Details_Select" = "选择一个服务以查看其详情。";
+"Services_Details_Loading" = "正在加载 %@ 的详情…";
+"Services_Details_Not_Available" = "不可用";
+"Services_Details_Format" = "服务：%@\n状态：%@\nPID：%@    用户：%@\n服务文件：%@\n已加载文件：%@\n日志：%@\n错误日志：%@\n退出代码：%@";
+"Services_Details_Failed" = "无法加载服务详情。Homebrew 报告：";
+"Services_Details_Helper_Unavailable" = "在不受支持的辅助工具传输方式下，服务详情不可用。服务列表仍可使用。";
+"Services_Reveal_File" = "在访达中显示";
+"Services_Open_Logs" = "打开日志";
+"Services_Copy_Output" = "拷贝输出";
+"Services_File_Unavailable" = "该文件不可用或无法打开。";
 
 /* Unused dependency review */
-"Remove Unused Dependencies" = "Remove Unused Dependencies";
-"Checking unused dependencies…" = "Checking unused dependencies…";
-"Only the reviewed formulae will be submitted for removal. Homebrew will recheck its dependency rules. Do not run other Homebrew operations until this finishes: external changes cannot be checked atomically." = "Only the reviewed formulae will be submitted for removal. Homebrew will recheck its dependency rules. Do not run other Homebrew operations until this finishes: external changes cannot be checked atomically.";
-"Unused dependency preview and command output" = "Unused dependency preview and command output";
-"Remove Reviewed Dependencies" = "Remove Reviewed Dependencies";
-"Cancelled before removal. Nothing was removed." = "Cancelled before removal. Nothing was removed.";
-"The unused dependency preview could not be verified. Nothing can be removed." = "The unused dependency preview could not be verified. Nothing can be removed.";
-"No unused dependencies to remove." = "No unused dependencies to remove.";
-"Review %lu unused dependencies before removal." = "Review %lu unused dependencies before removal.";
-"Rechecking and removing reviewed dependencies…" = "Rechecking and removing reviewed dependencies…";
-"Some formula or service lists could not be refreshed. Previous values were retained; refresh again before another operation." = "Some formula or service lists could not be refreshed. Previous values were retained; refresh again before another operation.";
-"Cancelling; waiting for Homebrew to stop…" = "Cancelling; waiting for Homebrew to stop…";
-"The unused dependency list changed or could not be verified. Nothing was removed. Close this window and review a new preview." = "The unused dependency list changed or could not be verified. Nothing was removed. Close this window and review a new preview.";
-"Reviewed unused dependencies were removed." = "Reviewed unused dependencies were removed.";
-"Removal failed. Packages may have been partially removed. The formula and service lists will be refreshed." = "Removal failed. Packages may have been partially removed. The formula and service lists will be refreshed.";
-"Removal cancelled. Packages may have been partially removed. The formula and service lists will be refreshed." = "Removal cancelled. Packages may have been partially removed. The formula and service lists will be refreshed.";
-"Unused dependency removal requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported." = "Unused dependency removal requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported.";
-"\nHomebrew exit status: %d\n" = "\nHomebrew exit status: %d\n";
+"Remove Unused Dependencies" = "移除未使用的依赖项";
+"Checking unused dependencies…" = "正在检查未使用的依赖项…";
+"Only the reviewed formulae will be submitted for removal. Homebrew will recheck its dependency rules. Do not run other Homebrew operations until this finishes: external changes cannot be checked atomically." = "仅会提交经审阅的 formulae 进行移除。Homebrew 将重新检查其依赖规则。在此操作完成前，请勿运行其他 Homebrew 操作：外部更改无法进行原子化检查。";
+"Unused dependency preview and command output" = "未使用依赖项预览与命令输出";
+"Remove Reviewed Dependencies" = "移除已审阅的依赖项";
+"Cancelled before removal. Nothing was removed." = "已在移除前取消。未移除任何内容。";
+"The unused dependency preview could not be verified. Nothing can be removed." = "无法验证未使用依赖项预览。无法移除任何内容。";
+"No unused dependencies to remove." = "没有可移除的未使用依赖项。";
+"Review %lu unused dependencies before removal." = "请在移除前审阅 %lu 个未使用的依赖项。";
+"Rechecking and removing reviewed dependencies…" = "正在重新检查并移除已审阅的依赖项…";
+"Some formula or service lists could not be refreshed. Previous values were retained; refresh again before another operation." = "部分 formula 或服务列表无法刷新。已保留之前的值；请在执行其他操作前重新刷新。";
+"Cancelling; waiting for Homebrew to stop…" = "正在取消；正在等待 Homebrew 停止…";
+"The unused dependency list changed or could not be verified. Nothing was removed. Close this window and review a new preview." = "未使用依赖项列表已更改或无法验证。未移除任何内容。请关闭此窗口并审阅新的预览。";
+"Reviewed unused dependencies were removed." = "已移除经审阅的未使用依赖项。";
+"Removal failed. Packages may have been partially removed. The formula and service lists will be refreshed." = "移除失败。部分软件包可能已被移除。将刷新 formula 和服务列表。";
+"Removal cancelled. Packages may have been partially removed. The formula and service lists will be refreshed." = "移除已取消。部分软件包可能已被移除。将刷新 formula 和服务列表。";
+"Unused dependency removal requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported." = "移除未使用的依赖项需要标准的非沙盒版 Cakebrew 应用。不支持辅助工具传输。";
+"\nHomebrew exit status: %d\n" = "\nHomebrew 退出状态：%d\n";
 
-"Homebrew could not export the Brewfile. Check the destination and try again." = "Homebrew could not export the Brewfile. Check the destination and try again.";
+"Homebrew could not export the Brewfile. Check the destination and try again." = "Homebrew 无法导出 Brewfile。请检查目标位置并重试。";
 
 "Complete Mock Catalog" = "Complete Mock Catalog";
 
 /* Exact-snapshot Upgrade All */
-"Updates_Confirm_Title" = "Upgrade all available updates?";
-"Updates_Confirm_Action" = "Upgrade";
-"Updates_Formula_Targets" = "Formulae: %@";
-"Updates_Cask_Targets" = "Casks: %@";
-"Updates_Pinned_Formula_Exclusions" = "Pinned formulae will be skipped: %@";
-"Updates_Pinned_Cask_Exclusions" = "Pinned Casks will be skipped: %@";
-"Updates_Changed_Title" = "Updates changed";
-"Updates_Changed_Body" = "The update inventory changed while you reviewed it. Choose Upgrade All Updates again to review the current targets.";
-"Updates_Command_Succeeded" = "Command succeeded: brew %@";
-"Updates_Command_Failed" = "Command failed; some packages may have changed: brew %@";
-"Updates_Command_Cancelled" = "Command cancelled; some packages may have changed: brew %@";
-"Updates_Command_Unattempted" = "Command not attempted: brew %@";
-"Updates_Task_Cancelled" = "Homebrew task cancelled";
-"Updates_Review_Body" = "Review the exact targets below. Pinned items are excluded.";
-"Updates_Review_Targets" = "Update targets and pinned exclusions";
-"Updates_Cancelling" = "Cancelling… Waiting for the active command to finish.";
+"Updates_Confirm_Title" = "要升级所有可用更新吗？";
+"Updates_Confirm_Action" = "升级";
+"Updates_Formula_Targets" = "Formulae：%@";
+"Updates_Cask_Targets" = "Casks：%@";
+"Updates_Pinned_Formula_Exclusions" = "将跳过已固定的 formulae：%@";
+"Updates_Pinned_Cask_Exclusions" = "将跳过已固定的 Casks：%@";
+"Updates_Changed_Title" = "更新列表已更改";
+"Updates_Changed_Body" = "在您审阅期间，更新清单已发生更改。请再次选择“升级全部过期项”以审阅当前目标。";
+"Updates_Command_Succeeded" = "命令成功：brew %@";
+"Updates_Command_Failed" = "命令失败；部分软件包可能已更改：brew %@";
+"Updates_Command_Cancelled" = "命令已取消；部分软件包可能已更改：brew %@";
+"Updates_Command_Unattempted" = "未尝试执行命令：brew %@";
+"Updates_Task_Cancelled" = "Homebrew 任务已取消";
+"Updates_Review_Body" = "请审阅下方的确切更新目标。已固定的项目已被排除。";
+"Updates_Review_Targets" = "更新目标与已固定的排除项";
+"Updates_Cancelling" = "正在取消… 正在等待当前命令完成。";
 
 /* Package information popover */
-"Information_Title" = "Information for %@";
-"Information_Unavailable" = "No information is available for this package.";
+"Information_Title" = "%@ 的信息";
+"Information_Unavailable" = "此软件包没有可用信息。";
