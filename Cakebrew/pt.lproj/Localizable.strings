@@ -146,7 +146,7 @@
 "Message_Untap_Body" = "Tem certeza que deseja remover o repositório '%@'?";
 
 /* No comment provided by engineer. */
-"Message_Untap_Title" = "Untapping Repository";
+"Message_Untap_Title" = "Removendo Repositório";
 
 /* No comment provided by engineer. */
 "Message_Update_All_Outdated_Body" = "Tem certeza que deseja atualizar todas as fórmulas e casks desatualizados?";
@@ -161,7 +161,7 @@
 "Message_Update_Formulae_Title" = "Atualizando Fórmulas";
 
 /* (No Commment) */
-"Notification_Doctor" = "Homebrew Doctor";
+"Notification_Doctor" = "Doutor do Homebrew";
 
 /* No comment provided by engineer. */
 "Notification_Update" = "Atualizar Homebrew";
@@ -239,7 +239,7 @@
 "Sidebar_Item_Leaves" = "Folhas";
 "Sidebar_Item_Pinned" = "Fixadas";
 "Sidebar_Item_Services" = "Serviços";
-"Sidebar_Item_AllCasks" = "All Casks";
+"Sidebar_Item_AllCasks" = "Todos os Casks";
 
 /* No comment provided by engineer. */
 "Sidebar_Item_Outdated" = "Desatualizadas";
@@ -298,67 +298,67 @@
 "Services_Operation_Failed_Title" = "Não foi possível alterar o serviço “%@”";
 "Error_Brew_Failed_No_Output" = "O Homebrew terminou com o estado %d e não produziu saída.";
 "Installation_Window_Cancelled" = "Cancelado.";
-"Empty_Search_Title" = "No Results";
-"Empty_Search_Message" = "No formula or cask matches your search.";
-"Empty_Outdated_Title" = "Everything Is Up to Date";
-"Empty_Outdated_Message" = "None of your installed formulae have a newer version available.";
-"Empty_OutdatedCasks_Title" = "Everything Is Up to Date";
-"Empty_OutdatedCasks_Message" = "None of your installed casks have a newer version available.";
-"Empty_Pinned_Title" = "No Pinned Formulae";
-"Empty_Pinned_Message" = "Pinning a formula holds it at its installed version, so upgrades skip it.";
-"Empty_Services_Title" = "No Services";
-"Empty_Services_Message" = "Formulae that run in the background, like databases, appear here once installed.";
-"Empty_Casks_Title" = "No Casks Installed";
-"Empty_Casks_Message" = "Casks are applications installed through Homebrew.";
-"Empty_Leaves_Title" = "No Leaves";
-"Empty_Leaves_Message" = "Leaves are formulae installed on their own, not as a dependency of something else.";
-"Empty_Generic_Title" = "Nothing Here";
-"Empty_Generic_Message" = "This list has no items.";
-"Sidebar_VoiceOver_Badge_Count" = "%@ items";
-"Sidebar_VoiceOver_Sidebar" = "Sidebar";
-"Detail_VoiceOver_Description" = "Description";
-"Detail_VoiceOver_Installed" = "Installed";
-"Detail_VoiceOver_Version" = "Version";
-"Detail_VoiceOver_Dependencies" = "Dependencies";
-"Detail_VoiceOver_Conflicts" = "Conflicts";
-"Detail_VoiceOver_RequiredBy" = "Required by";
-"VoiceOver_Operation_Progress" = "Operation in progress";
-"VoiceOver_Operation_Finished" = "Operation finished";
+"Empty_Search_Title" = "Sem Resultados";
+"Empty_Search_Message" = "Nenhuma fórmula ou cask corresponde à sua pesquisa.";
+"Empty_Outdated_Title" = "Tudo Atualizado";
+"Empty_Outdated_Message" = "Nenhuma das fórmulas instaladas tem uma versão mais recente disponível.";
+"Empty_OutdatedCasks_Title" = "Tudo Atualizado";
+"Empty_OutdatedCasks_Message" = "Nenhum dos casks instalados tem uma versão mais recente disponível.";
+"Empty_Pinned_Title" = "Sem Fórmulas Fixadas";
+"Empty_Pinned_Message" = "Fixar uma fórmula mantém a versão instalada, ignorando-a nas atualizações.";
+"Empty_Services_Title" = "Sem Serviços";
+"Empty_Services_Message" = "As fórmulas executadas em segundo plano, como bases de dados, aparecem aqui depois de instaladas.";
+"Empty_Casks_Title" = "Sem Casks Instalados";
+"Empty_Casks_Message" = "Os casks são aplicações instaladas através do Homebrew.";
+"Empty_Leaves_Title" = "Sem Folhas";
+"Empty_Leaves_Message" = "As folhas são fórmulas instaladas individualmente, e não como dependência de outro pacote.";
+"Empty_Generic_Title" = "Nada Aqui";
+"Empty_Generic_Message" = "Esta lista não tem itens.";
+"Sidebar_VoiceOver_Badge_Count" = "%@ itens";
+"Sidebar_VoiceOver_Sidebar" = "Barra lateral";
+"Detail_VoiceOver_Description" = "Descrição";
+"Detail_VoiceOver_Installed" = "Instalado";
+"Detail_VoiceOver_Version" = "Versão";
+"Detail_VoiceOver_Dependencies" = "Dependências";
+"Detail_VoiceOver_Conflicts" = "Conflitos";
+"Detail_VoiceOver_RequiredBy" = "Requerido por";
+"VoiceOver_Operation_Progress" = "Operação em curso";
+"VoiceOver_Operation_Finished" = "Operação concluída";
 
 /* Cleanup preview — brew cleanup --dry-run before deleting anything */
-"Cleanup_Nothing_Title" = "Nothing to Clean Up";
-"Cleanup_Nothing_Body" = "Homebrew has no cached downloads or outdated versions to remove.";
-"Cleanup_Item_Count_One" = "1 item";
-"Cleanup_Item_Count_Other" = "%lu items";
-"Confirmation_Cleanup" = "Homebrew will permanently remove %1$@, freeing about %2$@. This cannot be undone.";
-"Confirmation_Cleanup_No_Size" = "Homebrew will permanently remove %@. This cannot be undone.";
+"Cleanup_Nothing_Title" = "Nada para Limpar";
+"Cleanup_Nothing_Body" = "O Homebrew não tem transferências em cache nem versões antigas para remover.";
+"Cleanup_Item_Count_One" = "1 elemento";
+"Cleanup_Item_Count_Other" = "%lu elementos";
+"Confirmation_Cleanup" = "O Homebrew irá remover permanentemente %1$@, libertando cerca de %2$@. Esta ação não pode ser desfeita.";
+"Confirmation_Cleanup_No_Size" = "O Homebrew irá remover permanentemente %@. Esta ação não pode ser desfeita.";
 
 /* Dock menu */
-"Dock_Check_For_Updates" = "Check for Updates";
-"Dock_Upgrade_All_Outdated" = "Upgrade All Outdated";
-"Dock_Show_Outdated" = "Show Outdated Formulae";
+"Dock_Check_For_Updates" = "Procurar Atualizações";
+"Dock_Upgrade_All_Outdated" = "Atualizar Todos os Desatualizados";
+"Dock_Show_Outdated" = "Mostrar Fórmulas Desatualizadas";
 
 "Sidebar_VoiceOver_Separator" = ", ";
 
 /* Opening a Brewfile from Finder, or dropping one on the app */
-"Confirmation_Import_Brewfile" = "Install everything listed in “%@”? Homebrew will install any formulae and casks it names that are not already installed.";
-"Brewfile_Not_Recognized_Title" = "Not a Brewfile";
-"Brewfile_Not_Recognized_Body" = "“%@” is not named Brewfile, so Cakebrew will not run brew bundle against it.";
+"Confirmation_Import_Brewfile" = "Instalar tudo o que está listado em “%@”? O Homebrew instalará quaisquer fórmulas e casks indicados que ainda não estejam instalados.";
+"Brewfile_Not_Recognized_Title" = "Não é um Brewfile";
+"Brewfile_Not_Recognized_Body" = "“%@” não tem o nome Brewfile, pelo que o Cakebrew não executará o brew bundle nele.";
 
 /* Loading overlay — which step of the reload is running */
-"Loading_Status_Default" = "Loading…";
-"Loading_Status_Installed" = "Reading installed formulae…";
-"Loading_Status_Outdated" = "Checking what is outdated…";
-"Loading_Status_Leaves" = "Finding leaves…";
-"Loading_Status_Pinned" = "Reading pinned formulae…";
-"Loading_Status_Repositories" = "Reading taps…";
-"Loading_Status_InstalledCasks" = "Reading installed casks…";
-"Loading_Status_OutdatedCasks" = "Checking which casks are outdated…";
-"Loading_Status_AllFormulae" = "Fetching the formula catalog — this can take a minute the first time…";
-"Loading_Status_AllCasks" = "Fetching the cask catalog — this can take a minute the first time…";
-"Loading_Cancel" = "Cancel";
+"Loading_Status_Default" = "A carregar…";
+"Loading_Status_Installed" = "A ler fórmulas instaladas…";
+"Loading_Status_Outdated" = "A verificar o que está desatualizado…";
+"Loading_Status_Leaves" = "A procurar folhas…";
+"Loading_Status_Pinned" = "A ler fórmulas fixadas…";
+"Loading_Status_Repositories" = "A ler taps…";
+"Loading_Status_InstalledCasks" = "A ler casks instalados…";
+"Loading_Status_OutdatedCasks" = "A verificar que casks estão desatualizados…";
+"Loading_Status_AllFormulae" = "A obter o catálogo de fórmulas — isto pode demorar um minuto da primeira vez…";
+"Loading_Status_AllCasks" = "A obter o catálogo de casks — isto pode demorar um minuto da primeira vez…";
+"Loading_Cancel" = "Cancelar";
 
-"Toolbar_Cancel_Reload" = "Stop Reloading";
+"Toolbar_Cancel_Reload" = "Parar Recarregamento";
 
 /* Debug mock notification journeys */
 "Notification Test" = "Notification Test";
@@ -369,100 +369,100 @@
 
 /* Detail values and Brewfile export errors */
 "Info_View_Empty_Value" = "--";
-"Brewfile_Export_Failed" = "Export Failed";
+"Brewfile_Export_Failed" = "Falha ao Exportar";
 
 /* Homebrew discovery and recovery */
-"Try Again" = "Try Again";
-"Open brew.sh" = "Open brew.sh";
-"Checking for Homebrew…" = "Checking for Homebrew…";
-"Checking your login shell for Homebrew. This may take a moment." = "Checking your login shell for Homebrew. This may take a moment.";
-"Homebrew wasn’t found" = "Homebrew wasn’t found";
-"Cakebrew couldn’t find Homebrew in your login shell’s PATH. Open brew.sh for installation instructions, or fix your shell configuration, then choose Try Again." = "Cakebrew couldn’t find Homebrew in your login shell’s PATH. Open brew.sh for installation instructions, or fix your shell configuration, then choose Try Again.";
-"Your login shell is unavailable" = "Your login shell is unavailable";
-"Cakebrew needs an executable login shell listed in /etc/shells. Check your shell configuration, then choose Try Again. Homebrew installation instructions are available at brew.sh." = "Cakebrew needs an executable login shell listed in /etc/shells. Check your shell configuration, then choose Try Again. Homebrew installation instructions are available at brew.sh.";
-"Homebrew couldn’t be checked" = "Homebrew couldn’t be checked";
-"Your login shell didn’t return a usable Homebrew executable. Check its startup configuration and PATH, then choose Try Again. Installation instructions are available at brew.sh." = "Your login shell didn’t return a usable Homebrew executable. Check its startup configuration and PATH, then choose Try Again. Installation instructions are available at brew.sh.";
+"Try Again" = "Tentar Novamente";
+"Open brew.sh" = "Abrir brew.sh";
+"Checking for Homebrew…" = "A procurar o Homebrew…";
+"Checking your login shell for Homebrew. This may take a moment." = "A procurar o Homebrew na sua shell de início de sessão. Isto pode demorar um momento.";
+"Homebrew wasn’t found" = "O Homebrew não foi encontrado";
+"Cakebrew couldn’t find Homebrew in your login shell’s PATH. Open brew.sh for installation instructions, or fix your shell configuration, then choose Try Again." = "O Cakebrew não encontrou o Homebrew no PATH da sua shell de início de sessão. Abra brew.sh para ver as instruções de instalação ou corrija a configuração da shell e, em seguida, escolha Tentar Novamente.";
+"Your login shell is unavailable" = "A sua shell de início de sessão está indisponível";
+"Cakebrew needs an executable login shell listed in /etc/shells. Check your shell configuration, then choose Try Again. Homebrew installation instructions are available at brew.sh." = "O Cakebrew precisa de uma shell de início de sessão executável listada em /etc/shells. Verifique a configuração da sua shell e, em seguida, escolha Tentar Novamente. As instruções de instalação do Homebrew estão disponíveis em brew.sh.";
+"Homebrew couldn’t be checked" = "Não foi possível verificar o Homebrew";
+"Your login shell didn’t return a usable Homebrew executable. Check its startup configuration and PATH, then choose Try Again. Installation instructions are available at brew.sh." = "A sua shell de início de sessão não devolveu um executável do Homebrew utilizável. Verifique a configuração de arranque e o PATH e, em seguida, escolha Tentar Novamente. As instruções de instalação estão disponíveis em brew.sh.";
 /* Reviewed Brewfile import. */
-"Line %lu: unsupported syntax or invalid package name. Nothing will be installed." = "Line %lu: unsupported syntax or invalid package name. Nothing will be installed.";
-"Choose a readable UTF-8 Brewfile smaller than 1 MiB. Nothing was installed." = "Choose a readable UTF-8 Brewfile smaller than 1 MiB. Nothing was installed.";
-"%lu installed • %lu missing • %lu not checked" = "%lu installed • %lu missing • %lu not checked";
+"Line %lu: unsupported syntax or invalid package name. Nothing will be installed." = "Linha %lu: sintaxe não suportada ou nome de pacote inválido. Nada será instalado.";
+"Choose a readable UTF-8 Brewfile smaller than 1 MiB. Nothing was installed." = "Escolha um Brewfile UTF-8 legível com menos de 1 MiB. Nada foi instalado.";
+"%lu installed • %lu missing • %lu not checked" = "%lu instalados • %lu em falta • %lu não verificados";
 "Casks" = "Casks";
-"Taps" = "Taps";
+"Taps" = "Repositórios (Taps)";
 "Mac App Store" = "Mac App Store";
 "VS Code" = "VS Code";
-"Installed" = "Installed";
-"Missing" = "Missing";
-"Not checked" = "Not checked";
-"No supported package entries. Nothing will be installed." = "No supported package entries. Nothing will be installed.";
-"Reviewed import requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported." = "Reviewed import requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported.";
-"Review Brewfile" = "Review Brewfile";
-"Direct entries only, not a dependency or upgrade plan. Installed means present in the current inventory, not up to date. Homebrew may upgrade packages, install dependencies and required tools, and run package installation scripts. Only the reviewed literal entries will be submitted." = "Direct entries only, not a dependency or upgrade plan. Installed means present in the current inventory, not up to date. Homebrew may upgrade packages, install dependencies and required tools, and run package installation scripts. Only the reviewed literal entries will be submitted.";
-"Install Reviewed Entries" = "Install Reviewed Entries";
-"Cancel" = "Cancel";
-"Close" = "Close";
-"Import Brewfile" = "Import Brewfile";
-"Import cancelled. Some changes may already have been made." = "Import cancelled. Some changes may already have been made.";
-"Import finished." = "Import finished.";
-"Import failed. Review the output for details." = "Import failed. Review the output for details.";
-"Cancelling… Waiting for Homebrew to exit." = "Cancelling… Waiting for Homebrew to exit.";
+"Installed" = "Instalado";
+"Missing" = "Em falta";
+"Not checked" = "Não verificado";
+"No supported package entries. Nothing will be installed." = "Nenhuma entrada de pacote suportada. Nada será instalado.";
+"Reviewed import requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported." = "A importação revista requer a aplicação Cakebrew padrão sem sandbox. O transporte por auxiliar não é suportado.";
+"Review Brewfile" = "Rever Brewfile";
+"Direct entries only, not a dependency or upgrade plan. Installed means present in the current inventory, not up to date. Homebrew may upgrade packages, install dependencies and required tools, and run package installation scripts. Only the reviewed literal entries will be submitted." = "Apenas entradas diretas, não um plano de dependências ou de atualização. Instalado significa presente no inventário atual, não necessariamente atualizado. O Homebrew pode atualizar pacotes, instalar dependências e ferramentas necessárias e executar scripts de instalação de pacotes. Apenas as entradas literais revistas serão submetidas.";
+"Install Reviewed Entries" = "Instalar Entradas Revistas";
+"Cancel" = "Cancelar";
+"Close" = "Fechar";
+"Import Brewfile" = "Importar Brewfile";
+"Import cancelled. Some changes may already have been made." = "Importação cancelada. Algumas alterações podem já ter sido feitas.";
+"Import finished." = "Importação concluída.";
+"Import failed. Review the output for details." = "A importação falhou. Consulte a saída para mais detalhes.";
+"Cancelling… Waiting for Homebrew to exit." = "A cancelar… A aguardar que o Homebrew termine.";
 "Brewfile Test" = "Brewfile Test";
 "Review Mock Brewfile" = "Review Mock Brewfile";
 
 /* Selected service details */
-"Services_Details_Title" = "Service Details";
-"Services_Details_Select" = "Select a service to view its details.";
-"Services_Details_Loading" = "Loading details for %@…";
-"Services_Details_Not_Available" = "Not available";
-"Services_Details_Format" = "Service: %@\nStatus: %@\nPID: %@    User: %@\nService file: %@\nLoaded file: %@\nLog: %@\nError log: %@\nExit code: %@";
-"Services_Details_Failed" = "Could not load service details. Homebrew reported:";
-"Services_Details_Helper_Unavailable" = "Service details are unavailable with the unsupported helper transport. The service list remains available.";
-"Services_Reveal_File" = "Reveal File";
-"Services_Open_Logs" = "Open Logs";
-"Services_Copy_Output" = "Copy Output";
-"Services_File_Unavailable" = "The file is unavailable or could not be opened.";
+"Services_Details_Title" = "Detalhes do Serviço";
+"Services_Details_Select" = "Selecione um serviço para ver os seus detalhes.";
+"Services_Details_Loading" = "A carregar detalhes de %@…";
+"Services_Details_Not_Available" = "Indisponível";
+"Services_Details_Format" = "Serviço: %@\nEstado: %@\nPID: %@    Utilizador: %@\nFicheiro do serviço: %@\nFicheiro carregado: %@\nRegisto: %@\nRegisto de erros: %@\nCódigo de saída: %@";
+"Services_Details_Failed" = "Não foi possível carregar os detalhes do serviço. O Homebrew comunicou:";
+"Services_Details_Helper_Unavailable" = "Os detalhes do serviço estão indisponíveis com o transporte por auxiliar não suportado. A lista de serviços permanece disponível.";
+"Services_Reveal_File" = "Mostrar Ficheiro";
+"Services_Open_Logs" = "Abrir Registos";
+"Services_Copy_Output" = "Copiar Saída";
+"Services_File_Unavailable" = "O ficheiro está indisponível ou não pôde ser aberto.";
 
 /* Unused dependency review */
-"Remove Unused Dependencies" = "Remove Unused Dependencies";
-"Checking unused dependencies…" = "Checking unused dependencies…";
-"Only the reviewed formulae will be submitted for removal. Homebrew will recheck its dependency rules. Do not run other Homebrew operations until this finishes: external changes cannot be checked atomically." = "Only the reviewed formulae will be submitted for removal. Homebrew will recheck its dependency rules. Do not run other Homebrew operations until this finishes: external changes cannot be checked atomically.";
-"Unused dependency preview and command output" = "Unused dependency preview and command output";
-"Remove Reviewed Dependencies" = "Remove Reviewed Dependencies";
-"Cancelled before removal. Nothing was removed." = "Cancelled before removal. Nothing was removed.";
-"The unused dependency preview could not be verified. Nothing can be removed." = "The unused dependency preview could not be verified. Nothing can be removed.";
-"No unused dependencies to remove." = "No unused dependencies to remove.";
-"Review %lu unused dependencies before removal." = "Review %lu unused dependencies before removal.";
-"Rechecking and removing reviewed dependencies…" = "Rechecking and removing reviewed dependencies…";
-"Some formula or service lists could not be refreshed. Previous values were retained; refresh again before another operation." = "Some formula or service lists could not be refreshed. Previous values were retained; refresh again before another operation.";
-"Cancelling; waiting for Homebrew to stop…" = "Cancelling; waiting for Homebrew to stop…";
-"The unused dependency list changed or could not be verified. Nothing was removed. Close this window and review a new preview." = "The unused dependency list changed or could not be verified. Nothing was removed. Close this window and review a new preview.";
-"Reviewed unused dependencies were removed." = "Reviewed unused dependencies were removed.";
-"Removal failed. Packages may have been partially removed. The formula and service lists will be refreshed." = "Removal failed. Packages may have been partially removed. The formula and service lists will be refreshed.";
-"Removal cancelled. Packages may have been partially removed. The formula and service lists will be refreshed." = "Removal cancelled. Packages may have been partially removed. The formula and service lists will be refreshed.";
-"Unused dependency removal requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported." = "Unused dependency removal requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported.";
-"\nHomebrew exit status: %d\n" = "\nHomebrew exit status: %d\n";
+"Remove Unused Dependencies" = "Remover Dependências Não Utilizadas";
+"Checking unused dependencies…" = "A verificar dependências não utilizadas…";
+"Only the reviewed formulae will be submitted for removal. Homebrew will recheck its dependency rules. Do not run other Homebrew operations until this finishes: external changes cannot be checked atomically." = "Apenas as fórmulas revistas serão submetidas para remoção. O Homebrew voltará a verificar as regras de dependências. Não execute outras operações do Homebrew até isto terminar: alterações externas não podem ser verificadas atomicamente.";
+"Unused dependency preview and command output" = "Pré-visualização de dependências não utilizadas e saída do comando";
+"Remove Reviewed Dependencies" = "Remover Dependências Revistas";
+"Cancelled before removal. Nothing was removed." = "Cancelado antes da remoção. Nada foi removido.";
+"The unused dependency preview could not be verified. Nothing can be removed." = "Não foi possível verificar a pré-visualização de dependências não utilizadas. Nada pode ser removido.";
+"No unused dependencies to remove." = "Não há dependências não utilizadas para remover.";
+"Review %lu unused dependencies before removal." = "Reveja %lu dependências não utilizadas antes da remoção.";
+"Rechecking and removing reviewed dependencies…" = "A verificar novamente e a remover as dependências revistas…";
+"Some formula or service lists could not be refreshed. Previous values were retained; refresh again before another operation." = "Não foi possível atualizar algumas listas de fórmulas ou serviços. Os valores anteriores foram mantidos; atualize novamente antes de outra operação.";
+"Cancelling; waiting for Homebrew to stop…" = "A cancelar; a aguardar que o Homebrew pare…";
+"The unused dependency list changed or could not be verified. Nothing was removed. Close this window and review a new preview." = "A lista de dependências não utilizadas foi alterada ou não pôde ser verificada. Nada foi removido. Feche esta janela e reveja uma nova pré-visualização.";
+"Reviewed unused dependencies were removed." = "As dependências não utilizadas revistas foram removidas.";
+"Removal failed. Packages may have been partially removed. The formula and service lists will be refreshed." = "A remoção falhou. Os pacotes podem ter sido parcialmente removidos. As listas de fórmulas e serviços serão atualizadas.";
+"Removal cancelled. Packages may have been partially removed. The formula and service lists will be refreshed." = "Remoção cancelada. Os pacotes podem ter sido parcialmente removidos. As listas de fórmulas e serviços serão atualizadas.";
+"Unused dependency removal requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported." = "A remoção de dependências não utilizadas requer a aplicação Cakebrew padrão sem sandbox. O transporte por auxiliar não é suportado.";
+"\nHomebrew exit status: %d\n" = "\nEstado de saída do Homebrew: %d\n";
 
-"Homebrew could not export the Brewfile. Check the destination and try again." = "Homebrew could not export the Brewfile. Check the destination and try again.";
+"Homebrew could not export the Brewfile. Check the destination and try again." = "O Homebrew não conseguiu exportar o Brewfile. Verifique o destino e tente novamente.";
 
 "Complete Mock Catalog" = "Complete Mock Catalog";
 
 /* Exact-snapshot Upgrade All */
-"Updates_Confirm_Title" = "Upgrade all available updates?";
-"Updates_Confirm_Action" = "Upgrade";
-"Updates_Formula_Targets" = "Formulae: %@";
-"Updates_Cask_Targets" = "Casks: %@";
-"Updates_Pinned_Formula_Exclusions" = "Pinned formulae will be skipped: %@";
-"Updates_Pinned_Cask_Exclusions" = "Pinned Casks will be skipped: %@";
-"Updates_Changed_Title" = "Updates changed";
-"Updates_Changed_Body" = "The update inventory changed while you reviewed it. Choose Upgrade All Updates again to review the current targets.";
-"Updates_Command_Succeeded" = "Command succeeded: brew %@";
-"Updates_Command_Failed" = "Command failed; some packages may have changed: brew %@";
-"Updates_Command_Cancelled" = "Command cancelled; some packages may have changed: brew %@";
-"Updates_Command_Unattempted" = "Command not attempted: brew %@";
-"Updates_Task_Cancelled" = "Homebrew task cancelled";
-"Updates_Review_Body" = "Review the exact targets below. Pinned items are excluded.";
-"Updates_Review_Targets" = "Update targets and pinned exclusions";
-"Updates_Cancelling" = "Cancelling… Waiting for the active command to finish.";
+"Updates_Confirm_Title" = "Atualizar todas as atualizações disponíveis?";
+"Updates_Confirm_Action" = "Atualizar";
+"Updates_Formula_Targets" = "Fórmulas: %@";
+"Updates_Cask_Targets" = "Casks (aplicações): %@";
+"Updates_Pinned_Formula_Exclusions" = "As fórmulas fixadas serão ignoradas: %@";
+"Updates_Pinned_Cask_Exclusions" = "Os Casks fixados serão ignorados: %@";
+"Updates_Changed_Title" = "As atualizações mudaram";
+"Updates_Changed_Body" = "O inventário de atualizações mudou enquanto o revia. Escolha Atualizar Todos os Desatualizados novamente para rever os alvos atuais.";
+"Updates_Command_Succeeded" = "Comando concluído com êxito: brew %@";
+"Updates_Command_Failed" = "O comando falhou; alguns pacotes podem ter mudado: brew %@";
+"Updates_Command_Cancelled" = "Comando cancelado; alguns pacotes podem ter mudado: brew %@";
+"Updates_Command_Unattempted" = "Comando não executado: brew %@";
+"Updates_Task_Cancelled" = "Tarefa do Homebrew cancelada";
+"Updates_Review_Body" = "Reveja os alvos exatos abaixo. Os itens fixados estão excluídos.";
+"Updates_Review_Targets" = "Alvos de atualização e exclusões fixadas";
+"Updates_Cancelling" = "A cancelar… A aguardar que o comando ativo termine.";
 
 /* Package information popover */
-"Information_Title" = "Information for %@";
-"Information_Unavailable" = "No information is available for this package.";
+"Information_Title" = "Informações sobre %@";
+"Information_Unavailable" = "Não existem informações disponíveis para este pacote.";

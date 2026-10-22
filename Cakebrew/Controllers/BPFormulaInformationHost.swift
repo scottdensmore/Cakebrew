@@ -463,6 +463,11 @@ public final class BPInstalledPackageListHost: NSObject {
         presentation.state.selectedRow?.cask ?? false
     }
 
+    @objc public var listMode: Int {
+        get { presentation.state.mode.rawValue }
+        set { presentation.state.setMode(BPPackageListMode(rawMode: newValue)) }
+    }
+
     public override init() {
         let presentation = self.presentation
         let coordinator = BPInstalledTableBridgeCoordinator(presentation: presentation)
@@ -514,6 +519,40 @@ public final class BPInstalledPackageListHost: NSObject {
         }
     }
 
+    @objc(updateRowsWithNames:versions:latestVersions:statusRanks:pinnedFlags:caskFlags:mode:)
+    public func updateRows(names: [String],
+                           versions: [String],
+                           latestVersions: [String],
+                           statusRanks: [NSNumber],
+                           pinnedFlags: [NSNumber],
+                           caskFlags: [NSNumber],
+                           mode rawMode: Int) {
+        let resolvedMode = BPPackageListMode(rawMode: rawMode)
+        let count = names.count
+        var rows: [BPInstalledPackageRow] = []
+        rows.reserveCapacity(count)
+        for index in 0..<count {
+            let version = index < versions.count ? versions[index] : ""
+            let latest = index < latestVersions.count ? latestVersions[index] : ""
+            let rank = index < statusRanks.count ? statusRanks[index].intValue : 1
+            let pinned = index < pinnedFlags.count ? pinnedFlags[index].boolValue : false
+            let cask = index < caskFlags.count ? caskFlags[index].boolValue : resolvedMode.isCaskMode
+            rows.append(BPInstalledPackageRow(
+                name: names[index],
+                cask: cask,
+                version: version,
+                latestVersion: latest,
+                statusRank: rank,
+                isPinned: pinned))
+        }
+        let previousSelection = presentation.state.selectedID
+        presentation.state.replaceRows(rows, mode: resolvedMode)
+        syncUnderlyingTableSelection()
+        if presentation.state.selectedID != previousSelection {
+            presentation.notifySelectionChanged()
+        }
+    }
+
     @objc(applySortColumnIdentifier:ascending:)
     public func applySort(columnIdentifier: String?, ascending: Bool) {
         guard let columnIdentifier,
@@ -527,8 +566,12 @@ public final class BPInstalledPackageListHost: NSObject {
         switch column {
         case .name:
             presentation.sortOrder = [KeyPathComparator(\BPInstalledPackageRow.name, order: order)]
-        case .version, .latestVersion, .status:
+        case .version:
             presentation.sortOrder = [KeyPathComparator(\BPInstalledPackageRow.version, order: order)]
+        case .latestVersion:
+            presentation.sortOrder = [KeyPathComparator(\BPInstalledPackageRow.latestVersion, order: order)]
+        case .status:
+            presentation.sortOrder = [KeyPathComparator(\BPInstalledPackageRow.statusRank, order: order)]
         }
     }
 
@@ -836,34 +879,431 @@ private struct BPInstalledPackageListView: View {
                 presentation.sortOrder = newOrder
                 guard let first = newOrder.first else { return }
                 let ascending = (first.order == .forward)
-                let column: BPInstalledPackageSortColumn = (first.keyPath == \BPInstalledPackageRow.name) ? .name : .version
+                let column: BPInstalledPackageSortColumn
+                if first.keyPath == \BPInstalledPackageRow.name {
+                    column = .name
+                } else if first.keyPath == \BPInstalledPackageRow.latestVersion {
+                    column = .latestVersion
+                } else if first.keyPath == \BPInstalledPackageRow.statusRank {
+                    column = .status
+                } else {
+                    column = .version
+                }
                 presentation.state.setSort(column: column, ascending: ascending)
                 presentation.onSortChanged?(column.rawValue, ascending)
             }
         )
     }
 
-    var body: some View {
-        Table(presentation.state.displayedRows, selection: selectionBinding, sortOrder: sortOrderBinding) {
-            TableColumn(BPMainMenuLocalizedTitle("A78-TI-Q8X.headerCell.title", fallback: "Name"), value: \.name) { row in
-                HStack(spacing: 4) {
-                    Text(row.name)
+    @ViewBuilder
+    private func nameCell(_ row: BPInstalledPackageRow) -> some View {
+        HStack(spacing: 4) {
+            Text(row.name)
+                .lineLimit(1)
+                .accessibilityValue(row.name)
+                .accessibilityIdentifier("package.row.\(row.name)")
+            if row.isPinned {
+                Image(systemName: "pin.fill")
+                    .font(.system(size: NSFont.smallSystemFontSize))
+                    .accessibilityLabel(NSLocalizedString("Sidebar_Item_Pinned", comment: ""))
+            }
+        }
+    }
+
+    private func statusText(for statusRank: Int) -> String {
+        switch statusRank {
+        case 1:
+            return NSLocalizedString("Formula_Status_Installed", comment: "")
+        case 2:
+            return NSLocalizedString("Formula_Status_Outdated", comment: "")
+        default:
+            return NSLocalizedString("Formula_Status_Not_Installed", comment: "")
+        }
+    }
+
+    @ViewBuilder
+    private var modeTable: some View {
+        let mode = presentation.state.mode
+        if !mode.showsVersionColumn {
+            Table(presentation.state.displayedRows, selection: selectionBinding, sortOrder: sortOrderBinding) {
+                TableColumn(BPMainMenuLocalizedTitle("A78-TI-Q8X.headerCell.title", fallback: "Name"), value: \.name) { row in
+                    nameCell(row)
+                }
+            }
+        } else if mode.showsLatestVersionColumn {
+            Table(presentation.state.displayedRows, selection: selectionBinding, sortOrder: sortOrderBinding) {
+                TableColumn(BPMainMenuLocalizedTitle("A78-TI-Q8X.headerCell.title", fallback: "Name"), value: \.name) { row in
+                    nameCell(row)
+                }
+                TableColumn(BPMainMenuLocalizedTitle("h5d-xc-Jih.headerCell.title", fallback: "Version"), value: \.version) { row in
+                    Text(row.version)
                         .lineLimit(1)
-                        .accessibilityValue(row.name)
-                        .accessibilityIdentifier("package.row.\(row.name)")
+                }
+                TableColumn(BPMainMenuLocalizedTitle("d93-10-421.headerCell.title", fallback: "Latest Version"), value: \.latestVersion) { row in
+                    Text(row.latestVersion)
+                        .lineLimit(1)
+                }
+            }
+        } else if mode.showsStatusColumn {
+            Table(presentation.state.displayedRows, selection: selectionBinding, sortOrder: sortOrderBinding) {
+                TableColumn(BPMainMenuLocalizedTitle("A78-TI-Q8X.headerCell.title", fallback: "Name"), value: \.name) { row in
+                    nameCell(row)
+                }
+                TableColumn(BPMainMenuLocalizedTitle("h5d-xc-Jih.headerCell.title", fallback: "Version"), value: \.version) { row in
+                    Text(row.version)
+                        .lineLimit(1)
+                }
+                TableColumn(BPMainMenuLocalizedTitle("Be6-3F-p4b.headerCell.title", fallback: "Status"), value: \.statusRank) { row in
+                    Text(statusText(for: row.statusRank))
+                        .lineLimit(1)
+                }
+            }
+        } else {
+            Table(presentation.state.displayedRows, selection: selectionBinding, sortOrder: sortOrderBinding) {
+                TableColumn(BPMainMenuLocalizedTitle("A78-TI-Q8X.headerCell.title", fallback: "Name"), value: \.name) { row in
+                    nameCell(row)
+                }
+                TableColumn(BPMainMenuLocalizedTitle("h5d-xc-Jih.headerCell.title", fallback: "Version"), value: \.version) { row in
+                    Text(row.version)
+                        .lineLimit(1)
+                }
+            }
+        }
+    }
+
+    var body: some View {
+        modeTable
+            .tableStyle(.inset(alternatesRowBackgrounds: true))
+            .background(BPInstalledTableBridgeIntrospector(presentation: presentation))
+    }
+}
+
+@MainActor
+private final class BPUnifiedUpdatesPresentation: ObservableObject {
+    @Published var state = BPUnifiedUpdatesState()
+    var onSelectionChanged: (() -> Void)?
+    var onUpgradeSelected: (([String], [String]) -> Void)?
+
+    func triggerUpgradeSelected() {
+        let formulae = state.selectedFormulaNames
+        let casks = state.selectedCaskNames
+        guard !formulae.isEmpty || !casks.isEmpty else { return }
+        onUpgradeSelected?(formulae, casks)
+    }
+}
+
+@MainActor
+@objc(BPUnifiedUpdatesHost)
+public final class BPUnifiedUpdatesHost: NSObject {
+    private let presentation = BPUnifiedUpdatesPresentation()
+    @objc public let viewController: NSViewController
+
+    @objc public var selectedFormulaNames: [String] {
+        presentation.state.selectedFormulaNames
+    }
+
+    @objc public var selectedCaskNames: [String] {
+        presentation.state.selectedCaskNames
+    }
+
+    @objc public var hasFormulaUpdates: Bool {
+        presentation.state.hasFormulaUpdates
+    }
+
+    @objc public var hasCaskUpdates: Bool {
+        presentation.state.hasCaskUpdates
+    }
+
+    @objc public var isEmpty: Bool {
+        presentation.state.isEmpty
+    }
+
+    @objc public var onSelectionChanged: (() -> Void)? {
+        get { presentation.onSelectionChanged }
+        set { presentation.onSelectionChanged = newValue }
+    }
+
+    @objc public var onUpgradeSelected: (([String], [String]) -> Void)? {
+        get { presentation.onUpgradeSelected }
+        set { presentation.onUpgradeSelected = newValue }
+    }
+
+    public override init() {
+        let presentation = self.presentation
+        let host = NSHostingController(rootView: BPUnifiedUpdatesView(presentation: presentation))
+        host.sizingOptions = []
+        viewController = host
+        super.init()
+    }
+
+    @objc public func selectAllEligible() {
+        let previous = presentation.state.selectedIDs
+        presentation.state.selectAllEligible()
+        if presentation.state.selectedIDs != previous {
+            presentation.onSelectionChanged?()
+        }
+    }
+
+    @objc public func selectFormulaGroup() {
+        let previous = presentation.state.selectedIDs
+        presentation.state.selectEligibleFormulae()
+        if presentation.state.selectedIDs != previous {
+            presentation.onSelectionChanged?()
+        }
+    }
+
+    @objc public func selectCaskGroup() {
+        let previous = presentation.state.selectedIDs
+        presentation.state.selectEligibleCasks()
+        if presentation.state.selectedIDs != previous {
+            presentation.onSelectionChanged?()
+        }
+    }
+
+    @objc public func clearSelection() {
+        let previous = presentation.state.selectedIDs
+        presentation.state.clearSelection()
+        if presentation.state.selectedIDs != previous {
+            presentation.onSelectionChanged?()
+        }
+    }
+
+    @objc public func upgradeSelected() {
+        presentation.triggerUpgradeSelected()
+    }
+
+    @objc(updateWithFormulaNames:formulaVersions:formulaLatestVersions:formulaPinnedFlags:caskNames:caskVersions:caskLatestVersions:caskPinnedFlags:)
+    public func update(formulaNames: [String],
+                       formulaVersions: [String],
+                       formulaLatestVersions: [String],
+                       formulaPinnedFlags: [NSNumber],
+                       caskNames: [String],
+                       caskVersions: [String],
+                       caskLatestVersions: [String],
+                       caskPinnedFlags: [NSNumber]) {
+        var formulaRows: [BPUnifiedUpdateRow] = []
+        formulaRows.reserveCapacity(formulaNames.count)
+        for index in 0..<formulaNames.count {
+            let version = index < formulaVersions.count ? formulaVersions[index] : ""
+            let latest = index < formulaLatestVersions.count ? formulaLatestVersions[index] : ""
+            let pinned = index < formulaPinnedFlags.count ? formulaPinnedFlags[index].boolValue : false
+            formulaRows.append(BPUnifiedUpdateRow(
+                name: formulaNames[index],
+                cask: false,
+                version: version,
+                latestVersion: latest,
+                isPinned: pinned))
+        }
+
+        var caskRows: [BPUnifiedUpdateRow] = []
+        caskRows.reserveCapacity(caskNames.count)
+        for index in 0..<caskNames.count {
+            let version = index < caskVersions.count ? caskVersions[index] : ""
+            let latest = index < caskLatestVersions.count ? caskLatestVersions[index] : ""
+            let pinned = index < caskPinnedFlags.count ? caskPinnedFlags[index].boolValue : false
+            caskRows.append(BPUnifiedUpdateRow(
+                name: caskNames[index],
+                cask: true,
+                version: version,
+                latestVersion: latest,
+                isPinned: pinned))
+        }
+
+        let previous = presentation.state.selectedIDs
+        presentation.state.replace(formulaRows: formulaRows, caskRows: caskRows)
+        if presentation.state.selectedIDs != previous {
+            presentation.onSelectionChanged?()
+        }
+    }
+}
+
+@MainActor
+private struct BPUnifiedUpdatesView: View {
+    @ObservedObject var presentation: BPUnifiedUpdatesPresentation
+
+    private var formulaeGroupTitle: String {
+        NSLocalizedString("Sidebar_Group_Formulae", comment: "")
+    }
+
+    private var casksGroupTitle: String {
+        NSLocalizedString("Sidebar_Group_Casks", comment: "")
+    }
+
+    private func isSelectedBinding(for row: BPUnifiedUpdateRow) -> Binding<Bool> {
+        Binding(
+            get: { presentation.state.selectedIDs.contains(row.id) },
+            set: { shouldSelect in
+                guard row.isEligible else { return }
+                let currentlySelected = presentation.state.selectedIDs.contains(row.id)
+                guard shouldSelect != currentlySelected else { return }
+                presentation.state.toggleSelection(for: row.id)
+                presentation.onSelectionChanged?()
+            }
+        )
+    }
+
+    private func rowAccessibilityLabel(for row: BPUnifiedUpdateRow) -> String {
+        let groupTitle = row.cask ? casksGroupTitle : formulaeGroupTitle
+        var parts = [groupTitle, row.name]
+        if !row.version.isEmpty || !row.latestVersion.isEmpty {
+            parts.append("\(row.version) → \(row.latestVersion)")
+        }
+        if row.isPinned {
+            parts.append(NSLocalizedString("Sidebar_Item_Pinned", comment: ""))
+        }
+        return parts.joined(separator: ", ")
+    }
+
+    @ViewBuilder
+    private func updateRowView(_ row: BPUnifiedUpdateRow) -> some View {
+        let groupTitle = row.cask ? casksGroupTitle : formulaeGroupTitle
+        let identifierPrefix = row.cask ? "unified.updates.row.cask" : "unified.updates.row.formula"
+        HStack(spacing: 8) {
+            Toggle(isOn: isSelectedBinding(for: row)) {
+                HStack(spacing: 6) {
+                    Text(row.name)
+                        .fontWeight(.medium)
+                        .lineLimit(1)
+                    Text(groupTitle)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(
+                            Capsule()
+                                .fill(Color.secondary.opacity(0.14))
+                        )
                     if row.isPinned {
                         Image(systemName: "pin.fill")
                             .font(.system(size: NSFont.smallSystemFontSize))
-                            .accessibilityLabel(NSLocalizedString("Sidebar_Item_Pinned", comment: ""))
+                            .foregroundStyle(.secondary)
+                        Text(NSLocalizedString("Sidebar_Item_Pinned", comment: ""))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
-            TableColumn(BPMainMenuLocalizedTitle("h5d-xc-Jih.headerCell.title", fallback: "Version"), value: \.version) { row in
+            .toggleStyle(.checkbox)
+            .disabled(!row.isEligible)
+
+            Spacer()
+
+            HStack(spacing: 4) {
                 Text(row.version)
+                    .font(.system(.body, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                Image(systemName: "arrow.right")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text(row.latestVersion)
+                    .font(.system(.body, design: .monospaced))
+                    .foregroundStyle(.primary)
                     .lineLimit(1)
             }
         }
-        .tableStyle(.inset(alternatesRowBackgrounds: true))
-        .background(BPInstalledTableBridgeIntrospector(presentation: presentation))
+        .padding(.vertical, 2)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(rowAccessibilityLabel(for: row))
+        .accessibilityIdentifier("\(identifierPrefix).\(row.name)")
+    }
+
+    var body: some View {
+        if presentation.state.isEmpty {
+            VStack(spacing: 6) {
+                Text(NSLocalizedString("Empty_Outdated_Title", comment: ""))
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+                Text(NSLocalizedString("Empty_Outdated_Message", comment: ""))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding()
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("unified.updates.empty")
+        } else {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: 8) {
+                    Button(BPMainMenuLocalizedTitle("Ruw-6m-B2m.title", fallback: "Select All")) {
+                        let previous = presentation.state.selectedIDs
+                        presentation.state.selectAllEligible()
+                        if presentation.state.selectedIDs != previous {
+                            presentation.onSelectionChanged?()
+                        }
+                    }
+                    .controlSize(.small)
+                    .accessibilityIdentifier("unified.updates.selectAll")
+
+                    if presentation.state.hasFormulaUpdates {
+                        Button(formulaeGroupTitle) {
+                            let previous = presentation.state.selectedIDs
+                            presentation.state.selectEligibleFormulae()
+                            if presentation.state.selectedIDs != previous {
+                                presentation.onSelectionChanged?()
+                            }
+                        }
+                        .controlSize(.small)
+                        .accessibilityIdentifier("unified.updates.selectFormulae")
+                    }
+
+                    if presentation.state.hasCaskUpdates {
+                        Button(casksGroupTitle) {
+                            let previous = presentation.state.selectedIDs
+                            presentation.state.selectEligibleCasks()
+                            if presentation.state.selectedIDs != previous {
+                                presentation.onSelectionChanged?()
+                            }
+                        }
+                        .controlSize(.small)
+                        .accessibilityIdentifier("unified.updates.selectCasks")
+                    }
+
+                    Spacer()
+
+                    Button(NSLocalizedString("Toolbar_Update_Selected", comment: "")) {
+                        presentation.triggerUpgradeSelected()
+                    }
+                    .controlSize(.small)
+                    .disabled(presentation.state.selectedIDs.isEmpty)
+                    .accessibilityIdentifier("unified.updates.upgradeSelected")
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+
+                Divider()
+
+                List {
+                    if presentation.state.hasFormulaUpdates {
+                        Section {
+                            ForEach(presentation.state.formulaRows) { row in
+                                updateRowView(row)
+                            }
+                        } header: {
+                            Text(formulaeGroupTitle)
+                                .font(.headline)
+                                .accessibilityAddTraits(.isHeader)
+                                .accessibilityIdentifier("unified.updates.section.formulae")
+                        }
+                    }
+
+                    if presentation.state.hasCaskUpdates {
+                        Section {
+                            ForEach(presentation.state.caskRows) { row in
+                                updateRowView(row)
+                            }
+                        } header: {
+                            Text(casksGroupTitle)
+                                .font(.headline)
+                                .accessibilityAddTraits(.isHeader)
+                                .accessibilityIdentifier("unified.updates.section.casks")
+                        }
+                    }
+                }
+                .listStyle(.inset(alternatesRowBackgrounds: true))
+                .accessibilityIdentifier("unified.updates.list")
+            }
+        }
     }
 }

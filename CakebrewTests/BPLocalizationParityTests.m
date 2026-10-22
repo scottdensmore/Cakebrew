@@ -214,4 +214,54 @@
  }
 }
 
+- (void)testAllNonEnglishLocalesTranslateCoreBacklogWorkflows
+{
+	NSBundle *english = [self bundleForLocale:@"en"];
+	XCTAssertNotNil(english);
+	NSString *missing = @"__CAKEBREW_MISSING_TRANSLATION__";
+	NSArray<NSString *> *keys = @[
+		@"Empty_Search_Title",
+		@"Empty_Search_Message",
+		@"Empty_Outdated_Title",
+		@"Empty_Outdated_Message",
+		@"Empty_Pinned_Title",
+		@"Empty_Services_Title",
+		@"Empty_Casks_Title",
+		@"Empty_Leaves_Title",
+		@"Cleanup_Nothing_Title",
+		@"Confirmation_Cleanup",
+		@"Dock_Check_For_Updates",
+		@"Dock_Upgrade_All_Outdated",
+		@"Loading_Status_Default",
+		@"Loading_Status_AllCasks",
+		@"Toolbar_Cancel_Reload",
+		@"Try Again",
+		@"Homebrew wasn’t found",
+		@"Review Brewfile",
+		@"Install Reviewed Entries",
+		@"Services_Details_Title",
+		@"Services_Reveal_File",
+		@"Remove Unused Dependencies",
+		@"Checking unused dependencies…",
+		@"Remove Reviewed Dependencies",
+		@"Updates_Confirm_Title",
+		@"Updates_Confirm_Action",
+		@"Information_Title",
+		@"Information_Unavailable"
+	];
+
+	for (NSString *locale in @[@"de", @"fr", @"it", @"pt", @"zh-Hans"])
+	{
+		NSBundle *bundle = [self bundleForLocale:locale];
+		XCTAssertNotNil(bundle, @"Missing bundle for %@", locale);
+		for (NSString *key in keys)
+		{
+			NSString *translated = [bundle localizedStringForKey:key value:missing table:@"Localizable"];
+			NSString *original = [english localizedStringForKey:key value:missing table:@"Localizable"];
+			XCTAssertNotEqualObjects(translated, missing, @"%@ missing %@", locale, key);
+			XCTAssertNotEqualObjects(translated, original, @"%@ still uses English placeholder for %@", locale, key);
+		}
+	}
+}
+
 @end

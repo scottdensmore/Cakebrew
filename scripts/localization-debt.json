@@ -1,14 +1,32 @@
 {
   "version": 1,
-  "placeholders": [
-    { "key": "Remove Unused Dependencies", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "Unused dependency review shipped English placeholders." },
-    { "key": "Checking unused dependencies…", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "Unused dependency review shipped English placeholders." },
-    { "key": "Remove Reviewed Dependencies", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "Unused dependency review shipped English placeholders." }
-  ],
+  "placeholders": [],
   "intentional": [
+    { "key": "Brewfile Test", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "DEBUG-only UI test menu title." },
     { "key": "Cakebrew", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "Application product name." },
     { "key": "Casks", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "Homebrew term kept untranslated." },
+    { "key": "Complete Mock Catalog", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "DEBUG-only UI test menu title." },
+    { "key": "Detail_VoiceOver_Description", "locales": ["fr"], "reason": "Identical French spelling (Description)." },
+    { "key": "Detail_VoiceOver_Version", "locales": ["de", "fr"], "reason": "Identical German and French spelling (Version)." },
+    { "key": "Formulae", "locales": ["zh-Hans"], "reason": "Homebrew term kept untranslated in Simplified Chinese." },
+    { "key": "Generic_No", "locales": ["it"], "reason": "Identical Italian spelling (No)." },
+    { "key": "Generic_OK", "locales": ["pt"], "reason": "Identical Portuguese spelling (OK)." },
+    { "key": "Info_View_Empty_Value", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "Language-neutral empty value dash (--)." },
     { "key": "Mac App Store", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "Apple storefront product name." },
+    { "key": "Notification Test", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "DEBUG-only UI test menu title." },
+    { "key": "Open Mock Notification", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "DEBUG-only UI test menu title." },
+    { "key": "Review Mock Brewfile", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "DEBUG-only UI test menu title." },
+    { "key": "Search Mock Packages", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "DEBUG-only UI test menu title." },
+    { "key": "Search Then Clear Mock Search", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "DEBUG-only UI test menu title." },
+    { "key": "Search Then Open Mock Notification", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "DEBUG-only UI test menu title." },
+    { "key": "Services_Column_Name", "locales": ["de"], "reason": "Identical German spelling (Name)." },
+    { "key": "Services_Column_Status", "locales": ["de"], "reason": "Identical German spelling (Status)." },
+    { "key": "Sidebar_Group_Casks", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "Homebrew term kept untranslated." },
+    { "key": "Sidebar_Group_Formulae", "locales": ["zh-Hans"], "reason": "Homebrew term kept untranslated in Simplified Chinese." },
+    { "key": "Sidebar_Item_Doctor", "locales": ["de"], "reason": "Homebrew Doctor subcommand name kept in German." },
+    { "key": "Sidebar_Item_Services", "locales": ["fr"], "reason": "Identical French spelling (Services)." },
+    { "key": "Sidebar_VoiceOver_Separator", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "Language-neutral comma separator." },
+    { "key": "Taps", "locales": ["de", "fr"], "reason": "Homebrew term kept untranslated." },
     { "key": "VS Code", "locales": ["de", "fr", "it", "pt", "zh-Hans"], "reason": "Editor product name." }
   ]
 }

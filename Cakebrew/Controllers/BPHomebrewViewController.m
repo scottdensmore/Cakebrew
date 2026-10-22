@@ -614,6 +614,7 @@ NSOpenSavePanelDelegate>
 	NSIndexSet *selectedRows		= [self isUsingInstalledPackageListHost]
 		? (selectedIndex >= 0 ? [NSIndexSet indexSetWithIndex:(NSUInteger)selectedIndex] : [NSIndexSet indexSet])
 		: [self.formulaeTableView selectedRowIndexes];
+	NSUInteger selectedCount		= selectedIndex >= 0 ? [selectedRows count] : 0;
 	NSArray *selectedFormulae		= [self selectedFormulae];
 	if (selectedFormulae.count == 0)
 	{
@@ -624,77 +625,18 @@ NSOpenSavePanelDelegate>
 	// selection change — so dragging it and then clicking any row snapped it
 	// straight back. It is positioned once at first layout instead, and
 	// autosaved thereafter.
-	BOOL showFormulaInfo = YES;
-	
-	if (selectedSidebarRow == FormulaeSideBarItemRepositories) // Repositories (Taps) sidebaritem
-	{
-		showFormulaInfo = false;
+	// The detail pane and the operation pipeline both dispatch on the
+	// formula's cask flag (`brew info --cask`, `brew <op> --cask`).
+	// statusForFormula: is cask-aware, so All Casks mirrors All Formulae.
+	BPFormulaStatus selectedStatus = selectedCount == 1
+		? [[BPHomebrewManager sharedManager] statusForFormula:[self selectedFormula]]
+		: kBPFormulaNotInstalled;
+	BPToolbarMode toolbarMode = [BPFormulaeTableActions toolbarModeForSidebarRow:selectedSidebarRow
+																   selectedCount:selectedCount
+														   selectedFormulaStatus:selectedStatus];
+	[self.toolbar configureForMode:toolbarMode];
 
-		[self.toolbar configureForMode:BPToolbarModeTap];
-
-
-		if (selectedIndex != -1) {
-			[self.toolbar configureForMode:BPToolbarModeUntap];
-		} else {
-			[self.toolbar configureForMode:BPToolbarModeTap];
-		}
-	}
-	else if (selectedSidebarRow == FormulaeSideBarItemInstalledCasks
-			 || selectedSidebarRow == FormulaeSideBarItemOutdatedCasks
-			 || selectedSidebarRow == FormulaeSideBarItemAllCasks) // Casks
-	{
-		// The detail pane and the operation pipeline both dispatch on the
-		// formula's cask flag (`brew info --cask`, `brew <op> --cask`).
-
-		if (selectedIndex == -1) {
-			[self.toolbar configureForMode:BPToolbarModeDefault];
-		} else if (selectedSidebarRow == FormulaeSideBarItemOutdatedCasks) {
-			[self.toolbar configureForMode:([selectedRows count] > 1 ?
-											BPToolbarModeUpdateMany : BPToolbarModeUpdateSingle)];
-		} else if (selectedSidebarRow == FormulaeSideBarItemAllCasks) {
-			// statusForFormula: is cask-aware, so this mirrors All Formulae.
-			BPFormula *cask = [self selectedFormula];
-			if ([[BPHomebrewManager sharedManager] statusForFormula:cask] == kBPFormulaNotInstalled) {
-				[self.toolbar configureForMode:BPToolbarModeInstall];
-			} else {
-				[self.toolbar configureForMode:BPToolbarModeUninstall];
-			}
-		} else {
-			[self.toolbar configureForMode:BPToolbarModeUninstall];
-		}
-	}
-	else if (selectedIndex == -1 || selectedSidebarRow > FormulaeSideBarItemToolsCategory)
-	{
-		[self.toolbar configureForMode:BPToolbarModeDefault];
-	}
-	else if ([selectedRows count] > 1)
-	{
-		[self.toolbar configureForMode:BPToolbarModeUpdateMany];
-	}
-	else
-	{
-		BPFormula *formula = [self selectedFormula];
-
-		switch ([[BPHomebrewManager sharedManager] statusForFormula:formula]) {
-			case kBPFormulaInstalled:
-				[self.toolbar configureForMode:BPToolbarModeUninstall];
-				break;
-				
-			case kBPFormulaOutdated:
-				if (selectedSidebarRow == FormulaeSideBarItemOutdated) {
-					[self.toolbar configureForMode:BPToolbarModeUpdateSingle];
-				} else {
-					[self.toolbar configureForMode:BPToolbarModeUninstall];
-				}
-				break;
-				
-			case kBPFormulaNotInstalled:
-				[self.toolbar configureForMode:BPToolbarModeInstall];
-				break;
-		}
-	}
-
-	if (showFormulaInfo)
+	if ([BPFormulaeTableActions shouldShowFormulaInfoForSidebarRow:selectedSidebarRow])
 	{
 		[self.selectedFormulaView setHidden:NO];
 		[self.selectedFormulaeViewController setFormulae:selectedFormulae];
@@ -747,20 +689,12 @@ NSOpenSavePanelDelegate>
 - (void)updateInfoLabelWithSidebarSelection
 {
 	FormulaeSideBarItem selectedSidebarRow = [self.sidebarController.sidebar selectedRow];
-	NSString *message = nil;
-	
-	if (self.isSearching)
-	{
-		message = NSLocalizedString(@"Sidebar_Info_SearchResults", nil);
-	}
-	else
-	{
-		// One mapping, so a row can't be silently absent — an unmapped row
-		// yields nil and the label is cleared rather than keeping the previously
-		// selected row's description.
-		NSString *key = [BPSideBarController infoKeyForRow:selectedSidebarRow];
-		message = key ? NSLocalizedString(key, nil) : nil;
-	}
+	// One mapping, so a row can't be silently absent — an unmapped row
+	// yields nil and the label is cleared rather than keeping the previously
+	// selected row's description.
+	NSString *key = [BPFormulaeTableActions footerLocalizationKeyForSidebarRow:selectedSidebarRow
+																	 searching:self.isSearching];
+	NSString *message = key ? NSLocalizedString(key, nil) : nil;
 
 	[self updateInfoLabelWithText:message];
 }
@@ -841,8 +775,12 @@ NSOpenSavePanelDelegate>
 		[self revealContentForFirstPublishedList];
 	}
 
+	BOOL isLoading = (self.loadingView != nil);
+	BPListMode activeMode = self.formulaeDataSource.mode;
 	// Only redraw the table if what landed is what is on screen.
-	if (self.loadingView == nil && self.formulaeDataSource.mode == mode)
+	if ([BPFormulaeTableActions shouldRefreshVisibleListForPublishedMode:mode
+															  activeMode:activeMode
+															   isLoading:isLoading])
 	{
 		[self.formulaeDataSource refreshBackingArray];
 		if ([self isUsingInstalledPackageListHost]) {
@@ -851,8 +789,10 @@ NSOpenSavePanelDelegate>
 		[self.formulaeTableView reloadData];
 		[self refreshEmptyState];
 	}
-	else if (self.loadingView == nil && [self isUsingInstalledPackageListHost]
-			 && (mode == kBPListPinned || mode == kBPListOutdated || mode == kBPListOutdatedCasks))
+	else if ([BPFormulaeTableActions shouldSyncInstalledHostMetadataForPublishedMode:mode
+																		  activeMode:activeMode
+																		   isLoading:isLoading
+																isUsingInstalledHost:[self isUsingInstalledPackageListHost]])
 	{
 		[self syncInstalledPackageListHostRows];
 	}
