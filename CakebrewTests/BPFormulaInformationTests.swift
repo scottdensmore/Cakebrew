@@ -164,4 +164,83 @@ final class BPFormulaInformationTests: XCTestCase {
         XCTAssertEqual(state.currentSnapshot, enriched)
     }
 
+    func testInstalledPackageRowStripsCaskPinAndPreservesNamespaceIdentity() {
+        let formulaRow = BPInstalledPackageRow(
+            name: "shared",
+            cask: false,
+            version: "1.0",
+            latestVersion: "1.1",
+            statusRank: 2,
+            isPinned: true)
+        let caskRow = BPInstalledPackageRow(
+            name: "shared",
+            cask: true,
+            version: "2.0",
+            latestVersion: "2.0",
+            statusRank: 1,
+            isPinned: true)
+
+        XCTAssertNotEqual(formulaRow.id, caskRow.id)
+        XCTAssertTrue(formulaRow.isPinned)
+        XCTAssertFalse(caskRow.isPinned, "Casks cannot be pinned")
+    }
+
+    func testInstalledPackageListStateSortsByNameVersionAndStatusStably() {
+        var state = BPInstalledPackageListState()
+        let rows = [
+            BPInstalledPackageRow(name: "Wget", cask: false, version: "9.0", latestVersion: "9.0", statusRank: 2, isPinned: false),
+            BPInstalledPackageRow(name: "ack", cask: false, version: "10.0", latestVersion: "10.0", statusRank: 1, isPinned: false),
+            BPInstalledPackageRow(name: "git", cask: false, version: "2.0", latestVersion: "2.0", statusRank: 1, isPinned: true),
+            BPInstalledPackageRow(name: "curl", cask: false, version: "2.0", latestVersion: "2.0", statusRank: 0, isPinned: false)
+        ]
+        state.replaceRows(rows, isCaskList: false)
+
+        // Default unsort preserves incoming order
+        XCTAssertEqual(state.displayedRows.map(\.name), ["Wget", "ack", "git", "curl"])
+
+        // Case-insensitive Name sort
+        state.setSort(column: .name, ascending: true)
+        XCTAssertEqual(state.displayedRows.map(\.name), ["ack", "curl", "git", "Wget"])
+
+        state.setSort(column: .name, ascending: false)
+        XCTAssertEqual(state.displayedRows.map(\.name), ["Wget", "git", "curl", "ack"])
+
+        // Natural Version sort with stable tie-breaking (git before curl at version 2.0)
+        state.setSort(column: .version, ascending: true)
+        XCTAssertEqual(state.displayedRows.map(\.name), ["git", "curl", "Wget", "ack"])
+
+        // Enum Status sort (0 < 1 < 2) with stable tie-breaking (ack before git at rank 1)
+        state.setSort(column: .status, ascending: true)
+        XCTAssertEqual(state.displayedRows.map(\.name), ["curl", "ack", "git", "Wget"])
+    }
+
+    func testInstalledPackageListStatePreservesSelectionAcrossReloadAndSort() {
+        var state = BPInstalledPackageListState()
+        let initial = [
+            BPInstalledPackageRow(name: "wget", cask: false, version: "1.24", latestVersion: "1.24", statusRank: 1, isPinned: false),
+            BPInstalledPackageRow(name: "git", cask: false, version: "2.44", latestVersion: "2.44", statusRank: 1, isPinned: true)
+        ]
+        state.replaceRows(initial, isCaskList: false)
+        XCTAssertTrue(state.select(name: "git", cask: false))
+        XCTAssertEqual(state.selectedRowIndex, 1)
+
+        // Sorting moves "git" to index 0; selection stays on "git"
+        state.setSort(column: .name, ascending: true)
+        XCTAssertEqual(state.displayedRows.map(\.name), ["git", "wget"])
+        XCTAssertEqual(state.selectedRowIndex, 0)
+        XCTAssertEqual(state.selectedRow?.name, "git")
+
+        // Reloading with "git" still present keeps selection; reloading without "git" clears it
+        state.replaceRows(initial, isCaskList: false)
+        XCTAssertEqual(state.selectedRow?.name, "git")
+
+        // Same name in cask namespace does not match formula selection
+        let casks = [
+            BPInstalledPackageRow(name: "git", cask: true, version: "2.44", latestVersion: "2.44", statusRank: 1, isPinned: false)
+        ]
+        state.replaceRows(casks, isCaskList: true)
+        XCTAssertNil(state.selectedID)
+        XCTAssertEqual(state.selectedRowIndex, -1)
+    }
+
 }

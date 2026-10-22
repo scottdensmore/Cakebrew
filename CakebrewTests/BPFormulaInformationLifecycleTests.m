@@ -1,6 +1,7 @@
 #import <XCTest/XCTest.h>
 #import "BPFormulaPopoverViewController.h"
 #import "BPSelectedFormulaViewController.h"
+#import "BPFormulaInformation-Swift.h"
 
 // Model loads and AppKit animations are replaced at the boundary. The production
 // controller still registers and receives real NSNotificationCenter events.
@@ -314,6 +315,178 @@
 
     selected.formulae = @[];
     XCTAssertTrue(inspectorHost.isEmpty);
+}
+
+- (void)testInstalledPackageListHostSyncsSelectionSortAndActionCallbacks
+{
+    BPInstalledPackageListHost *listHost = [[BPInstalledPackageListHost alloc] init];
+    NSMutableArray<NSString *> *selectionEvents = [NSMutableArray array];
+    NSMutableArray<NSString *> *sortEvents = [NSMutableArray array];
+    NSMutableArray<NSNumber *> *actionEvents = [NSMutableArray array];
+
+    listHost.onSelectionChanged = ^(NSString * _Nullable name, BOOL cask) {
+        [selectionEvents addObject:name ? [NSString stringWithFormat:@"%@:%d", name, cask] : @"none"];
+    };
+    listHost.onSortChanged = ^(NSString * _Nullable key, BOOL ascending) {
+        [sortEvents addObject:[NSString stringWithFormat:@"%@:%d", key ?: @"", ascending]];
+    };
+    listHost.onTableAction = ^(NSInteger request) {
+        [actionEvents addObject:@(request)];
+    };
+
+    [listHost updateRowsWithNames:@[@"wget", @"ack"]
+                         versions:@[@"1.24", @"3.7"]
+                   latestVersions:@[@"1.24", @"3.7"]
+                      statusRanks:@[@1, @1]
+                      pinnedFlags:@[@NO, @YES]
+                             cask:NO];
+
+    XCTAssertEqual(listHost.rowCount, 2);
+    XCTAssertEqual([listHost indexOfPackageNamed:@"ack" cask:NO], 1);
+    XCTAssertEqual([listHost indexOfPackageNamed:@"ack" cask:YES], -1);
+
+    [listHost applySortColumnIdentifier:@"Name" ascending:YES];
+    XCTAssertEqual([listHost indexOfPackageNamed:@"ack" cask:NO], 0);
+    XCTAssertEqual([listHost indexOfPackageNamed:@"wget" cask:NO], 1);
+
+    XCTAssertTrue([listHost selectPackageNamed:@"wget" cask:NO]);
+    XCTAssertEqual(listHost.selectedRow, 1);
+    XCTAssertEqualObjects(listHost.selectedPackageName, @"wget");
+    XCTAssertFalse(listHost.selectedPackageCask);
+    XCTAssertEqualObjects(selectionEvents.lastObject, @"wget:0");
+
+    [listHost deselectAll];
+    XCTAssertEqual(listHost.selectedRow, -1);
+    XCTAssertNil(listHost.selectedPackageName);
+    XCTAssertEqualObjects(selectionEvents.lastObject, @"none");
+}
+
+- (void)testInstalledPackageListHostKeyboardRoutingAndPopoverAnchorFallback
+{
+    BPInstalledPackageListHost *listHost = [[BPInstalledPackageListHost alloc] init];
+    NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 400, 300)
+                                                   styleMask:NSWindowStyleMaskTitled
+                                                     backing:NSBackingStoreBuffered
+                                                       defer:NO];
+    [window.contentView addSubview:listHost.viewController.view];
+    listHost.viewController.view.frame = window.contentView.bounds;
+    [window makeFirstResponder:listHost.viewController.view];
+
+    __block NSInteger spacePresses = 0;
+    NSMutableArray<NSNumber *> *actions = [NSMutableArray array];
+    listHost.onSpacePressed = ^{
+        spacePresses++;
+    };
+    listHost.onTableAction = ^(NSInteger request) {
+        [actions addObject:@(request)];
+    };
+
+    [listHost updateRowsWithNames:@[@"wget"]
+                         versions:@[@"1.24"]
+                   latestVersions:@[@"1.24"]
+                      statusRanks:@[@1]
+                      pinnedFlags:@[@NO]
+                             cask:NO];
+    XCTAssertTrue([listHost selectPackageNamed:@"wget" cask:NO]);
+
+    NSEvent *(^makeKey)(unichar, NSEventModifierFlags, BOOL) = ^NSEvent *(unichar ch, NSEventModifierFlags flags, BOOL repeat) {
+        NSString *chars = [NSString stringWithCharacters:&ch length:1];
+        return [NSEvent keyEventWithType:NSEventTypeKeyDown
+                                location:NSZeroPoint
+                           modifierFlags:flags
+                               timestamp:0
+                            windowNumber:window.windowNumber
+                                 context:nil
+                              characters:chars
+             charactersIgnoringModifiers:chars
+                               isARepeat:repeat
+                                 keyCode:0];
+    };
+
+    XCTAssertTrue([listHost handleKeyDownEvent:makeKey(' ', 0, NO)]);
+    XCTAssertEqual(spacePresses, 1);
+
+    XCTAssertTrue([listHost handleKeyDownEvent:makeKey(NSCarriageReturnCharacter, 0, NO)]);
+    XCTAssertTrue([listHost handleKeyDownEvent:makeKey(NSEnterCharacter, 0, NO)]);
+    XCTAssertTrue([listHost handleKeyDownEvent:makeKey(NSDeleteCharacter, 0, NO)]);
+    XCTAssertTrue([listHost handleKeyDownEvent:makeKey(NSDeleteFunctionKey, 0, NO)]);
+    XCTAssertEqualObjects(actions, (@[@0, @0, @1, @1]));
+
+    // Modifiers and repeats are rejected for Return/Delete
+    XCTAssertFalse([listHost handleKeyDownEvent:makeKey(NSCarriageReturnCharacter, NSEventModifierFlagCommand, NO)]);
+    XCTAssertFalse([listHost handleKeyDownEvent:makeKey(NSDeleteCharacter, 0, YES)]);
+    XCTAssertEqual(actions.count, 4u);
+
+    NSRect anchor = [listHost rectOfSelectedRowInView:listHost.viewController.view];
+    XCTAssertFalse(NSIsEmptyRect(anchor));
+}
+
+- (NSTableView *)findTableViewInView:(NSView *)view
+{
+    if ([view isKindOfClass:[NSTableView class]]) {
+        return (NSTableView *)view;
+    }
+    for (NSView *subview in view.subviews) {
+        NSTableView *found = [self findTableViewInView:subview];
+        if (found) return found;
+    }
+    return nil;
+}
+
+- (void)testInstalledPackageListHostAttachesBridgeToUnderlyingTableViewAndSyncsMenuAndRowGeometry
+{
+    BPInstalledPackageListHost *listHost = [[BPInstalledPackageListHost alloc] init];
+    NSMenu *contextMenu = [[NSMenu alloc] init];
+    listHost.contextMenu = contextMenu;
+
+    NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 600, 400)
+                                                   styleMask:NSWindowStyleMaskTitled
+                                                     backing:NSBackingStoreBuffered
+                                                       defer:NO];
+    listHost.viewController.view.frame = window.contentView.bounds;
+    [window.contentView addSubview:listHost.viewController.view];
+
+    [listHost updateRowsWithNames:@[@"ack", @"wget"]
+                         versions:@[@"3.7", @"1.24"]
+                   latestVersions:@[@"3.7", @"1.24"]
+                      statusRanks:@[@1, @1]
+                      pinnedFlags:@[@YES, @NO]
+                             cask:NO];
+
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.15]];
+    [window.contentView layoutSubtreeIfNeeded];
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.10]];
+
+    NSTableView *underlyingTable = [self findTableViewInView:listHost.viewController.view];
+    XCTAssertNotNil(underlyingTable, @"SwiftUI Table must mount an underlying NSTableView");
+    XCTAssertEqual(underlyingTable.menu, contextMenu, @"Bridge must wire the context menu to the underlying NSTableView");
+    XCTAssertNotNil(underlyingTable.target, @"Bridge must wire doubleAction target");
+    XCTAssertNotEqual(underlyingTable.doubleAction, NULL, @"Bridge must wire doubleAction selector");
+    XCTAssertEqual(underlyingTable.numberOfRows, 2);
+
+    XCTAssertTrue([listHost selectPackageNamed:@"wget" cask:NO]);
+    XCTAssertEqual(underlyingTable.selectedRow, 1);
+
+    NSRect rowRect = [listHost rectOfSelectedRowInView:listHost.viewController.view];
+    XCTAssertFalse(NSIsEmptyRect(rowRect));
+    XCTAssertGreaterThan(rowRect.size.width, 100.0);
+
+    NSRect firstRowRect = [underlyingTable rectOfRow:0];
+    NSPoint firstRowPointInWindow = [underlyingTable convertPoint:NSMakePoint(NSMidX(firstRowRect), NSMidY(firstRowRect)) toView:nil];
+    NSEvent *rightClick = [NSEvent mouseEventWithType:NSEventTypeRightMouseDown
+                                             location:firstRowPointInWindow
+                                        modifierFlags:0
+                                            timestamp:0
+                                         windowNumber:window.windowNumber
+                                              context:nil
+                                          eventNumber:0
+                                           clickCount:1
+                                             pressure:1.0];
+    XCTAssertEqual([underlyingTable menuForEvent:rightClick], contextMenu);
+    XCTAssertEqual(underlyingTable.clickedRow, 0);
+    [listHost selectClickedRowIfNeeded];
+    XCTAssertEqual(listHost.selectedRow, 0);
+    XCTAssertEqualObjects(listHost.selectedPackageName, @"ack");
 }
 
 @end

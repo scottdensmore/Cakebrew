@@ -50,6 +50,7 @@
 #import "BPSearchCoordinator.h"
 #import "BPEmptyState.h"
 #import "BPEmptyStateView.h"
+#import "BPFormulaInformation-Swift.h"
 #if DEBUG
 #import "BPBackgroundUpdater.h"
 #import "BPMockHomebrewInterface.h"
@@ -93,6 +94,7 @@ NSOpenSavePanelDelegate>
 
 
 @property (strong, nonatomic) BPFormulaeDataSource				*formulaeDataSource;
+@property (strong, nonatomic) BPInstalledPackageListHost		*installedPackageListHost;
 @property (strong, nonatomic) BPFormulaOptionsWindowController	*formulaOptionsWindowController;
 @property (strong, nonatomic) NSWindowController				*operationWindowController;
 @property (strong, nonatomic) BPUpdateViewController			*updateViewController;
@@ -190,16 +192,19 @@ NSOpenSavePanelDelegate>
 
 	self.formulaeDataSource = [[BPFormulaeDataSource alloc] initWithMode:kBPListAll];
 	self.formulaeTableView.dataSource = self.formulaeDataSource;
+	[self setUpInstalledPackageListHost];
 
 	// Restore the sort the user last chose, so the header indicator and the row
 	// order agree with each other on launch.
 	NSString *sortColumn = [BPPreferences sortColumnIdentifier];
 	if (sortColumn.length > 0)
 	{
+		BOOL ascending = [BPPreferences sortAscending];
 		NSSortDescriptor *restored = [NSSortDescriptor sortDescriptorWithKey:sortColumn
-																   ascending:[BPPreferences sortAscending]];
+																   ascending:ascending];
 		self.formulaeTableView.sortDescriptors = @[restored];
 		self.formulaeDataSource.sortDescriptors = @[restored];
+		[self.installedPackageListHost applySortColumnIdentifier:sortColumn ascending:ascending];
 	}
 	self.formulaeTableView.delegate = self;
 	self.formulaeTableView.actionDelegate = self;
@@ -470,12 +475,150 @@ NSOpenSavePanelDelegate>
 	[self applyDefaultDividerPositionIfNeeded];
 }
 
+- (BOOL)usesInstalledPackageListHostForMode:(BPListMode)mode
+{
+	return mode == kBPListInstalled || mode == kBPListInstalledCasks;
+}
+
+- (BOOL)isUsingInstalledPackageListHost
+{
+	return [self usesInstalledPackageListHostForMode:self.formulaeDataSource.mode];
+}
+
+- (void)setUpInstalledPackageListHost
+{
+	self.installedPackageListHost = [[BPInstalledPackageListHost alloc] init];
+	self.installedPackageListHost.contextMenu = self.formulaeTableView.menu;
+
+	__weak typeof(self) weakSelf = self;
+	self.installedPackageListHost.onSelectionChanged = ^(NSString * _Nullable name, BOOL cask) {
+		__strong typeof(weakSelf) strongSelf = weakSelf;
+		if (!strongSelf || ![strongSelf isUsingInstalledPackageListHost]) return;
+		[strongSelf updateInterfaceItems];
+	};
+	self.installedPackageListHost.onSortChanged = ^(NSString * _Nullable key, BOOL ascending) {
+		__strong typeof(weakSelf) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		[BPPreferences setSortColumnIdentifier:key];
+		[BPPreferences setSortAscending:ascending];
+		if (key.length > 0) {
+			NSSortDescriptor *descriptor = [NSSortDescriptor sortDescriptorWithKey:key ascending:ascending];
+			strongSelf.formulaeTableView.sortDescriptors = @[descriptor];
+			strongSelf.formulaeDataSource.sortDescriptors = @[descriptor];
+		} else {
+			strongSelf.formulaeTableView.sortDescriptors = @[];
+			strongSelf.formulaeDataSource.sortDescriptors = @[];
+		}
+	};
+	self.installedPackageListHost.onTableAction = ^(NSInteger request) {
+		__strong typeof(weakSelf) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		[strongSelf handleInstalledPackageListAction:(BPFormulaeTableRequest)request];
+	};
+	self.installedPackageListHost.onSpacePressed = ^{
+		__strong typeof(weakSelf) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		[strongSelf showFormulaInfo:nil];
+	};
+}
+
+- (void)syncInstalledPackageListHostRows
+{
+	if (!self.installedPackageListHost) return;
+	NSSortDescriptor *descriptor = self.formulaeDataSource.sortDescriptors.firstObject;
+	[self.installedPackageListHost applySortColumnIdentifier:descriptor.key
+												   ascending:descriptor ? descriptor.ascending : YES];
+
+	BOOL isCask = (self.formulaeDataSource.mode == kBPListInstalledCasks);
+	NSArray<BPFormula *> *source = isCask ? _homebrewManager.installedCasks : _homebrewManager.installedFormulae;
+	NSUInteger count = source.count;
+	NSMutableArray<NSString *> *names = [NSMutableArray arrayWithCapacity:count];
+	NSMutableArray<NSString *> *versions = [NSMutableArray arrayWithCapacity:count];
+	NSMutableArray<NSString *> *latestVersions = [NSMutableArray arrayWithCapacity:count];
+	NSMutableArray<NSNumber *> *statusRanks = [NSMutableArray arrayWithCapacity:count];
+	NSMutableArray<NSNumber *> *pinnedFlags = [NSMutableArray arrayWithCapacity:count];
+
+	for (BPFormula *formula in source) {
+		if (![formula isKindOfClass:[BPFormula class]]) continue;
+		[names addObject:formula.name ?: @""];
+		[versions addObject:formula.version ?: @""];
+		[latestVersions addObject:formula.shortLatestVersion ?: @""];
+		[statusRanks addObject:@([_homebrewManager statusForFormula:formula])];
+		[pinnedFlags addObject:@([_homebrewManager isFormulaPinned:formula])];
+	}
+
+	[self.installedPackageListHost updateRowsWithNames:names
+											  versions:versions
+										latestVersions:latestVersions
+										   statusRanks:statusRanks
+										   pinnedFlags:pinnedFlags
+												  cask:isCask];
+}
+
+- (void)updateActiveListSurfaceVisibility
+{
+	if (!self.installedPackageListHost) return;
+	NSView *container = self.scrollView_formulae.superview;
+	NSView *hostView = self.installedPackageListHost.viewController.view;
+	if ([self isUsingInstalledPackageListHost]) {
+		self.scrollView_formulae.hidden = YES;
+		if (container && hostView.superview != container) {
+			hostView.translatesAutoresizingMaskIntoConstraints = NO;
+			[container addSubview:hostView];
+			[NSLayoutConstraint activateConstraints:@[
+				[hostView.leadingAnchor constraintEqualToAnchor:container.leadingAnchor],
+				[hostView.trailingAnchor constraintEqualToAnchor:container.trailingAnchor],
+				[hostView.topAnchor constraintEqualToAnchor:container.topAnchor],
+				[hostView.bottomAnchor constraintEqualToAnchor:container.bottomAnchor]
+			]];
+		}
+		hostView.hidden = NO;
+	} else {
+		if (hostView.superview) {
+			[hostView removeFromSuperview];
+		}
+		self.scrollView_formulae.hidden = NO;
+	}
+}
+
+- (void)handleInstalledPackageListAction:(BPFormulaeTableRequest)request
+{
+	NSView *hostView = self.installedPackageListHost.viewController.view;
+	if (![self isUsingInstalledPackageListHost] || !hostView.window || hostView.isHiddenOrHasHiddenAncestor
+		|| self.loadingView || self.disabledView || !self.homebrewInstalled
+		|| _appDelegate.window.attachedSheet || !self.tabView.selectedTabViewItem
+		|| [self.tabView indexOfTabViewItem:self.tabView.selectedTabViewItem] != kBPContentTabFormulae
+		|| _appDelegate.isRunningBackgroundTask) return;
+	BPFormula *formula = [self selectedFormula];
+	if (!formula || ![formula isKindOfClass:BPFormula.class]) return;
+	NSNumber *status = @([_homebrewManager statusForFormula:formula]);
+	BPFormulaeTableAction action = [BPFormulaeTableActions actionForRequest:request
+																	   mode:self.formulaeDataSource.mode
+																   formulae:@[formula]
+																   statuses:@[status]];
+	switch (action) {
+		case BPFormulaeTableActionInstall: [self installFormula:hostView]; break;
+		case BPFormulaeTableActionUpgrade: [self upgradeSelectedFormulae:hostView]; break;
+		case BPFormulaeTableActionInfo: [self showFormulaInfo:hostView]; break;
+		case BPFormulaeTableActionUninstall: [self uninstallFormula:hostView]; break;
+		case BPFormulaeTableActionNone: break;
+	}
+}
+
 - (void)updateInterfaceItems
 {
 	NSInteger selectedSidebarRow	= [self.sidebarController.sidebar selectedRow];
-	NSInteger selectedIndex			= [self.formulaeTableView selectedRow];
-	NSIndexSet *selectedRows		= [self.formulaeTableView selectedRowIndexes];
-	NSArray *selectedFormulae		= [self.formulaeDataSource formulasAtIndexSet:selectedRows];
+	NSInteger selectedIndex			= [self isUsingInstalledPackageListHost]
+		? self.installedPackageListHost.selectedRow
+		: [self.formulaeTableView selectedRow];
+	NSIndexSet *selectedRows		= [self isUsingInstalledPackageListHost]
+		? (selectedIndex >= 0 ? [NSIndexSet indexSetWithIndex:(NSUInteger)selectedIndex] : [NSIndexSet indexSet])
+		: [self.formulaeTableView selectedRowIndexes];
+	NSArray *selectedFormulae		= [self selectedFormulae];
+	if (selectedFormulae.count == 0)
+	{
+		self.currentFormula = nil;
+	}
 
 	// The divider used to be forced to 120 pt here, which runs on every
 	// selection change — so dragging it and then clicking any row snapped it
@@ -510,7 +653,7 @@ NSOpenSavePanelDelegate>
 											BPToolbarModeUpdateMany : BPToolbarModeUpdateSingle)];
 		} else if (selectedSidebarRow == FormulaeSideBarItemAllCasks) {
 			// statusForFormula: is cask-aware, so this mirrors All Formulae.
-			BPFormula *cask = [self.formulaeDataSource formulaAtIndex:selectedIndex];
+			BPFormula *cask = [self selectedFormula];
 			if ([[BPHomebrewManager sharedManager] statusForFormula:cask] == kBPFormulaNotInstalled) {
 				[self.toolbar configureForMode:BPToolbarModeInstall];
 			} else {
@@ -524,13 +667,13 @@ NSOpenSavePanelDelegate>
 	{
 		[self.toolbar configureForMode:BPToolbarModeDefault];
 	}
-	else if ([[self.formulaeTableView selectedRowIndexes] count] > 1)
+	else if ([selectedRows count] > 1)
 	{
 		[self.toolbar configureForMode:BPToolbarModeUpdateMany];
 	}
 	else
 	{
-		BPFormula *formula = [self .formulaeDataSource formulaAtIndex:selectedIndex];
+		BPFormula *formula = [self selectedFormula];
 
 		switch ([[BPHomebrewManager sharedManager] statusForFormula:formula]) {
 			case kBPFormulaInstalled:
@@ -565,8 +708,13 @@ NSOpenSavePanelDelegate>
 - (void)configureTableForListing:(BPListMode)mode
 {
 	[self.formulaeTableView deselectAll:nil];
+	[self.installedPackageListHost deselectAll];
 	[self.formulaeDataSource setMode:mode];
 	[self.formulaeTableView setMode:mode];
+	[self updateActiveListSurfaceVisibility];
+	if ([self isUsingInstalledPackageListHost]) {
+		[self syncInstalledPackageListHostRows];
+	}
 	[self.formulaeTableView reloadData];
 	[self updateInterfaceItems];
 	[self refreshEmptyState];
@@ -577,7 +725,9 @@ NSOpenSavePanelDelegate>
 /// "nothing matched" from "still loading".
 - (void)refreshEmptyState
 {
-	NSInteger rows = [self.formulaeDataSource numberOfRowsInTableView:self.formulaeTableView];
+	NSInteger rows = [self isUsingInstalledPackageListHost]
+		? self.installedPackageListHost.rowCount
+		: [self.formulaeDataSource numberOfRowsInTableView:self.formulaeTableView];
 	BOOL loading = (self.loadingView != nil);
 
 	BPEmptyState *state = nil;
@@ -587,7 +737,8 @@ NSOpenSavePanelDelegate>
 									   searching:[self isSearching]];
 	}
 
-	[BPEmptyStateView presentState:state overView:self.scrollView_formulae];
+	NSView *container = self.scrollView_formulae.superview ?: self.scrollView_formulae;
+	[BPEmptyStateView presentState:state overView:container];
 }
 
 
@@ -694,8 +845,16 @@ NSOpenSavePanelDelegate>
 	if (self.loadingView == nil && self.formulaeDataSource.mode == mode)
 	{
 		[self.formulaeDataSource refreshBackingArray];
+		if ([self isUsingInstalledPackageListHost]) {
+			[self syncInstalledPackageListHostRows];
+		}
 		[self.formulaeTableView reloadData];
 		[self refreshEmptyState];
+	}
+	else if (self.loadingView == nil && [self isUsingInstalledPackageListHost]
+			 && (mode == kBPListPinned || mode == kBPListOutdated || mode == kBPListOutdatedCasks))
+	{
+		[self syncInstalledPackageListHostRows];
 	}
 }
 
@@ -720,6 +879,10 @@ NSOpenSavePanelDelegate>
 	// row the user left off on, and -homebrewManagerFinishedUpdating: owns the
 	// fallback when there is none.
 	[self.formulaeDataSource refreshBackingArray];
+	[self updateActiveListSurfaceVisibility];
+	if ([self isUsingInstalledPackageListHost]) {
+		[self syncInstalledPackageListHostRows];
+	}
 	[self.formulaeTableView reloadData];
 	[self refreshEmptyState];
 }
@@ -769,6 +932,17 @@ NSOpenSavePanelDelegate>
 /// currentFormula and the detail pane.
 - (void)restoreSelectedFormula:(BPFormula *)formula
 {
+	if ([self isUsingInstalledPackageListHost])
+	{
+		[self syncInstalledPackageListHostRows];
+		if (!formula || ![self.installedPackageListHost selectPackageNamed:formula.name cask:formula.cask])
+		{
+			self.currentFormula = nil;
+			self.selectedFormulaeViewController.formulae = nil;
+		}
+		return;
+	}
+
 	NSInteger row = formula ? [self.formulaeDataSource indexOfFormulaNamed:formula.name cask:formula.cask] : -1;
 
 	if (row < 0)
@@ -825,7 +999,6 @@ NSOpenSavePanelDelegate>
 	{
 		[popover close];
 	}
-	NSInteger selectedIndex = [self.formulaeTableView selectedRow];
 	BPFormula *formula = [self selectedFormula];
 
 	if (!formula)
@@ -836,6 +1009,17 @@ NSOpenSavePanelDelegate>
 	[self.formulaPopoverViewController setInfoType:type];
 	[self.formulaPopoverViewController setFormula:formula];
 
+	if ([self isUsingInstalledPackageListHost])
+	{
+		NSView *anchorView = self.installedPackageListHost.viewController.view;
+		NSRect anchorRect = [self.installedPackageListHost rectOfSelectedRowInView:anchorView];
+		[popover showRelativeToRect:anchorRect
+							 ofView:anchorView
+					  preferredEdge:NSMaxXEdge];
+		return;
+	}
+
+	NSInteger selectedIndex = [self.formulaeTableView selectedRow];
 	NSRect anchorRect = [self.formulaeTableView rectOfRow:selectedIndex];
 	anchorRect.origin = [self.scrollView_formulae convertPoint:anchorRect.origin fromView:self.formulaeTableView];
 
@@ -947,6 +1131,7 @@ NSOpenSavePanelDelegate>
 	}
 	
 	[self.formulaeTableView deselectAll:nil];
+	[self.installedPackageListHost deselectAll];
 	[self setCurrentFormula:nil];
 	
 	[self updateInterfaceItems];
@@ -1015,7 +1200,16 @@ NSOpenSavePanelDelegate>
 
 - (void)menuNeedsUpdate:(NSMenu *)menu
 {
-	[self.formulaeTableView selectRowIndexes:[NSIndexSet indexSetWithIndex:[self.formulaeTableView clickedRow]] byExtendingSelection:NO];
+	if ([self isUsingInstalledPackageListHost])
+	{
+		[self.installedPackageListHost selectClickedRowIfNeeded];
+		return;
+	}
+	NSInteger clickedRow = [self.formulaeTableView clickedRow];
+	if (clickedRow >= 0)
+	{
+		[self.formulaeTableView selectRowIndexes:[NSIndexSet indexSetWithIndex:(NSUInteger)clickedRow] byExtendingSelection:NO];
+	}
 }
 
 #pragma mark - IBActions
@@ -1547,12 +1741,25 @@ NSOpenSavePanelDelegate>
 
 - (BPFormula *)selectedFormula
 {
+	if ([self isUsingInstalledPackageListHost])
+	{
+		NSString *name = self.installedPackageListHost.selectedPackageName;
+		if (name.length == 0) return nil;
+		NSInteger index = [self.formulaeDataSource indexOfFormulaNamed:name
+																  cask:self.installedPackageListHost.selectedPackageCask];
+		return [self.formulaeDataSource formulaAtIndex:index];
+	}
 	NSInteger selectedIndex = [self.formulaeTableView selectedRow];
 	return [self.formulaeDataSource formulaAtIndex:selectedIndex];
 }
 
 - (NSArray *)selectedFormulae
 {
+	if ([self isUsingInstalledPackageListHost])
+	{
+		BPFormula *selected = [self selectedFormula];
+		return selected ? @[selected] : nil;
+	}
 	NSIndexSet *selectedIndexes = [self.formulaeTableView selectedRowIndexes];
 	return [self.formulaeDataSource formulasAtIndexSet:selectedIndexes];
 }

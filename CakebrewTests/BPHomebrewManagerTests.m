@@ -331,4 +331,69 @@
 				   @"a superseded snapshot must be discarded, not published");
 }
 
+- (void)testUpdatingListsRefreshesStatusAndPinLookupSetsImmediately
+{
+	BPFormula *git = [BPFormula formulaWithName:@"git" andVersion:@"2.40.0"];
+	BPFormula *tapGit = [BPFormula formulaWithName:@"myorg/tap/git"];
+
+	self.manager.installedFormulae = @[git];
+	XCTAssertEqual([self.manager statusForFormula:tapGit], kBPFormulaInstalled);
+
+	self.manager.outdatedFormulae = @[git];
+	XCTAssertEqual([self.manager statusForFormula:tapGit], kBPFormulaOutdated);
+
+	self.manager.pinnedFormulae = @[git];
+	XCTAssertTrue([self.manager isFormulaPinned:tapGit]);
+
+	self.manager.outdatedFormulae = @[];
+	self.manager.installedFormulae = @[];
+	self.manager.pinnedFormulae = @[];
+	XCTAssertEqual([self.manager statusForFormula:tapGit], kBPFormulaNotInstalled);
+	XCTAssertFalse([self.manager isFormulaPinned:tapGit]);
+}
+
+- (void)testTenThousandCatalogStatusAndPinLookupsCompleteUnderFiftyMilliseconds
+{
+	NSMutableArray<BPFormula *> *catalog = [NSMutableArray arrayWithCapacity:10000];
+	NSMutableArray<BPFormula *> *installed = [NSMutableArray arrayWithCapacity:500];
+	NSMutableArray<BPFormula *> *outdated = [NSMutableArray arrayWithCapacity:50];
+	NSMutableArray<BPFormula *> *pinned = [NSMutableArray arrayWithCapacity:20];
+
+	for (NSUInteger i = 0; i < 10000; i++) {
+		NSString *name = [NSString stringWithFormat:@"pkg-%05lu", (unsigned long)i];
+		BPFormula *formula = [BPFormula formulaWithName:name andVersion:@"1.0.0"];
+		[catalog addObject:formula];
+		if (i % 20 == 0) {
+			[installed addObject:formula];
+		}
+		if (i % 200 == 0) {
+			[outdated addObject:formula];
+		}
+		if (i % 500 == 0) {
+			[pinned addObject:formula];
+		}
+	}
+
+	self.manager.installedFormulae = installed;
+	self.manager.outdatedFormulae = outdated;
+	self.manager.pinnedFormulae = pinned;
+
+	CFAbsoluteTime start = CFAbsoluteTimeGetCurrent();
+	NSUInteger installedCount = 0;
+	NSUInteger outdatedCount = 0;
+	NSUInteger pinnedCount = 0;
+	for (BPFormula *formula in catalog) {
+		BPFormulaStatus status = [self.manager statusForFormula:formula];
+		if (status == kBPFormulaInstalled) installedCount++;
+		if (status == kBPFormulaOutdated) outdatedCount++;
+		if ([self.manager isFormulaPinned:formula]) pinnedCount++;
+	}
+	CFAbsoluteTime elapsedMs = (CFAbsoluteTimeGetCurrent() - start) * 1000.0;
+
+	XCTAssertEqual(installedCount, 450u);
+	XCTAssertEqual(outdatedCount, 50u);
+	XCTAssertEqual(pinnedCount, 20u);
+	XCTAssertLessThan(elapsedMs, 50.0, @"10,000 status + pin lookups must be O(1) and complete well under 50 ms");
+}
+
 @end
