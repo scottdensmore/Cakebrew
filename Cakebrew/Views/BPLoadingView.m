@@ -7,11 +7,13 @@
 //
 
 #import "BPLoadingView.h"
+#import "BPFormulaInformation-Swift.h"
 
 @interface BPLoadingView()
 
 @property (strong) IBOutlet NSView *view;
 @property (weak) IBOutlet NSProgressIndicator *progressIndicator;
+@property (strong, nonatomic) BPLoadingHost *loadingHost;
 
 @end
 
@@ -42,17 +44,17 @@
 
 - (void)commonInit
 {
-	NSNib *nib = [[NSNib alloc] initWithNibNamed:@"Loading" bundle:nil];
-	[nib instantiateWithOwner:self topLevelObjects:NULL];
-	self.view.frame = self.bounds;
-	[self addSubview:self.view];
-	
-	self.view.translatesAutoresizingMaskIntoConstraints = NO;
-	
-	[self addConstraint:[self pin:self.view attribute:NSLayoutAttributeTop]];
-	[self addConstraint:[self pin:self.view attribute:NSLayoutAttributeLeft]];
-	[self addConstraint:[self pin:self.view attribute:NSLayoutAttributeBottom]];
-	[self addConstraint:[self pin:self.view attribute:NSLayoutAttributeRight]];
+	self.loadingHost = [[BPLoadingHost alloc] init];
+	NSView *hostView = self.loadingHost.viewController.view;
+	hostView.frame = self.bounds;
+	hostView.translatesAutoresizingMaskIntoConstraints = NO;
+	[self addSubview:hostView];
+	self.view = hostView;
+
+	[self addConstraint:[self pin:hostView attribute:NSLayoutAttributeTop]];
+	[self addConstraint:[self pin:hostView attribute:NSLayoutAttributeLeft]];
+	[self addConstraint:[self pin:hostView attribute:NSLayoutAttributeBottom]];
+	[self addConstraint:[self pin:hostView attribute:NSLayoutAttributeRight]];
 }
 
 - (NSLayoutConstraint *)pin:(id)item attribute:(NSLayoutAttribute)attribute

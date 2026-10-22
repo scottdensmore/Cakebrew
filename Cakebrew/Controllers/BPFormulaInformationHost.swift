@@ -496,12 +496,24 @@ public final class BPInstalledPackageListHost: NSObject {
         presentation.state.selectedRowIndex
     }
 
+    @objc public var selectedCount: Int {
+        presentation.state.selectedIDs.count
+    }
+
     @objc public var selectedPackageName: String? {
         presentation.state.selectedRow?.name
     }
 
     @objc public var selectedPackageCask: Bool {
         presentation.state.selectedRow?.cask ?? false
+    }
+
+    @objc public var selectedPackageNames: [String] {
+        presentation.state.selectedRows.map(\.name)
+    }
+
+    @objc public var selectedPackageCasks: [NSNumber] {
+        presentation.state.selectedRows.map { NSNumber(value: $0.cask) }
     }
 
     @objc public var listMode: Int {
@@ -552,10 +564,10 @@ public final class BPInstalledPackageListHost: NSObject {
                 statusRank: rank,
                 isPinned: pinned))
         }
-        let previousSelection = presentation.state.selectedID
+        let previousSelection = presentation.state.selectedIDs
         presentation.state.replaceRows(rows, isCaskList: cask)
         syncUnderlyingTableSelection()
-        if presentation.state.selectedID != previousSelection {
+        if presentation.state.selectedIDs != previousSelection {
             presentation.notifySelectionChanged()
         }
     }
@@ -569,6 +581,40 @@ public final class BPInstalledPackageListHost: NSObject {
                            caskFlags: [NSNumber],
                            mode rawMode: Int) {
         let resolvedMode = BPPackageListMode(rawMode: rawMode)
+        replaceRows(names: names,
+                    versions: versions,
+                    latestVersions: latestVersions,
+                    statusRanks: statusRanks,
+                    pinnedFlags: pinnedFlags,
+                    caskFlags: caskFlags,
+                    resolvedMode: resolvedMode)
+    }
+
+    @objc(updateRowsForObjCModeWithNames:versions:latestVersions:statusRanks:pinnedFlags:caskFlags:objcListMode:)
+    public func updateRowsForObjCMode(names: [String],
+                                      versions: [String],
+                                      latestVersions: [String],
+                                      statusRanks: [NSNumber],
+                                      pinnedFlags: [NSNumber],
+                                      caskFlags: [NSNumber],
+                                      objcListMode: Int) {
+        let resolvedMode = BPPackageListMode(objcListMode: objcListMode)
+        replaceRows(names: names,
+                    versions: versions,
+                    latestVersions: latestVersions,
+                    statusRanks: statusRanks,
+                    pinnedFlags: pinnedFlags,
+                    caskFlags: caskFlags,
+                    resolvedMode: resolvedMode)
+    }
+
+    private func replaceRows(names: [String],
+                             versions: [String],
+                             latestVersions: [String],
+                             statusRanks: [NSNumber],
+                             pinnedFlags: [NSNumber],
+                             caskFlags: [NSNumber],
+                             resolvedMode: BPPackageListMode) {
         let count = names.count
         var rows: [BPInstalledPackageRow] = []
         rows.reserveCapacity(count)
@@ -586,10 +632,10 @@ public final class BPInstalledPackageListHost: NSObject {
                 statusRank: rank,
                 isPinned: pinned))
         }
-        let previousSelection = presentation.state.selectedID
+        let previousSelection = presentation.state.selectedIDs
         presentation.state.replaceRows(rows, mode: resolvedMode)
         syncUnderlyingTableSelection()
-        if presentation.state.selectedID != previousSelection {
+        if presentation.state.selectedIDs != previousSelection {
             presentation.notifySelectionChanged()
         }
     }
@@ -640,9 +686,11 @@ public final class BPInstalledPackageListHost: NSObject {
         guard let tableView = presentation.ensureTableViewAttached() else { return }
         let clicked = tableView.clickedRow
         guard clicked >= 0 && clicked < presentation.state.displayedRows.count else { return }
-        if presentation.state.selectRow(at: clicked) {
-            tableView.selectRowIndexes(IndexSet(integer: clicked), byExtendingSelection: false)
-            presentation.notifySelectionChanged()
+        if !presentation.state.selectedRowIndexes.contains(clicked) {
+            if presentation.state.selectRow(at: clicked) {
+                tableView.selectRowIndexes(IndexSet(integer: clicked), byExtendingSelection: false)
+                presentation.notifySelectionChanged()
+            }
         }
     }
 
@@ -662,13 +710,18 @@ public final class BPInstalledPackageListHost: NSObject {
 
     private func syncUnderlyingTableSelection() {
         guard let tableView = presentation.ensureTableViewAttached() else { return }
-        let row = presentation.state.selectedRowIndex
-        if row >= 0 && row < tableView.numberOfRows {
-            tableView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
-            tableView.scrollRowToVisible(row)
-        } else {
-            tableView.deselectAll(nil)
+        let indexes = presentation.state.selectedRowIndexes
+        if !indexes.isEmpty {
+            let validIndexes = IndexSet(indexes.filter { $0 >= 0 && $0 < tableView.numberOfRows })
+            if !validIndexes.isEmpty {
+                tableView.selectRowIndexes(validIndexes, byExtendingSelection: false)
+                if let first = validIndexes.first {
+                    tableView.scrollRowToVisible(first)
+                }
+                return
+            }
         }
+        tableView.deselectAll(nil)
     }
 
     private func installKeyboardMonitor() {
@@ -749,6 +802,10 @@ private final class BPInstalledTableBridgeCoordinator: NSObject {
             presentation?.tableView = tableView
             tableView.setAccessibilityLabel(NSLocalizedString("Formulae", comment: ""))
         }
+        let allowsMulti = presentation?.state.mode.allowsMultipleSelection ?? false
+        if tableView.allowsMultipleSelection != allowsMulti {
+            tableView.allowsMultipleSelection = allowsMulti
+        }
         if tableView.target !== self || tableView.doubleAction != #selector(handleDoubleClick(_:)) {
             tableView.target = self
             tableView.doubleAction = #selector(handleDoubleClick(_:))
@@ -811,11 +868,31 @@ private final class BPInstalledTableBridgeCoordinator: NSObject {
     }
 
     private static func findTableView(in view: NSView) -> NSTableView? {
-        if let table = view as? NSTableView {
+        if let table = view as? NSTableView, !table.isHiddenOrHasHiddenAncestor {
             return table
         }
         for subview in view.subviews {
             if let found = findTableView(in: subview) {
+                return found
+            }
+        }
+        if let table = view as? NSTableView {
+            return table
+        }
+        for subview in view.subviews {
+            if let fallback = findAnyTableView(in: subview) {
+                return fallback
+            }
+        }
+        return nil
+    }
+
+    private static func findAnyTableView(in view: NSView) -> NSTableView? {
+        if let table = view as? NSTableView {
+            return table
+        }
+        for subview in view.subviews {
+            if let found = findAnyTableView(in: subview) {
                 return found
             }
         }
@@ -900,13 +977,13 @@ private struct BPInstalledTableBridgeIntrospector: NSViewRepresentable {
 private struct BPInstalledPackageListView: View {
     @ObservedObject var presentation: BPInstalledPackageListPresentation
 
-    private var selectionBinding: Binding<BPFormulaInformationIdentity?> {
+    private var selectionSetBinding: Binding<Set<BPFormulaInformationIdentity>> {
         Binding(
-            get: { presentation.state.selectedID },
+            get: { presentation.state.selectedIDs },
             set: { newValue in
-                let oldSelection = presentation.state.selectedID
-                presentation.state.select(id: newValue)
-                if presentation.state.selectedID != oldSelection {
+                let oldSelection = presentation.state.selectedIDs
+                presentation.state.select(ids: newValue)
+                if presentation.state.selectedIDs != oldSelection {
                     presentation.notifySelectionChanged()
                 }
             }
@@ -978,19 +1055,20 @@ private struct BPInstalledPackageListView: View {
                 Capsule()
                     .fill(tint.opacity(statusRank == 0 ? 0.10 : 0.16))
             )
+            .accessibilityValue(text)
     }
 
     @ViewBuilder
     private var modeTable: some View {
         let mode = presentation.state.mode
         if !mode.showsVersionColumn {
-            Table(presentation.state.displayedRows, selection: selectionBinding, sortOrder: sortOrderBinding) {
+            Table(presentation.state.displayedRows, selection: selectionSetBinding, sortOrder: sortOrderBinding) {
                 TableColumn(BPMainMenuLocalizedTitle("A78-TI-Q8X.headerCell.title", fallback: "Name"), value: \.name) { row in
                     nameCell(row)
                 }
             }
         } else if mode.showsLatestVersionColumn {
-            Table(presentation.state.displayedRows, selection: selectionBinding, sortOrder: sortOrderBinding) {
+            Table(presentation.state.displayedRows, selection: selectionSetBinding, sortOrder: sortOrderBinding) {
                 TableColumn(BPMainMenuLocalizedTitle("A78-TI-Q8X.headerCell.title", fallback: "Name"), value: \.name) { row in
                     nameCell(row)
                 }
@@ -999,16 +1077,27 @@ private struct BPInstalledPackageListView: View {
                         .font(.system(.body, design: .monospaced))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                        .accessibilityValue(row.version)
                 }
                 TableColumn(BPMainMenuLocalizedTitle("d93-10-421.headerCell.title", fallback: "Latest Version"), value: \.latestVersion) { row in
                     Text(row.latestVersion)
                         .font(.system(.body, design: .monospaced))
                         .fontWeight(.medium)
                         .lineLimit(1)
+                        .accessibilityValue(row.latestVersion)
+                }
+            }
+        } else if mode.showsStatusColumn && !mode.showsInstalledVersionColumn {
+            Table(presentation.state.displayedRows, selection: selectionSetBinding, sortOrder: sortOrderBinding) {
+                TableColumn(BPMainMenuLocalizedTitle("A78-TI-Q8X.headerCell.title", fallback: "Name"), value: \.name) { row in
+                    nameCell(row)
+                }
+                TableColumn(BPMainMenuLocalizedTitle("Be6-3F-p4b.headerCell.title", fallback: "Status"), value: \.statusRank) { row in
+                    statusBadge(for: row.statusRank)
                 }
             }
         } else if mode.showsStatusColumn {
-            Table(presentation.state.displayedRows, selection: selectionBinding, sortOrder: sortOrderBinding) {
+            Table(presentation.state.displayedRows, selection: selectionSetBinding, sortOrder: sortOrderBinding) {
                 TableColumn(BPMainMenuLocalizedTitle("A78-TI-Q8X.headerCell.title", fallback: "Name"), value: \.name) { row in
                     nameCell(row)
                 }
@@ -1016,13 +1105,14 @@ private struct BPInstalledPackageListView: View {
                     Text(row.version)
                         .font(.system(.body, design: .monospaced))
                         .lineLimit(1)
+                        .accessibilityValue(row.version)
                 }
                 TableColumn(BPMainMenuLocalizedTitle("Be6-3F-p4b.headerCell.title", fallback: "Status"), value: \.statusRank) { row in
                     statusBadge(for: row.statusRank)
                 }
             }
         } else {
-            Table(presentation.state.displayedRows, selection: selectionBinding, sortOrder: sortOrderBinding) {
+            Table(presentation.state.displayedRows, selection: selectionSetBinding, sortOrder: sortOrderBinding) {
                 TableColumn(BPMainMenuLocalizedTitle("A78-TI-Q8X.headerCell.title", fallback: "Name"), value: \.name) { row in
                     nameCell(row)
                 }
@@ -1030,6 +1120,7 @@ private struct BPInstalledPackageListView: View {
                     Text(row.version)
                         .font(.system(.body, design: .monospaced))
                         .lineLimit(1)
+                        .accessibilityValue(row.version)
                 }
             }
         }
@@ -2019,6 +2110,1130 @@ private struct BPPreferencesView: View {
             Spacer(minLength: 0)
         }
         .padding(16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+// MARK: - Shared AppKit View Containers for Streaming Logs & Tables
+
+@MainActor
+private struct BPNSViewContainerRepresentable: NSViewRepresentable {
+    let view: NSView
+
+    func makeNSView(context: Context) -> NSView {
+        let container = NSView(frame: .zero)
+        if view.superview !== container {
+            view.removeFromSuperview()
+            view.translatesAutoresizingMaskIntoConstraints = false
+            container.addSubview(view)
+            NSLayoutConstraint.activate([
+                view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+                view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+                view.topAnchor.constraint(equalTo: container.topAnchor),
+                view.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+            ])
+        }
+        return container
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        if view.superview !== nsView {
+            view.removeFromSuperview()
+            view.translatesAutoresizingMaskIntoConstraints = false
+            nsView.addSubview(view)
+            NSLayoutConstraint.activate([
+                view.leadingAnchor.constraint(equalTo: nsView.leadingAnchor),
+                view.trailingAnchor.constraint(equalTo: nsView.trailingAnchor),
+                view.topAnchor.constraint(equalTo: nsView.topAnchor),
+                view.bottomAnchor.constraint(equalTo: nsView.bottomAnchor)
+            ])
+        }
+    }
+}
+
+@MainActor
+private struct BPTextViewContainerRepresentable: NSViewRepresentable {
+    let textView: NSTextView
+
+    func makeNSView(context: Context) -> NSView {
+        let container = NSView(frame: .zero)
+        embedTextView(in: container)
+        return container
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        embedTextView(in: nsView)
+    }
+
+    private func embedTextView(in container: NSView) {
+        let scrollView: NSScrollView
+        if let existingScroll = textView.enclosingScrollView {
+            scrollView = existingScroll
+        } else {
+            let created = NSScrollView(frame: .zero)
+            created.hasVerticalScroller = true
+            created.hasHorizontalScroller = false
+            created.autohidesScrollers = true
+            created.borderType = .bezelBorder
+            created.drawsBackground = true
+            textView.isEditable = false
+            textView.isSelectable = true
+            textView.isVerticallyResizable = true
+            textView.isHorizontallyResizable = false
+            textView.autoresizingMask = [.width]
+            textView.textContainer?.widthTracksTextView = true
+            created.documentView = textView
+            scrollView = created
+        }
+        if scrollView.superview !== container {
+            scrollView.removeFromSuperview()
+            scrollView.translatesAutoresizingMaskIntoConstraints = false
+            container.addSubview(scrollView)
+            NSLayoutConstraint.activate([
+                scrollView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+                scrollView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+                scrollView.topAnchor.constraint(equalTo: container.topAnchor),
+                scrollView.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+            ])
+        }
+    }
+}
+
+// MARK: - SwiftUI Empty State Host
+
+@MainActor
+@objc(BPEmptyStateHost)
+public final class BPEmptyStateHost: NSObject {
+    @objc public let viewController: NSViewController
+    public let model: BPEmptyStateModel
+
+    @objc(initWithSymbolName:title:message:)
+    public init(symbolName: String, title: String, message: String) {
+        let model = BPEmptyStateModel(symbolName: symbolName, title: title, message: message)
+        self.model = model
+        let host = NSHostingController(rootView: BPEmptyStateSwiftUIView(model: model))
+        host.sizingOptions = []
+        self.viewController = host
+        super.init()
+    }
+}
+
+@MainActor
+private struct BPEmptyStateSwiftUIView: View {
+    let model: BPEmptyStateModel
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: model.symbolName)
+                .font(.system(size: 38, weight: .regular))
+                .foregroundStyle(.tertiary)
+            Text(model.title)
+                .font(.system(size: NSFont.systemFontSize + 3, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .accessibilityValue(model.title)
+            Text(model.message)
+                .font(.system(size: NSFont.smallSystemFontSize))
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 320)
+                .accessibilityValue(model.message)
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(model.combinedAccessibilityLabel)
+        .accessibilityValue(model.combinedAccessibilityLabel)
+    }
+}
+
+// MARK: - SwiftUI Loading Overlay Host
+
+@MainActor
+@objc(BPLoadingHost)
+public final class BPLoadingHost: NSObject {
+    @objc public let viewController: NSViewController
+
+    public override init() {
+        let host = NSHostingController(rootView: BPLoadingSwiftUIView())
+        host.sizingOptions = []
+        self.viewController = host
+        super.init()
+    }
+}
+
+@MainActor
+private struct BPLoadingSwiftUIView: View {
+    private var loadingTitle: String {
+        Bundle.main.localizedString(forKey: "a1c-mR-c5p.title", value: "Loading", table: "Loading")
+    }
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text(loadingTitle)
+                .font(.headline)
+                .foregroundStyle(.secondary)
+                .accessibilityValue(loadingTitle)
+                .accessibilityIdentifier("loading.title")
+            ProgressView()
+                .controlSize(.regular)
+                .accessibilityLabel(NSLocalizedString("VoiceOver_Operation_Progress", comment: ""))
+                .accessibilityIdentifier("loading.progress")
+        }
+        .padding(28)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(.regularMaterial)
+        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+// MARK: - SwiftUI Disabled / Recovery Overlay Host
+
+@MainActor
+private final class BPDisabledPresentation: ObservableObject {
+    @Published var state = BPDisabledRecoveryState(
+        title: NSLocalizedString("Homebrew wasn’t found", comment: ""),
+        message: NSLocalizedString("Cakebrew couldn’t find Homebrew in your login shell’s PATH. Open brew.sh for installation instructions, or fix your shell configuration, then choose Try Again.", comment: ""),
+        retryEnabled: true,
+        isChecking: false
+    )
+    var onRetry: (() -> Void)?
+    var onOpenInstructions: (() -> Void)?
+}
+
+@MainActor
+@objc(BPDisabledHost)
+public final class BPDisabledHost: NSObject {
+    private let presentation = BPDisabledPresentation()
+    @objc public let viewController: NSViewController
+
+    @objc public var onRetry: (() -> Void)? {
+        get { presentation.onRetry }
+        set { presentation.onRetry = newValue }
+    }
+
+    @objc public var onOpenInstructions: (() -> Void)? {
+        get { presentation.onOpenInstructions }
+        set { presentation.onOpenInstructions = newValue }
+    }
+
+    public override init() {
+        let presentation = self.presentation
+        let host = NSHostingController(rootView: BPDisabledSwiftUIView(presentation: presentation))
+        host.sizingOptions = []
+        self.viewController = host
+        super.init()
+    }
+
+    @objc(updateWithTitle:message:retryEnabled:checking:)
+    public func update(title: String, message: String, retryEnabled: Bool, checking: Bool) {
+        presentation.state = BPDisabledRecoveryState(
+            title: title,
+            message: message,
+            retryEnabled: retryEnabled,
+            isChecking: checking
+        )
+    }
+}
+
+@MainActor
+private struct BPDisabledSwiftUIView: View {
+    @ObservedObject var presentation: BPDisabledPresentation
+
+    var body: some View {
+        VStack(spacing: 14) {
+            Image(systemName: presentation.state.isChecking ? "magnifyingglass.circle" : "exclamationmark.triangle")
+                .font(.system(size: 40, weight: .light))
+                .foregroundStyle(.secondary)
+
+            Text(presentation.state.title)
+                .font(.title2)
+                .fontWeight(.semibold)
+                .multilineTextAlignment(.center)
+                .accessibilityValue(presentation.state.title)
+                .accessibilityIdentifier("homebrew.recovery.title")
+
+            Text(presentation.state.message)
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 460)
+                .accessibilityValue(presentation.state.message)
+                .accessibilityIdentifier("homebrew.recovery.message")
+
+            HStack(spacing: 12) {
+                Button(NSLocalizedString("Try Again", comment: "")) {
+                    presentation.onRetry?()
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!presentation.state.retryEnabled)
+                .accessibilityIdentifier("homebrew.retry")
+
+                Button(NSLocalizedString("Open brew.sh", comment: "")) {
+                    presentation.onOpenInstructions?()
+                }
+                .accessibilityIdentifier("homebrew.install")
+            }
+            .padding(.top, 4)
+        }
+        .padding(32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+// MARK: - SwiftUI Console Tool Host (Doctor & Update)
+
+@MainActor
+private final class BPConsoleToolPresentation: ObservableObject {
+    @Published var state: BPConsoleToolState
+    let textView: NSTextView
+    var onRun: (() -> Void)?
+    var onClear: (() -> Void)?
+
+    init(textView: NSTextView, state: BPConsoleToolState) {
+        self.textView = textView
+        self.state = state
+    }
+}
+
+@MainActor
+@objc(BPConsoleToolHost)
+public final class BPConsoleToolHost: NSObject {
+    private let presentation: BPConsoleToolPresentation
+    @objc public let viewController: NSViewController
+
+    @objc public var isRunning: Bool {
+        get { presentation.state.isRunning }
+        set { presentation.state.isRunning = newValue }
+    }
+
+    @objc public var onRun: (() -> Void)? {
+        get { presentation.onRun }
+        set { presentation.onRun = newValue }
+    }
+
+    @objc public var onClear: (() -> Void)? {
+        get { presentation.onClear }
+        set { presentation.onClear = newValue }
+    }
+
+    @objc(initWithTextView:title:subtitle:runButtonTitle:clearButtonTitle:)
+    public init(textView: NSTextView,
+                title: String,
+                subtitle: String?,
+                runButtonTitle: String,
+                clearButtonTitle: String) {
+        let state = BPConsoleToolState(
+            title: title,
+            subtitle: subtitle,
+            runButtonTitle: runButtonTitle,
+            clearButtonTitle: clearButtonTitle,
+            isRunning: false
+        )
+        let presentation = BPConsoleToolPresentation(textView: textView, state: state)
+        self.presentation = presentation
+        let host = NSHostingController(rootView: BPConsoleToolView(presentation: presentation))
+        host.sizingOptions = []
+        self.viewController = host
+        super.init()
+    }
+}
+
+@MainActor
+private struct BPConsoleToolView: View {
+    @ObservedObject var presentation: BPConsoleToolPresentation
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 10) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(presentation.state.title)
+                        .font(.system(size: 16, weight: .semibold))
+                        .accessibilityAddTraits(.isHeader)
+                        .accessibilityValue(presentation.state.title)
+                    if let subtitle = presentation.state.subtitle, !subtitle.isEmpty {
+                        Text(subtitle)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .accessibilityValue(subtitle)
+                    }
+                }
+
+                Spacer()
+
+                if presentation.state.isRunning {
+                    ProgressView()
+                        .controlSize(.small)
+                        .accessibilityLabel(NSLocalizedString("VoiceOver_Operation_Progress", comment: ""))
+                }
+
+                Button(presentation.state.clearButtonTitle) {
+                    presentation.onClear?()
+                }
+                .controlSize(.small)
+                .keyboardShortcut("k", modifiers: .command)
+
+                Button(presentation.state.runButtonTitle) {
+                    presentation.onRun?()
+                }
+                .controlSize(.small)
+                .buttonStyle(.borderedProminent)
+                .disabled(presentation.state.isRunning)
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, 12)
+
+            BPTextViewContainerRepresentable(textView: presentation.textView)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.horizontal, 12)
+                .padding(.bottom, 12)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+// MARK: - SwiftUI Services Tool Host
+
+@MainActor
+private final class BPServicesPresentation: ObservableObject {
+    let tableScrollView: NSView
+    let detailsScrollView: NSView
+    @Published var startEnabled = false
+    @Published var stopEnabled = false
+    @Published var restartEnabled = false
+    @Published var revealEnabled = false
+    @Published var logsEnabled = false
+    @Published var copyEnabled = false
+
+    var onStart: (() -> Void)?
+    var onStop: (() -> Void)?
+    var onRestart: (() -> Void)?
+    var onRevealFile: (() -> Void)?
+    var onOpenLogs: (() -> Void)?
+    var onCopyOutput: (() -> Void)?
+
+    init(tableScrollView: NSView, detailsScrollView: NSView) {
+        self.tableScrollView = tableScrollView
+        self.detailsScrollView = detailsScrollView
+    }
+}
+
+@MainActor
+@objc(BPServicesHost)
+public final class BPServicesHost: NSObject {
+    private let presentation: BPServicesPresentation
+    @objc public let viewController: NSViewController
+
+    @objc public var onStart: (() -> Void)? {
+        get { presentation.onStart }
+        set { presentation.onStart = newValue }
+    }
+
+    @objc public var onStop: (() -> Void)? {
+        get { presentation.onStop }
+        set { presentation.onStop = newValue }
+    }
+
+    @objc public var onRestart: (() -> Void)? {
+        get { presentation.onRestart }
+        set { presentation.onRestart = newValue }
+    }
+
+    @objc public var onRevealFile: (() -> Void)? {
+        get { presentation.onRevealFile }
+        set { presentation.onRevealFile = newValue }
+    }
+
+    @objc public var onOpenLogs: (() -> Void)? {
+        get { presentation.onOpenLogs }
+        set { presentation.onOpenLogs = newValue }
+    }
+
+    @objc public var onCopyOutput: (() -> Void)? {
+        get { presentation.onCopyOutput }
+        set { presentation.onCopyOutput = newValue }
+    }
+
+    @objc(initWithTableScrollView:detailsScrollView:)
+    public init(tableScrollView: NSView, detailsScrollView: NSView) {
+        let presentation = BPServicesPresentation(
+            tableScrollView: tableScrollView,
+            detailsScrollView: detailsScrollView
+        )
+        self.presentation = presentation
+        let host = NSHostingController(rootView: BPServicesView(presentation: presentation))
+        host.sizingOptions = []
+        self.viewController = host
+        super.init()
+    }
+
+    @objc(updateWithStartEnabled:stopEnabled:restartEnabled:revealEnabled:logsEnabled:copyEnabled:)
+    public func update(startEnabled: Bool,
+                       stopEnabled: Bool,
+                       restartEnabled: Bool,
+                       revealEnabled: Bool,
+                       logsEnabled: Bool,
+                       copyEnabled: Bool) {
+        presentation.startEnabled = startEnabled
+        presentation.stopEnabled = stopEnabled
+        presentation.restartEnabled = restartEnabled
+        presentation.revealEnabled = revealEnabled
+        presentation.logsEnabled = logsEnabled
+        presentation.copyEnabled = copyEnabled
+    }
+}
+
+@MainActor
+private struct BPServicesView: View {
+    @ObservedObject var presentation: BPServicesPresentation
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(NSLocalizedString("Services_Title", comment: ""))
+                .font(.system(size: 16, weight: .semibold))
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityValue(NSLocalizedString("Services_Title", comment: ""))
+
+            BPNSViewContainerRepresentable(view: presentation.tableScrollView)
+                .frame(minHeight: 90, maxHeight: .infinity)
+
+            HStack(spacing: 8) {
+                Button(NSLocalizedString("Services_Start", comment: "")) {
+                    presentation.onStart?()
+                }
+                .disabled(!presentation.startEnabled)
+
+                Button(NSLocalizedString("Services_Stop", comment: "")) {
+                    presentation.onStop?()
+                }
+                .disabled(!presentation.stopEnabled)
+
+                Button(NSLocalizedString("Services_Restart", comment: "")) {
+                    presentation.onRestart?()
+                }
+                .disabled(!presentation.restartEnabled)
+
+                Spacer()
+            }
+
+            BPNSViewContainerRepresentable(view: presentation.detailsScrollView)
+                .frame(height: 115)
+
+            HStack(spacing: 6) {
+                Button(NSLocalizedString("Services_Reveal_File", comment: "")) {
+                    presentation.onRevealFile?()
+                }
+                .disabled(!presentation.revealEnabled)
+                .accessibilityIdentifier("services.revealFile")
+
+                Button(NSLocalizedString("Services_Open_Logs", comment: "")) {
+                    presentation.onOpenLogs?()
+                }
+                .disabled(!presentation.logsEnabled)
+                .accessibilityIdentifier("services.openLogs")
+
+                Button(NSLocalizedString("Services_Copy_Output", comment: "")) {
+                    presentation.onCopyOutput?()
+                }
+                .disabled(!presentation.copyEnabled)
+                .accessibilityIdentifier("services.copyOutput")
+
+                Spacer()
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+// MARK: - SwiftUI Autoremove Sheet Host
+
+@MainActor
+private final class BPAutoremovePresentation: ObservableObject {
+    @Published var state = BPAutoremoveSheetState(
+        statusText: NSLocalizedString("Checking unused dependencies…", comment: ""),
+        warningText: NSLocalizedString("Only the reviewed formulae will be submitted for removal. Homebrew will recheck its dependency rules. Do not run other Homebrew operations until this finishes: external changes cannot be checked atomically.", comment: ""),
+        removeButtonTitle: NSLocalizedString("Remove Reviewed Dependencies", comment: ""),
+        cancelButtonTitle: NSLocalizedString("Cancel", comment: ""),
+        removeEnabled: false,
+        cancelEnabled: true,
+        isBusy: true
+    )
+    let outputTextView: NSTextView
+    var onRemove: (() -> Void)?
+    var onCancelOrClose: (() -> Void)?
+
+    init(outputTextView: NSTextView) {
+        self.outputTextView = outputTextView
+    }
+}
+
+@MainActor
+@objc(BPAutoremoveHost)
+public final class BPAutoremoveHost: NSObject {
+    private let presentation: BPAutoremovePresentation
+    @objc public let viewController: NSViewController
+
+    @objc public var onRemove: (() -> Void)? {
+        get { presentation.onRemove }
+        set { presentation.onRemove = newValue }
+    }
+
+    @objc public var onCancelOrClose: (() -> Void)? {
+        get { presentation.onCancelOrClose }
+        set { presentation.onCancelOrClose = newValue }
+    }
+
+    @objc(initWithOutputTextView:)
+    public init(outputTextView: NSTextView) {
+        let presentation = BPAutoremovePresentation(outputTextView: outputTextView)
+        self.presentation = presentation
+        let host = NSHostingController(rootView: BPAutoremoveView(presentation: presentation))
+        host.sizingOptions = []
+        self.viewController = host
+        super.init()
+    }
+
+    @objc(updateWithStatusText:removeEnabled:cancelTitle:cancelEnabled:busy:)
+    public func update(statusText: String,
+                       removeEnabled: Bool,
+                       cancelTitle: String,
+                       cancelEnabled: Bool,
+                       busy: Bool) {
+        presentation.state.statusText = statusText
+        presentation.state.removeEnabled = removeEnabled
+        presentation.state.cancelButtonTitle = cancelTitle
+        presentation.state.cancelEnabled = cancelEnabled
+        presentation.state.isBusy = busy
+    }
+}
+
+@MainActor
+private struct BPAutoremoveView: View {
+    @ObservedObject var presentation: BPAutoremovePresentation
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(presentation.state.statusText)
+                .font(.system(size: 14, weight: .bold))
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityValue(presentation.state.statusText)
+                .accessibilityIdentifier("autoremove.status")
+
+            Text(presentation.state.warningText)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityValue(presentation.state.warningText)
+
+            BPTextViewContainerRepresentable(textView: presentation.outputTextView)
+                .frame(maxWidth: .infinity, minHeight: 180, maxHeight: .infinity)
+
+            HStack(spacing: 12) {
+                Button(presentation.state.cancelButtonTitle) {
+                    presentation.onCancelOrClose?()
+                }
+                .disabled(!presentation.state.cancelEnabled)
+                .keyboardShortcut(.cancelAction)
+                .accessibilityIdentifier("autoremove.cancel")
+
+                Button(presentation.state.removeButtonTitle) {
+                    presentation.onRemove?()
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!presentation.state.removeEnabled)
+                .accessibilityIdentifier("autoremove.remove")
+
+                Spacer()
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+// MARK: - SwiftUI Bundle (Brewfile Import / Export) Sheet Host
+
+private func BPBundleWindowLocalizedTitle(_ key: String, fallback: String) -> String {
+    Bundle.main.localizedString(forKey: key, value: fallback, table: "BPBundleWindow")
+}
+
+@MainActor
+private final class BPBundleOperationPresentation: ObservableObject {
+    @Published var state = BPBundleSheetState(
+        mode: .importing,
+        headerTitle: BPBundleWindowLocalizedTitle("UHp-GH-2qP.title", fallback: "Homebrew Bundle"),
+        subtitleText: BPBundleWindowLocalizedTitle("UQX-gO-pze.title", fallback: "Importing File"),
+        statusText: BPBundleWindowLocalizedTitle("NRz-0t-Pn6.title", fallback: "Please wait while the file is imported."),
+        detailText: "",
+        actionButtonTitle: NSLocalizedString("Cancel", comment: ""),
+        actionEnabled: true,
+        isRunning: true,
+        hasFinished: false,
+        succeeded: false
+    )
+    let importTextView: NSTextView
+    var onAction: (() -> Void)?
+
+    init(importTextView: NSTextView) {
+        self.importTextView = importTextView
+    }
+}
+
+@MainActor
+@objc(BPBundleOperationHost)
+public final class BPBundleOperationHost: NSObject {
+    private let presentation: BPBundleOperationPresentation
+    @objc public let viewController: NSViewController
+
+    @objc public var onAction: (() -> Void)? {
+        get { presentation.onAction }
+        set { presentation.onAction = newValue }
+    }
+
+    @objc(initWithImportTextView:)
+    public init(importTextView: NSTextView) {
+        let presentation = BPBundleOperationPresentation(importTextView: importTextView)
+        self.presentation = presentation
+        let host = NSHostingController(rootView: BPBundleOperationView(presentation: presentation))
+        host.sizingOptions = []
+        self.viewController = host
+        super.init()
+    }
+
+    @objc(configureImportWithStatusText:actionTitle:actionEnabled:running:)
+    public func configureImport(statusText: String?,
+                                actionTitle: String,
+                                actionEnabled: Bool,
+                                running: Bool) {
+        let resolvedStatus = (statusText?.isEmpty == false)
+            ? statusText!
+            : BPBundleWindowLocalizedTitle("NRz-0t-Pn6.title", fallback: "Please wait while the file is imported.")
+        presentation.state = BPBundleSheetState(
+            mode: .importing,
+            headerTitle: BPBundleWindowLocalizedTitle("UHp-GH-2qP.title", fallback: "Homebrew Bundle"),
+            subtitleText: BPBundleWindowLocalizedTitle("UQX-gO-pze.title", fallback: "Importing File"),
+            statusText: resolvedStatus,
+            detailText: "",
+            actionButtonTitle: actionTitle,
+            actionEnabled: actionEnabled,
+            isRunning: running,
+            hasFinished: !running,
+            succeeded: !running
+        )
+    }
+
+    @objc(configureExportWithStatusText:detailText:actionTitle:actionEnabled:running:finished:succeeded:)
+    public func configureExport(statusText: String?,
+                                detailText: String?,
+                                actionTitle: String?,
+                                actionEnabled: Bool,
+                                running: Bool,
+                                finished: Bool,
+                                succeeded: Bool) {
+        let resolvedStatus = (statusText?.isEmpty == false)
+            ? statusText!
+            : BPBundleWindowLocalizedTitle("lO8-qv-x07.title", fallback: "Export Successful")
+        let resolvedDetail = (detailText?.isEmpty == false)
+            ? detailText!
+            : BPBundleWindowLocalizedTitle("Vid-Aa-KXl.title", fallback: "Please wait while the file is generated.")
+        let resolvedAction = (actionTitle?.isEmpty == false)
+            ? actionTitle!
+            : BPBundleWindowLocalizedTitle("xSx-yq-DSQ.title", fallback: "Close")
+        presentation.state = BPBundleSheetState(
+            mode: .exporting,
+            headerTitle: BPBundleWindowLocalizedTitle("UHp-GH-2qP.title", fallback: "Homebrew Bundle"),
+            subtitleText: BPBundleWindowLocalizedTitle("Kyw-ca-xgs.title", fallback: "Exporting File"),
+            statusText: resolvedStatus,
+            detailText: resolvedDetail,
+            actionButtonTitle: resolvedAction,
+            actionEnabled: actionEnabled,
+            isRunning: running,
+            hasFinished: finished,
+            succeeded: succeeded
+        )
+    }
+}
+
+@MainActor
+private struct BPBundleOperationView: View {
+    @ObservedObject var presentation: BPBundleOperationPresentation
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(presentation.state.headerTitle)
+                .font(.system(size: 16, weight: .semibold))
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityValue(presentation.state.headerTitle)
+
+            if presentation.state.mode == .importing {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(presentation.state.subtitleText)
+                        .font(.body)
+                        .accessibilityValue(presentation.state.subtitleText)
+
+                    Text(presentation.state.statusText)
+                        .font(.smallCaps(.caption)())
+                        .foregroundStyle(.secondary)
+                        .accessibilityValue(presentation.state.statusText)
+                        .accessibilityIdentifier("brewfile.import.status")
+
+                    BPTextViewContainerRepresentable(textView: presentation.importTextView)
+                        .frame(maxWidth: .infinity, minHeight: 160, maxHeight: .infinity)
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(presentation.state.subtitleText)
+                        .font(.body)
+                        .accessibilityValue(presentation.state.subtitleText)
+
+                    if !presentation.state.hasFinished || !presentation.state.succeeded {
+                        Text(presentation.state.detailText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .accessibilityValue(presentation.state.detailText)
+                            .accessibilityIdentifier("brewfile.export.detail")
+                    }
+
+                    Spacer(minLength: 8)
+
+                    if presentation.state.hasFinished {
+                        VStack(spacing: 8) {
+                            Image(systemName: presentation.state.succeeded ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                .font(.system(size: 48))
+                                .foregroundStyle(presentation.state.succeeded ? .green : .red)
+                            Text(presentation.state.statusText)
+                                .font(.headline)
+                                .accessibilityValue(presentation.state.statusText)
+                                .accessibilityIdentifier("brewfile.export.status")
+                        }
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    }
+
+                    Spacer(minLength: 8)
+                }
+                .frame(maxWidth: .infinity, minHeight: 160, maxHeight: .infinity)
+            }
+
+            HStack {
+                if presentation.state.isRunning {
+                    ProgressView()
+                        .controlSize(.small)
+                        .accessibilityLabel(NSLocalizedString("VoiceOver_Operation_Progress", comment: ""))
+                        .accessibilityIdentifier(presentation.state.mode == .exporting ? "brewfile.export.progress" : "brewfile.import.progress")
+                }
+
+                Spacer()
+
+                Button(presentation.state.actionButtonTitle) {
+                    presentation.onAction?()
+                }
+                .disabled(!presentation.state.actionEnabled)
+                .accessibilityIdentifier(presentation.state.mode == .importing ? "brewfile.import.action" : "brewfile.export.close")
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+// MARK: - SwiftUI Formula Options Sheet Host
+
+private func BPFormulaOptionsLocalizedTitle(_ key: String, fallback: String) -> String {
+    Bundle.main.localizedString(forKey: key, value: fallback, table: "BPFormulaOptionsWindow")
+}
+
+@MainActor
+private final class BPFormulaOptionsPresentation: ObservableObject {
+    @Published var state = BPFormulaOptionsSheetState()
+    var onOptionToggled: ((String, Bool) -> Void)?
+    var onCancel: (() -> Void)?
+    var onInstall: (() -> Void)?
+}
+
+@MainActor
+@objc(BPFormulaOptionsHost)
+public final class BPFormulaOptionsHost: NSObject {
+    private let presentation = BPFormulaOptionsPresentation()
+    @objc public let viewController: NSViewController
+
+    @objc public var selectedOptionNames: [String] {
+        presentation.state.selectedOptionNames
+    }
+
+    @objc public var onOptionToggled: ((String, Bool) -> Void)? {
+        get { presentation.onOptionToggled }
+        set { presentation.onOptionToggled = newValue }
+    }
+
+    @objc public var onCancel: (() -> Void)? {
+        get { presentation.onCancel }
+        set { presentation.onCancel = newValue }
+    }
+
+    @objc public var onInstall: (() -> Void)? {
+        get { presentation.onInstall }
+        set { presentation.onInstall = newValue }
+    }
+
+    public override init() {
+        let presentation = self.presentation
+        let host = NSHostingController(rootView: BPFormulaOptionsView(presentation: presentation))
+        host.sizingOptions = []
+        self.viewController = host
+        super.init()
+    }
+
+    @objc(configureWithFormulaName:optionNames:optionExplanations:)
+    public func configure(formulaName: String,
+                          optionNames: [String],
+                          optionExplanations: [String]) {
+        var rows: [BPFormulaOptionRow] = []
+        rows.reserveCapacity(optionNames.count)
+        for index in 0..<optionNames.count {
+            let explanation = index < optionExplanations.count ? optionExplanations[index] : ""
+            rows.append(BPFormulaOptionRow(name: optionNames[index], explanation: explanation, isApplied: false))
+        }
+        let helpText = rows.isEmpty
+            ? NSLocalizedString("Formula_Options_NoOptions", comment: "")
+            : NSLocalizedString("Formula_Options_ClickForDetails", comment: "")
+        presentation.state = BPFormulaOptionsSheetState(
+            formulaName: formulaName,
+            headerTitle: BPFormulaOptionsLocalizedTitle("idS-tT-jie.title", fallback: "Picking Options for Formula:"),
+            helpText: helpText,
+            optionsColumnTitle: BPFormulaOptionsLocalizedTitle("XqV-53-e7D.headerCell.title", fallback: "Options"),
+            descriptionPlaceholder: BPFormulaOptionsLocalizedTitle("G5n-5T-DoK.placeholderString", fallback: "Description for selected option."),
+            cancelTitle: BPFormulaOptionsLocalizedTitle("dCD-PS-P4J.title", fallback: "Cancel"),
+            installTitle: BPFormulaOptionsLocalizedTitle("hgj-Zo-s73.title", fallback: "Install"),
+            options: rows,
+            selectedOptionID: rows.first?.id
+        )
+    }
+}
+
+@MainActor
+private struct BPFormulaOptionsView: View {
+    @ObservedObject var presentation: BPFormulaOptionsPresentation
+
+    private var selectionBinding: Binding<String?> {
+        Binding(
+            get: { presentation.state.selectedOptionID },
+            set: { presentation.state.selectedOptionID = $0 }
+        )
+    }
+
+    private func toggleBinding(for row: BPFormulaOptionRow) -> Binding<Bool> {
+        Binding(
+            get: { row.isApplied },
+            set: { newValue in
+                presentation.state.setApplied(newValue, forOptionID: row.id)
+                presentation.onOptionToggled?(row.name, newValue)
+            }
+        )
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 6) {
+                Text(presentation.state.headerTitle)
+                    .font(.system(size: 15))
+                    .foregroundStyle(.secondary)
+                    .accessibilityValue(presentation.state.headerTitle)
+                Text(presentation.state.formulaName)
+                    .font(.system(size: 15, weight: .semibold))
+                    .accessibilityValue(presentation.state.formulaName)
+            }
+
+            List(presentation.state.options, selection: selectionBinding) { row in
+                HStack(spacing: 8) {
+                    Toggle("", isOn: toggleBinding(for: row))
+                        .labelsHidden()
+                        .toggleStyle(.checkbox)
+                    Text(row.name)
+                        .font(.system(.body, design: .monospaced))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            presentation.state.selectedOptionID = row.id
+                        }
+                        .help(row.explanation)
+                        .accessibilityLabel(row.explanation.isEmpty ? row.name : row.explanation)
+                        .accessibilityValue(row.name)
+                }
+                .tag(Optional(row.id))
+            }
+            .listStyle(.inset(alternatesRowBackgrounds: true))
+            .frame(minHeight: 130, maxHeight: .infinity)
+            .accessibilityLabel(NSLocalizedString("Formula_Options_VoiceOver", comment: ""))
+
+            ScrollView {
+                Text(presentation.state.selectedOptionDescription)
+                    .font(.callout)
+                    .foregroundStyle(presentation.state.selectedOptionID == nil ? .secondary : .primary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .textSelection(.enabled)
+                    .accessibilityLabel(NSLocalizedString("Formula_Options_VoiceOver_Description", comment: ""))
+                    .accessibilityValue(presentation.state.selectedOptionDescription)
+            }
+            .padding(8)
+            .frame(height: 60)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.primary.opacity(0.04))
+            )
+
+            HStack {
+                Button(presentation.state.cancelTitle) {
+                    presentation.onCancel?()
+                }
+                .keyboardShortcut(.cancelAction)
+
+                Spacer()
+
+                Text(presentation.state.helpText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .accessibilityValue(presentation.state.helpText)
+
+                Spacer()
+
+                Button(presentation.state.installTitle) {
+                    presentation.onInstall?()
+                }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+// MARK: - SwiftUI Installation / Operation Progress Sheet Host
+
+private func BPInstallationLocalizedTitle(_ key: String, fallback: String) -> String {
+    Bundle.main.localizedString(forKey: key, value: fallback, table: "BPInstallationWindow")
+}
+
+@MainActor
+private final class BPInstallationPresentation: ObservableObject {
+    @Published var state = BPInstallationSheetState(
+        windowTitle: "",
+        formulaNamesText: "",
+        okTitle: BPInstallationLocalizedTitle("atZ-M7-fU1.title", fallback: "OK"),
+        cancelTitle: NSLocalizedString("Cancel", comment: ""),
+        isRunning: true,
+        okEnabled: false,
+        cancelEnabled: true
+    )
+    let recordTextView: NSTextView
+    var onCancel: (() -> Void)?
+    var onOK: (() -> Void)?
+
+    init(recordTextView: NSTextView) {
+        self.recordTextView = recordTextView
+    }
+}
+
+@MainActor
+@objc(BPInstallationHost)
+public final class BPInstallationHost: NSObject {
+    private let presentation: BPInstallationPresentation
+    @objc public let viewController: NSViewController
+
+    @objc public var onCancel: (() -> Void)? {
+        get { presentation.onCancel }
+        set { presentation.onCancel = newValue }
+    }
+
+    @objc public var onOK: (() -> Void)? {
+        get { presentation.onOK }
+        set { presentation.onOK = newValue }
+    }
+
+    @objc(initWithRecordTextView:)
+    public init(recordTextView: NSTextView) {
+        let presentation = BPInstallationPresentation(recordTextView: recordTextView)
+        self.presentation = presentation
+        let host = NSHostingController(rootView: BPInstallationView(presentation: presentation))
+        host.sizingOptions = []
+        self.viewController = host
+        super.init()
+    }
+
+    @objc(updateWithWindowTitle:formulaNames:running:okEnabled:cancelEnabled:)
+    public func update(windowTitle: String,
+                       formulaNames: String,
+                       running: Bool,
+                       okEnabled: Bool,
+                       cancelEnabled: Bool) {
+        presentation.state = BPInstallationSheetState(
+            windowTitle: windowTitle,
+            formulaNamesText: formulaNames,
+            okTitle: BPInstallationLocalizedTitle("atZ-M7-fU1.title", fallback: "OK"),
+            cancelTitle: NSLocalizedString("Cancel", comment: ""),
+            isRunning: running,
+            okEnabled: okEnabled,
+            cancelEnabled: cancelEnabled
+        )
+    }
+}
+
+@MainActor
+private struct BPInstallationView: View {
+    @ObservedObject var presentation: BPInstallationPresentation
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(presentation.state.windowTitle)
+                    .font(.system(size: 15))
+                    .foregroundStyle(.secondary)
+                    .accessibilityValue(presentation.state.windowTitle)
+                    .accessibilityIdentifier("installation.title")
+
+                if !presentation.state.formulaNamesText.isEmpty {
+                    Text(presentation.state.formulaNamesText)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                        .accessibilityValue(presentation.state.formulaNamesText)
+                        .accessibilityIdentifier("installation.target")
+                }
+            }
+
+            BPTextViewContainerRepresentable(textView: presentation.recordTextView)
+                .frame(maxWidth: .infinity, minHeight: 164, maxHeight: .infinity)
+
+            HStack(spacing: 10) {
+                if presentation.state.isRunning {
+                    ProgressView()
+                        .controlSize(.small)
+                        .accessibilityLabel(NSLocalizedString("VoiceOver_Operation_Progress", comment: ""))
+                }
+
+                Spacer()
+
+                Button(presentation.state.cancelTitle) {
+                    presentation.onCancel?()
+                }
+                .disabled(!presentation.state.cancelEnabled)
+                .accessibilityIdentifier("installation.cancel")
+
+                Button(presentation.state.okTitle) {
+                    presentation.onOK?()
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!presentation.state.okEnabled)
+                .keyboardShortcut(.defaultAction)
+                .accessibilityIdentifier("installation.ok")
+            }
+        }
+        .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }

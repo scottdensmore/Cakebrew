@@ -24,16 +24,58 @@
 #import "BPAppDelegate.h"
 #import "BPStyle.h"
 #import "BPAutoScrollTextView.h"
+#import "BPFormulaInformation-Swift.h"
 
 @interface BPDoctorViewController ()
 
-@property (unsafe_unretained, nonatomic) IBOutlet BPAutoScrollTextView *doctorTextView;
+@property (strong, nonatomic) IBOutlet BPAutoScrollTextView *doctorTextView;
 @property (weak, nonatomic) IBOutlet NSProgressIndicator *progressIndicator;
 @property (assign) BOOL isPerformingDoctor;
+@property (strong, nonatomic) BPConsoleToolHost *consoleHost;
 
 @end
 
 @implementation BPDoctorViewController
+
+- (void)loadView {
+	BPAutoScrollTextView *textView = [[BPAutoScrollTextView alloc] initWithFrame:NSMakeRect(0, 0, 400, 232)];
+	textView.editable = NO;
+	textView.selectable = YES;
+	textView.richText = NO;
+	textView.font = [BPStyle defaultFixedWidthFont];
+	textView.textColor = NSColor.textColor;
+	textView.backgroundColor = NSColor.textBackgroundColor;
+	textView.textContainerInset = NSMakeSize(8, 8);
+	textView.autoresizingMask = NSViewWidthSizable;
+	textView.verticallyResizable = YES;
+	textView.textContainer.widthTracksTextView = YES;
+	self.doctorTextView = textView;
+	self.isPerformingDoctor = NO;
+
+	NSString *title = [NSBundle.mainBundle localizedStringForKey:@"UHp-GH-2qP.title"
+														   value:NSLocalizedString(@"Homebrew Doctor", nil)
+														   table:@"BPDoctorView"];
+	NSString *runTitle = [NSBundle.mainBundle localizedStringForKey:@"YyI-zq-THZ.title"
+															  value:NSLocalizedString(@"Run Doctor", nil)
+															  table:@"BPDoctorView"];
+	NSString *clearTitle = [NSBundle.mainBundle localizedStringForKey:@"AlR-6d-ju7.title"
+																value:NSLocalizedString(@"Clear Log", nil)
+																table:@"BPDoctorView"];
+
+	self.consoleHost = [[BPConsoleToolHost alloc] initWithTextView:textView
+															 title:title
+														  subtitle:nil
+													runButtonTitle:runTitle
+												  clearButtonTitle:clearTitle];
+	__weak typeof(self) weakSelf = self;
+	self.consoleHost.onRun = ^{
+		[weakSelf runStopDoctor:nil];
+	};
+	self.consoleHost.onClear = ^{
+		[weakSelf clearLogDoctor:nil];
+	};
+	self.view = self.consoleHost.viewController.view;
+}
 
 - (void)awakeFromNib {
 	self.progressIndicator.accessibilityLabel = NSLocalizedString(@"VoiceOver_Operation_Progress", nil);
@@ -58,6 +100,7 @@
 	
 	[self.doctorTextView clearOutput];
 	self.isPerformingDoctor = YES;
+	self.consoleHost.isRunning = YES;
 	[self.progressIndicator startAnimation:sender];
 
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
@@ -69,6 +112,7 @@
 			NSLog(@"Finished doctor");
 			[self.progressIndicator stopAnimation:sender];
 			self.isPerformingDoctor = NO;
+			self.consoleHost.isRunning = NO;
 			[appDelegate setRunningBackgroundTask:NO];
 			
 			NSString *title = NSLocalizedString(@"Homebrew_Task_Finished", nil);

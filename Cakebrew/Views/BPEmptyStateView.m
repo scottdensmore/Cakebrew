@@ -4,10 +4,15 @@
 //
 
 #import "BPEmptyStateView.h"
+#import "BPFormulaInformation-Swift.h"
 
 /// Tag so an existing view can be found and replaced without keeping a
 /// reference on every caller.
 static const NSInteger kBPEmptyStateViewTag = 0x43424553;
+
+@interface BPEmptyStateView ()
+@property (strong, nonatomic) BPEmptyStateHost *host;
+@end
 
 @implementation BPEmptyStateView
 
@@ -26,42 +31,24 @@ static const NSInteger kBPEmptyStateViewTag = 0x43424553;
 		return;
 	}
 
+	NSString *title = NSLocalizedString(state.titleKey, nil);
+	NSString *message = NSLocalizedString(state.messageKey, nil);
+
 	BPEmptyStateView *view = [[BPEmptyStateView alloc] initWithFrame:container.bounds];
 	view.translatesAutoresizingMaskIntoConstraints = NO;
+	view.host = [[BPEmptyStateHost alloc] initWithSymbolName:state.symbolName ?: @"tray"
+													   title:title ?: @""
+													 message:message ?: @""];
 
-	NSImageView *symbol = [[NSImageView alloc] init];
-	symbol.image = [NSImage imageWithSystemSymbolName:state.symbolName accessibilityDescription:nil];
-	symbol.symbolConfiguration = [NSImageSymbolConfiguration configurationWithPointSize:38
-																				weight:NSFontWeightRegular];
-	symbol.contentTintColor = [NSColor tertiaryLabelColor];
-	symbol.translatesAutoresizingMaskIntoConstraints = NO;
-
-	NSTextField *title = [NSTextField labelWithString:NSLocalizedString(state.titleKey, nil)];
-	title.font = [NSFont systemFontOfSize:[NSFont systemFontSize] + 3 weight:NSFontWeightSemibold];
-	title.textColor = [NSColor secondaryLabelColor];
-	title.alignment = NSTextAlignmentCenter;
-	title.translatesAutoresizingMaskIntoConstraints = NO;
-
-	NSTextField *message = [NSTextField wrappingLabelWithString:NSLocalizedString(state.messageKey, nil)];
-	message.font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
-	message.textColor = [NSColor tertiaryLabelColor];
-	message.alignment = NSTextAlignmentCenter;
-	message.selectable = NO;
-	message.translatesAutoresizingMaskIntoConstraints = NO;
-
-	NSStackView *stack = [NSStackView stackViewWithViews:@[symbol, title, message]];
-	stack.orientation = NSUserInterfaceLayoutOrientationVertical;
-	stack.alignment = NSLayoutAttributeCenterX;
-	stack.spacing = 8;
-	stack.translatesAutoresizingMaskIntoConstraints = NO;
-
-	[view addSubview:stack];
+	NSView *hostView = view.host.viewController.view;
+	hostView.translatesAutoresizingMaskIntoConstraints = NO;
+	[view addSubview:hostView];
 	[container addSubview:view];
 
 	// One announcement rather than three labels read separately.
 	view.accessibilityElement = YES;
 	view.accessibilityRole = NSAccessibilityStaticTextRole;
-	view.accessibilityLabel = [NSString stringWithFormat:@"%@. %@", title.stringValue, message.stringValue];
+	view.accessibilityLabel = [NSString stringWithFormat:@"%@. %@", title, message];
 
 	[NSLayoutConstraint activateConstraints:@[
 		[view.leadingAnchor constraintEqualToAnchor:container.leadingAnchor],
@@ -69,9 +56,10 @@ static const NSInteger kBPEmptyStateViewTag = 0x43424553;
 		[view.topAnchor constraintEqualToAnchor:container.topAnchor],
 		[view.bottomAnchor constraintEqualToAnchor:container.bottomAnchor],
 
-		[stack.centerXAnchor constraintEqualToAnchor:view.centerXAnchor],
-		[stack.centerYAnchor constraintEqualToAnchor:view.centerYAnchor],
-		[stack.widthAnchor constraintLessThanOrEqualToConstant:320],
+		[hostView.leadingAnchor constraintEqualToAnchor:view.leadingAnchor],
+		[hostView.trailingAnchor constraintEqualToAnchor:view.trailingAnchor],
+		[hostView.topAnchor constraintEqualToAnchor:view.topAnchor],
+		[hostView.bottomAnchor constraintEqualToAnchor:view.bottomAnchor],
 	]];
 }
 

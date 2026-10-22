@@ -7,6 +7,7 @@
 //
 
 #import "BPDisabledView.h"
+#import "BPFormulaInformation-Swift.h"
 
 @interface BPDisabledView()
 
@@ -15,6 +16,8 @@
 @property (weak) IBOutlet NSTextField *messageField;
 @property (weak) IBOutlet NSButton *retryButton;
 @property (weak) IBOutlet NSButton *installButton;
+@property (strong, nonatomic) BPDisabledHost *disabledHost;
+@property (assign, nonatomic) BOOL retryEnabled;
 
 @end
 
@@ -41,51 +44,63 @@
 
 - (void)commonInit
 {
-	NSNib *nib = [[NSNib alloc] initWithNibNamed:@"Disabled" bundle:nil];
-	[nib instantiateWithOwner:self topLevelObjects:NULL];
-	[self addSubview:self.view];
-	
-	self.view.translatesAutoresizingMaskIntoConstraints = NO;
-	
-	[self addConstraint:[self pin:self.view attribute:NSLayoutAttributeTop]];
-	[self addConstraint:[self pin:self.view attribute:NSLayoutAttributeLeft]];
-	[self addConstraint:[self pin:self.view attribute:NSLayoutAttributeBottom]];
-	[self addConstraint:[self pin:self.view attribute:NSLayoutAttributeRight]];
-	self.titleField.accessibilityIdentifier = @"homebrew.recovery.title";
-	self.messageField.accessibilityIdentifier = @"homebrew.recovery.message";
-	self.retryButton.accessibilityIdentifier = @"homebrew.retry";
-	self.installButton.accessibilityIdentifier = @"homebrew.install";
-	self.retryButton.title = NSLocalizedString(@"Try Again", nil);
-	self.installButton.title = NSLocalizedString(@"Open brew.sh", nil);
+	self.retryEnabled = YES;
+	self.disabledHost = [[BPDisabledHost alloc] init];
+	__weak typeof(self) weakSelf = self;
+	self.disabledHost.onRetry = ^{
+		[weakSelf retry:nil];
+	};
+	self.disabledHost.onOpenInstructions = ^{
+		[weakSelf openInstallationInstructions:nil];
+	};
+
+	NSView *hostView = self.disabledHost.viewController.view;
+	hostView.translatesAutoresizingMaskIntoConstraints = NO;
+	[self addSubview:hostView];
+	self.view = hostView;
+
+	[self addConstraint:[self pin:hostView attribute:NSLayoutAttributeTop]];
+	[self addConstraint:[self pin:hostView attribute:NSLayoutAttributeLeft]];
+	[self addConstraint:[self pin:hostView attribute:NSLayoutAttributeBottom]];
+	[self addConstraint:[self pin:hostView attribute:NSLayoutAttributeRight]];
 }
 
 - (void)showDiscoveryResult:(BPHomebrewDiscoveryResult)result checking:(BOOL)checking
 {
+	self.retryEnabled = !checking;
 	self.retryButton.enabled = !checking;
+	NSString *title = @"";
+	NSString *message = @"";
 	if (checking) {
-		self.titleField.stringValue = NSLocalizedString(@"Checking for Homebrew…", nil);
-		self.messageField.stringValue = NSLocalizedString(@"Checking your login shell for Homebrew. This may take a moment.", nil);
-		return;
+		title = NSLocalizedString(@"Checking for Homebrew…", nil);
+		message = NSLocalizedString(@"Checking your login shell for Homebrew. This may take a moment.", nil);
+	} else {
+		switch (result) {
+			case BPHomebrewDiscoveryMissing:
+				title = NSLocalizedString(@"Homebrew wasn’t found", nil);
+				message = NSLocalizedString(@"Cakebrew couldn’t find Homebrew in your login shell’s PATH. Open brew.sh for installation instructions, or fix your shell configuration, then choose Try Again.", nil);
+				break;
+			case BPHomebrewDiscoveryInvalidShell:
+				title = NSLocalizedString(@"Your login shell is unavailable", nil);
+				message = NSLocalizedString(@"Cakebrew needs an executable login shell listed in /etc/shells. Check your shell configuration, then choose Try Again. Homebrew installation instructions are available at brew.sh.", nil);
+				break;
+			default:
+				title = NSLocalizedString(@"Homebrew couldn’t be checked", nil);
+				message = NSLocalizedString(@"Your login shell didn’t return a usable Homebrew executable. Check its startup configuration and PATH, then choose Try Again. Installation instructions are available at brew.sh.", nil);
+				break;
+		}
 	}
-	switch (result) {
-		case BPHomebrewDiscoveryMissing:
-			self.titleField.stringValue = NSLocalizedString(@"Homebrew wasn’t found", nil);
-			self.messageField.stringValue = NSLocalizedString(@"Cakebrew couldn’t find Homebrew in your login shell’s PATH. Open brew.sh for installation instructions, or fix your shell configuration, then choose Try Again.", nil);
-			break;
-		case BPHomebrewDiscoveryInvalidShell:
-			self.titleField.stringValue = NSLocalizedString(@"Your login shell is unavailable", nil);
-			self.messageField.stringValue = NSLocalizedString(@"Cakebrew needs an executable login shell listed in /etc/shells. Check your shell configuration, then choose Try Again. Homebrew installation instructions are available at brew.sh.", nil);
-			break;
-		default:
-			self.titleField.stringValue = NSLocalizedString(@"Homebrew couldn’t be checked", nil);
-			self.messageField.stringValue = NSLocalizedString(@"Your login shell didn’t return a usable Homebrew executable. Check its startup configuration and PATH, then choose Try Again. Installation instructions are available at brew.sh.", nil);
-			break;
-	}
+	self.titleField.stringValue = title;
+	self.messageField.stringValue = message;
+	[self.disabledHost updateWithTitle:title
+							   message:message
+						  retryEnabled:!checking
+							  checking:checking];
 }
 
 - (IBAction)retry:(id)sender
 {
-	if (self.retryButton.enabled && self.retryHandler) self.retryHandler();
+	if (self.retryEnabled && self.retryHandler) self.retryHandler();
 }
 
 - (IBAction)openInstallationInstructions:(id)sender

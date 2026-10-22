@@ -13,6 +13,7 @@
 #import "BPBrewfilePlan.h"
 #import "BPBrewfileImportOperation.h"
 #import "BPBrewfileExportOperation.h"
+#import "BPFormulaInformation-Swift.h"
 
 @interface BPBundleWindowController ()
 
@@ -34,6 +35,7 @@
 @property (nonatomic, copy) void (^operationBlock)(void);
 @property (strong) BPBrewfileImportOperation *importOperation;
 @property (strong) BPBrewfileExportOperation *exportOperation;
+@property (strong, nonatomic) BPBundleOperationHost *bundleHost;
 
 
 @end
@@ -78,34 +80,18 @@
 + (BPBundleWindowController *)runImportOperationWithPlan:(BPBrewfilePlan *)plan
 {
 	BPBundleWindowController *controller = [self createWindow];
-	__weak BPBundleWindowController *weakController = controller;
-	
-	[controller setWindowLoadedBlock:^{
-		[weakController embedView:[weakController viewImportProgress]];
-	}];
-	
 	[BPAppDelegateRef setRunningBackgroundTask:YES];
-	
 	[controller startSheetOnMainWindow];
 	[controller runImportOperationWithPlan:plan];
-	
 	return controller;
 }
 
 + (BPBundleWindowController*)runExportOperationWithFile:(NSURL*)fileURL
 {
 	BPBundleWindowController *controller = [self createWindow];
-	__weak BPBundleWindowController *weakController = controller;
-	
-	[controller setWindowLoadedBlock:^{
-		[weakController embedView:[weakController viewExportProgress]];
-	}];
-	
 	[BPAppDelegateRef setRunningBackgroundTask:YES];
-	
 	[controller startSheetOnMainWindow];
 	[controller runExportOperationWithFile:fileURL];
-	
 	return controller;
 }
 
@@ -116,13 +102,35 @@
 
 - (void)windowDidLoad
 {
-	if (self.windowLoadedBlock)
-	{
-		self.windowLoadedBlock();
-		[self setWindowLoadedBlock:nil];
+	[super windowDidLoad];
+	if (!self.textViewImport) {
+		self.textViewImport = [[BPAutoScrollTextView alloc] initWithFrame:NSMakeRect(0, 0, 373, 197)];
 	}
-	
-	[self.progressIndicator startAnimation:nil];
+	self.textViewImport.editable = NO;
+	self.textViewImport.selectable = YES;
+	self.textViewImport.richText = NO;
+	self.textViewImport.font = [NSFont monospacedSystemFontOfSize:12 weight:NSFontWeightRegular];
+	self.textViewImport.accessibilityIdentifier = @"brewfile.import.output";
+
+	self.bundleHost = [[BPBundleOperationHost alloc] initWithImportTextView:self.textViewImport];
+	__weak typeof(self) weakSelf = self;
+	self.bundleHost.onAction = ^{
+		[weakSelf didClickClose:nil];
+	};
+
+	NSView *contentView = self.window.contentView;
+	for (NSView *subview in [contentView.subviews copy]) {
+		[subview removeFromSuperview];
+	}
+	NSView *hostView = self.bundleHost.viewController.view;
+	hostView.translatesAutoresizingMaskIntoConstraints = NO;
+	[contentView addSubview:hostView];
+	[NSLayoutConstraint activateConstraints:@[
+		[hostView.leadingAnchor constraintEqualToAnchor:contentView.leadingAnchor],
+		[hostView.trailingAnchor constraintEqualToAnchor:contentView.trailingAnchor],
+		[hostView.topAnchor constraintEqualToAnchor:contentView.topAnchor],
+		[hostView.bottomAnchor constraintEqualToAnchor:contentView.bottomAnchor]
+	]];
 }
 
 - (void)startSheetOnMainWindow
@@ -135,78 +143,77 @@
 - (void)runImportOperationWithPlan:(BPBrewfilePlan *)plan
 {
 	[self.textViewImport clearOutput];
- self.window.title = NSLocalizedString(@"Import Brewfile", nil);
- [self.window setContentSize:NSMakeSize(650, 380)];
- self.textViewImport.accessibilityIdentifier = @"brewfile.import.output";
- self.progressLabelImport.accessibilityIdentifier = @"brewfile.import.status";
- self.buttonClose.accessibilityIdentifier = @"brewfile.import.action";
- self.buttonClose.title = NSLocalizedString(@"Cancel", nil); self.buttonClose.enabled = YES;
- self.importOperation = [[BPBrewfileImportOperation alloc] initWithPlan:plan interface:[BPHomebrewInterface sharedInterface]];
- [self.importOperation startWithOutput:^(NSString *output) {
-  [self.textViewImport appendOutput:output];
- } completion:^(BOOL success, BOOL cancelled, NSError *error) {
-  self.progressLabelImport.stringValue = cancelled ? NSLocalizedString(@"Import cancelled. Some changes may already have been made.", nil) :
-   success ? NSLocalizedString(@"Import finished.", nil) : NSLocalizedString(@"Import failed. Review the output for details.", nil);
-  if (error) [self.textViewImport appendOutput:error.localizedDescription];
-  self.buttonClose.title = NSLocalizedString(@"Close", nil); self.buttonClose.enabled = YES;
-  [self.progressIndicator stopAnimation:nil];
- }];
+	self.window.title = NSLocalizedString(@"Import Brewfile", nil);
+	[self.window setContentSize:NSMakeSize(650, 380)];
+	self.textViewImport.accessibilityIdentifier = @"brewfile.import.output";
+	self.buttonClose.title = NSLocalizedString(@"Cancel", nil);
+	self.buttonClose.enabled = YES;
+	[self.bundleHost configureImportWithStatusText:nil
+									   actionTitle:NSLocalizedString(@"Cancel", nil)
+									 actionEnabled:YES
+										   running:YES];
+	self.importOperation = [[BPBrewfileImportOperation alloc] initWithPlan:plan interface:[BPHomebrewInterface sharedInterface]];
+	[self.importOperation startWithOutput:^(NSString *output) {
+		[self.textViewImport appendOutput:output];
+	} completion:^(BOOL success, BOOL cancelled, NSError *error) {
+		NSString *status = cancelled ? NSLocalizedString(@"Import cancelled. Some changes may already have been made.", nil) :
+			success ? NSLocalizedString(@"Import finished.", nil) : NSLocalizedString(@"Import failed. Review the output for details.", nil);
+		self.progressLabelImport.stringValue = status;
+		if (error) [self.textViewImport appendOutput:error.localizedDescription];
+		self.buttonClose.title = NSLocalizedString(@"Close", nil);
+		self.buttonClose.enabled = YES;
+		[self.bundleHost configureImportWithStatusText:status
+										   actionTitle:NSLocalizedString(@"Close", nil)
+										 actionEnabled:YES
+											   running:NO];
+	}];
 }
 
 - (void)runExportOperationWithFile:(NSURL*)fileURL
 {
- self.statusLabelExport.accessibilityIdentifier = @"brewfile.export.status";
- self.progressLabelExport.accessibilityIdentifier = @"brewfile.export.detail";
- self.buttonClose.accessibilityIdentifier = @"brewfile.export.close";
- self.progressIndicator.accessibilityIdentifier = @"brewfile.export.progress";
- self.buttonClose.enabled = NO;
- self.exportOperation = [[BPBrewfileExportOperation alloc] initWithURL:fileURL interface:[BPHomebrewInterface sharedInterface]];
- [self.exportOperation startWithCompletion:^(NSError *error) {
-  if (error) {
-   self.statusLabelExport.stringValue = NSLocalizedString(@"Brewfile_Export_Failed", nil);
-   self.statusViewExport.image = [NSImage imageWithSystemSymbolName:@"xmark.circle.fill" accessibilityDescription:nil];
-   self.progressLabelExport.stringValue = error.localizedDescription;
-   self.progressLabelExport.hidden = NO;
-  } else {
-   self.statusViewExport.image = [NSImage imageWithSystemSymbolName:@"checkmark.circle.fill" accessibilityDescription:nil];
-   self.progressLabelExport.hidden = YES;
-  }
-  self.statusLabelExport.hidden = NO;
-  self.statusViewExport.hidden = NO;
-  self.buttonClose.enabled = YES;
-  [self.progressIndicator stopAnimation:nil];
- }];
+	self.buttonClose.enabled = NO;
+	[self.bundleHost configureExportWithStatusText:nil
+										detailText:nil
+									   actionTitle:nil
+									 actionEnabled:NO
+										   running:YES
+										  finished:NO
+										 succeeded:NO];
+	self.exportOperation = [[BPBrewfileExportOperation alloc] initWithURL:fileURL interface:[BPHomebrewInterface sharedInterface]];
+	[self.exportOperation startWithCompletion:^(NSError *error) {
+		BOOL succeeded = (error == nil);
+		NSString *statusText = error ? NSLocalizedString(@"Brewfile_Export_Failed", nil) : nil;
+		NSString *detailText = error ? error.localizedDescription : nil;
+		self.buttonClose.enabled = YES;
+		[self.bundleHost configureExportWithStatusText:statusText
+											detailText:detailText
+										   actionTitle:nil
+										 actionEnabled:YES
+											   running:NO
+											  finished:YES
+											 succeeded:succeeded];
+	}];
 }
 
 - (void)embedView:(NSView*)view
 {
-	[view setTranslatesAutoresizingMaskIntoConstraints:NO];
-	
-	[self.viewOperationContainer addSubview:view];
-	
-	[self.viewOperationContainer addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-0-[view]-0-|"
-																						options:0
-																						metrics:nil
-																						  views:@{@"view": view}]];
-	
-	[self.viewOperationContainer addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-0-[view]-0-|"
-																						options:0
-																						metrics:nil
-																						  views:@{@"view": view}]];
-	
-	[self.viewOperationContainer setNeedsLayout:YES];
 }
 
 - (IBAction)didClickClose:(id)sender
 {
- if (self.exportOperation.running) return;
- if (self.importOperation.running) {
-  [self.importOperation cancel]; self.buttonClose.enabled = NO;
-  self.progressLabelImport.stringValue = NSLocalizedString(@"Cancelling… Waiting for Homebrew to exit.", nil);
-  return;
- }
+	if (self.exportOperation.running) return;
+	if (self.importOperation.running) {
+		[self.importOperation cancel];
+		self.buttonClose.enabled = NO;
+		NSString *cancelling = NSLocalizedString(@"Cancelling… Waiting for Homebrew to exit.", nil);
+		self.progressLabelImport.stringValue = cancelling;
+		[self.bundleHost configureImportWithStatusText:cancelling
+										   actionTitle:NSLocalizedString(@"Cancel", nil)
+										 actionEnabled:NO
+											   running:YES];
+		return;
+	}
 	NSWindow *mainWindow = self.window.sheetParent;
-	
 	[mainWindow endSheet:self.window];
 }
 
