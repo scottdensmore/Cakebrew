@@ -326,3 +326,5 @@
 /* Package information popover */
 "Information_Title" = "Information for %@";
 "Information_Unavailable" = "No information is available for this package.";
+"Sidebar_Item_Unified_Updates" = "Updates";
+"Sidebar_Info_Unified_Updates" = "Outdated formulae and casks with a newer version available.";

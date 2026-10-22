@@ -143,16 +143,17 @@ NSString *const kBP_CAKEBREW_DOCUMENTATION = @"https://github.com/scottdensmore/
 	{
 		return BPNotificationNavigationActionNone;
 	}
-	// Keep the mixed marker in the payload even while navigation uses the
-	// formulae list until there is a combined outdated destination.
-	if ([target isEqualToString:BPOutdatedNotificationTargetFormulae]
-		|| [target isEqualToString:BPOutdatedNotificationTargetMixed])
+	if ([target isEqualToString:BPOutdatedNotificationTargetFormulae])
 	{
 		return BPNotificationNavigationActionOutdatedFormulae;
 	}
 	if ([target isEqualToString:BPOutdatedNotificationTargetCasks])
 	{
 		return BPNotificationNavigationActionOutdatedCasks;
+	}
+	if ([target isEqualToString:BPOutdatedNotificationTargetMixed])
+	{
+		return BPNotificationNavigationActionUnifiedUpdates;
 	}
 	return BPNotificationNavigationActionNone;
 }
@@ -229,6 +230,9 @@ NSString *const kBP_CAKEBREW_DOCUMENTATION = @"https://github.com/scottdensmore/
 			break;
 		case BPNotificationNavigationActionOutdatedCasks:
 			[target showOutdatedCasks:self];
+			break;
+		case BPNotificationNavigationActionUnifiedUpdates:
+			[target showUnifiedUpdates:self];
 			break;
 		case BPNotificationNavigationActionNone:
 			break;

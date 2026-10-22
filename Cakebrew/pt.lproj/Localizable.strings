@@ -466,3 +466,5 @@
 /* Package information popover */
 "Information_Title" = "Informações sobre %@";
 "Information_Unavailable" = "Não existem informações disponíveis para este pacote.";
+"Sidebar_Item_Unified_Updates" = "Atualizações";
+"Sidebar_Info_Unified_Updates" = "Fórmulas e casks desatualizados com uma versão mais recente disponível.";

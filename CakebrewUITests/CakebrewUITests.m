@@ -688,7 +688,7 @@
 
 - (void)testPendingMixedNotificationOpensFormulaeAndSurvivesInitialReload
 {
-	[self assertPendingNotificationTarget:@"mixed" selectsSidebar:@"sidebar.formulae.outdated"
+	[self assertPendingNotificationTarget:@"mixed" selectsSidebar:@"sidebar.tools.updates"
 		fixtureName:@"mockgit"];
 }
 
@@ -816,7 +816,7 @@
 									@"sidebar.casks.installed", @"sidebar.casks.outdated",
 									@"sidebar.casks.all",
 									@"sidebar.tools.doctor", @"sidebar.tools.update",
-									@"sidebar.tools.services" ];
+									@"sidebar.tools.services", @"sidebar.tools.updates" ];
 	for (NSString *item in items) {
 		XCTAssertTrue([sidebar.staticTexts[item] waitForExistenceWithTimeout:15.0],
 					  @"the sidebar should show the %@ row", item);
@@ -2208,5 +2208,46 @@
     XCTAssertTrue([output waitForExistenceWithTimeout:15]);
     XCTAssertTrue([self.app.sheets.firstMatch.staticTexts matchingPredicate:[NSPredicate predicateWithFormat:@"value CONTAINS 'Homebrew task cancelled'"]].firstMatch.exists);
     [self.app.sheets.firstMatch.buttons[@"OK"] click];
+}
+
+- (void)testUnifiedUpdatesViewDisplaysBothFormulaAndCaskUpdatesAndUpgradesSelected
+{
+    [self launchWithArguments:@[@"-BPMockBrew", @"-BPMockMixedUpdates"]];
+    XCUIElement *updatesSidebar = [self sidebarRow:@"sidebar.tools.updates"];
+    XCTAssertTrue([updatesSidebar waitForExistenceWithTimeout:15.0]);
+    [updatesSidebar click];
+    [self assertSelectedSidebarIdentifier:@"sidebar.tools.updates"];
+
+    XCTAssertTrue([[self formulaCellWithName:@"mockgit"] waitForExistenceWithTimeout:15.0],
+                  @"Unified Updates should list outdated formulae");
+    XCTAssertTrue([[self formulaCellWithName:@"mockchrome"] waitForExistenceWithTimeout:15.0],
+                  @"Unified Updates should list outdated casks");
+
+    XCUIElement *selectAllButton = self.app.buttons[@"unified.updates.selectAll"];
+    XCTAssertTrue([selectAllButton waitForExistenceWithTimeout:10.0]);
+    [selectAllButton click];
+
+    XCUIElement *upgradeSelectedButton = self.app.buttons[@"unified.updates.upgradeSelected"];
+    XCTAssertTrue(upgradeSelectedButton.exists);
+    XCTAssertTrue(upgradeSelectedButton.isEnabled);
+    [upgradeSelectedButton click];
+
+    XCUIElement *yesButton = self.app.buttons[@"Yes"];
+    XCTAssertTrue([yesButton waitForExistenceWithTimeout:10.0],
+                  @"Upgrading selected updates should present confirmation");
+    [self dismissConfirmationSheet];
+}
+
+- (void)testUnifiedUpdatesViewShowsEmptyStateWhenUpToDate
+{
+    [self launchWithArguments:@[@"-BPMockBrew", @"-BPMockEmptyOutdated", @"-BPMockEmptyOutdatedCasks"]];
+    XCUIElement *updatesSidebar = [self sidebarRow:@"sidebar.tools.updates"];
+    XCTAssertTrue([updatesSidebar waitForExistenceWithTimeout:15.0]);
+    [updatesSidebar click];
+    [self assertSelectedSidebarIdentifier:@"sidebar.tools.updates"];
+
+    XCUIElement *upToDate = self.app.staticTexts[@"Everything is Up to Date"];
+    XCTAssertTrue([upToDate waitForExistenceWithTimeout:15.0],
+                  @"Unified Updates should show the Everything is Up to Date empty state");
 }
 @end

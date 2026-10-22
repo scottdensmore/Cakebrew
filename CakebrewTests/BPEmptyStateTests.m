@@ -46,6 +46,7 @@
 		@(FormulaeSideBarItemServices):      @"Empty_Services_Title",
 		@(FormulaeSideBarItemInstalledCasks):@"Empty_Casks_Title",
 		@(FormulaeSideBarItemOutdatedCasks): @"Empty_OutdatedCasks_Title",
+		@(FormulaeSideBarItemUnifiedUpdates):@"Empty_Outdated_Title",
 		@(FormulaeSideBarItemLeaves):        @"Empty_Leaves_Title",
 	};
 

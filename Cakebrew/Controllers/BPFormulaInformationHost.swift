@@ -983,12 +983,18 @@ private final class BPUnifiedUpdatesPresentation: ObservableObject {
     @Published var state = BPUnifiedUpdatesState()
     var onSelectionChanged: (() -> Void)?
     var onUpgradeSelected: (([String], [String]) -> Void)?
+    var onUpgradeAll: (() -> Void)?
 
     func triggerUpgradeSelected() {
         let formulae = state.selectedFormulaNames
         let casks = state.selectedCaskNames
         guard !formulae.isEmpty || !casks.isEmpty else { return }
         onUpgradeSelected?(formulae, casks)
+    }
+
+    func triggerUpgradeAll() {
+        guard !state.eligibleRowIDs.isEmpty else { return }
+        onUpgradeAll?()
     }
 }
 
@@ -1004,6 +1010,18 @@ public final class BPUnifiedUpdatesHost: NSObject {
 
     @objc public var selectedCaskNames: [String] {
         presentation.state.selectedCaskNames
+    }
+
+    @objc public var rowCount: Int {
+        presentation.state.formulaRows.count + presentation.state.caskRows.count
+    }
+
+    @objc public var selectedCount: Int {
+        presentation.state.selectedIDs.count
+    }
+
+    @objc public var hasEligibleUpdates: Bool {
+        !presentation.state.eligibleRowIDs.isEmpty
     }
 
     @objc public var hasFormulaUpdates: Bool {
@@ -1026,6 +1044,11 @@ public final class BPUnifiedUpdatesHost: NSObject {
     @objc public var onUpgradeSelected: (([String], [String]) -> Void)? {
         get { presentation.onUpgradeSelected }
         set { presentation.onUpgradeSelected = newValue }
+    }
+
+    @objc public var onUpgradeAll: (() -> Void)? {
+        get { presentation.onUpgradeAll }
+        set { presentation.onUpgradeAll = newValue }
     }
 
     public override init() {
@@ -1070,6 +1093,10 @@ public final class BPUnifiedUpdatesHost: NSObject {
 
     @objc public func upgradeSelected() {
         presentation.triggerUpgradeSelected()
+    }
+
+    @objc public func upgradeAll() {
+        presentation.triggerUpgradeAll()
     }
 
     @objc(updateWithFormulaNames:formulaVersions:formulaLatestVersions:formulaPinnedFlags:caskNames:caskVersions:caskLatestVersions:caskPinnedFlags:)
@@ -1144,7 +1171,7 @@ private struct BPUnifiedUpdatesView: View {
 
     private func rowAccessibilityLabel(for row: BPUnifiedUpdateRow) -> String {
         let groupTitle = row.cask ? casksGroupTitle : formulaeGroupTitle
-        var parts = [groupTitle, row.name]
+        var parts = [row.name, groupTitle]
         if !row.version.isEmpty || !row.latestVersion.isEmpty {
             parts.append("\(row.version) → \(row.latestVersion)")
         }
@@ -1158,12 +1185,17 @@ private struct BPUnifiedUpdatesView: View {
     private func updateRowView(_ row: BPUnifiedUpdateRow) -> some View {
         let groupTitle = row.cask ? casksGroupTitle : formulaeGroupTitle
         let identifierPrefix = row.cask ? "unified.updates.row.cask" : "unified.updates.row.formula"
+        let togglePrefix = row.cask ? "unified.updates.toggle.cask" : "unified.updates.toggle.formula"
+        let spokenLabel = rowAccessibilityLabel(for: row)
         HStack(spacing: 8) {
             Toggle(isOn: isSelectedBinding(for: row)) {
                 HStack(spacing: 6) {
                     Text(row.name)
                         .fontWeight(.medium)
                         .lineLimit(1)
+                        .accessibilityValue(row.name)
+                        .accessibilityLabel(spokenLabel)
+                        .accessibilityIdentifier("\(identifierPrefix).\(row.name)")
                     Text(groupTitle)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
@@ -1185,6 +1217,8 @@ private struct BPUnifiedUpdatesView: View {
             }
             .toggleStyle(.checkbox)
             .disabled(!row.isEligible)
+            .accessibilityLabel(spokenLabel)
+            .accessibilityIdentifier("\(togglePrefix).\(row.name)")
 
             Spacer()
 
@@ -1203,9 +1237,6 @@ private struct BPUnifiedUpdatesView: View {
             }
         }
         .padding(.vertical, 2)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(rowAccessibilityLabel(for: row))
-        .accessibilityIdentifier("\(identifierPrefix).\(row.name)")
     }
 
     var body: some View {
@@ -1214,14 +1245,15 @@ private struct BPUnifiedUpdatesView: View {
                 Text(NSLocalizedString("Empty_Outdated_Title", comment: ""))
                     .font(.headline)
                     .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("unified.updates.empty.title")
                 Text(NSLocalizedString("Empty_Outdated_Message", comment: ""))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+                    .accessibilityIdentifier("unified.updates.empty.message")
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding()
-            .accessibilityElement(children: .combine)
             .accessibilityIdentifier("unified.updates.empty")
         } else {
             VStack(alignment: .leading, spacing: 0) {
@@ -1268,6 +1300,13 @@ private struct BPUnifiedUpdatesView: View {
                     .controlSize(.small)
                     .disabled(presentation.state.selectedIDs.isEmpty)
                     .accessibilityIdentifier("unified.updates.upgradeSelected")
+
+                    Button(NSLocalizedString("Dock_Upgrade_All_Outdated", comment: "")) {
+                        presentation.triggerUpgradeAll()
+                    }
+                    .controlSize(.small)
+                    .disabled(presentation.state.eligibleRowIDs.isEmpty)
+                    .accessibilityIdentifier("unified.updates.upgradeAll")
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)

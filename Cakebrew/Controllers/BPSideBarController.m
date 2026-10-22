@@ -194,6 +194,7 @@ static NSString *BPSpokenSeparator(void)
 @property (strong, nonatomic) BPSidebarItem *installedCasksSidebarItem;
 @property (strong, nonatomic) BPSidebarItem *outdatedCasksSidebarItem;
 @property (strong, nonatomic) BPSidebarItem *allCasksSidebarItem;
+@property (strong, nonatomic) BPSidebarItem *unifiedUpdatesSidebarItem;
 
 @end
 
@@ -299,6 +300,12 @@ static NSString *BPSpokenSeparator(void)
 	item.accessibilityIdentifier = @"sidebar.tools.services";
 	[item setIcon:[self servicesSidebarIconImage]];
 	[parent addChildItem:item];
+
+	_unifiedUpdatesSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Unified_Updates", nil)
+												   identifier:@"item"];
+	_unifiedUpdatesSidebarItem.accessibilityIdentifier = @"sidebar.tools.updates";
+	_unifiedUpdatesSidebarItem.icon = [self outdatedSidebarIconImage];
+	[parent addChildItem:_unifiedUpdatesSidebarItem];
 }
 
 - (NSImage *)installedSidebarIconImage
@@ -397,6 +404,7 @@ static NSString *BPSpokenSeparator(void)
 		case FormulaeSideBarItemDoctor:         return @"Sidebar_Info_Doctor";
 		case FormulaeSideBarItemUpdate:         return @"Sidebar_Info_Update";
 		case FormulaeSideBarItemServices:       return @"Sidebar_Info_Services";
+		case FormulaeSideBarItemUnifiedUpdates: return @"Sidebar_Info_Unified_Updates";
 
 		case FormulaeSideBarItemFormulaeCategory:
 		case FormulaeSideBarItemCasksCategory:
@@ -496,6 +504,10 @@ static NSString *BPSpokenSeparator(void)
 
 	[self refreshSidebarBadges];
 	[self.sidebar reloadItem:item];
+	if ((mode == kBPListOutdated || mode == kBPListOutdatedCasks) && self.unifiedUpdatesSidebarItem)
+	{
+		[self.sidebar reloadItem:self.unifiedUpdatesSidebarItem];
+	}
 }
 
 - (void)refreshSidebarBadges
@@ -509,6 +521,8 @@ static NSString *BPSpokenSeparator(void)
 	self.installedCasksSidebarItem.badgeValue		= @([[[BPHomebrewManager sharedManager] installedCasks] count]);
 	self.outdatedCasksSidebarItem.badgeValue		= @([[[BPHomebrewManager sharedManager] outdatedCasks] count]);
 	self.allCasksSidebarItem.badgeValue				= @([[[BPHomebrewManager sharedManager] allCasks] count]);
+	self.unifiedUpdatesSidebarItem.badgeValue		= @([[[BPHomebrewManager sharedManager] outdatedFormulae] count] +
+														[[[BPHomebrewManager sharedManager] outdatedCasks] count]);
 }
 
 #pragma mark - NSOutlineView Data Source

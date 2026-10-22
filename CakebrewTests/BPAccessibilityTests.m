@@ -117,6 +117,7 @@
 
 	XCTAssertTrue([identifiers containsObject:@"sidebar.formulae.installed"], @"%@", identifiers);
 	XCTAssertTrue([identifiers containsObject:@"sidebar.casks.installed"], @"%@", identifiers);
+	XCTAssertTrue([identifiers containsObject:@"sidebar.tools.updates"], @"%@", identifiers);
 }
 
 @end

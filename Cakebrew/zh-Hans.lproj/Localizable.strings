@@ -460,3 +460,5 @@
 /* Package information popover */
 "Information_Title" = "%@ 的信息";
 "Information_Unavailable" = "此软件包没有可用信息。";
+"Sidebar_Item_Unified_Updates" = "更新";
+"Sidebar_Info_Unified_Updates" = "有新版本可用的过时 Formulae 和 Casks。";

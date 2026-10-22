@@ -78,6 +78,7 @@
 @interface BPNotificationNavigationTargetSpy : NSObject <BPNotificationNavigation>
 @property NSUInteger formulaeNavigationCount;
 @property NSUInteger caskNavigationCount;
+@property NSUInteger unifiedUpdatesNavigationCount;
 @property BOOL calledOnMainThread;
 @end
 
@@ -92,6 +93,12 @@
 - (void)showOutdatedCasks:(id)sender
 {
 	self.caskNavigationCount += 1;
+	self.calledOnMainThread = NSThread.isMainThread;
+}
+
+- (void)showUnifiedUpdates:(id)sender
+{
+	self.unifiedUpdatesNavigationCount += 1;
 	self.calledOnMainThread = NSThread.isMainThread;
 }
 
@@ -129,7 +136,7 @@
 {
 	XCTAssertEqual([BPAppDelegate notificationNavigationActionForUserInfo:
 		@{ BPOutdatedNotificationTargetKey: @"mixed" }],
-		BPNotificationNavigationActionOutdatedFormulae);
+		BPNotificationNavigationActionUnifiedUpdates);
 }
 
 - (void)testMissingMalformedAndFutureNotificationPayloadsMapToNoNavigation
@@ -167,6 +174,7 @@
 	XCTAssertEqual(completionCount, 1u);
 	XCTAssertEqual(target.formulaeNavigationCount, 0u);
 	XCTAssertEqual(target.caskNavigationCount, 0u);
+	XCTAssertEqual(target.unifiedUpdatesNavigationCount, 0u);
 }
 
 - (void)testMissingNotificationPayloadPresentsWithoutNavigatingAndCompletesOnce
@@ -198,7 +206,7 @@
 	delegate.notificationPresenter = presentation;
 	delegate.notificationNavigationTarget = target;
 
-	for (NSString *destination in @[ BPOutdatedNotificationTargetFormulae, BPOutdatedNotificationTargetCasks ])
+	for (NSString *destination in @[ BPOutdatedNotificationTargetFormulae, BPOutdatedNotificationTargetCasks, BPOutdatedNotificationTargetMixed ])
 	{
 		BPNotificationResponseStub *response = [[BPNotificationResponseStub alloc] init];
 		response.userInfo = @{ BPOutdatedNotificationTargetKey: destination };
@@ -209,7 +217,8 @@
 
 	XCTAssertEqual(target.formulaeNavigationCount, 1u);
 	XCTAssertEqual(target.caskNavigationCount, 1u);
-	XCTAssertEqual(presentation.windowCount, 2u);
+	XCTAssertEqual(target.unifiedUpdatesNavigationCount, 1u);
+	XCTAssertEqual(presentation.windowCount, 3u);
 }
 
 - (void)testLaunchPendingNotificationActionIsConsumedExactlyOnce
@@ -270,9 +279,12 @@
 		@protocol(BPNotificationNavigation), @selector(showOutdatedFormulae:), YES, YES);
 	struct objc_method_description casks = protocol_getMethodDescription(
 		@protocol(BPNotificationNavigation), @selector(showOutdatedCasks:), YES, YES);
+	struct objc_method_description unified = protocol_getMethodDescription(
+		@protocol(BPNotificationNavigation), @selector(showUnifiedUpdates:), YES, YES);
 
 	XCTAssertTrue(formulae.name != NULL);
 	XCTAssertTrue(casks.name != NULL);
+	XCTAssertTrue(unified.name != NULL);
 }
 
 @end

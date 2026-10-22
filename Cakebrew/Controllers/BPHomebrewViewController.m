@@ -95,6 +95,7 @@ NSOpenSavePanelDelegate>
 
 @property (strong, nonatomic) BPFormulaeDataSource				*formulaeDataSource;
 @property (strong, nonatomic) BPInstalledPackageListHost		*installedPackageListHost;
+@property (strong, nonatomic) BPUnifiedUpdatesHost				*unifiedUpdatesHost;
 @property (strong, nonatomic) BPFormulaOptionsWindowController	*formulaOptionsWindowController;
 @property (strong, nonatomic) NSWindowController				*operationWindowController;
 @property (strong, nonatomic) BPUpdateViewController			*updateViewController;
@@ -193,6 +194,7 @@ NSOpenSavePanelDelegate>
 	self.formulaeDataSource = [[BPFormulaeDataSource alloc] initWithMode:kBPListAll];
 	self.formulaeTableView.dataSource = self.formulaeDataSource;
 	[self setUpInstalledPackageListHost];
+	[self setUpUnifiedUpdatesHost];
 
 	// Restore the sort the user last chose, so the header indicator and the row
 	// order agree with each other on launch.
@@ -480,9 +482,76 @@ NSOpenSavePanelDelegate>
 	return mode == kBPListInstalled || mode == kBPListInstalledCasks;
 }
 
+- (BOOL)isUsingUnifiedUpdatesHost
+{
+	return ![self isSearching]
+		&& [self.sidebarController.sidebar selectedRow] == FormulaeSideBarItemUnifiedUpdates;
+}
+
 - (BOOL)isUsingInstalledPackageListHost
 {
-	return [self usesInstalledPackageListHostForMode:self.formulaeDataSource.mode];
+	return ![self isUsingUnifiedUpdatesHost]
+		&& [self usesInstalledPackageListHostForMode:self.formulaeDataSource.mode];
+}
+
+- (void)setUpUnifiedUpdatesHost
+{
+	self.unifiedUpdatesHost = [[BPUnifiedUpdatesHost alloc] init];
+	__weak typeof(self) weakSelf = self;
+	self.unifiedUpdatesHost.onSelectionChanged = ^{
+		__strong typeof(weakSelf) strongSelf = weakSelf;
+		if (!strongSelf || ![strongSelf isUsingUnifiedUpdatesHost]) return;
+		[strongSelf updateInterfaceItems];
+	};
+	self.unifiedUpdatesHost.onUpgradeSelected = ^(NSArray<NSString *> *formulaNames, NSArray<NSString *> *caskNames) {
+		__strong typeof(weakSelf) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		[strongSelf upgradeSelectedFormulae:nil];
+	};
+	self.unifiedUpdatesHost.onUpgradeAll = ^{
+		__strong typeof(weakSelf) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		[strongSelf upgradeAllOutdatedFormulae:nil];
+	};
+}
+
+- (void)syncUnifiedUpdatesHostRows
+{
+	if (!self.unifiedUpdatesHost) return;
+	NSArray<BPFormula *> *formulae = _homebrewManager.outdatedFormulae ?: @[];
+	NSMutableArray<NSString *> *formulaNames = [NSMutableArray arrayWithCapacity:formulae.count];
+	NSMutableArray<NSString *> *formulaVersions = [NSMutableArray arrayWithCapacity:formulae.count];
+	NSMutableArray<NSString *> *formulaLatestVersions = [NSMutableArray arrayWithCapacity:formulae.count];
+	NSMutableArray<NSNumber *> *formulaPinnedFlags = [NSMutableArray arrayWithCapacity:formulae.count];
+	for (BPFormula *formula in formulae) {
+		if (![formula isKindOfClass:[BPFormula class]]) continue;
+		[formulaNames addObject:formula.name ?: @""];
+		[formulaVersions addObject:formula.version ?: @""];
+		[formulaLatestVersions addObject:formula.shortLatestVersion ?: @""];
+		[formulaPinnedFlags addObject:@([_homebrewManager isFormulaPinned:formula])];
+	}
+
+	NSArray<BPFormula *> *casks = _homebrewManager.outdatedCasks ?: @[];
+	NSMutableArray<NSString *> *caskNames = [NSMutableArray arrayWithCapacity:casks.count];
+	NSMutableArray<NSString *> *caskVersions = [NSMutableArray arrayWithCapacity:casks.count];
+	NSMutableArray<NSString *> *caskLatestVersions = [NSMutableArray arrayWithCapacity:casks.count];
+	NSMutableArray<NSNumber *> *caskPinnedFlags = [NSMutableArray arrayWithCapacity:casks.count];
+	for (BPFormula *cask in casks) {
+		if (![cask isKindOfClass:[BPFormula class]]) continue;
+		[caskNames addObject:cask.name ?: @""];
+		[caskVersions addObject:cask.version ?: @""];
+		[caskLatestVersions addObject:cask.shortLatestVersion ?: @""];
+		[caskPinnedFlags addObject:@([_homebrewManager isFormulaPinned:cask])];
+	}
+
+	[self.unifiedUpdatesHost updateWithFormulaNames:formulaNames
+									formulaVersions:formulaVersions
+							  formulaLatestVersions:formulaLatestVersions
+								 formulaPinnedFlags:formulaPinnedFlags
+										  caskNames:caskNames
+									   caskVersions:caskVersions
+								 caskLatestVersions:caskLatestVersions
+									caskPinnedFlags:caskPinnedFlags];
 }
 
 - (void)setUpInstalledPackageListHost
@@ -555,28 +624,38 @@ NSOpenSavePanelDelegate>
 												  cask:isCask];
 }
 
+- (void)embedHostView:(NSView *)hostView inContainer:(NSView *)container
+{
+	if (!container || !hostView) return;
+	if (hostView.superview != container) {
+		hostView.translatesAutoresizingMaskIntoConstraints = NO;
+		[container addSubview:hostView];
+		[NSLayoutConstraint activateConstraints:@[
+			[hostView.leadingAnchor constraintEqualToAnchor:container.leadingAnchor],
+			[hostView.trailingAnchor constraintEqualToAnchor:container.trailingAnchor],
+			[hostView.topAnchor constraintEqualToAnchor:container.topAnchor],
+			[hostView.bottomAnchor constraintEqualToAnchor:container.bottomAnchor]
+		]];
+	}
+	hostView.hidden = NO;
+}
+
 - (void)updateActiveListSurfaceVisibility
 {
-	if (!self.installedPackageListHost) return;
 	NSView *container = self.scrollView_formulae.superview;
-	NSView *hostView = self.installedPackageListHost.viewController.view;
-	if ([self isUsingInstalledPackageListHost]) {
+	NSView *installedView = self.installedPackageListHost.viewController.view;
+	NSView *unifiedView = self.unifiedUpdatesHost.viewController.view;
+	if ([self isUsingUnifiedUpdatesHost]) {
 		self.scrollView_formulae.hidden = YES;
-		if (container && hostView.superview != container) {
-			hostView.translatesAutoresizingMaskIntoConstraints = NO;
-			[container addSubview:hostView];
-			[NSLayoutConstraint activateConstraints:@[
-				[hostView.leadingAnchor constraintEqualToAnchor:container.leadingAnchor],
-				[hostView.trailingAnchor constraintEqualToAnchor:container.trailingAnchor],
-				[hostView.topAnchor constraintEqualToAnchor:container.topAnchor],
-				[hostView.bottomAnchor constraintEqualToAnchor:container.bottomAnchor]
-			]];
-		}
-		hostView.hidden = NO;
+		if (installedView.superview) [installedView removeFromSuperview];
+		[self embedHostView:unifiedView inContainer:container];
+	} else if ([self isUsingInstalledPackageListHost]) {
+		self.scrollView_formulae.hidden = YES;
+		if (unifiedView.superview) [unifiedView removeFromSuperview];
+		[self embedHostView:installedView inContainer:container];
 	} else {
-		if (hostView.superview) {
-			[hostView removeFromSuperview];
-		}
+		if (installedView.superview) [installedView removeFromSuperview];
+		if (unifiedView.superview) [unifiedView removeFromSuperview];
 		self.scrollView_formulae.hidden = NO;
 	}
 }
@@ -608,14 +687,16 @@ NSOpenSavePanelDelegate>
 - (void)updateInterfaceItems
 {
 	NSInteger selectedSidebarRow	= [self.sidebarController.sidebar selectedRow];
-	NSInteger selectedIndex			= [self isUsingInstalledPackageListHost]
-		? self.installedPackageListHost.selectedRow
-		: [self.formulaeTableView selectedRow];
-	NSIndexSet *selectedRows		= [self isUsingInstalledPackageListHost]
-		? (selectedIndex >= 0 ? [NSIndexSet indexSetWithIndex:(NSUInteger)selectedIndex] : [NSIndexSet indexSet])
-		: [self.formulaeTableView selectedRowIndexes];
-	NSUInteger selectedCount		= selectedIndex >= 0 ? [selectedRows count] : 0;
 	NSArray *selectedFormulae		= [self selectedFormulae];
+	NSUInteger selectedCount		= 0;
+	if ([self isUsingUnifiedUpdatesHost]) {
+		selectedCount = (NSUInteger)self.unifiedUpdatesHost.selectedCount;
+	} else if ([self isUsingInstalledPackageListHost]) {
+		selectedCount = self.installedPackageListHost.selectedRow >= 0 ? 1 : 0;
+	} else {
+		NSInteger selectedIndex = [self.formulaeTableView selectedRow];
+		selectedCount = selectedIndex >= 0 ? [[self.formulaeTableView selectedRowIndexes] count] : 0;
+	}
 	if (selectedFormulae.count == 0)
 	{
 		self.currentFormula = nil;
@@ -647,10 +728,22 @@ NSOpenSavePanelDelegate>
 	}
 }
 
+- (void)configureForUnifiedUpdates
+{
+	[self.formulaeTableView deselectAll:nil];
+	[self.installedPackageListHost deselectAll];
+	[self.unifiedUpdatesHost clearSelection];
+	[self updateActiveListSurfaceVisibility];
+	[self syncUnifiedUpdatesHostRows];
+	[self updateInterfaceItems];
+	[self refreshEmptyState];
+}
+
 - (void)configureTableForListing:(BPListMode)mode
 {
 	[self.formulaeTableView deselectAll:nil];
 	[self.installedPackageListHost deselectAll];
+	[self.unifiedUpdatesHost clearSelection];
 	[self.formulaeDataSource setMode:mode];
 	[self.formulaeTableView setMode:mode];
 	[self updateActiveListSurfaceVisibility];
@@ -667,6 +760,12 @@ NSOpenSavePanelDelegate>
 /// "nothing matched" from "still loading".
 - (void)refreshEmptyState
 {
+	NSView *container = self.scrollView_formulae.superview ?: self.scrollView_formulae;
+	if ([self isUsingUnifiedUpdatesHost])
+	{
+		[BPEmptyStateView presentState:nil overView:container];
+		return;
+	}
 	NSInteger rows = [self isUsingInstalledPackageListHost]
 		? self.installedPackageListHost.rowCount
 		: [self.formulaeDataSource numberOfRowsInTableView:self.formulaeTableView];
@@ -679,7 +778,6 @@ NSOpenSavePanelDelegate>
 									   searching:[self isSearching]];
 	}
 
-	NSView *container = self.scrollView_formulae.superview ?: self.scrollView_formulae;
 	[BPEmptyStateView presentState:state overView:container];
 }
 
@@ -778,9 +876,16 @@ NSOpenSavePanelDelegate>
 	BOOL isLoading = (self.loadingView != nil);
 	BPListMode activeMode = self.formulaeDataSource.mode;
 	// Only redraw the table if what landed is what is on screen.
-	if ([BPFormulaeTableActions shouldRefreshVisibleListForPublishedMode:mode
-															  activeMode:activeMode
-															   isLoading:isLoading])
+	if ([BPFormulaeTableActions shouldSyncUnifiedUpdatesForPublishedMode:mode
+															   isLoading:isLoading
+											   isUsingUnifiedUpdatesHost:[self isUsingUnifiedUpdatesHost]])
+	{
+		[self syncUnifiedUpdatesHostRows];
+		[self refreshEmptyState];
+	}
+	else if ([BPFormulaeTableActions shouldRefreshVisibleListForPublishedMode:mode
+																   activeMode:activeMode
+																	isLoading:isLoading])
 	{
 		[self.formulaeDataSource refreshBackingArray];
 		if ([self isUsingInstalledPackageListHost]) {
@@ -820,7 +925,9 @@ NSOpenSavePanelDelegate>
 	// fallback when there is none.
 	[self.formulaeDataSource refreshBackingArray];
 	[self updateActiveListSurfaceVisibility];
-	if ([self isUsingInstalledPackageListHost]) {
+	if ([self isUsingUnifiedUpdatesHost]) {
+		[self syncUnifiedUpdatesHostRows];
+	} else if ([self isUsingInstalledPackageListHost]) {
 		[self syncInstalledPackageListHostRows];
 	}
 	[self.formulaeTableView reloadData];
@@ -872,6 +979,11 @@ NSOpenSavePanelDelegate>
 /// currentFormula and the detail pane.
 - (void)restoreSelectedFormula:(BPFormula *)formula
 {
+	if ([self isUsingUnifiedUpdatesHost])
+	{
+		[self syncUnifiedUpdatesHostRows];
+		return;
+	}
 	if ([self isUsingInstalledPackageListHost])
 	{
 		[self syncInstalledPackageListHostRows];
@@ -948,6 +1060,15 @@ NSOpenSavePanelDelegate>
 
 	[self.formulaPopoverViewController setInfoType:type];
 	[self.formulaPopoverViewController setFormula:formula];
+
+	if ([self isUsingUnifiedUpdatesHost])
+	{
+		NSView *anchorView = self.unifiedUpdatesHost.viewController.view;
+		[popover showRelativeToRect:anchorView.bounds
+							 ofView:anchorView
+					  preferredEdge:NSMaxXEdge];
+		return;
+	}
 
 	if ([self isUsingInstalledPackageListHost])
 	{
@@ -1072,6 +1193,7 @@ NSOpenSavePanelDelegate>
 	
 	[self.formulaeTableView deselectAll:nil];
 	[self.installedPackageListHost deselectAll];
+	[self.unifiedUpdatesHost clearSelection];
 	[self setCurrentFormula:nil];
 	
 	[self updateInterfaceItems];
@@ -1124,6 +1246,10 @@ NSOpenSavePanelDelegate>
 		case FormulaeSideBarItemServices: // Services Tool
 			tabIndex = kBPContentTabServices;
 			[self.servicesViewController refreshServices];
+			break;
+
+		case FormulaeSideBarItemUnifiedUpdates: // Unified Updates
+			[self configureForUnifiedUpdates];
 			break;
 			
 		default:
@@ -1179,21 +1305,9 @@ NSOpenSavePanelDelegate>
 {
 	if ([self hasBlockingBackgroundTask]) return;
 	BPFormula *formula = [self selectedFormula];
-	if (!formula) {
-		return;
-	}
+	NSAlert *alert = [BPPackageOperationPresenter installAlertForFormula:formula];
+	if (!alert) return;
 
-	NSAlert *alert = [[NSAlert alloc] init];
-	[alert setMessageText:NSLocalizedString(@"Generic_Attention", nil)];
-	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Yes", nil)];
-	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Cancel", nil)];
-	[alert setInformativeText:[NSString stringWithFormat:NSLocalizedString(@"Confirmation_Install_Formula", nil),
-							   formula.name]];
-
-	// Present as a sheet rather than an app-modal runModal: it keeps the main run
-	// loop responsive (so the app stays UI-testable) and is the expected macOS
-	// confirmation style. Attach to the app's main window, matching the other
-	// sheet in this controller.
 	[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
 		if (returnCode == NSAlertFirstButtonReturn) {
 			self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationInstall
@@ -1225,33 +1339,12 @@ NSOpenSavePanelDelegate>
 {
 	if ([self hasBlockingBackgroundTask]) return;
 	BPFormula *formula = [self selectedFormula];
-	if (!formula) {
-		return;
-	}
-
-	NSAlert *alert = [[NSAlert alloc] init];
-	[alert setMessageText:NSLocalizedString(@"Generic_Attention", nil)];
-	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Yes", nil)];
-	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Cancel", nil)];
-	[alert setInformativeText:[NSString stringWithFormat:NSLocalizedString(@"Confirmation_Uninstall_Formula", nil),
-							   formula.name]];
-
-	// Only casks have a zap stanza; a plain uninstall leaves their preferences,
-	// application support directories and launch agents behind.
 	NSButton *zapCheckbox = nil;
-	if (formula.cask)
-	{
-		zapCheckbox = [NSButton checkboxWithTitle:NSLocalizedString(@"Confirmation_Uninstall_Cask_Zap", nil)
-										   target:nil
-										   action:nil];
-		[zapCheckbox sizeToFit];
-		zapCheckbox.state = [BPPreferences zapCasksOnUninstall] ? NSControlStateValueOn : NSControlStateValueOff;
-		alert.accessoryView = zapCheckbox;
-	}
+	NSAlert *alert = [BPPackageOperationPresenter uninstallAlertForFormula:formula
+														   initialZapState:[BPPreferences zapCasksOnUninstall]
+															   zapCheckbox:&zapCheckbox];
+	if (!alert) return;
 
-	// Present as a sheet rather than an app-modal runModal: non-blocking (so the
-	// app stays responsive / UI-testable) and the expected macOS confirmation
-	// style. Attach to the app's main window like the other sheets here.
 	[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
 		if (returnCode == NSAlertFirstButtonReturn) {
 			BOOL zap = zapCheckbox && zapCheckbox.state == NSControlStateValueOn;
@@ -1301,20 +1394,9 @@ NSOpenSavePanelDelegate>
 {
 	if ([self hasBlockingBackgroundTask]) return;
 	NSArray *selectedFormulae = [self selectedFormulae];
-	if (![selectedFormulae count]) {
-		return;
-	}
-	NSString *formulaNames = [[self selectedFormulaNames] componentsJoinedByString:@", "];
-	
-	NSAlert *alert = [[NSAlert alloc] init];
-	[alert setMessageText:NSLocalizedString(@"Message_Update_Formulae_Title", nil)];
-	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Yes", nil)];
-	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Cancel", nil)];
-	[alert setInformativeText:[NSString stringWithFormat:NSLocalizedString(@"Message_Update_Formulae_Body", nil),
-							   formulaNames]];
+	NSAlert *alert = [BPPackageOperationPresenter upgradeAlertForFormulae:selectedFormulae];
+	if (!alert) return;
 
-	// Present as a sheet rather than an app-modal runModal (non-blocking,
-	// UI-testable, standard macOS style), matching the other confirmations here.
 	[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
 		if (returnCode == NSAlertFirstButtonReturn) {
 			self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationUpgrade
@@ -1329,46 +1411,14 @@ NSOpenSavePanelDelegate>
 {
     if ([self hasBlockingBackgroundTask]) return;
     BPUpdatesSnapshot *snapshot = _homebrewManager.updatesSnapshot;
-    if (!snapshot.hasEligibleUpdates) return; // Also guards the Dock action.
+    NSAlert *alert = [BPPackageOperationPresenter upgradeAllAlertForSnapshot:snapshot];
+    if (!alert) return; // Also guards the Dock action.
 
-    NSMutableArray *sections = [NSMutableArray array];
-    if (snapshot.eligibleFormulae.count) [sections addObject:[NSString stringWithFormat:NSLocalizedString(@"Updates_Formula_Targets", nil), [snapshot.eligibleFormulae componentsJoinedByString:@", "]]];
-    if (snapshot.eligibleCasks.count) [sections addObject:[NSString stringWithFormat:NSLocalizedString(@"Updates_Cask_Targets", nil), [snapshot.eligibleCasks componentsJoinedByString:@", "]]];
-    if (snapshot.excludedFormulae.count) [sections addObject:[NSString stringWithFormat:NSLocalizedString(@"Updates_Pinned_Formula_Exclusions", nil), [snapshot.excludedFormulae componentsJoinedByString:@", "]]];
-    if (snapshot.excludedCasks.count) [sections addObject:[NSString stringWithFormat:NSLocalizedString(@"Updates_Pinned_Cask_Exclusions", nil), [snapshot.excludedCasks componentsJoinedByString:@", "]]];
-
-    NSAlert *alert = [[NSAlert alloc] init];
-    alert.messageText = NSLocalizedString(@"Updates_Confirm_Title", nil);
-    alert.informativeText = NSLocalizedString(@"Updates_Review_Body", nil);
-    NSScrollView *review = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 440, 180)];
-    review.hasVerticalScroller = YES;
-    review.borderType = NSBezelBorder;
-    NSTextView *targets = [[NSTextView alloc] initWithFrame:review.contentView.bounds];
-    targets.editable = NO;
-    targets.selectable = YES;
-    targets.font = [NSFont systemFontOfSize:NSFont.systemFontSize];
-    targets.textContainerInset = NSMakeSize(8, 8);
-    targets.textContainer.widthTracksTextView = YES;
-    targets.autoresizingMask = NSViewWidthSizable;
-    targets.verticallyResizable = YES;
-    targets.horizontallyResizable = NO;
-    targets.maxSize = NSMakeSize(CGFLOAT_MAX, CGFLOAT_MAX);
-    targets.string = [sections componentsJoinedByString:@"\n\n"];
-    targets.accessibilityIdentifier = @"updates.targets";
-    targets.accessibilityLabel = NSLocalizedString(@"Updates_Review_Targets", nil);
-    review.documentView = targets;
-    alert.accessoryView = review;
-    [alert addButtonWithTitle:NSLocalizedString(@"Updates_Confirm_Action", nil)];
-    [alert addButtonWithTitle:NSLocalizedString(@"Generic_Cancel", nil)];
-    alert.buttons.firstObject.accessibilityIdentifier = @"updates.confirm";
     [alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse response) {
         if (response != NSAlertFirstButtonReturn || [self hasBlockingBackgroundTask]) return;
         NSArray *selection = [self->_homebrewManager selectionForConfirmedUpdatesSnapshot:snapshot];
         if (!selection.count) {
-            NSAlert *changed = [[NSAlert alloc] init];
-            changed.messageText = NSLocalizedString(@"Updates_Changed_Title", nil);
-            changed.informativeText = NSLocalizedString(@"Updates_Changed_Body", nil);
-            [changed addButtonWithTitle:NSLocalizedString(@"Generic_OK", nil)];
+            NSAlert *changed = [BPPackageOperationPresenter updatesChangedAlert];
             [changed beginSheetModalForWindow:self->_appDelegate.window completionHandler:nil];
             return;
         }
@@ -1380,17 +1430,9 @@ NSOpenSavePanelDelegate>
 {
 	if ([self hasBlockingBackgroundTask]) return;
 
-	NSAlert *alert = [[NSAlert alloc] init];
-	[alert setMessageText:NSLocalizedString(@"Message_Tap_Title", nil)];
-	[alert addButtonWithTitle:NSLocalizedString(@"Generic_OK", nil)];
-	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Cancel", nil)];
-	[alert setInformativeText:NSLocalizedString(@"Message_Tap_Body", nil)];
+	NSTextField *input = nil;
+	NSAlert *alert = [BPPackageOperationPresenter tapInputAlertWithInputField:&input];
 
-	NSTextField *input = [[NSTextField alloc] initWithFrame:NSMakeRect(0,0,200,24)];
-	[alert setAccessoryView:input];
-
-	// Present as a sheet rather than an app-modal runModal (non-blocking,
-	// UI-testable, standard macOS style), matching the other confirmations here.
 	[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
 		if (returnCode != NSAlertFirstButtonReturn) {
 			return;
@@ -1400,10 +1442,7 @@ NSOpenSavePanelDelegate>
 			return;
 		}
 		if (![BPHomebrewInterface isValidTapName:name]) {
-			NSAlert *error = [[NSAlert alloc] init];
-			error.messageText = NSLocalizedString(@"Message_Tap_Invalid_Title", nil);
-			error.informativeText = NSLocalizedString(@"Message_Tap_Invalid_Body", nil);
-			[error addButtonWithTitle:NSLocalizedString(@"Generic_OK", nil)];
+			NSAlert *error = [BPPackageOperationPresenter invalidTapAlert];
 			[error beginSheetModalForWindow:self->_appDelegate.window completionHandler:nil];
 			return;
 		}
@@ -1418,20 +1457,9 @@ NSOpenSavePanelDelegate>
 {
 	if ([self hasBlockingBackgroundTask]) return;
 	BPFormula *formula = [self selectedFormula];
-	
-	if (!formula)
-	{
-		return;
-	}
+	NSAlert *alert = [BPPackageOperationPresenter untapAlertForFormula:formula];
+	if (!alert) return;
 
-	NSAlert *alert = [[NSAlert alloc] init];
-	[alert setMessageText:NSLocalizedString(@"Message_Untap_Title", nil)];
-	[alert addButtonWithTitle:NSLocalizedString(@"Generic_OK", nil)];
-	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Cancel", nil)];
-	[alert setInformativeText:[NSString stringWithFormat:NSLocalizedString(@"Message_Untap_Body", nil), formula.name]];
-
-	// Present as a sheet rather than an app-modal runModal (non-blocking,
-	// UI-testable, standard macOS style), matching the other confirmations here.
 	[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
 		if (returnCode == NSAlertFirstButtonReturn) {
 			self.operationWindowController = [BPInstallationWindowController runWithOperation:kBPWindowOperationUntap
@@ -1455,6 +1483,11 @@ NSOpenSavePanelDelegate>
 - (IBAction)showOutdatedCasks:(id)sender
 {
 	[self showOutdatedSidebarRow:FormulaeSideBarItemOutdatedCasks];
+}
+
+- (IBAction)showUnifiedUpdates:(id)sender
+{
+	[self showOutdatedSidebarRow:FormulaeSideBarItemUnifiedUpdates];
 }
 
 - (void)showOutdatedSidebarRow:(FormulaeSideBarItem)row
@@ -1533,25 +1566,13 @@ NSOpenSavePanelDelegate>
 	// that started meanwhile — the sheet would confirm a cleanup that cannot run.
 	if ([self hasBlockingBackgroundTask]) return;
 
-	NSAlert *alert = [[NSAlert alloc] init];
-
+	NSAlert *alert = [BPPackageOperationPresenter cleanupAlertForPreview:preview];
 	if (preview.isEmpty)
 	{
-		[alert setMessageText:NSLocalizedString(@"Cleanup_Nothing_Title", nil)];
-		[alert setInformativeText:NSLocalizedString(@"Cleanup_Nothing_Body", nil)];
-		[alert addButtonWithTitle:NSLocalizedString(@"Generic_OK", nil)];
-
 		[alert beginSheetModalForWindow:_appDelegate.window completionHandler:nil];
 		return;
 	}
 
-	[alert setMessageText:NSLocalizedString(@"Generic_Attention", nil)];
-	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Yes", nil)];
-	[alert addButtonWithTitle:NSLocalizedString(@"Generic_Cancel", nil)];
-	[alert setInformativeText:[self cleanupConfirmationBodyForPreview:preview]];
-
-	// Sheet, not runModal: keeps the app responsive and the flow UI-testable.
-	// Attached to the app's window like every other sheet here.
 	[alert beginSheetModalForWindow:_appDelegate.window completionHandler:^(NSModalResponse returnCode) {
 		if (returnCode != NSAlertFirstButtonReturn) return;
 
@@ -1559,32 +1580,6 @@ NSOpenSavePanelDelegate>
 																				 formulae:nil
 																				  options:nil];
 	}];
-}
-
-- (NSString *)cleanupConfirmationBodyForPreview:(BPCleanupPreview *)preview
-{
-	NSString *items = preview.itemCount == 1 ?
-		NSLocalizedString(@"Cleanup_Item_Count_One", nil) :
-		[NSString localizedStringWithFormat:NSLocalizedString(@"Cleanup_Item_Count_Other", nil),
-		 (unsigned long)preview.itemCount];
-
-	if (preview.reclaimableBytes == 0)
-	{
-		// brew found things to remove but could not size them. Say only what is
-		// known rather than printing "0 bytes", which reads as "nothing to do".
-		return [NSString localizedStringWithFormat:
-				NSLocalizedString(@"Confirmation_Cleanup_No_Size", nil), items];
-	}
-
-	// Binary style, because brew's own "MB" is 1024-based — a decimal formatter
-	// here would print a smaller-looking number than brew just reported.
-	NSByteCountFormatter *formatter = [[NSByteCountFormatter alloc] init];
-	formatter.countStyle = NSByteCountFormatterCountStyleBinary;
-
-	NSString *size = [formatter stringFromByteCount:(long long)preview.reclaimableBytes];
-
-	return [NSString localizedStringWithFormat:
-			NSLocalizedString(@"Confirmation_Cleanup", nil), items, size];
 }
 
 - (IBAction)runHomebrewExport:(id)sender
@@ -1628,11 +1623,11 @@ NSOpenSavePanelDelegate>
  if (_appDelegate.window.attachedSheet) return;
  _appDelegate.runningBackgroundTask = YES;
  BPHomebrewManager *manager = [BPHomebrewManager sharedManager];
- NSMutableDictionary *inventories = [NSMutableDictionary dictionary];
- if (manager.installedFormulae) inventories[@"brew"] = [manager.installedFormulae valueForKey:@"name"];
- if (manager.installedCasks) inventories[@"cask"] = [manager.installedCasks valueForKey:@"name"];
- if (manager.repositoriesFormulae) inventories[@"tap"] = [manager.repositoriesFormulae valueForKey:@"name"];
- [BPBundleWindowController reviewFile:url inventories:[inventories copy] parentWindow:_appDelegate.window completion:^(BPBrewfilePlan *plan) {
+ NSDictionary<NSString *, NSArray<NSString *> *> *inventories =
+	 [BPPackageOperationPresenter brewfileInventoriesForInstalledFormulae:manager.installedFormulae
+														   installedCasks:manager.installedCasks
+															 repositories:manager.repositoriesFormulae];
+ [BPBundleWindowController reviewFile:url inventories:inventories parentWindow:_appDelegate.window completion:^(BPBrewfilePlan *plan) {
   if (!plan) { self->_appDelegate.runningBackgroundTask = NO; return; }
   self.operationWindowController = [BPBundleWindowController runImportOperationWithPlan:plan];
  }];
@@ -1681,6 +1676,11 @@ NSOpenSavePanelDelegate>
 
 - (BPFormula *)selectedFormula
 {
+	if ([self isUsingUnifiedUpdatesHost])
+	{
+		NSArray *selected = [self selectedFormulae];
+		return selected.count == 1 ? selected.firstObject : nil;
+	}
 	if ([self isUsingInstalledPackageListHost])
 	{
 		NSString *name = self.installedPackageListHost.selectedPackageName;
@@ -1695,6 +1695,15 @@ NSOpenSavePanelDelegate>
 
 - (NSArray *)selectedFormulae
 {
+	if ([self isUsingUnifiedUpdatesHost])
+	{
+		NSArray<BPFormula *> *resolved = [BPPackageOperationPresenter
+			resolvedSelectionForFormulaNames:self.unifiedUpdatesHost.selectedFormulaNames
+								   caskNames:self.unifiedUpdatesHost.selectedCaskNames
+							outdatedFormulae:_homebrewManager.outdatedFormulae
+							   outdatedCasks:_homebrewManager.outdatedCasks];
+		return resolved.count ? resolved : nil;
+	}
 	if ([self isUsingInstalledPackageListHost])
 	{
 		BPFormula *selected = [self selectedFormula];

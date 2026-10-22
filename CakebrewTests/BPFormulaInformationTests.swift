@@ -425,11 +425,18 @@ final class BPFormulaInformationTests: XCTestCase {
 
         let updatesHost = BPUnifiedUpdatesHost()
         var selectionCallbacks = 0
+        var upgradeAllCount = 0
         var upgradedPairs: [([String], [String])] = []
         updatesHost.onSelectionChanged = { selectionCallbacks += 1 }
         updatesHost.onUpgradeSelected = { formulae, casks in
             upgradedPairs.append((formulae, casks))
         }
+        updatesHost.onUpgradeAll = { upgradeAllCount += 1 }
+
+        XCTAssertTrue(updatesHost.isEmpty)
+        XCTAssertEqual(updatesHost.rowCount, 0)
+        XCTAssertEqual(updatesHost.selectedCount, 0)
+        XCTAssertFalse(updatesHost.hasEligibleUpdates)
 
         updatesHost.update(
             formulaNames: ["git", "pinned-formula"],
@@ -441,12 +448,16 @@ final class BPFormulaInformationTests: XCTestCase {
             caskLatestVersions: ["3.5"],
             caskPinnedFlags: [false])
         XCTAssertFalse(updatesHost.isEmpty)
+        XCTAssertEqual(updatesHost.rowCount, 3)
+        XCTAssertEqual(updatesHost.selectedCount, 0)
+        XCTAssertTrue(updatesHost.hasEligibleUpdates)
         XCTAssertTrue(updatesHost.hasFormulaUpdates)
         XCTAssertTrue(updatesHost.hasCaskUpdates)
 
         updatesHost.selectAllEligible()
         XCTAssertEqual(updatesHost.selectedFormulaNames, ["git"])
         XCTAssertEqual(updatesHost.selectedCaskNames, ["iterm2"])
+        XCTAssertEqual(updatesHost.selectedCount, 2)
         XCTAssertEqual(selectionCallbacks, 1)
 
         updatesHost.upgradeSelected()
@@ -454,17 +465,23 @@ final class BPFormulaInformationTests: XCTestCase {
         XCTAssertEqual(upgradedPairs.first?.0, ["git"])
         XCTAssertEqual(upgradedPairs.first?.1, ["iterm2"])
 
+        updatesHost.upgradeAll()
+        XCTAssertEqual(upgradeAllCount, 1)
+
         updatesHost.selectFormulaGroup()
         XCTAssertEqual(updatesHost.selectedFormulaNames, ["git"])
         XCTAssertEqual(updatesHost.selectedCaskNames, [])
+        XCTAssertEqual(updatesHost.selectedCount, 1)
 
         updatesHost.selectCaskGroup()
         XCTAssertEqual(updatesHost.selectedFormulaNames, [])
         XCTAssertEqual(updatesHost.selectedCaskNames, ["iterm2"])
+        XCTAssertEqual(updatesHost.selectedCount, 1)
 
         updatesHost.clearSelection()
         XCTAssertEqual(updatesHost.selectedFormulaNames, [])
         XCTAssertEqual(updatesHost.selectedCaskNames, [])
+        XCTAssertEqual(updatesHost.selectedCount, 0)
     }
 
 }

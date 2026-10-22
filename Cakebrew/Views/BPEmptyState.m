@@ -29,6 +29,7 @@
 	switch ((FormulaeSideBarItem)row)
 	{
 		case FormulaeSideBarItemOutdated:
+		case FormulaeSideBarItemUnifiedUpdates:
 			// Good news, not an error, and it should read that way.
 			return [self stateWithSymbol:@"checkmark.circle"
 								   title:@"Empty_Outdated_Title"
