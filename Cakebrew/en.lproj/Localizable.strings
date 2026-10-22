@@ -328,3 +328,9 @@
 "Information_Unavailable" = "No information is available for this package.";
 "Sidebar_Item_Unified_Updates" = "Updates";
 "Sidebar_Info_Unified_Updates" = "Outdated formulae and casks with a newer version available.";
+"App_Update_Menu_Item" = "Check for Updates…";
+"App_Update_Auto_Check" = "Automatically check for Cakebrew updates";
+"App_Update_Open_Releases" = "View Releases on GitHub";
+"App_Update_Download" = "Download Update";
+"App_Update_Verified" = "Verified SHA-256 & Ed25519 signature";
+"App_Update_Feed_Unconfigured" = "Signed update feed is not configured for this build. Check GitHub Releases for source and release status.";

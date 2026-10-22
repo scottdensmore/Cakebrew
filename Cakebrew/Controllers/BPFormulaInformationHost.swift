@@ -262,6 +262,16 @@ private struct BPSelectedFormulaInspectorView: View {
         }
     }
 
+    private var copyableInstallPath: String? {
+        guard case .single(let snapshot) = presentation.state.selection,
+              snapshot.isInstalled,
+              let path = snapshot.installPath,
+              !path.isEmpty else {
+            return nil
+        }
+        return path
+    }
+
     private var versionValue: String {
         switch presentation.state.selection {
         case .none:
@@ -304,14 +314,39 @@ private struct BPSelectedFormulaInspectorView: View {
         return dependents.joined(separator: ", ")
     }
 
+    private var headerSymbolName: String {
+        if case .single(let snapshot) = presentation.state.selection {
+            return snapshot.identity.cask ? "macwindow" : "shippingbox.fill"
+        }
+        return "info.circle"
+    }
+
     var body: some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 6) {
-                Text(BPSelectedFormulaLocalizedTitle("F2k-Nm-vhK.title", fallback: "Selected Formula Information"))
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(.secondary)
-                    .accessibilityAddTraits(.isHeader)
-                    .accessibilityIdentifier("formula.detail.header")
+                HStack(spacing: 6) {
+                    Image(systemName: headerSymbolName)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                    Text(BPSelectedFormulaLocalizedTitle("F2k-Nm-vhK.title", fallback: "Selected Formula Information"))
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.secondary)
+                        .accessibilityAddTraits(.isHeader)
+                        .accessibilityIdentifier("formula.detail.header")
+                    Spacer()
+                    if let path = copyableInstallPath {
+                        Button {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(path, forType: .string)
+                        } label: {
+                            Image(systemName: "doc.on.doc")
+                                .font(.system(size: 11))
+                        }
+                        .buttonStyle(.borderless)
+                        .help(NSLocalizedString("Services_Copy_Output", comment: ""))
+                        .accessibilityIdentifier("formula.detail.copyPath")
+                    }
+                }
 
                 Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 8, verticalSpacing: 5) {
                     inspectorRow(
@@ -353,8 +388,14 @@ private struct BPSelectedFormulaInspectorView: View {
                     }
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.primary.opacity(0.03))
+            )
+            .padding(.horizontal, 4)
+            .padding(.vertical, 2)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
     }
@@ -897,7 +938,7 @@ private struct BPInstalledPackageListView: View {
 
     @ViewBuilder
     private func nameCell(_ row: BPInstalledPackageRow) -> some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 5) {
             Text(row.name)
                 .lineLimit(1)
                 .accessibilityValue(row.name)
@@ -905,6 +946,7 @@ private struct BPInstalledPackageListView: View {
             if row.isPinned {
                 Image(systemName: "pin.fill")
                     .font(.system(size: NSFont.smallSystemFontSize))
+                    .foregroundStyle(.secondary)
                     .accessibilityLabel(NSLocalizedString("Sidebar_Item_Pinned", comment: ""))
             }
         }
@@ -919,6 +961,23 @@ private struct BPInstalledPackageListView: View {
         default:
             return NSLocalizedString("Formula_Status_Not_Installed", comment: "")
         }
+    }
+
+    @ViewBuilder
+    private func statusBadge(for statusRank: Int) -> some View {
+        let text = statusText(for: statusRank)
+        let tint: Color = (statusRank == 2) ? .orange : ((statusRank == 1) ? .green : .secondary)
+        Text(text)
+            .font(.caption)
+            .fontWeight(statusRank == 2 ? .medium : .regular)
+            .foregroundStyle(statusRank == 0 ? .secondary : .primary)
+            .lineLimit(1)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 2)
+            .background(
+                Capsule()
+                    .fill(tint.opacity(statusRank == 0 ? 0.10 : 0.16))
+            )
     }
 
     @ViewBuilder
@@ -937,10 +996,14 @@ private struct BPInstalledPackageListView: View {
                 }
                 TableColumn(BPMainMenuLocalizedTitle("h5d-xc-Jih.headerCell.title", fallback: "Version"), value: \.version) { row in
                     Text(row.version)
+                        .font(.system(.body, design: .monospaced))
+                        .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
                 TableColumn(BPMainMenuLocalizedTitle("d93-10-421.headerCell.title", fallback: "Latest Version"), value: \.latestVersion) { row in
                     Text(row.latestVersion)
+                        .font(.system(.body, design: .monospaced))
+                        .fontWeight(.medium)
                         .lineLimit(1)
                 }
             }
@@ -951,11 +1014,11 @@ private struct BPInstalledPackageListView: View {
                 }
                 TableColumn(BPMainMenuLocalizedTitle("h5d-xc-Jih.headerCell.title", fallback: "Version"), value: \.version) { row in
                     Text(row.version)
+                        .font(.system(.body, design: .monospaced))
                         .lineLimit(1)
                 }
                 TableColumn(BPMainMenuLocalizedTitle("Be6-3F-p4b.headerCell.title", fallback: "Status"), value: \.statusRank) { row in
-                    Text(statusText(for: row.statusRank))
-                        .lineLimit(1)
+                    statusBadge(for: row.statusRank)
                 }
             }
         } else {
@@ -965,6 +1028,7 @@ private struct BPInstalledPackageListView: View {
                 }
                 TableColumn(BPMainMenuLocalizedTitle("h5d-xc-Jih.headerCell.title", fallback: "Version"), value: \.version) { row in
                     Text(row.version)
+                        .font(.system(.body, design: .monospaced))
                         .lineLimit(1)
                 }
             }
@@ -1034,6 +1098,11 @@ public final class BPUnifiedUpdatesHost: NSObject {
 
     @objc public var isEmpty: Bool {
         presentation.state.isEmpty
+    }
+
+    @objc public var filterQuery: String {
+        get { presentation.state.filterQuery }
+        set { presentation.state.setFilterQuery(newValue) }
     }
 
     @objc public var onSelectionChanged: (() -> Void)? {
@@ -1156,6 +1225,13 @@ private struct BPUnifiedUpdatesView: View {
         NSLocalizedString("Sidebar_Group_Casks", comment: "")
     }
 
+    private var filterBinding: Binding<String> {
+        Binding(
+            get: { presentation.state.filterQuery },
+            set: { presentation.state.setFilterQuery($0) }
+        )
+    }
+
     private func isSelectedBinding(for row: BPUnifiedUpdateRow) -> Binding<Bool> {
         Binding(
             get: { presentation.state.selectedIDs.contains(row.id) },
@@ -1232,16 +1308,26 @@ private struct BPUnifiedUpdatesView: View {
                     .foregroundStyle(.secondary)
                 Text(row.latestVersion)
                     .font(.system(.body, design: .monospaced))
+                    .fontWeight(.medium)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
             }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 2)
+            .background(
+                Capsule()
+                    .fill(Color.primary.opacity(0.05))
+            )
         }
         .padding(.vertical, 2)
     }
 
     var body: some View {
         if presentation.state.isEmpty {
-            VStack(spacing: 6) {
+            VStack(spacing: 8) {
+                Image(systemName: "checkmark.circle")
+                    .font(.system(size: 32, weight: .light))
+                    .foregroundStyle(.secondary)
                 Text(NSLocalizedString("Empty_Outdated_Title", comment: ""))
                     .font(.headline)
                     .foregroundStyle(.secondary)
@@ -1292,6 +1378,12 @@ private struct BPUnifiedUpdatesView: View {
                         .accessibilityIdentifier("unified.updates.selectCasks")
                     }
 
+                    TextField(NSLocalizedString("Toolbar_Search", comment: ""), text: filterBinding)
+                        .textFieldStyle(.roundedBorder)
+                        .controlSize(.small)
+                        .frame(maxWidth: 180)
+                        .accessibilityIdentifier("unified.updates.filter")
+
                     Spacer()
 
                     Button(NSLocalizedString("Toolbar_Update_Selected", comment: "")) {
@@ -1314,9 +1406,11 @@ private struct BPUnifiedUpdatesView: View {
                 Divider()
 
                 List {
-                    if presentation.state.hasFormulaUpdates {
+                    let filteredFormulae = presentation.state.filteredFormulaRows
+                    let filteredCasks = presentation.state.filteredCaskRows
+                    if !filteredFormulae.isEmpty {
                         Section {
-                            ForEach(presentation.state.formulaRows) { row in
+                            ForEach(filteredFormulae) { row in
                                 updateRowView(row)
                             }
                         } header: {
@@ -1327,9 +1421,9 @@ private struct BPUnifiedUpdatesView: View {
                         }
                     }
 
-                    if presentation.state.hasCaskUpdates {
+                    if !filteredCasks.isEmpty {
                         Section {
-                            ForEach(presentation.state.caskRows) { row in
+                            ForEach(filteredCasks) { row in
                                 updateRowView(row)
                             }
                         } header: {
@@ -1344,5 +1438,587 @@ private struct BPUnifiedUpdatesView: View {
                 .accessibilityIdentifier("unified.updates.list")
             }
         }
+    }
+}
+
+// MARK: - In-App Update Discovery Host (#149)
+
+@MainActor
+private final class BPAppUpdatePresentation: ObservableObject {
+    @Published var state: BPAppUpdateState
+    @Published var automaticCheckEnabled: Bool
+    var onToggleAutomaticCheck: ((Bool) -> Void)?
+    var onOpenURL: ((URL) -> Void)?
+    var onRetryCheck: (() -> Void)?
+    var onCloseWindow: (() -> Void)?
+
+    init(currentVersionString: String, automaticCheckEnabled: Bool) {
+        self.state = BPAppUpdateState(currentVersionString: currentVersionString)
+        self.automaticCheckEnabled = automaticCheckEnabled
+    }
+}
+
+@MainActor
+@objc(BPAppUpdateHost)
+public final class BPAppUpdateHost: NSObject {
+    private let presentation: BPAppUpdatePresentation
+    @objc public let viewController: NSViewController
+    @objc public let window: NSWindow
+    private var feedURL: URL?
+    private var publicKeyBase64: String?
+
+    @objc public var automaticCheckEnabled: Bool {
+        get { presentation.automaticCheckEnabled }
+        set { presentation.automaticCheckEnabled = newValue }
+    }
+
+    @objc public var onToggleAutomaticCheck: ((Bool) -> Void)? {
+        get { presentation.onToggleAutomaticCheck }
+        set { presentation.onToggleAutomaticCheck = newValue }
+    }
+
+    @objc public var onOpenURL: ((URL) -> Void)? {
+        get { presentation.onOpenURL }
+        set { presentation.onOpenURL = newValue }
+    }
+
+    @objc public var currentVersionString: String {
+        presentation.state.currentVersion.raw
+    }
+
+    @objc public var isUpdateAvailable: Bool {
+        if case .updateAvailable = presentation.state.phase {
+            return true
+        }
+        return false
+    }
+
+    @objc public var isChecking: Bool {
+        if case .checking = presentation.state.phase {
+            return true
+        }
+        return false
+    }
+
+    public override convenience init() {
+        let bundleVersion = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "1.0.0"
+        self.init(currentVersion: bundleVersion, automaticCheckEnabled: true)
+    }
+
+    @objc(initWithCurrentVersion:automaticCheckEnabled:)
+    public init(currentVersion: String, automaticCheckEnabled: Bool) {
+        let presentation = BPAppUpdatePresentation(
+            currentVersionString: currentVersion,
+            automaticCheckEnabled: automaticCheckEnabled)
+        self.presentation = presentation
+        let host = NSHostingController(rootView: BPAppUpdateView(presentation: presentation))
+        host.preferredContentSize = NSSize(width: 480, height: 320)
+        self.viewController = host
+
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 480, height: 320),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: true)
+        window.title = NSLocalizedString("Dock_Check_For_Updates", comment: "")
+        window.isReleasedWhenClosed = false
+        window.contentViewController = host
+        self.window = window
+
+        super.init()
+
+        presentation.onOpenURL = { url in
+            NSWorkspace.shared.open(url)
+        }
+        presentation.onRetryCheck = { [weak self] in
+            self?.performConfiguredCheck()
+        }
+        presentation.onCloseWindow = { [weak self] in
+            self?.window.close()
+        }
+
+        if let feedString = Bundle.main.object(forInfoDictionaryKey: "BPAppUpdateFeedURL") as? String,
+           let parsedURL = URL(string: feedString),
+           parsedURL.scheme?.lowercased() == "https" {
+            self.feedURL = parsedURL
+        }
+        if let keyString = Bundle.main.object(forInfoDictionaryKey: "BPAppUpdatePublicKey") as? String,
+           !keyString.isEmpty {
+            self.publicKeyBase64 = keyString
+        }
+    }
+
+    @objc public func showWindow() {
+        if !window.isVisible {
+            window.center()
+        }
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    @objc(configureFeedURL:publicKeyBase64:)
+    public func configure(feedURL: URL?, publicKeyBase64: String?) {
+        self.feedURL = feedURL
+        self.publicKeyBase64 = publicKeyBase64
+    }
+
+    @objc(beginCheckWithCurrentVersion:)
+    @discardableResult
+    public func beginCheck(currentVersion: String?) -> UInt64 {
+        presentation.state.beginCheck(currentVersionString: currentVersion)
+    }
+
+    @objc(receiveFeedData:publicKeyBase64:generation:)
+    @discardableResult
+    public func receiveFeedData(_ data: Data, publicKeyBase64: String?, generation: UInt64) -> Bool {
+        presentation.state.receiveFeedData(data, publicKeyBase64: publicKeyBase64, generation: generation)
+    }
+
+    @objc(receiveFeedUnavailableForGeneration:)
+    @discardableResult
+    public func receiveFeedUnavailable(generation: UInt64) -> Bool {
+        presentation.state.receiveFeedUnavailable(generation: generation)
+    }
+
+    @objc(receiveErrorMessage:generation:)
+    @discardableResult
+    public func receiveError(_ message: String, generation: UInt64) -> Bool {
+        presentation.state.receiveError(message, generation: generation)
+    }
+
+    @objc public func performConfiguredCheck() {
+        let bundleVersion = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? presentation.state.currentVersion.raw
+        let generation = presentation.state.beginCheck(currentVersionString: bundleVersion)
+        guard let feedURL, feedURL.scheme?.lowercased() == "https" else {
+            _ = presentation.state.receiveFeedUnavailable(generation: generation)
+            return
+        }
+        let expectedKey = self.publicKeyBase64
+        let task = URLSession.shared.dataTask(with: feedURL) { [weak self] data, response, error in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                if let error {
+                    _ = self.presentation.state.receiveError(error.localizedDescription, generation: generation)
+                    return
+                }
+                if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
+                    _ = self.presentation.state.receiveFeedUnavailable(generation: generation)
+                    return
+                }
+                guard let data, !data.isEmpty else {
+                    _ = self.presentation.state.receiveFeedUnavailable(generation: generation)
+                    return
+                }
+                _ = self.presentation.state.receiveFeedData(data, publicKeyBase64: expectedKey, generation: generation)
+            }
+        }
+        task.resume()
+    }
+}
+
+@MainActor
+private struct BPAppUpdateView: View {
+    @ObservedObject var presentation: BPAppUpdatePresentation
+
+    private var automaticBinding: Binding<Bool> {
+        Binding(
+            get: { presentation.automaticCheckEnabled },
+            set: { newValue in
+                presentation.automaticCheckEnabled = newValue
+                presentation.onToggleAutomaticCheck?(newValue)
+            }
+        )
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 12) {
+                Image(nsImage: NSApp.applicationIconImage)
+                    .resizable()
+                    .frame(width: 52, height: 52)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(NSLocalizedString("Cakebrew", comment: ""))
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                        .accessibilityIdentifier("app.update.title")
+                    Text("\(NSLocalizedString("Detail_VoiceOver_Version", comment: "")): \(presentation.state.currentVersion.raw)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("app.update.currentVersion")
+                }
+                Spacer()
+            }
+
+            Divider()
+
+            statusCard
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+
+            Divider()
+
+            HStack(spacing: 10) {
+                Toggle(NSLocalizedString("App_Update_Auto_Check", comment: ""), isOn: automaticBinding)
+                    .toggleStyle(.checkbox)
+                    .controlSize(.small)
+                    .accessibilityIdentifier("app.update.autoCheck")
+
+                Spacer()
+
+                Button(NSLocalizedString("Try Again", comment: "")) {
+                    presentation.onRetryCheck?()
+                }
+                .accessibilityIdentifier("app.update.retry")
+
+                primaryActionButton
+
+                Button(NSLocalizedString("Close", comment: "")) {
+                    presentation.onCloseWindow?()
+                }
+                .keyboardShortcut(.cancelAction)
+                .accessibilityIdentifier("app.update.close")
+            }
+        }
+        .padding(18)
+        .frame(width: 480, height: 320)
+    }
+
+    @ViewBuilder
+    private var statusCard: some View {
+        switch presentation.state.phase {
+        case .idle, .checking:
+            HStack(spacing: 10) {
+                ProgressView()
+                    .controlSize(.small)
+                Text(NSLocalizedString("Loading_Status_Default", comment: ""))
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .accessibilityIdentifier("app.update.checking")
+
+        case .upToDate(let latestVersion):
+            VStack(alignment: .leading, spacing: 8) {
+                Label(NSLocalizedString("Empty_Outdated_Title", comment: ""), systemImage: "checkmark.seal.fill")
+                    .font(.headline)
+                    .foregroundStyle(.green)
+                    .accessibilityIdentifier("app.update.upToDate")
+                Text("Cakebrew \(latestVersion)")
+                    .font(.system(.subheadline, design: .monospaced))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.primary.opacity(0.04))
+            )
+
+        case .updateAvailable(let release, let isVerified):
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Label(release.title, systemImage: "sparkles")
+                        .font(.headline)
+                        .accessibilityIdentifier("app.update.availableTitle")
+                    Spacer()
+                    Text("\(presentation.state.currentVersion.raw) → \(release.version.raw)")
+                        .font(.system(.caption, design: .monospaced))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(Capsule().fill(Color.accentColor.opacity(0.15)))
+                }
+                if isVerified {
+                    Label(NSLocalizedString("App_Update_Verified", comment: ""), systemImage: "lock.shield.fill")
+                        .font(.caption)
+                        .foregroundStyle(.green)
+                        .accessibilityIdentifier("app.update.verifiedBadge")
+                }
+                if !release.releaseNotes.isEmpty {
+                    ScrollView {
+                        Text(release.releaseNotes)
+                            .font(.callout)
+                            .textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .accessibilityIdentifier("app.update.releaseNotes")
+                    }
+                }
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.primary.opacity(0.04))
+            )
+
+        case .feedUnavailable:
+            VStack(alignment: .leading, spacing: 8) {
+                Label(NSLocalizedString("Dock_Check_For_Updates", comment: ""), systemImage: "arrow.up.forward.app")
+                    .font(.headline)
+                Text(NSLocalizedString("App_Update_Feed_Unconfigured", comment: ""))
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("app.update.feedUnavailable")
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.primary.opacity(0.04))
+            )
+
+        case .failed(let message):
+            VStack(alignment: .leading, spacing: 8) {
+                Label(NSLocalizedString("Generic_Error", comment: ""), systemImage: "exclamationmark.triangle.fill")
+                    .font(.headline)
+                    .foregroundStyle(.orange)
+                Text(message)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("app.update.error")
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.primary.opacity(0.04))
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var primaryActionButton: some View {
+        if case .updateAvailable(let release, _) = presentation.state.phase {
+            Button(NSLocalizedString("App_Update_Download", comment: "")) {
+                presentation.onOpenURL?(release.downloadURL)
+            }
+            .buttonStyle(.borderedProminent)
+            .accessibilityIdentifier("app.update.download")
+        } else {
+            Button(NSLocalizedString("App_Update_Open_Releases", comment: "")) {
+                presentation.onOpenURL?(presentation.state.releasesPageURL)
+            }
+            .buttonStyle(.borderedProminent)
+            .accessibilityIdentifier("app.update.openReleases")
+        }
+    }
+}
+
+// MARK: - SwiftUI Tahoe Settings Host
+
+@MainActor
+private final class BPPreferencesPresentation: ObservableObject {
+    @Published var backgroundCheckEnabled: Bool = true
+    @Published var backgroundCheckInterval: Double = 21600.0
+    @Published var greedyCaskUpgrades: Bool = false
+    @Published var automaticAppUpdateCheckEnabled: Bool = true
+    @Published var helperStatusText: String = ""
+    @Published var helperActionTitle: String?
+
+    var onBackgroundCheckChanged: ((Bool) -> Void)?
+    var onIntervalChanged: ((Double) -> Void)?
+    var onGreedyChanged: ((Bool) -> Void)?
+    var onAutomaticAppUpdateCheckChanged: ((Bool) -> Void)?
+    var onCheckForAppUpdates: (() -> Void)?
+    var onHelperAction: (() -> Void)?
+}
+
+@MainActor
+@objc(BPPreferencesHost)
+public final class BPPreferencesHost: NSObject {
+    private let presentation = BPPreferencesPresentation()
+    @objc public let viewController: NSViewController
+
+    @objc public var onBackgroundCheckChanged: ((Bool) -> Void)? {
+        get { presentation.onBackgroundCheckChanged }
+        set { presentation.onBackgroundCheckChanged = newValue }
+    }
+
+    @objc public var onIntervalChanged: ((Double) -> Void)? {
+        get { presentation.onIntervalChanged }
+        set { presentation.onIntervalChanged = newValue }
+    }
+
+    @objc public var onGreedyChanged: ((Bool) -> Void)? {
+        get { presentation.onGreedyChanged }
+        set { presentation.onGreedyChanged = newValue }
+    }
+
+    @objc public var onAutomaticAppUpdateCheckChanged: ((Bool) -> Void)? {
+        get { presentation.onAutomaticAppUpdateCheckChanged }
+        set { presentation.onAutomaticAppUpdateCheckChanged = newValue }
+    }
+
+    @objc public var onCheckForAppUpdates: (() -> Void)? {
+        get { presentation.onCheckForAppUpdates }
+        set { presentation.onCheckForAppUpdates = newValue }
+    }
+
+    @objc public var onHelperAction: (() -> Void)? {
+        get { presentation.onHelperAction }
+        set { presentation.onHelperAction = newValue }
+    }
+
+    public override init() {
+        let presentation = self.presentation
+        let host = NSHostingController(rootView: BPPreferencesView(presentation: presentation))
+        host.sizingOptions = []
+        viewController = host
+        super.init()
+    }
+
+    @objc(syncWithBackgroundCheckEnabled:interval:greedy:automaticAppUpdates:helperStatus:helperActionTitle:)
+    public func sync(backgroundCheckEnabled: Bool,
+                     interval: Double,
+                     greedy: Bool,
+                     automaticAppUpdates: Bool,
+                     helperStatus: String,
+                     helperActionTitle: String?) {
+        presentation.backgroundCheckEnabled = backgroundCheckEnabled
+        if interval == 3600.0 || interval == 21600.0 || interval == 86400.0 {
+            presentation.backgroundCheckInterval = interval
+        } else {
+            presentation.backgroundCheckInterval = 21600.0
+        }
+        presentation.greedyCaskUpgrades = greedy
+        presentation.automaticAppUpdateCheckEnabled = automaticAppUpdates
+        presentation.helperStatusText = helperStatus
+        presentation.helperActionTitle = (helperActionTitle?.isEmpty == false) ? helperActionTitle : nil
+    }
+}
+
+@MainActor
+private struct BPPreferencesView: View {
+    @ObservedObject var presentation: BPPreferencesPresentation
+
+    private var backgroundCheckBinding: Binding<Bool> {
+        Binding(
+            get: { presentation.backgroundCheckEnabled },
+            set: { newValue in
+                presentation.backgroundCheckEnabled = newValue
+                presentation.onBackgroundCheckChanged?(newValue)
+            }
+        )
+    }
+
+    private var intervalBinding: Binding<Double> {
+        Binding(
+            get: { presentation.backgroundCheckInterval },
+            set: { newValue in
+                presentation.backgroundCheckInterval = newValue
+                presentation.onIntervalChanged?(newValue)
+            }
+        )
+    }
+
+    private var greedyBinding: Binding<Bool> {
+        Binding(
+            get: { presentation.greedyCaskUpgrades },
+            set: { newValue in
+                presentation.greedyCaskUpgrades = newValue
+                presentation.onGreedyChanged?(newValue)
+            }
+        )
+    }
+
+    private var autoAppUpdateBinding: Binding<Bool> {
+        Binding(
+            get: { presentation.automaticAppUpdateCheckEnabled },
+            set: { newValue in
+                presentation.automaticAppUpdateCheckEnabled = newValue
+                presentation.onAutomaticAppUpdateCheckChanged?(newValue)
+            }
+        )
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 8) {
+                Toggle(NSLocalizedString("Preferences_Background_Check", comment: ""), isOn: backgroundCheckBinding)
+                    .toggleStyle(.checkbox)
+                    .accessibilityIdentifier("preferences.backgroundCheck")
+
+                HStack(spacing: 8) {
+                    Text(NSLocalizedString("Preferences_Check_Interval", comment: ""))
+                        .foregroundStyle(presentation.backgroundCheckEnabled ? .primary : .secondary)
+                    Picker("", selection: intervalBinding) {
+                        Text(NSLocalizedString("Preferences_Interval_Hourly", comment: "")).tag(3600.0)
+                        Text(NSLocalizedString("Preferences_Interval_Six_Hours", comment: "")).tag(21600.0)
+                        Text(NSLocalizedString("Preferences_Interval_Daily", comment: "")).tag(86400.0)
+                    }
+                    .labelsHidden()
+                    .frame(width: 140)
+                    .disabled(!presentation.backgroundCheckEnabled)
+                    .accessibilityIdentifier("preferences.interval")
+                }
+                .padding(.leading, 18)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.primary.opacity(0.04))
+            )
+
+            VStack(alignment: .leading, spacing: 6) {
+                Toggle(NSLocalizedString("Preferences_Greedy_Casks", comment: ""), isOn: greedyBinding)
+                    .toggleStyle(.checkbox)
+                    .accessibilityIdentifier("preferences.greedyCasks")
+
+                Text(NSLocalizedString("Preferences_Greedy_Casks_Note", comment: ""))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 18)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.primary.opacity(0.04))
+            )
+
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Toggle(NSLocalizedString("App_Update_Auto_Check", comment: ""), isOn: autoAppUpdateBinding)
+                        .toggleStyle(.checkbox)
+                        .accessibilityIdentifier("preferences.autoAppUpdates")
+                    Spacer()
+                    Button(NSLocalizedString("Dock_Check_For_Updates", comment: "")) {
+                        presentation.onCheckForAppUpdates?()
+                    }
+                    .controlSize(.small)
+                    .accessibilityIdentifier("preferences.checkForAppUpdates")
+                }
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.primary.opacity(0.04))
+            )
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(NSLocalizedString("Preferences_Helper_Section", comment: ""))
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                Text(presentation.helperStatusText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("preferences.helperStatus")
+                if let actionTitle = presentation.helperActionTitle {
+                    Button(actionTitle) {
+                        presentation.onHelperAction?()
+                    }
+                    .controlSize(.small)
+                    .accessibilityIdentifier("preferences.helperAction")
+                }
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.primary.opacity(0.04))
+            )
+
+            Spacer(minLength: 0)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }

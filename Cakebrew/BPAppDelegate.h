@@ -28,6 +28,7 @@ extern NSString *const kBP_HOMEBREW_PATH;
 extern NSString *const kBP_HOMEBREW_PATH_KEY;
 extern NSString *const kBP_HOMEBREW_WEBSITE;
 extern NSString *const kBP_CAKEBREW_DOCUMENTATION;
+extern NSString *const kBP_CAKEBREW_RELEASES_URL;
 
 /// Who a Brewfile opened from Finder, or dropped on the app, is handed to.
 @protocol BPBrewfileImporting <NSObject>
@@ -108,6 +109,11 @@ typedef NS_ENUM(NSUInteger, BPNotificationNavigationAction) {
 /// "Help isn't available" alert.
 - (IBAction)openDocumentation:(id)sender;
 - (IBAction)openPreferences:(id)sender;
+- (IBAction)checkForAppUpdates:(id)sender;
+
+/// Inserts the localized "Check for Updates…" menu item into the application
+/// submenu if not already present.
++ (NSMenuItem *)installCheckForUpdatesMenuItemInApplicationMenu:(NSMenu *)appMenu target:(id)target;
 
 - (void)displayBackgroundWarning;
 - (void)requestUserAttentionWithMessageTitle:(NSString*)title andDescription:(NSString*)desc;

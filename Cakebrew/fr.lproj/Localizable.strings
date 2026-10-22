@@ -466,3 +466,9 @@
 "Information_Unavailable" = "Aucune information n’est disponible pour ce paquet.";
 "Sidebar_Item_Unified_Updates" = "Mises à jour";
 "Sidebar_Info_Unified_Updates" = "Formules et casks obsolètes disposant d’une version plus récente.";
+"App_Update_Menu_Item" = "Rechercher des mises à jour…";
+"App_Update_Auto_Check" = "Rechercher automatiquement les mises à jour de Cakebrew";
+"App_Update_Open_Releases" = "Voir les versions sur GitHub";
+"App_Update_Download" = "Télécharger la mise à jour";
+"App_Update_Verified" = "Condensé SHA-256 et signature Ed25519 vérifiés";
+"App_Update_Feed_Unconfigured" = "Aucun flux de mise à jour signé n’est configuré pour cette version. Consultez les versions GitHub pour le code source et l’état des versions.";

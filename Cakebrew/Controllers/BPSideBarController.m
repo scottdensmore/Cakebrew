@@ -272,7 +272,7 @@ static NSString *BPSpokenSeparator(void)
 
 	_allCasksSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_AllCasks", nil)
 											 identifier:@"item"];
-	_allCasksSidebarItem.icon = [self allFormulaeSidebarIconImage];
+	_allCasksSidebarItem.icon = [self allCasksSidebarIconImage];
 	_allCasksSidebarItem.accessibilityIdentifier = @"sidebar.casks.all";
 	[parent addChildItem:_allCasksSidebarItem];
 
@@ -304,7 +304,7 @@ static NSString *BPSpokenSeparator(void)
 	_unifiedUpdatesSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Unified_Updates", nil)
 												   identifier:@"item"];
 	_unifiedUpdatesSidebarItem.accessibilityIdentifier = @"sidebar.tools.updates";
-	_unifiedUpdatesSidebarItem.icon = [self outdatedSidebarIconImage];
+	_unifiedUpdatesSidebarItem.icon = [self unifiedUpdatesSidebarIconImage];
 	[parent addChildItem:_unifiedUpdatesSidebarItem];
 }
 
@@ -324,6 +324,18 @@ static NSString *BPSpokenSeparator(void)
 {
 	return [NSImage imageWithSystemSymbolName:@"books.vertical"
 					 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_All", nil)];
+}
+
+- (NSImage *)allCasksSidebarIconImage
+{
+	return [NSImage imageWithSystemSymbolName:@"square.stack.3d.up"
+					 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_AllCasks", nil)];
+}
+
+- (NSImage *)unifiedUpdatesSidebarIconImage
+{
+	return [NSImage imageWithSystemSymbolName:@"arrow.down.circle"
+					 accessibilityDescription:NSLocalizedString(@"Sidebar_Item_Unified_Updates", nil)];
 }
 
 - (NSImage *)leavesSidebarIconImage

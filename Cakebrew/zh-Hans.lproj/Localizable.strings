@@ -462,3 +462,9 @@
 "Information_Unavailable" = "此软件包没有可用信息。";
 "Sidebar_Item_Unified_Updates" = "更新";
 "Sidebar_Info_Unified_Updates" = "有新版本可用的过时 Formulae 和 Casks。";
+"App_Update_Menu_Item" = "检查更新…";
+"App_Update_Auto_Check" = "自动检查 Cakebrew 更新";
+"App_Update_Open_Releases" = "在 GitHub 上查看发行版";
+"App_Update_Download" = "下载更新";
+"App_Update_Verified" = "已验证 SHA-256 与 Ed25519 签名";
+"App_Update_Feed_Unconfigured" = "此构建未配置签名更新源。请前往 GitHub Releases 查看源码与发布状态。";

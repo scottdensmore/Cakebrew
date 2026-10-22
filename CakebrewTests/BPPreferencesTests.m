@@ -11,6 +11,7 @@
 #import "BPPreferences.h"
 #import "BPSideBarController.h"
 #import "BPFormula.h"
+#import "BPAppDelegate.h"
 
 @interface BPHomebrewInterfaceListCall : NSObject
 @property (strong, readonly) NSArray *arguments;
@@ -38,6 +39,7 @@
 	[defaults removeObjectForKey:kBPBackgroundCheckEnabledKey];
 	[defaults removeObjectForKey:kBPBackgroundCheckIntervalKey];
 	[defaults removeObjectForKey:kBPGreedyCaskUpgradesKey];
+	[defaults removeObjectForKey:kBPAutomaticAppUpdateCheckEnabledKey];
 	[super tearDown];
 }
 
@@ -46,6 +48,7 @@
 	XCTAssertTrue([BPPreferences backgroundCheckEnabled], @"background checking defaults to on");
 	XCTAssertEqual([BPPreferences backgroundCheckInterval], 21600.0, @"default interval is 6 hours");
 	XCTAssertFalse([BPPreferences greedyCaskUpgrades], @"greedy cask upgrades default to off");
+	XCTAssertTrue([BPPreferences automaticAppUpdateCheckEnabled], @"automatic app update check defaults to on");
 }
 
 - (void)testSettersRoundTrip
@@ -58,6 +61,9 @@
 
 	[BPPreferences setGreedyCaskUpgrades:YES];
 	XCTAssertTrue([BPPreferences greedyCaskUpgrades]);
+
+	[BPPreferences setAutomaticAppUpdateCheckEnabled:NO];
+	XCTAssertFalse([BPPreferences automaticAppUpdateCheckEnabled]);
 }
 
 - (void)testOutdatedCasksCallOmitsGreedyByDefault
@@ -159,6 +165,26 @@
 
 	[BPPreferences setZapCasksOnUninstall:YES];
 	XCTAssertTrue([BPPreferences zapCasksOnUninstall]);
+}
+
+- (void)testCheckForUpdatesMenuItemInstallsIdempotentlyBelowAbout
+{
+	NSMenu *appMenu = [[NSMenu alloc] initWithTitle:NSLocalizedString(@"Cakebrew", @"Test application menu title")];
+	[appMenu addItemWithTitle:NSLocalizedString(@"About Cakebrew", @"Test about menu item title") action:NULL keyEquivalent:@""];
+	[appMenu addItem:[NSMenuItem separatorItem]];
+	[appMenu addItemWithTitle:NSLocalizedString(@"Settings…", @"Test settings menu item title") action:NULL keyEquivalent:@","];
+
+	NSObject *target = [[NSObject alloc] init];
+	NSMenuItem *first = [BPAppDelegate installCheckForUpdatesMenuItemInApplicationMenu:appMenu target:target];
+	XCTAssertNotNil(first);
+	XCTAssertEqual(first.action, @selector(checkForAppUpdates:));
+	XCTAssertEqual(first.target, target);
+	XCTAssertEqualObjects(first.accessibilityIdentifier, @"menu.app.checkForUpdates");
+	XCTAssertEqual([appMenu indexOfItem:first], 1);
+
+	NSMenuItem *second = [BPAppDelegate installCheckForUpdatesMenuItemInApplicationMenu:appMenu target:target];
+	XCTAssertEqual(first, second, @"installing Check for Updates twice must not duplicate the menu item");
+	XCTAssertEqual(appMenu.numberOfItems, 4);
 }
 
 @end
