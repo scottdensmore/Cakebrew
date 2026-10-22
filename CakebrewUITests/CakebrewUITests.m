@@ -848,10 +848,15 @@
 // is the element's value rather than its label — match on value.
 - (XCUIElement *)formulaCellWithName:(NSString *)name
 {
-	// BEGINSWITH (not ==) so a pinned formula's cell — whose value is the name
-	// followed by the pin symbol — still matches.
-	NSPredicate *predicate = [NSPredicate predicateWithFormat:@"value BEGINSWITH %@", name];
-	return [[self.app.textFields matchingPredicate:predicate] firstMatch];
+	// BEGINSWITH (not ==) so a pinned formula's cell — whose value/label is the
+	// name followed by the pin symbol — still matches across AppKit and SwiftUI tables.
+	NSPredicate *predicate = [NSPredicate predicateWithFormat:
+		@"(elementType == %lu OR elementType == %lu) AND (value BEGINSWITH %@ OR label BEGINSWITH %@) AND NOT (identifier BEGINSWITH 'formula.')",
+		(unsigned long)XCUIElementTypeTextField,
+		(unsigned long)XCUIElementTypeStaticText,
+		name,
+		name];
+	return [[[self.app descendantsMatchingType:XCUIElementTypeAny] matchingPredicate:predicate] firstMatch];
 }
 
 // Journey: launched with the mock brew interface, the Installed list populates

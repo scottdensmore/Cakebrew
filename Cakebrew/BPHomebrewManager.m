@@ -62,6 +62,16 @@ static const NSInteger kBPCacheVersion = 2;
 	BOOL _formulaRefreshRequested;
 	NSMutableArray<void (^)(BOOL)> *_formulaRefreshCompletions;
 	BPHomebrewDiscoveryResult _discoveryResult;
+	NSArray<BPFormula *> *_installedFormulae;
+	NSArray<BPFormula *> *_outdatedFormulae;
+	NSArray<BPFormula *> *_installedCasks;
+	NSArray<BPFormula *> *_outdatedCasks;
+	NSArray<BPFormula *> *_pinnedFormulae;
+	NSSet<NSString *> *_installedFormulaNamesSet;
+	NSSet<NSString *> *_outdatedFormulaNamesSet;
+	NSSet<NSString *> *_installedCaskNamesSet;
+	NSSet<NSString *> *_outdatedCaskNamesSet;
+	NSSet<NSString *> *_pinnedFormulaNamesSet;
 }
 @end
 
@@ -747,51 +757,128 @@ static const NSInteger kBPCacheVersion = 2;
 											   forKey:kBPCacheLastUpdateKey];
 }
 
-- (NSInteger)searchForFormula:(BPFormula*)formula inArray:(NSArray*)array
++ (NSSet<NSString *> *)installedNameSetFromFormulae:(NSArray<BPFormula *> *)formulae
 {
-	NSUInteger index = 0;
-	
-	for (BPFormula* item in array)
+	if (formulae.count == 0) return [NSSet set];
+	NSMutableSet<NSString *> *names = [NSMutableSet setWithCapacity:formulae.count];
+	for (BPFormula *formula in formulae)
 	{
-		if ([[item installedName] isEqualToString:[formula installedName]])
+		if (![formula isKindOfClass:[BPFormula class]]) continue;
+		NSString *installedName = [formula installedName];
+		if (installedName.length > 0)
 		{
-			return index;
+			[names addObject:installedName];
 		}
-		
-		index++;
 	}
-	
-	return -1;
+	return [names copy];
+}
+
+- (NSArray<BPFormula *> *)installedFormulae
+{
+	@synchronized (self) { return _installedFormulae; }
+}
+
+- (void)setInstalledFormulae:(NSArray<BPFormula *> *)installedFormulae
+{
+	NSSet<NSString *> *names = [[self class] installedNameSetFromFormulae:installedFormulae];
+	@synchronized (self) {
+		_installedFormulae = installedFormulae;
+		_installedFormulaNamesSet = names;
+	}
+}
+
+- (NSArray<BPFormula *> *)outdatedFormulae
+{
+	@synchronized (self) { return _outdatedFormulae; }
+}
+
+- (void)setOutdatedFormulae:(NSArray<BPFormula *> *)outdatedFormulae
+{
+	NSSet<NSString *> *names = [[self class] installedNameSetFromFormulae:outdatedFormulae];
+	@synchronized (self) {
+		_outdatedFormulae = outdatedFormulae;
+		_outdatedFormulaNamesSet = names;
+	}
+}
+
+- (NSArray<BPFormula *> *)installedCasks
+{
+	@synchronized (self) { return _installedCasks; }
+}
+
+- (void)setInstalledCasks:(NSArray<BPFormula *> *)installedCasks
+{
+	NSSet<NSString *> *names = [[self class] installedNameSetFromFormulae:installedCasks];
+	@synchronized (self) {
+		_installedCasks = installedCasks;
+		_installedCaskNamesSet = names;
+	}
+}
+
+- (NSArray<BPFormula *> *)outdatedCasks
+{
+	@synchronized (self) { return _outdatedCasks; }
+}
+
+- (void)setOutdatedCasks:(NSArray<BPFormula *> *)outdatedCasks
+{
+	NSSet<NSString *> *names = [[self class] installedNameSetFromFormulae:outdatedCasks];
+	@synchronized (self) {
+		_outdatedCasks = outdatedCasks;
+		_outdatedCaskNamesSet = names;
+	}
+}
+
+- (NSArray<BPFormula *> *)pinnedFormulae
+{
+	@synchronized (self) { return _pinnedFormulae; }
+}
+
+- (void)setPinnedFormulae:(NSArray<BPFormula *> *)pinnedFormulae
+{
+	NSSet<NSString *> *names = [[self class] installedNameSetFromFormulae:pinnedFormulae];
+	@synchronized (self) {
+		_pinnedFormulae = pinnedFormulae;
+		_pinnedFormulaNamesSet = names;
+	}
 }
 
 - (BPFormulaStatus)statusForFormula:(BPFormula*)formula
 {
+	if (![formula isKindOfClass:[BPFormula class]]) return kBPFormulaNotInstalled;
+	NSString *installedName = [formula installedName];
+	if (installedName.length == 0) return kBPFormulaNotInstalled;
+
 	// Casks are tracked in their own lists; a cask must never read the
 	// formula lists (names can collide across the two namespaces).
-	NSArray *installed = formula.cask ? self.installedCasks : self.installedFormulae;
-	NSArray *outdated  = formula.cask ? self.outdatedCasks  : self.outdatedFormulae;
+	NSSet<NSString *> *installed;
+	NSSet<NSString *> *outdated;
+	@synchronized (self) {
+		installed = formula.cask ? _installedCaskNamesSet : _installedFormulaNamesSet;
+		outdated  = formula.cask ? _outdatedCaskNamesSet  : _outdatedFormulaNamesSet;
+	}
 
-	if ([self searchForFormula:formula inArray:installed] >= 0)
+	if ([installed containsObject:installedName])
 	{
-		if ([self searchForFormula:formula inArray:outdated] >= 0)
+		if ([outdated containsObject:installedName])
 		{
 			return kBPFormulaOutdated;
 		}
-		else
-		{
-			return kBPFormulaInstalled;
-		}
+		return kBPFormulaInstalled;
 	}
-	else
-	{
-		return kBPFormulaNotInstalled;
-	}
+	return kBPFormulaNotInstalled;
 }
 
 - (BOOL)isFormulaPinned:(BPFormula*)formula
 {
-	if (!formula || formula.cask) return NO;
-	return [self searchForFormula:formula inArray:self.pinnedFormulae] >= 0;
+	if (![formula isKindOfClass:[BPFormula class]] || formula.cask) return NO;
+	NSString *installedName = [formula installedName];
+	if (installedName.length == 0) return NO;
+	NSSet<NSString *> *pinned;
+	@synchronized (self) {
+		pinned = _pinnedFormulaNamesSet;
+	}
+	return [pinned containsObject:installedName];
 }
 
 - (void)cleanUp
