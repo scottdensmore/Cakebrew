@@ -645,4 +645,127 @@ final class BPFormulaInformationTests: XCTestCase {
         XCTAssertNotNil(prefsHost.viewController.view)
     }
 
+    @MainActor
+    func testObjCListModeMappingMultiSelectionAndTahoeSurfaceHosts() {
+        // Verify all 10 Objective-C BPListMode values map to the expected BPPackageListMode
+        XCTAssertEqual(BPPackageListMode(objcListMode: 0), .allFormulae)
+        XCTAssertEqual(BPPackageListMode(objcListMode: 1), .installedFormulae)
+        XCTAssertEqual(BPPackageListMode(objcListMode: 2), .leaves)
+        XCTAssertEqual(BPPackageListMode(objcListMode: 3), .outdatedFormulae)
+        XCTAssertEqual(BPPackageListMode(objcListMode: 4), .search)
+        XCTAssertEqual(BPPackageListMode(objcListMode: 5), .repositories)
+        XCTAssertEqual(BPPackageListMode(objcListMode: 6), .pinned)
+        XCTAssertEqual(BPPackageListMode(objcListMode: 7), .installedCasks)
+        XCTAssertEqual(BPPackageListMode(objcListMode: 8), .outdatedCasks)
+        XCTAssertEqual(BPPackageListMode(objcListMode: 9), .allCasks)
+
+        XCTAssertTrue(BPPackageListMode.outdatedFormulae.allowsMultipleSelection)
+        XCTAssertTrue(BPPackageListMode.outdatedCasks.allowsMultipleSelection)
+        XCTAssertFalse(BPPackageListMode.installedFormulae.allowsMultipleSelection)
+        XCTAssertFalse(BPPackageListMode.allFormulae.showsInstalledVersionColumn)
+        XCTAssertFalse(BPPackageListMode.allCasks.showsInstalledVersionColumn)
+        XCTAssertFalse(BPPackageListMode.search.showsInstalledVersionColumn)
+        XCTAssertTrue(BPPackageListMode.installedFormulae.showsInstalledVersionColumn)
+        XCTAssertTrue(BPPackageListMode.outdatedFormulae.showsInstalledVersionColumn)
+
+        // Multi-selection in BPInstalledPackageListState & BPInstalledPackageListHost
+        let listHost = BPInstalledPackageListHost()
+        listHost.updateRowsForObjCMode(
+            names: ["wget", "git", "curl"],
+            versions: ["1.0", "2.0", "3.0"],
+            latestVersions: ["1.1", "2.1", "3.1"],
+            statusRanks: [2, 2, 2],
+            pinnedFlags: [false, false, false],
+            caskFlags: [false, false, false],
+            objcListMode: 3)
+        XCTAssertEqual(listHost.rowCount, 3)
+        XCTAssertTrue(listHost.selectPackage(named: "git", cask: false))
+        XCTAssertEqual(listHost.selectedCount, 1)
+        XCTAssertEqual(listHost.selectedPackageNames, ["git"])
+        XCTAssertEqual(listHost.selectedPackageCasks, [NSNumber(value: false)])
+
+        var listState = BPInstalledPackageListState()
+        listState.replaceRows([
+            BPInstalledPackageRow(name: "a", cask: false, version: "1.0", latestVersion: "1.1", statusRank: 2, isPinned: false),
+            BPInstalledPackageRow(name: "b", cask: false, version: "2.0", latestVersion: "2.1", statusRank: 2, isPinned: false),
+            BPInstalledPackageRow(name: "c", cask: false, version: "3.0", latestVersion: "3.1", statusRank: 2, isPinned: false)
+        ], mode: .outdatedFormulae)
+        XCTAssertTrue(listState.selectRows(at: IndexSet([0, 2])))
+        XCTAssertEqual(listState.selectedRows.map(\.name), ["a", "c"])
+        XCTAssertEqual(listState.selectedRowIndexes, [0, 2])
+        // Switching to a single-selection mode collapses multi-selection to 1 row
+        listState.setMode(.installedFormulae)
+        XCTAssertEqual(listState.selectedIDs.count, 1)
+
+        // Verify Tahoe surface state models and hosts
+        let emptyHost = BPEmptyStateHost(symbolName: "shippingbox", title: "No Packages", message: "Install one")
+        XCTAssertEqual(emptyHost.model.combinedAccessibilityLabel, "No Packages. Install one")
+        XCTAssertNotNil(emptyHost.viewController.view)
+
+        let loadingHost = BPLoadingHost()
+        XCTAssertNotNil(loadingHost.viewController.view)
+
+        let disabledHost = BPDisabledHost()
+        disabledHost.update(title: "Missing", message: "Install Homebrew", retryEnabled: true, checking: false)
+        XCTAssertNotNil(disabledHost.viewController.view)
+
+        let consoleHost = BPConsoleToolHost(
+            textView: NSTextView(),
+            title: "Homebrew Doctor",
+            subtitle: nil,
+            runButtonTitle: "Run Doctor",
+            clearButtonTitle: "Clear Log")
+        consoleHost.isRunning = true
+        XCTAssertTrue(consoleHost.isRunning)
+        XCTAssertNotNil(consoleHost.viewController.view)
+
+        let servicesHost = BPServicesHost(tableScrollView: NSView(), detailsScrollView: NSView())
+        servicesHost.update(
+            startEnabled: true,
+            stopEnabled: false,
+            restartEnabled: true,
+            revealEnabled: true,
+            logsEnabled: false,
+            copyEnabled: true)
+        XCTAssertNotNil(servicesHost.viewController.view)
+
+        let autoremoveHost = BPAutoremoveHost(outputTextView: NSTextView())
+        autoremoveHost.update(
+            statusText: "Review 2 unused dependencies before removal.",
+            removeEnabled: true,
+            cancelTitle: "Close",
+            cancelEnabled: true,
+            busy: false)
+        XCTAssertNotNil(autoremoveHost.viewController.view)
+
+        let bundleHost = BPBundleOperationHost(importTextView: NSTextView())
+        bundleHost.configureImport(statusText: "Importing", actionTitle: "Cancel", actionEnabled: true, running: true)
+        bundleHost.configureExport(
+            statusText: "Export Successful",
+            detailText: nil,
+            actionTitle: "Close",
+            actionEnabled: true,
+            running: false,
+            finished: true,
+            succeeded: true)
+        XCTAssertNotNil(bundleHost.viewController.view)
+
+        let optionsHost = BPFormulaOptionsHost()
+        optionsHost.configure(
+            formulaName: "ffmpeg",
+            optionNames: ["--with-x265", "--HEAD"],
+            optionExplanations: ["Enable x265", "Install HEAD"])
+        XCTAssertEqual(optionsHost.selectedOptionNames, [])
+        XCTAssertNotNil(optionsHost.viewController.view)
+
+        let installHost = BPInstallationHost(recordTextView: NSTextView())
+        installHost.update(
+            windowTitle: "Installing Formula:",
+            formulaNames: "wget",
+            running: true,
+            okEnabled: false,
+            cancelEnabled: true)
+        XCTAssertNotNil(installHost.viewController.view)
+    }
+
 }

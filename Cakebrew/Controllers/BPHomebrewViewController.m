@@ -479,7 +479,20 @@ NSOpenSavePanelDelegate>
 
 - (BOOL)usesInstalledPackageListHostForMode:(BPListMode)mode
 {
-	return mode == kBPListInstalled || mode == kBPListInstalledCasks;
+	switch (mode) {
+		case kBPListAll:
+		case kBPListInstalled:
+		case kBPListLeaves:
+		case kBPListPinned:
+		case kBPListOutdated:
+		case kBPListSearch:
+		case kBPListRepositories:
+		case kBPListInstalledCasks:
+		case kBPListOutdatedCasks:
+		case kBPListAllCasks:
+			return YES;
+	}
+	return NO;
 }
 
 - (BOOL)isUsingUnifiedUpdatesHost
@@ -591,6 +604,23 @@ NSOpenSavePanelDelegate>
 	};
 }
 
+- (NSArray<BPFormula *> *)sourceFormulaeForMode:(BPListMode)mode
+{
+	switch (mode) {
+		case kBPListAll: return _homebrewManager.allFormulae;
+		case kBPListInstalled: return _homebrewManager.installedFormulae;
+		case kBPListLeaves: return _homebrewManager.leavesFormulae;
+		case kBPListPinned: return _homebrewManager.pinnedFormulae;
+		case kBPListOutdated: return _homebrewManager.outdatedFormulae;
+		case kBPListSearch: return _homebrewManager.searchFormulae;
+		case kBPListRepositories: return _homebrewManager.repositoriesFormulae;
+		case kBPListInstalledCasks: return _homebrewManager.installedCasks;
+		case kBPListOutdatedCasks: return _homebrewManager.outdatedCasks;
+		case kBPListAllCasks: return _homebrewManager.allCasks;
+	}
+	return @[];
+}
+
 - (void)syncInstalledPackageListHostRows
 {
 	if (!self.installedPackageListHost) return;
@@ -598,14 +628,15 @@ NSOpenSavePanelDelegate>
 	[self.installedPackageListHost applySortColumnIdentifier:descriptor.key
 												   ascending:descriptor ? descriptor.ascending : YES];
 
-	BOOL isCask = (self.formulaeDataSource.mode == kBPListInstalledCasks);
-	NSArray<BPFormula *> *source = isCask ? _homebrewManager.installedCasks : _homebrewManager.installedFormulae;
+	BPListMode mode = self.formulaeDataSource.mode;
+	NSArray<BPFormula *> *source = [self sourceFormulaeForMode:mode];
 	NSUInteger count = source.count;
 	NSMutableArray<NSString *> *names = [NSMutableArray arrayWithCapacity:count];
 	NSMutableArray<NSString *> *versions = [NSMutableArray arrayWithCapacity:count];
 	NSMutableArray<NSString *> *latestVersions = [NSMutableArray arrayWithCapacity:count];
 	NSMutableArray<NSNumber *> *statusRanks = [NSMutableArray arrayWithCapacity:count];
 	NSMutableArray<NSNumber *> *pinnedFlags = [NSMutableArray arrayWithCapacity:count];
+	NSMutableArray<NSNumber *> *caskFlags = [NSMutableArray arrayWithCapacity:count];
 
 	for (BPFormula *formula in source) {
 		if (![formula isKindOfClass:[BPFormula class]]) continue;
@@ -614,14 +645,16 @@ NSOpenSavePanelDelegate>
 		[latestVersions addObject:formula.shortLatestVersion ?: @""];
 		[statusRanks addObject:@([_homebrewManager statusForFormula:formula])];
 		[pinnedFlags addObject:@([_homebrewManager isFormulaPinned:formula])];
+		[caskFlags addObject:@(formula.cask)];
 	}
 
-	[self.installedPackageListHost updateRowsWithNames:names
-											  versions:versions
-										latestVersions:latestVersions
-										   statusRanks:statusRanks
-										   pinnedFlags:pinnedFlags
-												  cask:isCask];
+	[self.installedPackageListHost updateRowsForObjCModeWithNames:names
+														 versions:versions
+												   latestVersions:latestVersions
+													  statusRanks:statusRanks
+													  pinnedFlags:pinnedFlags
+														caskFlags:caskFlags
+													 objcListMode:mode];
 }
 
 - (void)embedHostView:(NSView *)hostView inContainer:(NSView *)container
@@ -668,13 +701,17 @@ NSOpenSavePanelDelegate>
 		|| _appDelegate.window.attachedSheet || !self.tabView.selectedTabViewItem
 		|| [self.tabView indexOfTabViewItem:self.tabView.selectedTabViewItem] != kBPContentTabFormulae
 		|| _appDelegate.isRunningBackgroundTask) return;
-	BPFormula *formula = [self selectedFormula];
-	if (!formula || ![formula isKindOfClass:BPFormula.class]) return;
-	NSNumber *status = @([_homebrewManager statusForFormula:formula]);
+	NSArray<BPFormula *> *formulae = [self selectedFormulae];
+	if (!formulae.count) return;
+	NSMutableArray<NSNumber *> *statuses = [NSMutableArray arrayWithCapacity:formulae.count];
+	for (BPFormula *formula in formulae) {
+		if (![formula isKindOfClass:BPFormula.class]) return;
+		[statuses addObject:@([_homebrewManager statusForFormula:formula])];
+	}
 	BPFormulaeTableAction action = [BPFormulaeTableActions actionForRequest:request
 																	   mode:self.formulaeDataSource.mode
-																   formulae:@[formula]
-																   statuses:@[status]];
+																   formulae:formulae
+																   statuses:statuses];
 	switch (action) {
 		case BPFormulaeTableActionInstall: [self installFormula:hostView]; break;
 		case BPFormulaeTableActionUpgrade: [self upgradeSelectedFormulae:hostView]; break;
@@ -692,7 +729,7 @@ NSOpenSavePanelDelegate>
 	if ([self isUsingUnifiedUpdatesHost]) {
 		selectedCount = (NSUInteger)self.unifiedUpdatesHost.selectedCount;
 	} else if ([self isUsingInstalledPackageListHost]) {
-		selectedCount = self.installedPackageListHost.selectedRow >= 0 ? 1 : 0;
+		selectedCount = (NSUInteger)self.installedPackageListHost.selectedCount;
 	} else {
 		NSInteger selectedIndex = [self.formulaeTableView selectedRow];
 		selectedCount = selectedIndex >= 0 ? [[self.formulaeTableView selectedRowIndexes] count] : 0;
@@ -897,7 +934,9 @@ NSOpenSavePanelDelegate>
 	else if ([BPFormulaeTableActions shouldSyncInstalledHostMetadataForPublishedMode:mode
 																		  activeMode:activeMode
 																		   isLoading:isLoading
-																isUsingInstalledHost:[self isUsingInstalledPackageListHost]])
+																isUsingInstalledHost:[self isUsingInstalledPackageListHost]]
+			 || (!isLoading && [self isUsingInstalledPackageListHost]
+				 && (mode == kBPListInstalled || mode == kBPListInstalledCasks)))
 	{
 		[self syncInstalledPackageListHostRows];
 	}
@@ -1706,8 +1745,17 @@ NSOpenSavePanelDelegate>
 	}
 	if ([self isUsingInstalledPackageListHost])
 	{
-		BPFormula *selected = [self selectedFormula];
-		return selected ? @[selected] : nil;
+		NSArray<NSString *> *names = self.installedPackageListHost.selectedPackageNames;
+		NSArray<NSNumber *> *casks = self.installedPackageListHost.selectedPackageCasks;
+		if (!names.count) return nil;
+		NSMutableArray<BPFormula *> *selected = [NSMutableArray arrayWithCapacity:names.count];
+		for (NSUInteger i = 0; i < names.count; i++) {
+			BOOL isCask = (i < casks.count) ? casks[i].boolValue : NO;
+			NSInteger idx = [self.formulaeDataSource indexOfFormulaNamed:names[i] cask:isCask];
+			BPFormula *formula = [self.formulaeDataSource formulaAtIndex:idx];
+			if (formula) [selected addObject:formula];
+		}
+		return selected.count ? selected : nil;
 	}
 	NSIndexSet *selectedIndexes = [self.formulaeTableView selectedRowIndexes];
 	return [self.formulaeDataSource formulasAtIndexSet:selectedIndexes];

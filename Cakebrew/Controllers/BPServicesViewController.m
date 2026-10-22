@@ -26,6 +26,7 @@
 #import "BPEmptyState.h"
 #import "BPEmptyStateView.h"
 #import "BPSideBarController.h"
+#import "BPFormulaInformation-Swift.h"
 
 static NSString * const kServiceColumnName   = @"Name";
 static NSString * const kServiceColumnStatus = @"Status";
@@ -47,6 +48,7 @@ static NSString * const kServiceColumnUser   = @"User";
 @property (strong) NSButton *revealButton;
 @property (strong) NSButton *logsButton;
 @property (strong) NSButton *outputCopyButton;
+@property (strong, nonatomic) BPServicesHost *servicesHost;
 
 @end
 
@@ -54,13 +56,6 @@ static NSString * const kServiceColumnUser   = @"User";
 
 - (void)loadView
 {
-	NSView *view = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 826, 416)];
-
-	NSTextField *titleLabel = [NSTextField labelWithString:NSLocalizedString(@"Services_Title", nil)];
-	titleLabel.font = [NSFont systemFontOfSize:16 weight:NSFontWeightSemibold];
-	titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
-	[view addSubview:titleLabel];
-
 	NSTableView *tableView = [[NSTableView alloc] initWithFrame:NSZeroRect];
 	for (NSString *identifier in @[ kServiceColumnName, kServiceColumnStatus, kServiceColumnUser ]) {
 		NSTableColumn *column = [[NSTableColumn alloc] initWithIdentifier:identifier];
@@ -78,20 +73,14 @@ static NSString * const kServiceColumnUser   = @"User";
 	scrollView.documentView = tableView;
 	scrollView.hasVerticalScroller = YES;
 	scrollView.borderType = NSBezelBorder;
-	scrollView.translatesAutoresizingMaskIntoConstraints = NO;
-	[view addSubview:scrollView];
 
 	self.startButton = [self buttonWithTitle:NSLocalizedString(@"Services_Start", nil) action:@selector(startSelectedService:)];
 	self.stopButton = [self buttonWithTitle:NSLocalizedString(@"Services_Stop", nil) action:@selector(stopSelectedService:)];
 	self.restartButton = [self buttonWithTitle:NSLocalizedString(@"Services_Restart", nil) action:@selector(restartSelectedService:)];
-	[view addSubview:self.startButton];
-	[view addSubview:self.stopButton];
-	[view addSubview:self.restartButton];
 
 	NSScrollView *detailsScroll = [[NSScrollView alloc] initWithFrame:NSZeroRect];
 	detailsScroll.hasVerticalScroller = YES;
 	detailsScroll.borderType = NSBezelBorder;
-	detailsScroll.translatesAutoresizingMaskIntoConstraints = NO;
 	self.detailsText = [[NSTextView alloc] initWithFrame:NSMakeRect(0, 0, 600, 100)];
 	self.detailsText.editable = NO;
 	self.detailsText.selectable = YES;
@@ -107,50 +96,25 @@ static NSString * const kServiceColumnUser   = @"User";
 	[self.detailsText setAccessibilityIdentifier:@"services.details"];
 	[self.detailsText setAccessibilityLabel:NSLocalizedString(@"Services_Details_Title", nil)];
 	detailsScroll.documentView = self.detailsText;
-	[view addSubview:detailsScroll];
+
 	self.revealButton = [self buttonWithTitle:NSLocalizedString(@"Services_Reveal_File", nil) action:@selector(revealServiceFile:)];
 	self.logsButton = [self buttonWithTitle:NSLocalizedString(@"Services_Open_Logs", nil) action:@selector(openServiceLogs:)];
 	self.outputCopyButton = [self buttonWithTitle:NSLocalizedString(@"Services_Copy_Output", nil) action:@selector(copyServiceOutput:)];
 	[self.revealButton setAccessibilityIdentifier:@"services.revealFile"];
 	[self.logsButton setAccessibilityIdentifier:@"services.openLogs"];
 	[self.outputCopyButton setAccessibilityIdentifier:@"services.copyOutput"];
-	[view addSubview:self.revealButton];
-	[view addSubview:self.logsButton];
-	[view addSubview:self.outputCopyButton];
-	NSLayoutConstraint *detailHeight = [detailsScroll.heightAnchor constraintEqualToConstant:115];
-	detailHeight.priority = NSLayoutPriorityDefaultHigh;
-	detailHeight.active = YES;
 
-	[NSLayoutConstraint activateConstraints:@[
-		[titleLabel.topAnchor constraintEqualToAnchor:view.topAnchor constant:16],
-		[titleLabel.leadingAnchor constraintEqualToAnchor:view.leadingAnchor constant:20],
+	self.servicesHost = [[BPServicesHost alloc] initWithTableScrollView:scrollView
+													  detailsScrollView:detailsScroll];
+	__weak typeof(self) weakSelf = self;
+	self.servicesHost.onStart = ^{ [weakSelf startSelectedService:nil]; };
+	self.servicesHost.onStop = ^{ [weakSelf stopSelectedService:nil]; };
+	self.servicesHost.onRestart = ^{ [weakSelf restartSelectedService:nil]; };
+	self.servicesHost.onRevealFile = ^{ [weakSelf revealServiceFile:nil]; };
+	self.servicesHost.onOpenLogs = ^{ [weakSelf openServiceLogs:nil]; };
+	self.servicesHost.onCopyOutput = ^{ [weakSelf copyServiceOutput:nil]; };
 
-		[scrollView.topAnchor constraintEqualToAnchor:titleLabel.bottomAnchor constant:12],
-		[scrollView.leadingAnchor constraintEqualToAnchor:view.leadingAnchor constant:20],
-		[scrollView.trailingAnchor constraintEqualToAnchor:view.trailingAnchor constant:-20],
-
-		[self.startButton.topAnchor constraintEqualToAnchor:scrollView.bottomAnchor constant:12],
-		[self.startButton.leadingAnchor constraintEqualToAnchor:view.leadingAnchor constant:20],
-		[self.stopButton.leadingAnchor constraintEqualToAnchor:self.startButton.trailingAnchor constant:8],
-		[self.stopButton.centerYAnchor constraintEqualToAnchor:self.startButton.centerYAnchor],
-		[self.restartButton.leadingAnchor constraintEqualToAnchor:self.stopButton.trailingAnchor constant:8],
-		[self.restartButton.centerYAnchor constraintEqualToAnchor:self.startButton.centerYAnchor],
-		[scrollView.heightAnchor constraintGreaterThanOrEqualToConstant:45],
-		[detailsScroll.topAnchor constraintEqualToAnchor:self.startButton.bottomAnchor constant:8],
-		[detailsScroll.leadingAnchor constraintEqualToAnchor:scrollView.leadingAnchor],
-		[detailsScroll.trailingAnchor constraintEqualToAnchor:scrollView.trailingAnchor],
-		[detailsScroll.heightAnchor constraintGreaterThanOrEqualToConstant:40],
-		[self.revealButton.topAnchor constraintEqualToAnchor:detailsScroll.bottomAnchor constant:8],
-		[self.revealButton.leadingAnchor constraintEqualToAnchor:scrollView.leadingAnchor],
-		[self.logsButton.leadingAnchor constraintEqualToAnchor:self.revealButton.trailingAnchor constant:6],
-		[self.logsButton.centerYAnchor constraintEqualToAnchor:self.revealButton.centerYAnchor],
-		[self.outputCopyButton.leadingAnchor constraintEqualToAnchor:self.logsButton.trailingAnchor constant:6],
-		[self.outputCopyButton.centerYAnchor constraintEqualToAnchor:self.revealButton.centerYAnchor],
-		[self.outputCopyButton.trailingAnchor constraintLessThanOrEqualToAnchor:scrollView.trailingAnchor],
-		[self.revealButton.bottomAnchor constraintEqualToAnchor:view.bottomAnchor constant:-12],
-	]];
-
-	self.view = view;
+	self.view = self.servicesHost.viewController.view;
 	[self updateButtonStates];
 	[self showDetailsMessage:NSLocalizedString(@"Services_Details_Select", nil)];
 }
@@ -246,6 +210,7 @@ static NSString * const kServiceColumnUser   = @"User";
 	self.revealButton.enabled = [self validatedServiceFileURL] != nil;
 	self.logsButton.enabled = [self validatedLogURLs].count > 0;
 	self.outputCopyButton.enabled = self.details.rawOutput.length > 0;
+	[self syncServicesHostState];
 }
 
 - (void)renderServiceDetails
@@ -423,6 +388,17 @@ static NSString * const kServiceColumnUser   = @"User";
 	self.startButton.enabled = enabled && !running;
 	self.stopButton.enabled = enabled && running;
 	self.restartButton.enabled = enabled;
+	[self syncServicesHostState];
+}
+
+- (void)syncServicesHostState
+{
+	[self.servicesHost updateWithStartEnabled:self.startButton.enabled
+								  stopEnabled:self.stopButton.enabled
+							   restartEnabled:self.restartButton.enabled
+								revealEnabled:self.revealButton.enabled
+								  logsEnabled:self.logsButton.enabled
+								  copyEnabled:self.outputCopyButton.enabled];
 }
 
 #pragma mark - NSTableView

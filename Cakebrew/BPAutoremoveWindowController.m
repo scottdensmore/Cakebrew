@@ -5,6 +5,7 @@
 #import "BPHomebrewManager.h"
 #import "BPAutoScrollTextView.h"
 #import "BPAppDelegate.h"
+#import "BPFormulaInformation-Swift.h"
 
 @interface BPAutoremoveWindowController ()
 @property (strong) BPHomebrewInterface *interface;
@@ -16,6 +17,7 @@
 @property (strong) BPAutoScrollTextView *outputView;
 @property (strong) NSButton *removeButton;
 @property (strong) NSButton *cancelButton;
+@property (strong, nonatomic) BPAutoremoveHost *autoremoveHost;
 @property BOOL busy;
 @end
 
@@ -34,25 +36,7 @@
 - (void)buildContent
 {
 	self.window.title = NSLocalizedString(@"Remove Unused Dependencies", nil);
-	NSStackView *stack = [NSStackView stackViewWithViews:@[]];
-	stack.orientation = NSUserInterfaceLayoutOrientationVertical;
-	stack.alignment = NSLayoutAttributeLeading;
-	stack.spacing = 14;
-	stack.translatesAutoresizingMaskIntoConstraints = NO;
-	[self.window.contentView addSubview:stack];
-	[NSLayoutConstraint activateConstraints:@[
-		[stack.leadingAnchor constraintEqualToAnchor:self.window.contentView.leadingAnchor constant:20],
-		[stack.trailingAnchor constraintEqualToAnchor:self.window.contentView.trailingAnchor constant:-20],
-		[stack.topAnchor constraintEqualToAnchor:self.window.contentView.topAnchor constant:20],
-		[stack.bottomAnchor constraintEqualToAnchor:self.window.contentView.bottomAnchor constant:-20]]];
 	self.statusLabel = [NSTextField wrappingLabelWithString:NSLocalizedString(@"Checking unused dependencies…", nil)];
-	self.statusLabel.font = [NSFont boldSystemFontOfSize:14];
-	self.statusLabel.accessibilityIdentifier = @"autoremove.status";
-	[stack addArrangedSubview:self.statusLabel];
-	NSTextField *warning = [NSTextField wrappingLabelWithString:NSLocalizedString(@"Only the reviewed formulae will be submitted for removal. Homebrew will recheck its dependency rules. Do not run other Homebrew operations until this finishes: external changes cannot be checked atomically.", nil)];
-	[stack addArrangedSubview:warning];
-	NSScrollView *scroll = [[NSScrollView alloc] initWithFrame:NSZeroRect];
-	scroll.hasVerticalScroller = YES; scroll.borderType = NSBezelBorder;
 	self.outputView = [[BPAutoScrollTextView alloc] initWithFrame:NSMakeRect(0, 0, 620, 280)];
 	self.outputView.editable = NO; self.outputView.selectable = YES;
 	self.outputView.richText = NO; self.outputView.font = [NSFont monospacedSystemFontOfSize:12 weight:NSFontWeightRegular];
@@ -62,27 +46,39 @@
 	self.outputView.verticallyResizable = YES; self.outputView.textContainer.widthTracksTextView = YES;
 	self.outputView.accessibilityIdentifier = @"autoremove.output";
 	self.outputView.accessibilityLabel = NSLocalizedString(@"Unused dependency preview and command output", nil);
-	scroll.documentView = self.outputView;
-	[stack addArrangedSubview:scroll];
 	self.removeButton = [NSButton buttonWithTitle:NSLocalizedString(@"Remove Reviewed Dependencies", nil) target:self action:@selector(removeReviewed:)];
-	self.removeButton.accessibilityIdentifier = @"autoremove.remove";
 	self.removeButton.enabled = NO;
 	self.cancelButton = [NSButton buttonWithTitle:NSLocalizedString(@"Cancel", nil) target:self action:@selector(cancelOrClose:)];
-	self.cancelButton.accessibilityIdentifier = @"autoremove.cancel";
-	self.cancelButton.keyEquivalent = @"\e";
-	NSStackView *buttons = [NSStackView stackViewWithViews:@[self.cancelButton, self.removeButton]];
-	buttons.spacing = 12;
-	[stack addArrangedSubview:buttons];
+	self.cancelButton.enabled = YES;
+
+	self.autoremoveHost = [[BPAutoremoveHost alloc] initWithOutputTextView:self.outputView];
+	__weak typeof(self) weakSelf = self;
+	self.autoremoveHost.onRemove = ^{ [weakSelf removeReviewed:nil]; };
+	self.autoremoveHost.onCancelOrClose = ^{ [weakSelf cancelOrClose:nil]; };
+
+	NSView *hostView = self.autoremoveHost.viewController.view;
+	hostView.translatesAutoresizingMaskIntoConstraints = NO;
+	[self.window.contentView addSubview:hostView];
 	[NSLayoutConstraint activateConstraints:@[
-		[self.statusLabel.widthAnchor constraintEqualToAnchor:stack.widthAnchor],
-		[warning.widthAnchor constraintEqualToAnchor:stack.widthAnchor],
-		[scroll.widthAnchor constraintEqualToAnchor:stack.widthAnchor],
-		[scroll.heightAnchor constraintGreaterThanOrEqualToConstant:180]]];
-	[scroll setContentHuggingPriority:NSLayoutPriorityDefaultLow forOrientation:NSLayoutConstraintOrientationVertical];
+		[hostView.leadingAnchor constraintEqualToAnchor:self.window.contentView.leadingAnchor],
+		[hostView.trailingAnchor constraintEqualToAnchor:self.window.contentView.trailingAnchor],
+		[hostView.topAnchor constraintEqualToAnchor:self.window.contentView.topAnchor],
+		[hostView.bottomAnchor constraintEqualToAnchor:self.window.contentView.bottomAnchor]
+	]];
+	[self syncAutoremoveHostState];
+}
+- (void)syncAutoremoveHostState
+{
+	[self.autoremoveHost updateWithStatusText:self.statusLabel.stringValue ?: @""
+								removeEnabled:self.removeButton.enabled
+								  cancelTitle:self.cancelButton.title ?: @""
+								cancelEnabled:self.cancelButton.enabled
+										 busy:self.busy];
 }
 - (void)loadPreview
 {
 	self.busy = YES;
+	[self syncAutoremoveHostState];
 	self.previewProgress = [NSProgress progressWithTotalUnitCount:1];
 	dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
 		BPAutoremovePreview *preview = [self.interface previewAutoremoveWithProgress:self.previewProgress];
@@ -101,6 +97,7 @@
 				self.removeButton.enabled = YES;
 			}
 			self.cancelButton.title = NSLocalizedString(@"Close", nil);
+			[self syncAutoremoveHostState];
 		});
 	});
 }
@@ -110,17 +107,20 @@
 	self.busy = YES; self.removeButton.enabled = NO;
 	self.cancelButton.title = NSLocalizedString(@"Cancel", nil);
 	self.statusLabel.stringValue = NSLocalizedString(@"Rechecking and removing reviewed dependencies…", nil);
+	[self syncAutoremoveHostState];
 	self.operation = [[BPAutoremoveOperation alloc] initWithPreview:self.preview interface:self.interface];
 	[self.outputView appendOutput:@"\n"];
 	[self.operation startWithOutput:^(NSString *chunk) { [self.outputView appendOutput:chunk]; }
 	completion:^(BOOL success, BOOL cancelled, BOOL attempted, NSString *message) {
 		[self.outputView flushPendingOutput];
 		self.cancelButton.enabled = NO;
+		[self syncAutoremoveHostState];
 		void (^finished)(BOOL) = ^(BOOL refreshed) {
 			self.statusLabel.stringValue = refreshed ? message : [message stringByAppendingFormat:@"\n%@", NSLocalizedString(@"Some formula or service lists could not be refreshed. Previous values were retained; refresh again before another operation.", nil)];
 			self.busy = NO;
 			self.cancelButton.title = NSLocalizedString(@"Close", nil);
 			self.cancelButton.enabled = YES;
+			[self syncAutoremoveHostState];
 		};
 		if (attempted) [self.manager refreshFormulaStateAfterRemovalWithCompletion:finished];
 		else finished(YES);
@@ -131,6 +131,7 @@
 	if (self.busy) {
 		self.cancelButton.enabled = NO;
 		self.statusLabel.stringValue = NSLocalizedString(@"Cancelling; waiting for Homebrew to stop…", nil);
+		[self syncAutoremoveHostState];
 		if (self.operation) [self.operation cancel];
 		else { @synchronized (self.previewProgress) { [self.previewProgress cancel]; } }
 	} else {

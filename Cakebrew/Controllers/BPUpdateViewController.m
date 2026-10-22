@@ -24,16 +24,58 @@
 #import "BPStyle.h"
 #import "BPAppDelegate.h"
 #import "BPAutoScrollTextView.h"
+#import "BPFormulaInformation-Swift.h"
 
 @interface BPUpdateViewController ()
 
-@property (unsafe_unretained, nonatomic) IBOutlet BPAutoScrollTextView *updateTextView;
+@property (strong, nonatomic) IBOutlet BPAutoScrollTextView *updateTextView;
 @property (weak, nonatomic) IBOutlet NSProgressIndicator *progressIndicator;
 @property (assign) BOOL isPerformingUpdate;
+@property (strong, nonatomic) BPConsoleToolHost *consoleHost;
 
 @end
 
 @implementation BPUpdateViewController
+
+- (void)loadView {
+	BPAutoScrollTextView *textView = [[BPAutoScrollTextView alloc] initWithFrame:NSMakeRect(0, 0, 404, 232)];
+	textView.editable = NO;
+	textView.selectable = YES;
+	textView.richText = NO;
+	textView.font = [BPStyle defaultFixedWidthFont];
+	textView.textColor = NSColor.textColor;
+	textView.backgroundColor = NSColor.textBackgroundColor;
+	textView.textContainerInset = NSMakeSize(8, 8);
+	textView.autoresizingMask = NSViewWidthSizable;
+	textView.verticallyResizable = YES;
+	textView.textContainer.widthTracksTextView = YES;
+	self.updateTextView = textView;
+	self.isPerformingUpdate = NO;
+
+	NSString *title = [NSBundle.mainBundle localizedStringForKey:@"a3Y-VX-bpV.title"
+														   value:NSLocalizedString(@"Homebrew Updater", nil)
+														   table:@"BPUpdateView"];
+	NSString *runTitle = [NSBundle.mainBundle localizedStringForKey:@"MVF-cn-lfW.title"
+															  value:NSLocalizedString(@"Update Homebrew", nil)
+															  table:@"BPUpdateView"];
+	NSString *clearTitle = [NSBundle.mainBundle localizedStringForKey:@"EE6-5g-Jos.title"
+																value:NSLocalizedString(@"Clear Log", nil)
+																table:@"BPUpdateView"];
+
+	self.consoleHost = [[BPConsoleToolHost alloc] initWithTextView:textView
+															 title:title
+														  subtitle:nil
+													runButtonTitle:runTitle
+												  clearButtonTitle:clearTitle];
+	__weak typeof(self) weakSelf = self;
+	self.consoleHost.onRun = ^{
+		[weakSelf runStopUpdate:nil];
+	};
+	self.consoleHost.onClear = ^{
+		[weakSelf clearLogUpdate:nil];
+	};
+	self.view = self.consoleHost.viewController.view;
+}
 
 - (void)awakeFromNib {
 	self.progressIndicator.accessibilityLabel = NSLocalizedString(@"VoiceOver_Operation_Progress", nil);
@@ -58,6 +100,7 @@
 	
 	[self.updateTextView clearOutput];
 	self.isPerformingUpdate = YES;
+	self.consoleHost.isRunning = YES;
 	[self.progressIndicator startAnimation:sender];
 
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
@@ -68,6 +111,7 @@
 		dispatch_async(dispatch_get_main_queue(), ^{
 			[self.progressIndicator stopAnimation:sender];
 			self.isPerformingUpdate = NO;
+			self.consoleHost.isRunning = NO;
 			[appDelegate setRunningBackgroundTask:NO];
 			
 			NSString *title = NSLocalizedString(@"Homebrew_Task_Finished", nil);

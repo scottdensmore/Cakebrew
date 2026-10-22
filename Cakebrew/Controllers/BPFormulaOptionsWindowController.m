@@ -22,6 +22,7 @@
 #import "BPFormulaOptionsWindowController.h"
 #import "BPFormula.h"
 #import "BPAppDelegate.h"
+#import "BPFormulaInformation-Swift.h"
 
 //these constants must match arraycontroller in XIB (array controller + binding on table columns)
 static NSString * const kFormulaOptionCommand = @"formulaOptionCommand";
@@ -40,28 +41,55 @@ static NSString * const kFormulaOptionsTitleColumnId = @"title";
 
 @property (nonatomic, strong) NSMutableArray *availableOptions;
 @property (strong) BPFormula *formula;
+@property (strong, nonatomic) BPFormulaOptionsHost *optionsHost;
 
 @end
 
 @implementation BPFormulaOptionsWindowController
 
 - (void)awakeFromNib {
-	
-	NSUInteger numberOfFormulaOptions = [self.availableOptions count];
-	if (numberOfFormulaOptions > 0) {
-		[self.userHelpLabel setStringValue:NSLocalizedString(@"Formula_Options_ClickForDetails", nil)];
-	} else {
-		[self.userHelpLabel setStringValue:NSLocalizedString(@"Formula_Options_NoOptions", nil)];
+	NSMutableArray<NSString *> *names = [NSMutableArray arrayWithCapacity:self.availableOptions.count];
+	NSMutableArray<NSString *> *explanations = [NSMutableArray arrayWithCapacity:self.availableOptions.count];
+	for (NSDictionary *dict in self.availableOptions) {
+		[names addObject:dict[kFormulaOptionCommand] ?: @""];
+		[explanations addObject:dict[kFormulaOptionDescription] ?: @""];
 	}
-	[self.optionDetailsTextField setAccessibilityLabel:NSLocalizedString(@"Formula_Options_VoiceOver_Description", nil)];
-	
-	//load array controller with array of mutable dictionaries with options
-	[self.formulasArrayController addObjects:self.availableOptions];
-	
-	self.formulaNameLabel.stringValue = self.formula.name;
-	
-	[self.formulaOptionsTableView reloadData];
-	[self.formulaOptionsTableView setAccessibilityLabel:NSLocalizedString(@"Formula_Options_VoiceOver", nil)];
+
+	self.optionsHost = [[BPFormulaOptionsHost alloc] init];
+	[self.optionsHost configureWithFormulaName:self.formula.name ?: @""
+								   optionNames:names
+							optionExplanations:explanations];
+
+	__weak typeof(self) weakSelf = self;
+	self.optionsHost.onOptionToggled = ^(NSString *optionName, BOOL applied) {
+		__strong typeof(weakSelf) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		for (NSMutableDictionary *entry in strongSelf.availableOptions) {
+			if ([entry[kFormulaOptionCommand] isEqualToString:optionName]) {
+				entry[kIsFormulaOptionCommandApplied] = @(applied);
+			}
+		}
+	};
+	self.optionsHost.onCancel = ^{
+		[weakSelf cancel:nil];
+	};
+	self.optionsHost.onInstall = ^{
+		[weakSelf install:nil];
+	};
+
+	NSView *contentView = self.window.contentView;
+	for (NSView *subview in [contentView.subviews copy]) {
+		[subview removeFromSuperview];
+	}
+	NSView *hostView = self.optionsHost.viewController.view;
+	hostView.translatesAutoresizingMaskIntoConstraints = NO;
+	[contentView addSubview:hostView];
+	[NSLayoutConstraint activateConstraints:@[
+		[hostView.leadingAnchor constraintEqualToAnchor:contentView.leadingAnchor],
+		[hostView.trailingAnchor constraintEqualToAnchor:contentView.trailingAnchor],
+		[hostView.topAnchor constraintEqualToAnchor:contentView.topAnchor],
+		[hostView.bottomAnchor constraintEqualToAnchor:contentView.bottomAnchor]
+	]];
 }
 
 + (BPFormulaOptionsWindowController *)runFormula:(BPFormula *)formula withCompletionBlock:(InstalWithOptionsBlock_t)completionBlock
@@ -108,6 +136,9 @@ static NSString * const kFormulaOptionsTitleColumnId = @"title";
  * Return an array with formula options that user wants to use with formula
  */
 - (NSArray *)allSelectedOptions {
+	if (self.optionsHost) {
+		return self.optionsHost.selectedOptionNames;
+	}
 	NSPredicate *selectedFormulas = [NSPredicate predicateWithFormat:@"%K == %@", kIsFormulaOptionCommandApplied, @YES];
 	NSArray *filteredArray = [self.availableOptions filteredArrayUsingPredicate:selectedFormulas];
 	NSArray *allOptions = [filteredArray valueForKeyPath:kFormulaOptionCommand];

@@ -26,17 +26,18 @@
 #import "BPStyle.h"
 #import "BPAppDelegate.h"
 #import "BPAutoScrollTextView.h"
+#import "BPFormulaInformation-Swift.h"
 
 @interface BPInstallationWindowController ()
 
-@property (weak) IBOutlet NSTextField *windowTitleLabel;
-@property (weak) IBOutlet NSTextField *formulaNameLabel;
-@property (unsafe_unretained) IBOutlet BPAutoScrollTextView *recordTextView; //NSTextView does not support weak in ARC at all (not just 10.7)
-@property (weak) IBOutlet NSButton *okButton;
-@property (weak) IBOutlet NSButton *cancelButton;
+@property (strong) IBOutlet NSTextField *windowTitleLabel;
+@property (strong) IBOutlet NSTextField *formulaNameLabel;
+@property (strong) IBOutlet BPAutoScrollTextView *recordTextView;
+@property (strong) IBOutlet NSButton *okButton;
+@property (strong) IBOutlet NSButton *cancelButton;
 @property (nonatomic) BOOL wasCancelled;
 @property (strong, nonatomic) NSProgress *upgradeProgress;
-@property (weak) IBOutlet NSProgressIndicator *progressIndicator;
+@property (strong) IBOutlet NSProgressIndicator *progressIndicator;
 
 @property (nonatomic) BPWindowOperation windowOperation;
 @property (strong, nonatomic) NSArray *formulae;
@@ -47,6 +48,8 @@
 @property (nonatomic) BOOL upgradeWorkerFinished;
 @property (nonatomic) BOOL zapCask;
 @property (nonatomic, copy) void (^completionBlock)(BOOL);
+@property (strong, nonatomic) BPInstallationHost *installationHost;
+@property (assign, nonatomic) BOOL isRunningTask;
 
 @end
 
@@ -83,7 +86,9 @@
 {
 	NSDictionary *messagesMap = [self.class sharedTaskMessagesMap];
 	NSFont *font = [BPStyle defaultFixedWidthFont];
-	
+	if (!self.recordTextView) {
+		self.recordTextView = [[BPAutoScrollTextView alloc] initWithFrame:NSMakeRect(0, 0, 344, 162)];
+	}
 	[self.recordTextView setFont:font];
 	self.progressIndicator.accessibilityLabel = NSLocalizedString(@"VoiceOver_Operation_Progress", nil);
 	self.windowTitleLabel.stringValue = messagesMap[@(self.windowOperation)] ?: @"";
@@ -107,6 +112,43 @@
 	}
 	
 	[self setOperationStatus:NO];
+	self.isRunningTask = YES;
+
+	if (!self.installationHost && [self.window isKindOfClass:[NSWindow class]] && self.window.contentView) {
+		self.installationHost = [[BPInstallationHost alloc] initWithRecordTextView:self.recordTextView];
+		__weak typeof(self) weakSelf = self;
+		self.installationHost.onCancel = ^{
+			[weakSelf cancelAction:nil];
+		};
+		self.installationHost.onOK = ^{
+			[weakSelf okAction:nil];
+		};
+
+		NSView *contentView = self.window.contentView;
+		for (NSView *subview in [contentView.subviews copy]) {
+			[subview removeFromSuperview];
+		}
+		NSView *hostView = self.installationHost.viewController.view;
+		hostView.translatesAutoresizingMaskIntoConstraints = NO;
+		[contentView addSubview:hostView];
+		[NSLayoutConstraint activateConstraints:@[
+			[hostView.leadingAnchor constraintEqualToAnchor:contentView.leadingAnchor],
+			[hostView.trailingAnchor constraintEqualToAnchor:contentView.trailingAnchor],
+			[hostView.topAnchor constraintEqualToAnchor:contentView.topAnchor],
+			[hostView.bottomAnchor constraintEqualToAnchor:contentView.bottomAnchor]
+		]];
+	}
+	[self syncInstallationHostState];
+}
+
+- (void)syncInstallationHostState
+{
+	if (!self.installationHost) return;
+	[self.installationHost updateWithWindowTitle:self.windowTitleLabel.stringValue ?: @""
+									formulaNames:self.formulaNameLabel.stringValue ?: @""
+										 running:self.isRunningTask
+									   okEnabled:self.okButton ? self.okButton.enabled : NO
+								   cancelEnabled:self.cancelButton ? self.cancelButton.enabled : YES];
 }
 
 + (BPInstallationWindowController *)runWithOperation:(BPWindowOperation)windowOperation
@@ -169,8 +211,10 @@
 
 - (void)executeInstallation
 {
+	self.isRunningTask = YES;
 	[self.okButton setEnabled:NO];
 	[self.progressIndicator startAnimation:nil];
+	[self syncInstallationHostState];
 	if (self.windowOperation == kBPWindowOperationUpgrade && self.formulae) {
 		// Created before dispatch so Cancel also covers queued work and gaps
 		// between namespace batches, when there is no current task to cancel.
@@ -264,6 +308,7 @@
 {
 	dispatch_async(dispatch_get_main_queue(), ^(){
         self.upgradeWorkerFinished = YES;
+		self.isRunningTask = NO;
 		[self.progressIndicator stopAnimation:nil];
 		[self.okButton setEnabled:YES];
 		[self.cancelButton setEnabled:NO];
@@ -283,6 +328,7 @@
 			: [NSString stringWithFormat:@"%@ — %@",
 			   self.windowTitleLabel.stringValue,
 			   failureTitle];
+		[self syncInstallationHostState];
 
 		[BPAppDelegateRef requestUserAttentionWithMessageTitle:title andDescription:desc];
 
@@ -306,6 +352,7 @@
 	[self.cancelButton setEnabled:NO];
 	[self.okButton setEnabled:self.upgradeProgress == nil];
     if (self.upgradeProgress) self.windowTitleLabel.stringValue = NSLocalizedString(@"Updates_Cancelling", nil);
+	[self syncInstallationHostState];
 
 	[self.recordTextView appendOutput:[NSString stringWithFormat:@"\n%@\n",
 									   NSLocalizedString(self.upgradeProgress ? @"Updates_Cancelling" : @"Installation_Window_Cancelled", nil)]];
