@@ -468,3 +468,12 @@
 "App_Update_Download" = "下载更新";
 "App_Update_Verified" = "已验证 SHA-256 与 Ed25519 签名";
 "App_Update_Feed_Unconfigured" = "此构建未配置签名更新源。请前往 GitHub Releases 查看源码与发布状态。";
+"Command_Palette_Menu_Item" = "命令面板…";
+"Command_Palette_Title" = "命令面板";
+"Command_Palette_Placeholder" = "跳转到视图、运行工具或查看软件包…";
+"Preferences_Menu_Bar_Extra" = "在菜单栏中显示 Cakebrew 状态";
+"MenuBar_Open_Cakebrew" = "打开 Cakebrew";
+"About_Credits" = "制作人员";
+"About_Acknowledgements" = "致谢";
+"About_Copy_Version" = "拷贝版本信息";
+"About_Visit_Website" = "访问网站";

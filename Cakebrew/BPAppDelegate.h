@@ -115,6 +115,13 @@ typedef NS_ENUM(NSUInteger, BPNotificationNavigationAction) {
 /// submenu if not already present.
 + (NSMenuItem *)installCheckForUpdatesMenuItemInApplicationMenu:(NSMenu *)appMenu target:(id)target;
 
+/// Inserts the localized "Command Palette…" (⌘K) menu item into the Tools
+/// submenu if not already present.
++ (NSMenuItem *)installCommandPaletteMenuItemInToolsMenu:(NSMenu *)toolsMenu target:(id)target;
+
+@property (strong, nonatomic, readonly) NSStatusItem *statusItem;
+- (void)updateMenuBarExtra;
+
 - (void)displayBackgroundWarning;
 - (void)requestUserAttentionWithMessageTitle:(NSString*)title andDescription:(NSString*)desc;
 

@@ -26,6 +26,7 @@ NSString *const kBPSortColumnIdentifierKey = @"BPSortColumnIdentifier";
 NSString *const kBPSortAscendingKey = @"BPSortAscending";
 NSString *const kBPZapCasksOnUninstallKey = @"BPZapCasksOnUninstall";
 NSString *const kBPAutomaticAppUpdateCheckEnabledKey = @"BPAutomaticAppUpdateCheckEnabled";
+NSString *const kBPShowMenuBarExtraKey = @"BPShowMenuBarExtra";
 
 @implementation BPPreferences
 
@@ -40,6 +41,7 @@ NSString *const kBPAutomaticAppUpdateCheckEnabledKey = @"BPAutomaticAppUpdateChe
 		kBPSortAscendingKey: @YES,
 		kBPZapCasksOnUninstallKey: @NO,
 		kBPAutomaticAppUpdateCheckEnabledKey: @YES,
+		kBPShowMenuBarExtraKey: @NO,
 	}];
 }
 
@@ -126,6 +128,16 @@ NSString *const kBPAutomaticAppUpdateCheckEnabledKey = @"BPAutomaticAppUpdateChe
 + (void)setAutomaticAppUpdateCheckEnabled:(BOOL)enabled
 {
 	[[NSUserDefaults standardUserDefaults] setBool:enabled forKey:kBPAutomaticAppUpdateCheckEnabledKey];
+}
+
++ (BOOL)showMenuBarExtra
+{
+	return [[NSUserDefaults standardUserDefaults] boolForKey:kBPShowMenuBarExtraKey];
+}
+
++ (void)setShowMenuBarExtra:(BOOL)enabled
+{
+	[[NSUserDefaults standardUserDefaults] setBool:enabled forKey:kBPShowMenuBarExtraKey];
 }
 
 @end

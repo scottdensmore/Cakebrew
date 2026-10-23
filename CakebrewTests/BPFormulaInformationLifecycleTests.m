@@ -24,6 +24,7 @@
 #import "BPPreferences.h"
 #import "BPPreferencesWindowController.h"
 #import "BPAutoScrollTextView.h"
+#import "DCOAboutWindowController.h"
 #import "BPFormulaInformation-Swift.h"
 
 @interface BPHomebrewInterface (BPTestingInjection)
@@ -557,6 +558,7 @@
 @property NSTimeInterval savedBackgroundInterval;
 @property BOOL savedGreedy;
 @property BOOL savedAutoAppUpdates;
+@property BOOL savedShowMenuBarExtra;
 @end
 
 @implementation BPEndToEndFeatureJourneyTests
@@ -571,10 +573,12 @@
     self.savedBackgroundInterval = [BPPreferences backgroundCheckInterval];
     self.savedGreedy = [BPPreferences greedyCaskUpgrades];
     self.savedAutoAppUpdates = [BPPreferences automaticAppUpdateCheckEnabled];
+    self.savedShowMenuBarExtra = [BPPreferences showMenuBarExtra];
 
     [BPPreferences setSortColumnIdentifier:nil];
     [BPPreferences setSortAscending:YES];
     [BPPreferences setLastSelectedSidebarRow:FormulaeSideBarItemInstalled];
+    [BPPreferences setShowMenuBarExtra:NO];
 
     self.mockInterface = [(BPMockHomebrewInterface *)[NSClassFromString(@"BPMockHomebrewInterface") alloc] initUniqueInstance];
     [BPHomebrewInterface setSharedInterfaceForTesting:self.mockInterface];
@@ -599,6 +603,8 @@
     [BPPreferences setBackgroundCheckInterval:self.savedBackgroundInterval];
     [BPPreferences setGreedyCaskUpgrades:self.savedGreedy];
     [BPPreferences setAutomaticAppUpdateCheckEnabled:self.savedAutoAppUpdates];
+    [BPPreferences setShowMenuBarExtra:self.savedShowMenuBarExtra];
+    [BPAppDelegateRef updateMenuBarExtra];
     [super tearDown];
 }
 
@@ -1121,9 +1127,9 @@
     NSError *planError = nil;
     BPBrewfilePlan *plan = [BPBrewfilePlan planWithURL:brewfileURL
                                            inventories:@{
-                                               @"formulae": [NSSet setWithObject:@"mockwget"],
-                                               @"casks": [NSSet set],
-                                               @"taps": [NSSet setWithObject:@"homebrew/core"]
+                                               @"brew": @[@"mockwget"],
+                                               @"cask": @[],
+                                               @"tap": @[@"homebrew/core"]
                                            }
                                                  error:&planError];
     XCTAssertNil(planError);
@@ -1213,6 +1219,108 @@
     XCTAssertTrue([updateHost receiveFeedUnavailableForGeneration:gen]);
     XCTAssertFalse(updateHost.isChecking);
     XCTAssertFalse(updateHost.isUpdateAvailable);
+}
+
+- (void)testEndToEndAboutWindowBrewfileReviewCommandPaletteAndMenuBarExtra
+{
+    // 1. SwiftUI Tahoe About Window (DCOAboutWindowController + BPAboutWindowHost)
+    DCOAboutWindowController *aboutWC = [[DCOAboutWindowController alloc] init];
+    aboutWC.appName = @"Cakebrew";
+    aboutWC.appVersion = @"Version 2.0 (Build 200)";
+    aboutWC.appCopyright = @"Copyright © Cakebrew Contributors";
+    aboutWC.appCredits = [[NSAttributedString alloc] initWithString:NSLocalizedString(@"Credits: Bruno Philipe & Contributors", nil)];
+    [aboutWC setValue:[[NSAttributedString alloc] initWithString:NSLocalizedString(@"Acknowledgements: Sparkle & DCOAboutWindow", nil)]
+               forKey:@"appAcknowledgements"];
+    __unused NSWindow *aboutWin = aboutWC.window;
+    [aboutWC windowDidLoad];
+
+    XCTAssertNotNil(aboutWC.aboutHost);
+    XCTAssertNotNil(aboutWC.creditsTextView);
+    XCTAssertEqual(aboutWC.aboutHost.selectedTabIndex, 0);
+    XCTAssertTrue([aboutWC.creditsTextView.string containsString:@"Bruno Philipe"]);
+
+    [aboutWC showAcknowledgements:nil];
+    XCTAssertEqual(aboutWC.aboutHost.selectedTabIndex, 1);
+    XCTAssertTrue([aboutWC.creditsTextView.string containsString:@"Acknowledgements"]);
+
+    [aboutWC.aboutHost selectTabAtIndex:0];
+    XCTAssertEqual(aboutWC.aboutHost.selectedTabIndex, 0);
+    XCTAssertTrue([aboutWC.creditsTextView.string containsString:@"Credits:"]);
+
+    NSString *copiedVersion = [aboutWC.aboutHost copyVersionInfoToPasteboard];
+    XCTAssertEqualObjects(copiedVersion, @"Cakebrew (Version 2.0 (Build 200))");
+    XCTAssertEqualObjects([NSPasteboard.generalPasteboard stringForType:NSPasteboardTypeString], copiedVersion);
+
+    // 2. SwiftUI Brewfile Review Host (BPBundleWindowController + BPBrewfileReviewHost)
+    NSURL *tempDir = [[NSURL fileURLWithPath:NSTemporaryDirectory()] URLByAppendingPathComponent:NSUUID.UUID.UUIDString];
+    XCTAssertTrue([[NSFileManager defaultManager] createDirectoryAtURL:tempDir withIntermediateDirectories:YES attributes:nil error:NULL]);
+    NSURL *brewfileURL = [tempDir URLByAppendingPathComponent:@"Brewfile"];
+    NSString *brewfileContents = @"brew \"mockwget\"\ncask \"mockchrome\"\ntap \"homebrew/core\"\n";
+    XCTAssertTrue([brewfileContents writeToURL:brewfileURL atomically:YES encoding:NSUTF8StringEncoding error:NULL]);
+
+    NSError *planError = nil;
+    BPBrewfilePlan *plan = [BPBrewfilePlan planWithURL:brewfileURL
+                                           inventories:@{
+                                               @"brew": @[@"mockwget"],
+                                               @"cask": @[],
+                                               @"tap": @[@"homebrew/core"]
+                                           }
+                                                 error:&planError];
+    XCTAssertNil(planError);
+    NSTextView *reviewEntriesView = nil;
+    BPBrewfileReviewHost *reviewHost = [BPBundleWindowController reviewHostForPlan:plan
+                                                                          fileName:@"Brewfile"
+                                                                             error:nil
+                                                                   entriesTextView:&reviewEntriesView];
+    XCTAssertNotNil(reviewHost);
+    XCTAssertNotNil(reviewEntriesView);
+    XCTAssertEqualObjects(reviewEntriesView.accessibilityIdentifier, @"brewfile.review.entries");
+    XCTAssertEqual(reviewHost.totalEntryCount, 3);
+    XCTAssertEqual(reviewHost.installedCount, 2);
+    XCTAssertEqual(reviewHost.missingCount, 1);
+    XCTAssertTrue(reviewHost.canInstall);
+    XCTAssertTrue([reviewEntriesView.string containsString:@"mockwget"]);
+    [[NSFileManager defaultManager] removeItemAtURL:tempDir error:NULL];
+
+    // 3. Command Palette (⌘K) + Unified Window Subtitle Synchronization
+    NSWindow *mainWindow = nil;
+    BPHomebrewViewController *vc = [self makeWiredHomebrewViewControllerInWindow:&mainWindow];
+    XCTAssertEqualObjects(mainWindow.subtitle, vc.label_information.stringValue);
+    XCTAssertGreaterThan(mainWindow.subtitle.length, 0u);
+
+    [vc showCommandPalette:nil];
+    BPCommandPaletteHost *palette = vc.commandPaletteHost;
+    XCTAssertNotNil(palette);
+    XCTAssertGreaterThanOrEqual(palette.filteredCount, 19);
+
+    palette.query = @"Doctor";
+    XCTAssertGreaterThanOrEqual(palette.filteredCount, 1);
+    XCTAssertEqualObjects(palette.selectedItemID, @"nav.doctor");
+    XCTAssertTrue([palette executeSelectedItem]);
+    XCTAssertEqual(vc.sidebarController.sidebar.selectedRow, (NSInteger)FormulaeSideBarItemDoctor);
+    XCTAssertEqualObjects(mainWindow.subtitle, vc.label_information.stringValue);
+
+    // Select a package via Command Palette
+    [vc showCommandPalette:nil];
+    palette.query = @"mockwget";
+    XCTAssertGreaterThanOrEqual(palette.filteredCount, 1);
+    XCTAssertTrue([palette executeItemWithID:@"pkg:formula:mockwget"]);
+    XCTAssertEqual(vc.sidebarController.sidebar.selectedRow, (NSInteger)FormulaeSideBarItemInstalled);
+    XCTAssertEqualObjects([vc selectedFormula].name, @"mockwget");
+
+    // 4. Optional Menu Bar Extra in Settings & BPAppDelegate
+    BPAppDelegate *appDelegate = [[BPAppDelegate alloc] init];
+    XCTAssertNil(appDelegate.statusItem);
+
+    [BPPreferences setShowMenuBarExtra:YES];
+    [appDelegate updateMenuBarExtra];
+    XCTAssertNotNil(appDelegate.statusItem);
+    XCTAssertNotNil(appDelegate.statusItem.menu);
+    XCTAssertGreaterThanOrEqual(appDelegate.statusItem.menu.numberOfItems, 5);
+
+    [BPPreferences setShowMenuBarExtra:NO];
+    [appDelegate updateMenuBarExtra];
+    XCTAssertNil(appDelegate.statusItem);
 }
 
 @end

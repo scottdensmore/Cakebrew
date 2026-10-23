@@ -8,10 +8,15 @@
 
 #import <Cocoa/Cocoa.h>
 
+@class BPAboutWindowHost;
+
 /**
  *  The about window.
  */
 @interface DCOAboutWindowController : NSWindowController
+
+@property (strong, nonatomic, readonly) BPAboutWindowHost *aboutHost;
+@property (strong, nonatomic, readonly) NSTextView *creditsTextView;
 
 /** 
  *  The application name. 

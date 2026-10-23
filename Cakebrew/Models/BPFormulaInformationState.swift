@@ -1102,3 +1102,183 @@ public struct BPInstallationSheetState: Equatable, Sendable {
         self.cancelEnabled = cancelEnabled
     }
 }
+
+// MARK: - SwiftUI Tahoe About, Brewfile Review & Command Palette State Models
+
+public enum BPAboutWindowTab: Int, Equatable, Sendable {
+    case credits = 0
+    case acknowledgements = 1
+}
+
+public struct BPAboutWindowState: Equatable, Sendable {
+    public var appName: String
+    public var appVersion: String
+    public var appCopyright: String
+    public var selectedTab: BPAboutWindowTab
+    public var hasAcknowledgements: Bool
+
+    public init(appName: String = "Cakebrew",
+                appVersion: String = "",
+                appCopyright: String = "",
+                selectedTab: BPAboutWindowTab = .credits,
+                hasAcknowledgements: Bool = true) {
+        self.appName = appName
+        self.appVersion = appVersion
+        self.appCopyright = appCopyright
+        self.selectedTab = selectedTab
+        self.hasAcknowledgements = hasAcknowledgements
+    }
+
+    public var versionClipboardSummary: String {
+        if appVersion.isEmpty {
+            return appName
+        }
+        return "\(appName) (\(appVersion))"
+    }
+}
+
+public struct BPBrewfileReviewState: Equatable, Sendable {
+    public var fileName: String
+    public var installedCount: Int
+    public var missingCount: Int
+    public var notCheckedCount: Int
+    public var formulaCount: Int
+    public var caskCount: Int
+    public var tapCount: Int
+    public var otherCount: Int
+    public var canInstall: Bool
+    public var summaryText: String
+
+    public init(fileName: String = "Brewfile",
+                installedCount: Int = 0,
+                missingCount: Int = 0,
+                notCheckedCount: Int = 0,
+                formulaCount: Int = 0,
+                caskCount: Int = 0,
+                tapCount: Int = 0,
+                otherCount: Int = 0,
+                canInstall: Bool = false,
+                summaryText: String = "") {
+        self.fileName = fileName
+        self.installedCount = installedCount
+        self.missingCount = missingCount
+        self.notCheckedCount = notCheckedCount
+        self.formulaCount = formulaCount
+        self.caskCount = caskCount
+        self.tapCount = tapCount
+        self.otherCount = otherCount
+        self.canInstall = canInstall
+        self.summaryText = summaryText
+    }
+
+    public var totalEntryCount: Int {
+        formulaCount + caskCount + tapCount + otherCount
+    }
+}
+
+public enum BPCommandPaletteItemKind: Int, Equatable, Sendable {
+    case navigation = 0
+    case action = 1
+    case package = 2
+}
+
+public struct BPCommandPaletteItem: Identifiable, Equatable, Sendable {
+    public let id: String
+    public let title: String
+    public let subtitle: String
+    public let symbolName: String
+    public let shortcutHint: String?
+    public let kind: BPCommandPaletteItemKind
+    public let sidebarRow: Int
+    public let actionIdentifier: String?
+    public let packageName: String?
+    public let isCask: Bool
+
+    public init(id: String,
+                title: String,
+                subtitle: String = "",
+                symbolName: String = "sparkle.magnifyingglass",
+                shortcutHint: String? = nil,
+                kind: BPCommandPaletteItemKind,
+                sidebarRow: Int = -1,
+                actionIdentifier: String? = nil,
+                packageName: String? = nil,
+                isCask: Bool = false) {
+        self.id = id
+        self.title = title
+        self.subtitle = subtitle
+        self.symbolName = symbolName
+        self.shortcutHint = shortcutHint
+        self.kind = kind
+        self.sidebarRow = sidebarRow
+        self.actionIdentifier = actionIdentifier
+        self.packageName = packageName
+        self.isCask = isCask
+    }
+}
+
+public struct BPCommandPaletteState: Equatable, Sendable {
+    public var query: String = "" {
+        didSet {
+            normalizeSelection()
+        }
+    }
+    public var items: [BPCommandPaletteItem] = [] {
+        didSet {
+            normalizeSelection()
+        }
+    }
+    public var selectedItemID: String?
+
+    public init(query: String = "",
+                items: [BPCommandPaletteItem] = [],
+                selectedItemID: String? = nil) {
+        self.query = query
+        self.items = items
+        self.selectedItemID = selectedItemID
+        normalizeSelection()
+    }
+
+    public var filteredItems: [BPCommandPaletteItem] {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            return items
+        }
+        return items.filter { item in
+            item.title.localizedCaseInsensitiveContains(trimmed)
+                || item.subtitle.localizedCaseInsensitiveContains(trimmed)
+                || (item.packageName?.localizedCaseInsensitiveContains(trimmed) ?? false)
+        }
+    }
+
+    public var selectedItem: BPCommandPaletteItem? {
+        let current = filteredItems
+        if let selectedItemID, let match = current.first(where: { $0.id == selectedItemID }) {
+            return match
+        }
+        return current.first
+    }
+
+    public mutating func normalizeSelection() {
+        let current = filteredItems
+        if let selectedItemID, current.contains(where: { $0.id == selectedItemID }) {
+            return
+        }
+        selectedItemID = current.first?.id
+    }
+
+    public mutating func moveSelection(delta: Int) {
+        let current = filteredItems
+        guard !current.isEmpty else {
+            selectedItemID = nil
+            return
+        }
+        guard let selectedItemID,
+              let index = current.firstIndex(where: { $0.id == selectedItemID }) else {
+            self.selectedItemID = current.first?.id
+            return
+        }
+        let nextIndex = max(0, min(current.count - 1, index + delta))
+        self.selectedItemID = current[nextIndex].id
+    }
+}

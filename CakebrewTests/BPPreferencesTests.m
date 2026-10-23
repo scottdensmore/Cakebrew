@@ -40,6 +40,7 @@
 	[defaults removeObjectForKey:kBPBackgroundCheckIntervalKey];
 	[defaults removeObjectForKey:kBPGreedyCaskUpgradesKey];
 	[defaults removeObjectForKey:kBPAutomaticAppUpdateCheckEnabledKey];
+	[defaults removeObjectForKey:kBPShowMenuBarExtraKey];
 	[super tearDown];
 }
 
@@ -49,6 +50,7 @@
 	XCTAssertEqual([BPPreferences backgroundCheckInterval], 21600.0, @"default interval is 6 hours");
 	XCTAssertFalse([BPPreferences greedyCaskUpgrades], @"greedy cask upgrades default to off");
 	XCTAssertTrue([BPPreferences automaticAppUpdateCheckEnabled], @"automatic app update check defaults to on");
+	XCTAssertFalse([BPPreferences showMenuBarExtra], @"menu bar extra defaults to off");
 }
 
 - (void)testSettersRoundTrip
@@ -64,6 +66,9 @@
 
 	[BPPreferences setAutomaticAppUpdateCheckEnabled:NO];
 	XCTAssertFalse([BPPreferences automaticAppUpdateCheckEnabled]);
+
+	[BPPreferences setShowMenuBarExtra:YES];
+	XCTAssertTrue([BPPreferences showMenuBarExtra]);
 }
 
 - (void)testOutdatedCasksCallOmitsGreedyByDefault
@@ -185,6 +190,24 @@
 	NSMenuItem *second = [BPAppDelegate installCheckForUpdatesMenuItemInApplicationMenu:appMenu target:target];
 	XCTAssertEqual(first, second, @"installing Check for Updates twice must not duplicate the menu item");
 	XCTAssertEqual(appMenu.numberOfItems, 4);
+}
+
+- (void)testCommandPaletteMenuItemInstallsIdempotentlyAtTopOfToolsMenu
+{
+	NSMenu *toolsMenu = [[NSMenu alloc] initWithTitle:NSLocalizedString(@"Sidebar_VoiceOver_Tools", @"Test tools menu title")];
+	[toolsMenu addItemWithTitle:NSLocalizedString(@"Toolbar_Homebrew_Update", @"Test update menu item title") action:NULL keyEquivalent:@"u"];
+
+	NSObject *target = [[NSObject alloc] init];
+	NSMenuItem *first = [BPAppDelegate installCommandPaletteMenuItemInToolsMenu:toolsMenu target:target];
+	XCTAssertNotNil(first);
+	XCTAssertEqual(first.action, NSSelectorFromString(@"showCommandPalette:"));
+	XCTAssertEqual(first.target, target);
+	XCTAssertEqualObjects(first.keyEquivalent, @"k");
+	XCTAssertEqualObjects(first.accessibilityIdentifier, @"menu.tools.commandPalette");
+	XCTAssertEqual([toolsMenu indexOfItem:first], 0);
+
+	NSMenuItem *second = [BPAppDelegate installCommandPaletteMenuItemInToolsMenu:toolsMenu target:target];
+	XCTAssertEqual(first, second, @"installing Command Palette twice must not duplicate the menu item");
 }
 
 @end

@@ -20,6 +20,7 @@
 //
 
 #import "BPHomebrewManager.h"
+#import "BPUpdatesSnapshot.h"
 #import "DCOAboutWindowController.h"
 #import "BPAppDelegate.h"
 #import "BPPreferences.h"
@@ -28,6 +29,13 @@
 #import "BPBrewfile.h"
 #import "BPFormulaInformation-Swift.h"
 #import <UserNotifications/UserNotifications.h>
+
+// Counts in the menu bar extra are numeric tokens.
+__attribute__((annotate("returns_localized_nsstring")))
+static NSString *BPMenuBarCountBadgeTitle(NSUInteger count)
+{
+	return count > 0 ? [NSString stringWithFormat:@" %lu", (unsigned long)count] : @"";
+}
 
 NSString *const kBP_HOMEBREW_WEBSITE = @"https://www.cakebrew.com";
 NSString *const kBP_CAKEBREW_DOCUMENTATION = @"https://github.com/scottdensmore/Cakebrew#readme";
@@ -38,6 +46,7 @@ NSString *const kBP_CAKEBREW_RELEASES_URL = @"https://github.com/scottdensmore/C
 @property (strong, nonatomic) BPPreferencesWindowController *preferencesWindowController;
 @property (strong, nonatomic) BPBackgroundUpdater *backgroundUpdater;
 @property (strong, nonatomic) BPAppUpdateHost *appUpdateHost;
+@property (strong, nonatomic, readwrite) NSStatusItem *statusItem;
 
 @property (nonatomic, strong) DCOAboutWindowController *aboutWindowController;
 
@@ -78,6 +87,12 @@ NSString *const kBP_CAKEBREW_RELEASES_URL = @"https://github.com/scottdensmore/C
 	{
 		[BPAppDelegate installCheckForUpdatesMenuItemInApplicationMenu:appMenu target:self];
 	}
+
+	[NSNotificationCenter.defaultCenter addObserver:self
+										   selector:@selector(updatesSnapshotDidChangeForMenuBar:)
+											   name:BPHomebrewManagerUpdatesSnapshotDidChangeNotification
+											 object:nil];
+	[self updateMenuBarExtra];
 
 	self.backgroundUpdater = [[BPBackgroundUpdater alloc] init];
 	[self.backgroundUpdater start];
@@ -466,6 +481,142 @@ NSString *const kBP_CAKEBREW_RELEASES_URL = @"https://github.com/scottdensmore/C
 	NSInteger insertIndex = (appMenu.numberOfItems > 1) ? 1 : appMenu.numberOfItems;
 	[appMenu insertItem:item atIndex:insertIndex];
 	return item;
+}
+
++ (NSMenuItem *)installCommandPaletteMenuItemInToolsMenu:(NSMenu *)toolsMenu target:(id)target
+{
+	if (!toolsMenu)
+	{
+		return nil;
+	}
+	SEL action = NSSelectorFromString(@"showCommandPalette:");
+	NSInteger existingIndex = [toolsMenu indexOfItemWithTarget:target andAction:action];
+	if (existingIndex >= 0)
+	{
+		return [toolsMenu itemAtIndex:existingIndex];
+	}
+
+	NSString *title = NSLocalizedStringWithDefaultValue(
+		@"Command_Palette_Menu_Item",
+		nil,
+		NSBundle.mainBundle,
+		@"Command Palette…",
+		@"Tools menu item for Command Palette");
+	NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:title
+												  action:action
+										   keyEquivalent:@"k"];
+	item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
+	item.target = target;
+	item.accessibilityIdentifier = @"menu.tools.commandPalette";
+
+	[toolsMenu insertItem:item atIndex:0];
+	if (toolsMenu.numberOfItems > 1 && ![toolsMenu itemAtIndex:1].isSeparatorItem)
+	{
+		[toolsMenu insertItem:[NSMenuItem separatorItem] atIndex:1];
+	}
+	return item;
+}
+
+- (void)updatesSnapshotDidChangeForMenuBar:(NSNotification *)notification
+{
+	if (self.statusItem)
+	{
+		[self updateMenuBarExtra];
+	}
+}
+
+- (void)updateMenuBarExtra
+{
+	if (![BPPreferences showMenuBarExtra])
+	{
+		if (self.statusItem)
+		{
+			[[NSStatusBar systemStatusBar] removeStatusItem:self.statusItem];
+			self.statusItem = nil;
+		}
+		return;
+	}
+
+	if (!self.statusItem)
+	{
+		self.statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
+	}
+
+	BPUpdatesSnapshot *snapshot = [BPHomebrewManager sharedManager].updatesSnapshot;
+	NSUInteger outdatedCount = snapshot.formulae.count + snapshot.casks.count;
+
+	NSStatusBarButton *button = self.statusItem.button;
+	if (button)
+	{
+		NSImage *icon = [NSImage imageWithSystemSymbolName:@"mug.fill"
+								  accessibilityDescription:NSLocalizedString(@"Cakebrew", nil)];
+		icon.template = YES;
+		button.image = icon;
+		button.imagePosition = NSImageLeading;
+		button.title = BPMenuBarCountBadgeTitle(outdatedCount);
+		button.accessibilityIdentifier = @"menubar.statusItem";
+	}
+
+	NSMenu *menu = [[NSMenu alloc] initWithTitle:NSLocalizedString(@"Cakebrew", nil)];
+	NSMenuItem *openItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedStringWithDefaultValue(@"MenuBar_Open_Cakebrew", nil, NSBundle.mainBundle, @"Open Cakebrew", nil)
+													  action:@selector(openMainWindowFromMenuBar:)
+											   keyEquivalent:@""];
+	openItem.target = self;
+	openItem.accessibilityIdentifier = @"menubar.openCakebrew";
+	[menu addItem:openItem];
+
+	[menu addItem:[NSMenuItem separatorItem]];
+
+	NSMenuItem *updatesItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedStringWithDefaultValue(@"Sidebar_Item_Unified_Updates", nil, NSBundle.mainBundle, @"Updates", nil)
+														 action:@selector(openUnifiedUpdatesFromMenuBar:)
+												  keyEquivalent:@""];
+	updatesItem.target = self;
+	updatesItem.accessibilityIdentifier = @"menubar.unifiedUpdates";
+	[menu addItem:updatesItem];
+
+	NSMenuItem *upgradeAllItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedStringWithDefaultValue(@"Dock_Upgrade_All_Outdated", nil, NSBundle.mainBundle, @"Upgrade All Outdated", nil)
+															action:@selector(upgradeAllFromMenuBar:)
+													 keyEquivalent:@""];
+	upgradeAllItem.target = self;
+	upgradeAllItem.enabled = snapshot.hasEligibleUpdates;
+	upgradeAllItem.accessibilityIdentifier = @"menubar.upgradeAll";
+	[menu addItem:upgradeAllItem];
+
+	NSMenuItem *refreshItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedStringWithDefaultValue(@"Dock_Check_For_Updates", nil, NSBundle.mainBundle, @"Check for Updates", nil)
+														 action:@selector(updateHomebrewFromMenuBar:)
+												  keyEquivalent:@""];
+	refreshItem.target = self;
+	refreshItem.accessibilityIdentifier = @"menubar.checkUpdates";
+	[menu addItem:refreshItem];
+
+	self.statusItem.menu = menu;
+}
+
+- (void)openMainWindowFromMenuBar:(id)sender
+{
+	[self activateCakebrewIgnoringOtherApps];
+	[self showMainWindow];
+}
+
+- (void)openUnifiedUpdatesFromMenuBar:(id)sender
+{
+	[self activateCakebrewIgnoringOtherApps];
+	[self showMainWindow];
+	[self.notificationNavigationTarget showUnifiedUpdates:sender];
+}
+
+- (void)upgradeAllFromMenuBar:(id)sender
+{
+	[self activateCakebrewIgnoringOtherApps];
+	[self showMainWindow];
+	[self.dockActionTarget upgradeAllOutdatedFormulae:sender];
+}
+
+- (void)updateHomebrewFromMenuBar:(id)sender
+{
+	[self activateCakebrewIgnoringOtherApps];
+	[self showMainWindow];
+	[self.dockActionTarget updateHomebrew:sender];
 }
 
 - (BPAppUpdateHost *)ensureAppUpdateHost

@@ -124,7 +124,7 @@ static NSString *BPSpokenSeparator(void)
 
 - (NSDictionary *)textAttributesWithColor:(NSColor *)color
 {
-	return @{ NSFontAttributeName: [NSFont boldSystemFontOfSize:11.0],
+	return @{ NSFontAttributeName: [NSFont monospacedDigitSystemFontOfSize:11.0 weight:NSFontWeightSemibold],
 			  NSForegroundColorAttributeName: color };
 }
 
@@ -137,25 +137,31 @@ static NSString *BPSpokenSeparator(void)
 - (void)drawRect:(NSRect)dirtyRect
 {
 	NSColor *backgroundColor;
+	NSColor *borderColor;
 	NSColor *textColor;
 	if (self.isEmphasized) {
-		backgroundColor = [NSColor.whiteColor colorWithAlphaComponent:0.9];
+		backgroundColor = [NSColor.whiteColor colorWithAlphaComponent:0.92];
+		borderColor = [NSColor.whiteColor colorWithAlphaComponent:0.98];
 		textColor = NSColor.selectedContentBackgroundColor;
 	} else {
-		backgroundColor = [NSColor.secondaryLabelColor colorWithAlphaComponent:0.18];
+		backgroundColor = [NSColor.secondaryLabelColor colorWithAlphaComponent:0.14];
+		borderColor = [NSColor.secondaryLabelColor colorWithAlphaComponent:0.24];
 		textColor = NSColor.secondaryLabelColor;
 	}
 
 	CGFloat pillHeight = 16.0;
-	NSRect pill = NSMakeRect(NSMinX(self.bounds),
-							 NSMidY(self.bounds) - pillHeight / 2.0,
-							 NSWidth(self.bounds),
-							 pillHeight);
+	NSRect pill = NSInsetRect(NSMakeRect(NSMinX(self.bounds),
+										 NSMidY(self.bounds) - pillHeight / 2.0,
+										 NSWidth(self.bounds),
+										 pillHeight), 0.5, 0.5);
 	NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:pill
-														xRadius:pillHeight / 2.0
-														yRadius:pillHeight / 2.0];
+														xRadius:pill.size.height / 2.0
+														yRadius:pill.size.height / 2.0];
 	[backgroundColor setFill];
 	[path fill];
+	path.lineWidth = 0.75;
+	[borderColor setStroke];
+	[path stroke];
 
 	NSString *text = [self badgeText];
 	NSDictionary *attributes = [self textAttributesWithColor:textColor];
