@@ -37,6 +37,7 @@ typedef NS_ENUM(NSUInteger, BPWindowOperation) {
 };
 
 @class BPUpdateDoctorController;
+@class BPCommandPaletteHost;
 
 @interface BPHomebrewViewController : NSViewController <BPDockMenuTarget, BPBrewfileImporting, BPNotificationNavigation>
 
@@ -47,6 +48,7 @@ typedef NS_ENUM(NSUInteger, BPWindowOperation) {
 @property (weak) IBOutlet NSTabView                *tabView;
 @property (weak) IBOutlet NSTextField              *label_information;
 @property (weak) IBOutlet NSMenu                   *menu_formula;
+@property (strong, nonatomic, readonly) BPCommandPaletteHost *commandPaletteHost;
 
 // Cocoa bindings
 @property BOOL enableUpgradeFormulasMenu;
@@ -76,5 +78,7 @@ typedef NS_ENUM(NSUInteger, BPWindowOperation) {
 - (IBAction)runHomebrewImport:(id)sender;
 - (IBAction)pinSelectedFormula:(id)sender;
 - (IBAction)unpinSelectedFormula:(id)sender;
+- (IBAction)showCommandPalette:(id)sender;
+- (IBAction)dismissCommandPalette:(id)sender;
 
 @end

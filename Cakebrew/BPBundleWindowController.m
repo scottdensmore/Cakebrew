@@ -7,6 +7,7 @@
 //
 
 #import "BPBundleWindowController.h"
+#import <objc/runtime.h>
 #import "BPAppDelegate.h"
 #import "BPHomebrewInterface.h"
 #import "BPAutoScrollTextView.h"
@@ -14,6 +15,8 @@
 #import "BPBrewfileImportOperation.h"
 #import "BPBrewfileExportOperation.h"
 #import "BPFormulaInformation-Swift.h"
+
+static const void *kBPBrewfileReviewHostAssocKey = &kBPBrewfileReviewHostAssocKey;
 
 @interface BPBundleWindowController ()
 
@@ -42,6 +45,75 @@
 
 @implementation BPBundleWindowController
 
++ (BPBrewfileReviewHost *)reviewHostForPlan:(BPBrewfilePlan *)plan
+								   fileName:(NSString *)fileName
+									  error:(NSError *)error
+							entriesTextView:(NSTextView **)outTextView
+{
+	NSTextView *text = [[NSTextView alloc] initWithFrame:NSMakeRect(0, 0, 550, 210)];
+	text.editable = NO;
+	text.selectable = YES;
+	text.richText = NO;
+	text.font = [NSFont systemFontOfSize:13];
+	text.textColor = NSColor.textColor;
+	text.backgroundColor = NSColor.textBackgroundColor;
+	text.textContainerInset = NSMakeSize(10, 10);
+	text.autoresizingMask = NSViewWidthSizable;
+	text.verticallyResizable = YES;
+	text.textContainer.widthTracksTextView = YES;
+	text.accessibilityIdentifier = @"brewfile.review.entries";
+	text.string = error.localizedDescription ?: (plan.reviewText ?: @"");
+	if ([BPHomebrewInterface sharedInterface].brewTransport != kBPBrewTransportDirect) {
+		text.string = NSLocalizedString(@"Reviewed import requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported.", nil);
+	}
+	if (outTextView) {
+		*outTextView = text;
+	}
+
+	NSInteger installedCount = 0;
+	NSInteger missingCount = 0;
+	NSInteger notCheckedCount = 0;
+	NSInteger formulaCount = 0;
+	NSInteger caskCount = 0;
+	NSInteger tapCount = 0;
+	NSInteger otherCount = 0;
+
+	for (BPBrewfileEntry *entry in plan.entries) {
+		if ([entry.status isEqualToString:@"Installed"]) {
+			installedCount++;
+		} else if ([entry.status isEqualToString:@"Missing"]) {
+			missingCount++;
+		} else {
+			notCheckedCount++;
+		}
+
+		if ([entry.kind isEqualToString:@"brew"]) {
+			formulaCount++;
+		} else if ([entry.kind isEqualToString:@"cask"]) {
+			caskCount++;
+		} else if ([entry.kind isEqualToString:@"tap"]) {
+			tapCount++;
+		} else {
+			otherCount++;
+		}
+	}
+
+	BOOL canInstall = plan.canInstall && [BPHomebrewInterface sharedInterface].brewTransport == kBPBrewTransportDirect;
+	BPBrewfileReviewHost *host = [[BPBrewfileReviewHost alloc] initWithEntriesTextView:text
+																			  fileName:fileName.length ? fileName : @"Brewfile"
+																		installedCount:installedCount
+																		  missingCount:missingCount
+																	   notCheckedCount:notCheckedCount
+																		  formulaCount:formulaCount
+																			 caskCount:caskCount
+																			  tapCount:tapCount
+																			otherCount:otherCount
+																			canInstall:canInstall
+																		   summaryText:plan.reviewText ?: @""];
+	host.viewController.view.frame = NSMakeRect(0, 0, 570, 280);
+	return host;
+}
+
 + (void)reviewFile:(NSURL *)url inventories:(NSDictionary *)inventories parentWindow:(NSWindow *)window completion:(void (^)(BPBrewfilePlan *))completion
 {
  dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
@@ -57,19 +129,12 @@
    install.enabled = plan.canInstall && [BPHomebrewInterface sharedInterface].brewTransport == kBPBrewTransportDirect;
    NSButton *cancel = [alert addButtonWithTitle:NSLocalizedString(@"Cancel", nil)];
    cancel.accessibilityIdentifier = @"brewfile.review.cancel";
-   NSScrollView *scroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 570, 260)];
-   scroll.hasVerticalScroller = YES; scroll.borderType = NSBezelBorder;
-   NSTextView *text = [[NSTextView alloc] initWithFrame:NSMakeRect(0, 0, 550, 260)];
-   text.editable = NO; text.selectable = YES; text.richText = NO;
-   text.font = [NSFont systemFontOfSize:13]; text.textColor = NSColor.textColor; text.backgroundColor = NSColor.textBackgroundColor;
-   text.textContainerInset = NSMakeSize(10, 10);
-   text.autoresizingMask = NSViewWidthSizable; text.verticallyResizable = YES;
-   text.textContainer.widthTracksTextView = YES;
-   text.accessibilityIdentifier = @"brewfile.review.entries";
-   text.string = error.localizedDescription ?: plan.reviewText;
-   if ([BPHomebrewInterface sharedInterface].brewTransport != kBPBrewTransportDirect)
-    text.string = NSLocalizedString(@"Reviewed import requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported.", nil);
-   scroll.documentView = text; alert.accessoryView = scroll;
+   BPBrewfileReviewHost *reviewHost = [self reviewHostForPlan:plan
+                                                     fileName:url.lastPathComponent
+                                                        error:error
+                                              entriesTextView:NULL];
+   objc_setAssociatedObject(alert, kBPBrewfileReviewHostAssocKey, reviewHost, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+   alert.accessoryView = reviewHost.viewController.view;
    [alert beginSheetModalForWindow:window completionHandler:^(NSModalResponse result) {
     if (completion) completion(result == NSAlertFirstButtonReturn && install.enabled ? plan : nil);
    }];

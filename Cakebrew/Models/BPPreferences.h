@@ -22,6 +22,7 @@ extern NSString *const kBPBackgroundCheckEnabledKey;
 extern NSString *const kBPBackgroundCheckIntervalKey;
 extern NSString *const kBPGreedyCaskUpgradesKey;
 extern NSString *const kBPAutomaticAppUpdateCheckEnabledKey;
+extern NSString *const kBPShowMenuBarExtraKey;
 
 /**
  *  User settings, backed by NSUserDefaults. Call +registerDefaults once at
@@ -65,5 +66,9 @@ extern NSString *const kBPAutomaticAppUpdateCheckEnabledKey;
 /** Whether Cakebrew automatically checks for signed app updates (default YES). */
 + (BOOL)automaticAppUpdateCheckEnabled;
 + (void)setAutomaticAppUpdateCheckEnabled:(BOOL)enabled;
+
+/** Whether Cakebrew shows a quick-status menu bar extra (default NO). */
++ (BOOL)showMenuBarExtra;
++ (void)setShowMenuBarExtra:(BOOL)enabled;
 
 @end

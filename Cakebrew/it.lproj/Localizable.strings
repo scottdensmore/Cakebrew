@@ -472,3 +472,12 @@
 "App_Update_Download" = "Scarica aggiornamento";
 "App_Update_Verified" = "SHA-256 e firma Ed25519 verificati";
 "App_Update_Feed_Unconfigured" = "Nessun feed di aggiornamento firmato configurato per questa build. Controlla GitHub Releases per il codice sorgente e lo stato dei rilasci.";
+"Command_Palette_Menu_Item" = "Palette dei comandi…";
+"Command_Palette_Title" = "Palette dei comandi";
+"Command_Palette_Placeholder" = "Passa a una vista, avvia uno strumento o ispeziona un pacchetto…";
+"Preferences_Menu_Bar_Extra" = "Mostra lo stato di Cakebrew nella barra dei menu";
+"MenuBar_Open_Cakebrew" = "Apri Cakebrew";
+"About_Credits" = "Crediti";
+"About_Acknowledgements" = "Riconoscimenti";
+"About_Copy_Version" = "Copia informazioni versione";
+"About_Visit_Website" = "Visita il sito web";

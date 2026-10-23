@@ -1907,6 +1907,7 @@ private final class BPPreferencesPresentation: ObservableObject {
     @Published var backgroundCheckInterval: Double = 21600.0
     @Published var greedyCaskUpgrades: Bool = false
     @Published var automaticAppUpdateCheckEnabled: Bool = true
+    @Published var showMenuBarExtra: Bool = false
     @Published var helperStatusText: String = ""
     @Published var helperActionTitle: String?
 
@@ -1914,6 +1915,7 @@ private final class BPPreferencesPresentation: ObservableObject {
     var onIntervalChanged: ((Double) -> Void)?
     var onGreedyChanged: ((Bool) -> Void)?
     var onAutomaticAppUpdateCheckChanged: ((Bool) -> Void)?
+    var onShowMenuBarExtraChanged: ((Bool) -> Void)?
     var onCheckForAppUpdates: (() -> Void)?
     var onHelperAction: (() -> Void)?
 }
@@ -1923,6 +1925,11 @@ private final class BPPreferencesPresentation: ObservableObject {
 public final class BPPreferencesHost: NSObject {
     private let presentation = BPPreferencesPresentation()
     @objc public let viewController: NSViewController
+
+    @objc public var showMenuBarExtra: Bool {
+        get { presentation.showMenuBarExtra }
+        set { presentation.showMenuBarExtra = newValue }
+    }
 
     @objc public var onBackgroundCheckChanged: ((Bool) -> Void)? {
         get { presentation.onBackgroundCheckChanged }
@@ -1942,6 +1949,11 @@ public final class BPPreferencesHost: NSObject {
     @objc public var onAutomaticAppUpdateCheckChanged: ((Bool) -> Void)? {
         get { presentation.onAutomaticAppUpdateCheckChanged }
         set { presentation.onAutomaticAppUpdateCheckChanged = newValue }
+    }
+
+    @objc public var onShowMenuBarExtraChanged: ((Bool) -> Void)? {
+        get { presentation.onShowMenuBarExtraChanged }
+        set { presentation.onShowMenuBarExtraChanged = newValue }
     }
 
     @objc public var onCheckForAppUpdates: (() -> Void)? {
@@ -2026,6 +2038,16 @@ private struct BPPreferencesView: View {
         )
     }
 
+    private var menuBarExtraBinding: Binding<Bool> {
+        Binding(
+            get: { presentation.showMenuBarExtra },
+            set: { newValue in
+                presentation.showMenuBarExtra = newValue
+                presentation.onShowMenuBarExtraChanged?(newValue)
+            }
+        )
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 8) {
@@ -2047,6 +2069,10 @@ private struct BPPreferencesView: View {
                     .accessibilityIdentifier("preferences.interval")
                 }
                 .padding(.leading, 18)
+
+                Toggle(NSLocalizedString("Preferences_Menu_Bar_Extra", comment: ""), isOn: menuBarExtraBinding)
+                    .toggleStyle(.checkbox)
+                    .accessibilityIdentifier("preferences.menuBarExtra")
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -3253,5 +3279,605 @@ private struct BPInstallationView: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+// MARK: - SwiftUI Tahoe About Window Host
+
+private func BPLocalizedWithFallback(_ key: String, fallback: String) -> String {
+    let resolved = Bundle.main.localizedString(forKey: key, value: fallback, table: nil)
+    return (resolved.isEmpty || resolved == key) ? fallback : resolved
+}
+
+@MainActor
+private final class BPAboutWindowPresentation: ObservableObject {
+    @Published var state = BPAboutWindowState()
+    let creditsTextView: NSTextView
+    var onVisitWebsite: (() -> Void)?
+    var onSelectTab: ((Int) -> Void)?
+
+    init(creditsTextView: NSTextView) {
+        self.creditsTextView = creditsTextView
+    }
+}
+
+@MainActor
+@objc(BPAboutWindowHost)
+public final class BPAboutWindowHost: NSObject {
+    private let presentation: BPAboutWindowPresentation
+    @objc public let viewController: NSViewController
+
+    @objc public var selectedTabIndex: Int {
+        presentation.state.selectedTab.rawValue
+    }
+
+    @objc public var versionClipboardSummary: String {
+        presentation.state.versionClipboardSummary
+    }
+
+    @objc public var onVisitWebsite: (() -> Void)? {
+        get { presentation.onVisitWebsite }
+        set { presentation.onVisitWebsite = newValue }
+    }
+
+    @objc public var onSelectTab: ((Int) -> Void)? {
+        get { presentation.onSelectTab }
+        set { presentation.onSelectTab = newValue }
+    }
+
+    @objc(initWithCreditsTextView:)
+    public init(creditsTextView: NSTextView) {
+        let presentation = BPAboutWindowPresentation(creditsTextView: creditsTextView)
+        self.presentation = presentation
+        let host = NSHostingController(rootView: BPAboutWindowView(presentation: presentation))
+        host.sizingOptions = []
+        self.viewController = host
+        super.init()
+    }
+
+    @objc(configureWithAppName:appVersion:appCopyright:hasAcknowledgements:)
+    public func configure(appName: String,
+                          appVersion: String,
+                          appCopyright: String,
+                          hasAcknowledgements: Bool) {
+        presentation.state = BPAboutWindowState(
+            appName: appName.isEmpty ? "Cakebrew" : appName,
+            appVersion: appVersion,
+            appCopyright: appCopyright,
+            selectedTab: presentation.state.selectedTab,
+            hasAcknowledgements: hasAcknowledgements
+        )
+    }
+
+    @objc(selectTabAtIndex:)
+    public func selectTab(at index: Int) {
+        let tab = BPAboutWindowTab(rawValue: index) ?? .credits
+        presentation.state.selectedTab = tab
+        presentation.onSelectTab?(tab.rawValue)
+    }
+
+    @objc
+    @discardableResult
+    public func copyVersionInfoToPasteboard() -> String {
+        let summary = presentation.state.versionClipboardSummary
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(summary, forType: .string)
+        return summary
+    }
+}
+
+@MainActor
+private struct BPAboutWindowView: View {
+    @ObservedObject var presentation: BPAboutWindowPresentation
+
+    private var selectedTabBinding: Binding<BPAboutWindowTab> {
+        Binding(
+            get: { presentation.state.selectedTab },
+            set: { newTab in
+                presentation.state.selectedTab = newTab
+                presentation.onSelectTab?(newTab.rawValue)
+            }
+        )
+    }
+
+    var body: some View {
+        VStack(spacing: 14) {
+            HStack(spacing: 16) {
+                Image(nsImage: NSApplication.shared.applicationIconImage)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: 72, height: 72)
+                    .shadow(color: .black.opacity(0.12), radius: 6, x: 0, y: 3)
+
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(presentation.state.appName)
+                            .font(.system(size: 22, weight: .bold))
+                            .accessibilityIdentifier("about.appName")
+
+                        if !presentation.state.appVersion.isEmpty {
+                            Text(presentation.state.appVersion)
+                                .font(.system(.caption, design: .monospaced))
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.accentColor.opacity(0.14))
+                                )
+                                .accessibilityIdentifier("about.appVersion")
+                        }
+                    }
+
+                    if !presentation.state.appCopyright.isEmpty {
+                        Text(presentation.state.appCopyright)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                            .accessibilityIdentifier("about.appCopyright")
+                    }
+                }
+
+                Spacer()
+            }
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(.regularMaterial)
+            )
+
+            if presentation.state.hasAcknowledgements {
+                Picker("", selection: selectedTabBinding) {
+                    Text(BPLocalizedWithFallback("About_Credits", fallback: "Credits"))
+                        .tag(BPAboutWindowTab.credits)
+                    Text(BPLocalizedWithFallback("About_Acknowledgements", fallback: "Acknowledgements"))
+                        .tag(BPAboutWindowTab.acknowledgements)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .accessibilityIdentifier("about.tabPicker")
+            }
+
+            BPTextViewContainerRepresentable(textView: presentation.creditsTextView)
+                .frame(maxWidth: .infinity, minHeight: 150, maxHeight: .infinity)
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+            HStack(spacing: 10) {
+                Button {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(presentation.state.versionClipboardSummary, forType: .string)
+                } label: {
+                    Label(BPLocalizedWithFallback("About_Copy_Version", fallback: "Copy Version Info"), systemImage: "doc.on.doc")
+                }
+                .controlSize(.small)
+                .accessibilityIdentifier("about.copyVersion")
+
+                Spacer()
+
+                Button {
+                    presentation.onVisitWebsite?()
+                } label: {
+                    Label(BPLocalizedWithFallback("About_Visit_Website", fallback: "Visit Website"), systemImage: "safari")
+                }
+                .controlSize(.small)
+                .buttonStyle(.borderedProminent)
+                .accessibilityIdentifier("about.visitWebsite")
+            }
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+// MARK: - SwiftUI Brewfile Review Accessory Host
+
+@MainActor
+private final class BPBrewfileReviewPresentation: ObservableObject {
+    @Published var state: BPBrewfileReviewState
+    let entriesTextView: NSTextView
+
+    init(entriesTextView: NSTextView, state: BPBrewfileReviewState) {
+        self.entriesTextView = entriesTextView
+        self.state = state
+    }
+}
+
+@MainActor
+@objc(BPBrewfileReviewHost)
+public final class BPBrewfileReviewHost: NSObject {
+    private let presentation: BPBrewfileReviewPresentation
+    @objc public let viewController: NSViewController
+
+    @objc public var totalEntryCount: Int {
+        presentation.state.totalEntryCount
+    }
+
+    @objc public var installedCount: Int {
+        presentation.state.installedCount
+    }
+
+    @objc public var missingCount: Int {
+        presentation.state.missingCount
+    }
+
+    @objc public var notCheckedCount: Int {
+        presentation.state.notCheckedCount
+    }
+
+    @objc public var canInstall: Bool {
+        presentation.state.canInstall
+    }
+
+    @objc(initWithEntriesTextView:fileName:installedCount:missingCount:notCheckedCount:formulaCount:caskCount:tapCount:otherCount:canInstall:summaryText:)
+    public init(entriesTextView: NSTextView,
+                fileName: String,
+                installedCount: Int,
+                missingCount: Int,
+                notCheckedCount: Int,
+                formulaCount: Int,
+                caskCount: Int,
+                tapCount: Int,
+                otherCount: Int,
+                canInstall: Bool,
+                summaryText: String) {
+        let state = BPBrewfileReviewState(
+            fileName: fileName,
+            installedCount: installedCount,
+            missingCount: missingCount,
+            notCheckedCount: notCheckedCount,
+            formulaCount: formulaCount,
+            caskCount: caskCount,
+            tapCount: tapCount,
+            otherCount: otherCount,
+            canInstall: canInstall,
+            summaryText: summaryText
+        )
+        let presentation = BPBrewfileReviewPresentation(entriesTextView: entriesTextView, state: state)
+        self.presentation = presentation
+        let host = NSHostingController(rootView: BPBrewfileReviewView(presentation: presentation))
+        host.sizingOptions = []
+        self.viewController = host
+        super.init()
+    }
+}
+
+@MainActor
+private struct BPBrewfileReviewView: View {
+    @ObservedObject var presentation: BPBrewfileReviewPresentation
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Label(presentation.state.fileName, systemImage: "doc.text.magnifyingglass")
+                    .font(.system(size: 13, weight: .semibold))
+                    .lineLimit(1)
+                    .accessibilityIdentifier("brewfile.review.fileName")
+
+                Spacer()
+
+                statusPill(
+                    count: presentation.state.installedCount,
+                    label: BPLocalizedWithFallback("Installed", fallback: "Installed"),
+                    color: .green
+                )
+                statusPill(
+                    count: presentation.state.missingCount,
+                    label: BPLocalizedWithFallback("Missing", fallback: "Missing"),
+                    color: .orange
+                )
+                if presentation.state.notCheckedCount > 0 {
+                    statusPill(
+                        count: presentation.state.notCheckedCount,
+                        label: BPLocalizedWithFallback("Not checked", fallback: "Not checked"),
+                        color: .secondary
+                    )
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.primary.opacity(0.04))
+            )
+
+            BPTextViewContainerRepresentable(textView: presentation.entriesTextView)
+                .frame(maxWidth: .infinity, minHeight: 210, maxHeight: .infinity)
+        }
+        .frame(width: 570, height: 280)
+    }
+
+    @ViewBuilder
+    private func statusPill(count: Int, label: String, color: Color) -> some View {
+        HStack(spacing: 4) {
+            Text("\(count)")
+                .font(.system(.caption, design: .monospaced).weight(.semibold))
+            Text(label)
+                .font(.caption)
+        }
+        .foregroundStyle(color)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(
+            Capsule()
+                .fill(color.opacity(0.12))
+        )
+    }
+}
+
+// MARK: - SwiftUI Command Palette Host (⌘K)
+
+@MainActor
+private final class BPCommandPalettePresentation: ObservableObject {
+    @Published var state = BPCommandPaletteState()
+    var onNavigateToSidebarRow: ((Int) -> Void)?
+    var onPerformAction: ((String) -> Void)?
+    var onSelectPackage: ((String, Bool) -> Void)?
+    var onDismiss: (() -> Void)?
+
+    @discardableResult
+    func execute(_ item: BPCommandPaletteItem) -> Bool {
+        switch item.kind {
+        case .navigation:
+            guard item.sidebarRow >= 0 else { return false }
+            onNavigateToSidebarRow?(item.sidebarRow)
+            onDismiss?()
+            return true
+        case .action:
+            guard let actionID = item.actionIdentifier, !actionID.isEmpty else { return false }
+            onPerformAction?(actionID)
+            onDismiss?()
+            return true
+        case .package:
+            guard let name = item.packageName, !name.isEmpty else { return false }
+            onSelectPackage?(name, item.isCask)
+            onDismiss?()
+            return true
+        }
+    }
+}
+
+@MainActor
+@objc(BPCommandPaletteHost)
+public final class BPCommandPaletteHost: NSObject {
+    private let presentation = BPCommandPalettePresentation()
+    @objc public let viewController: NSViewController
+
+    @objc public var query: String {
+        get { presentation.state.query }
+        set { presentation.state.query = newValue }
+    }
+
+    @objc public var filteredCount: Int {
+        presentation.state.filteredItems.count
+    }
+
+    @objc public var selectedItemID: String? {
+        presentation.state.selectedItem?.id
+    }
+
+    @objc public var onNavigateToSidebarRow: ((Int) -> Void)? {
+        get { presentation.onNavigateToSidebarRow }
+        set { presentation.onNavigateToSidebarRow = newValue }
+    }
+
+    @objc public var onPerformAction: ((String) -> Void)? {
+        get { presentation.onPerformAction }
+        set { presentation.onPerformAction = newValue }
+    }
+
+    @objc public var onSelectPackage: ((String, Bool) -> Void)? {
+        get { presentation.onSelectPackage }
+        set { presentation.onSelectPackage = newValue }
+    }
+
+    @objc public var onDismiss: (() -> Void)? {
+        get { presentation.onDismiss }
+        set { presentation.onDismiss = newValue }
+    }
+
+    public override init() {
+        let presentation = self.presentation
+        let host = NSHostingController(rootView: BPCommandPaletteView(presentation: presentation))
+        host.sizingOptions = []
+        self.viewController = host
+        super.init()
+    }
+
+    @objc
+    public func removeAllItems() {
+        presentation.state.items = []
+        presentation.state.query = ""
+    }
+
+    @objc(addNavigationItemWithID:title:subtitle:symbolName:sidebarRow:)
+    public func addNavigationItem(id: String,
+                                  title: String,
+                                  subtitle: String,
+                                  symbolName: String,
+                                  sidebarRow: Int) {
+        let item = BPCommandPaletteItem(
+            id: id,
+            title: title,
+            subtitle: subtitle,
+            symbolName: symbolName,
+            shortcutHint: nil,
+            kind: .navigation,
+            sidebarRow: sidebarRow
+        )
+        presentation.state.items.append(item)
+    }
+
+    @objc(addActionItemWithID:title:subtitle:symbolName:shortcutHint:)
+    public func addActionItem(id: String,
+                              title: String,
+                              subtitle: String,
+                              symbolName: String,
+                              shortcutHint: String?) {
+        let item = BPCommandPaletteItem(
+            id: id,
+            title: title,
+            subtitle: subtitle,
+            symbolName: symbolName,
+            shortcutHint: shortcutHint,
+            kind: .action,
+            actionIdentifier: id
+        )
+        presentation.state.items.append(item)
+    }
+
+    @objc(addPackageItemWithName:version:cask:)
+    public func addPackageItem(name: String, version: String, cask: Bool) {
+        guard !name.isEmpty else { return }
+        let kindLabel = cask
+            ? BPLocalizedWithFallback("Casks", fallback: "Casks")
+            : BPLocalizedWithFallback("Formulae", fallback: "Formulae")
+        let subtitle = version.isEmpty ? kindLabel : "\(kindLabel) • \(version)"
+        let item = BPCommandPaletteItem(
+            id: "pkg:\(cask ? "cask" : "formula"):\(name)",
+            title: name,
+            subtitle: subtitle,
+            symbolName: cask ? "macwindow" : "shippingbox",
+            shortcutHint: nil,
+            kind: .package,
+            packageName: name,
+            isCask: cask
+        )
+        presentation.state.items.append(item)
+    }
+
+    @objc
+    public func moveSelectionDown() {
+        presentation.state.moveSelection(delta: 1)
+    }
+
+    @objc
+    public func moveSelectionUp() {
+        presentation.state.moveSelection(delta: -1)
+    }
+
+    @objc
+    @discardableResult
+    public func executeSelectedItem() -> Bool {
+        guard let item = presentation.state.selectedItem else { return false }
+        return presentation.execute(item)
+    }
+
+    @objc(executeItemWithID:)
+    @discardableResult
+    public func executeItem(withID id: String) -> Bool {
+        guard let item = presentation.state.items.first(where: { $0.id == id }) else { return false }
+        return presentation.execute(item)
+    }
+}
+
+@MainActor
+private struct BPCommandPaletteView: View {
+    @ObservedObject var presentation: BPCommandPalettePresentation
+
+    private var queryBinding: Binding<String> {
+        Binding(
+            get: { presentation.state.query },
+            set: { presentation.state.query = $0 }
+        )
+    }
+
+    private var selectionBinding: Binding<String?> {
+        Binding(
+            get: { presentation.state.selectedItemID },
+            set: { presentation.state.selectedItemID = $0 }
+        )
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Image(systemName: "command")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.secondary)
+
+                TextField(
+                    BPLocalizedWithFallback("Command_Palette_Placeholder", fallback: "Jump to a view, run a tool, or inspect a package…"),
+                    text: queryBinding
+                )
+                .textFieldStyle(.plain)
+                .font(.system(size: 15))
+                .onSubmit {
+                    _ = presentation.state.selectedItem.map { presentation.execute($0) }
+                }
+                .accessibilityIdentifier("commandPalette.searchField")
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.primary.opacity(0.05))
+            )
+
+            List(presentation.state.filteredItems, selection: selectionBinding) { item in
+                HStack(spacing: 10) {
+                    Image(systemName: item.symbolName)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Color.accentColor)
+                        .frame(width: 20)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(item.title)
+                            .font(.system(size: 13, weight: .medium))
+                        if !item.subtitle.isEmpty {
+                            Text(item.subtitle)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                    }
+
+                    Spacer()
+
+                    if let shortcut = item.shortcutHint, !shortcut.isEmpty {
+                        Text(shortcut)
+                            .font(.system(.caption2, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                    .fill(Color.primary.opacity(0.06))
+                            )
+                    }
+                }
+                .padding(.vertical, 2)
+                .contentShape(Rectangle())
+                .onTapGesture(count: 2) {
+                    _ = presentation.execute(item)
+                }
+                .onTapGesture {
+                    presentation.state.selectedItemID = item.id
+                }
+                .tag(Optional(item.id))
+            }
+            .listStyle(.inset)
+            .frame(minHeight: 240, maxHeight: .infinity)
+            .accessibilityIdentifier("commandPalette.list")
+
+            HStack {
+                Button(BPLocalizedWithFallback("Cancel", fallback: "Cancel")) {
+                    presentation.onDismiss?()
+                }
+                .keyboardShortcut(.cancelAction)
+                .accessibilityIdentifier("commandPalette.cancel")
+
+                Spacer()
+
+                Button(BPLocalizedWithFallback("Generic_OK", fallback: "OK")) {
+                    _ = presentation.state.selectedItem.map { presentation.execute($0) }
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(presentation.state.selectedItem == nil)
+                .keyboardShortcut(.defaultAction)
+                .accessibilityIdentifier("commandPalette.run")
+            }
+        }
+        .padding(16)
+        .frame(width: 520, height: 380)
     }
 }

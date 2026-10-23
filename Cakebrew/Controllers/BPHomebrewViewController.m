@@ -51,6 +51,13 @@
 #import "BPEmptyState.h"
 #import "BPEmptyStateView.h"
 #import "BPFormulaInformation-Swift.h"
+
+__attribute__((annotate("returns_localized_nsstring")))
+static NSString *BPWindowSubtitleFromLocalizedMessage(NSString *message)
+{
+	return message ?: @"";
+}
+
 #if DEBUG
 #import "BPBackgroundUpdater.h"
 #import "BPMockHomebrewInterface.h"
@@ -96,6 +103,8 @@ NSOpenSavePanelDelegate>
 @property (strong, nonatomic) BPFormulaeDataSource				*formulaeDataSource;
 @property (strong, nonatomic) BPInstalledPackageListHost		*installedPackageListHost;
 @property (strong, nonatomic) BPUnifiedUpdatesHost				*unifiedUpdatesHost;
+@property (strong, nonatomic, readwrite) BPCommandPaletteHost	*commandPaletteHost;
+@property (strong, nonatomic) NSWindow							*commandPaletteSheetWindow;
 @property (strong, nonatomic) BPFormulaOptionsWindowController	*formulaOptionsWindowController;
 @property (strong, nonatomic) NSWindowController				*operationWindowController;
 @property (strong, nonatomic) BPUpdateViewController			*updateViewController;
@@ -280,6 +289,7 @@ NSOpenSavePanelDelegate>
 	// Likewise, a notification tap can launch the app before this controller
 	// exists. Register only after the main-window outlets are ready.
 	_appDelegate.notificationNavigationTarget = self;
+	[self installCommandPaletteMenuItemIfAvailable];
 #if DEBUG
 	[self installMockWarmNotificationMenu];
  [self installMockBrewfileMenu];
@@ -840,7 +850,10 @@ NSOpenSavePanelDelegate>
 {
 	// Clear on nil. Silently keeping the old text is what made an unmapped row
 	// (Pinned) show the previously selected row's description.
-	[self.label_information setStringValue:message ?: @""];
+	NSString *resolved = BPWindowSubtitleFromLocalizedMessage(message);
+	[self.label_information setStringValue:resolved];
+	NSWindow *window = self.view.window ?: _appDelegate.window;
+	window.subtitle = resolved;
 }
 
 #pragma mark - Homebrew Manager Delegate
@@ -1572,6 +1585,170 @@ NSOpenSavePanelDelegate>
 - (IBAction)beginFormulaSearch:(id)sender
 {
 	[self.toolbar makeSearchFieldFirstResponder];
+}
+
+- (void)installCommandPaletteMenuItemIfAvailable
+{
+	for (NSMenuItem *topItem in NSApp.mainMenu.itemArray)
+	{
+		NSMenu *submenu = topItem.submenu;
+		if (!submenu) continue;
+		if ([submenu indexOfItemWithTarget:self andAction:@selector(updateHomebrew:)] >= 0)
+		{
+			[BPAppDelegate installCommandPaletteMenuItemInToolsMenu:submenu target:self];
+			return;
+		}
+	}
+}
+
+- (void)populateCommandPaletteHost:(BPCommandPaletteHost *)host
+{
+	[host removeAllItems];
+
+	NSArray<NSArray *> *navigationEntries = @[
+		@[@"nav.installed", NSLocalizedString(@"Sidebar_Item_Installed", nil), NSLocalizedString(@"Sidebar_Info_Installed", nil), @"checkmark.square", @(FormulaeSideBarItemInstalled)],
+		@[@"nav.outdated", NSLocalizedString(@"Sidebar_Item_Outdated", nil), NSLocalizedString(@"Sidebar_Info_Outdated", nil), @"clock.arrow.circlepath", @(FormulaeSideBarItemOutdated)],
+		@[@"nav.all", NSLocalizedString(@"Sidebar_Item_All", nil), NSLocalizedString(@"Sidebar_Info_All", nil), @"books.vertical", @(FormulaeSideBarItemAll)],
+		@[@"nav.leaves", NSLocalizedString(@"Sidebar_Item_Leaves", nil), NSLocalizedString(@"Sidebar_Info_Leaves", nil), @"leaf", @(FormulaeSideBarItemLeaves)],
+		@[@"nav.pinned", NSLocalizedString(@"Sidebar_Item_Pinned", nil), NSLocalizedString(@"Sidebar_Info_Pinned", nil), @"pin", @(FormulaeSideBarItemPinned)],
+		@[@"nav.repos", NSLocalizedString(@"Sidebar_Item_Repos", nil), NSLocalizedString(@"Sidebar_Info_Repos", nil), @"externaldrive", @(FormulaeSideBarItemRepositories)],
+		@[@"nav.installedCasks", NSLocalizedString(@"Sidebar_Item_Installed", nil), NSLocalizedString(@"Sidebar_Info_Casks", nil), @"macwindow.badge.plus", @(FormulaeSideBarItemInstalledCasks)],
+		@[@"nav.outdatedCasks", NSLocalizedString(@"Sidebar_Item_Outdated", nil), NSLocalizedString(@"Sidebar_Info_OutdatedCasks", nil), @"arrow.down.app", @(FormulaeSideBarItemOutdatedCasks)],
+		@[@"nav.allCasks", NSLocalizedString(@"Sidebar_Item_AllCasks", nil), NSLocalizedString(@"Sidebar_Info_AllCasks", nil), @"square.grid.2x2", @(FormulaeSideBarItemAllCasks)],
+		@[@"nav.doctor", NSLocalizedString(@"Sidebar_Item_Doctor", nil), NSLocalizedString(@"Sidebar_Info_Doctor", nil), @"stethoscope", @(FormulaeSideBarItemDoctor)],
+		@[@"nav.update", NSLocalizedString(@"Sidebar_Item_Update", nil), NSLocalizedString(@"Sidebar_Info_Update", nil), @"arrow.triangle.2.circlepath", @(FormulaeSideBarItemUpdate)],
+		@[@"nav.services", NSLocalizedString(@"Sidebar_Item_Services", nil), NSLocalizedString(@"Sidebar_Info_Services", nil), @"gearshape.2", @(FormulaeSideBarItemServices)],
+		@[@"nav.unifiedUpdates", NSLocalizedString(@"Sidebar_Item_Unified_Updates", nil), NSLocalizedString(@"Sidebar_Info_Unified_Updates", nil), @"arrow.down.circle", @(FormulaeSideBarItemUnifiedUpdates)],
+	];
+
+	for (NSArray *entry in navigationEntries)
+	{
+		[host addNavigationItemWithID:entry[0]
+								title:entry[1]
+							 subtitle:entry[2]
+						   symbolName:entry[3]
+						   sidebarRow:[entry[4] integerValue]];
+	}
+
+	[host addActionItemWithID:@"action.updateHomebrew"
+						title:NSLocalizedString(@"Toolbar_Homebrew_Update", nil)
+					 subtitle:NSLocalizedString(@"Sidebar_Info_Update", nil)
+				   symbolName:@"arrow.triangle.2.circlepath"
+				 shortcutHint:@"⌘U"];
+	[host addActionItemWithID:@"action.upgradeAll"
+						title:NSLocalizedString(@"Dock_Upgrade_All_Outdated", nil)
+					 subtitle:NSLocalizedString(@"Sidebar_Info_Unified_Updates", nil)
+				   symbolName:@"arrow.down.circle.fill"
+				 shortcutHint:@"⌥⌘U"];
+	[host addActionItemWithID:@"action.cleanup"
+						title:NSLocalizedString(@"Cleanup_Nothing_Title", nil)
+					 subtitle:NSLocalizedString(@"Sidebar_VoiceOver_Tools", nil)
+				   symbolName:@"trash"
+				 shortcutHint:nil];
+	[host addActionItemWithID:@"action.autoremove"
+						title:NSLocalizedString(@"Remove Unused Dependencies", nil)
+					 subtitle:NSLocalizedString(@"Sidebar_VoiceOver_Tools", nil)
+				   symbolName:@"scissors"
+				 shortcutHint:nil];
+	[host addActionItemWithID:@"action.importBrewfile"
+						title:NSLocalizedString(@"Import Brewfile", nil)
+					 subtitle:NSLocalizedString(@"Review Brewfile", nil)
+				   symbolName:@"square.and.arrow.down"
+				 shortcutHint:nil];
+	[host addActionItemWithID:@"action.exportBrewfile"
+						title:NSLocalizedString(@"Panel_Export_Button", nil)
+					 subtitle:NSLocalizedString(@"Panel_Export_Message", nil)
+				   symbolName:@"square.and.arrow.up"
+				 shortcutHint:nil];
+
+	for (BPFormula *formula in _homebrewManager.installedFormulae)
+	{
+		if (![formula isKindOfClass:BPFormula.class]) continue;
+		[host addPackageItemWithName:formula.name ?: @""
+							 version:formula.version ?: @""
+								cask:NO];
+	}
+	for (BPFormula *cask in _homebrewManager.installedCasks)
+	{
+		if (![cask isKindOfClass:BPFormula.class]) continue;
+		[host addPackageItemWithName:cask.name ?: @""
+							 version:cask.version ?: @""
+								cask:YES];
+	}
+}
+
+- (IBAction)showCommandPalette:(id)sender
+{
+	if (!self.commandPaletteHost)
+	{
+		BPCommandPaletteHost *host = [[BPCommandPaletteHost alloc] init];
+		__weak typeof(self) weakSelf = self;
+		host.onNavigateToSidebarRow = ^(NSInteger row) {
+			__strong typeof(weakSelf) strongSelf = weakSelf;
+			if (!strongSelf) return;
+			[strongSelf showOutdatedSidebarRow:(FormulaeSideBarItem)row];
+		};
+		host.onPerformAction = ^(NSString *actionID) {
+			__strong typeof(weakSelf) strongSelf = weakSelf;
+			if (!strongSelf) return;
+			if ([actionID isEqualToString:@"action.updateHomebrew"]) {
+				[strongSelf updateHomebrew:nil];
+			} else if ([actionID isEqualToString:@"action.upgradeAll"]) {
+				[strongSelf upgradeAllOutdatedFormulae:nil];
+			} else if ([actionID isEqualToString:@"action.cleanup"]) {
+				[strongSelf runHomebrewCleanup:nil];
+			} else if ([actionID isEqualToString:@"action.autoremove"]) {
+				[strongSelf removeUnusedDependencies:nil];
+			} else if ([actionID isEqualToString:@"action.importBrewfile"]) {
+				[strongSelf runHomebrewImport:nil];
+			} else if ([actionID isEqualToString:@"action.exportBrewfile"]) {
+				[strongSelf runHomebrewExport:nil];
+			}
+		};
+		host.onSelectPackage = ^(NSString *name, BOOL isCask) {
+			__strong typeof(weakSelf) strongSelf = weakSelf;
+			if (!strongSelf) return;
+			FormulaeSideBarItem targetRow = isCask ? FormulaeSideBarItemInstalledCasks : FormulaeSideBarItemInstalled;
+			[strongSelf showOutdatedSidebarRow:targetRow];
+			BPFormula *formula = [BPFormula formulaWithName:name version:nil andLatestVersion:nil];
+			formula.cask = isCask;
+			[strongSelf restoreSelectedFormula:formula];
+		};
+		host.onDismiss = ^{
+			[weakSelf dismissCommandPalette:nil];
+		};
+		self.commandPaletteHost = host;
+	}
+
+	[self populateCommandPaletteHost:self.commandPaletteHost];
+
+	NSWindow *parentWindow = self.view.window ?: _appDelegate.window;
+	if (!parentWindow || parentWindow.attachedSheet)
+	{
+		return;
+	}
+
+	if (!self.commandPaletteSheetWindow)
+	{
+		NSWindow *sheet = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 520, 380)
+													  styleMask:NSWindowStyleMaskTitled
+														backing:NSBackingStoreBuffered
+														  defer:NO];
+		sheet.title = NSLocalizedString(@"Command_Palette_Title", nil);
+		sheet.contentViewController = self.commandPaletteHost.viewController;
+		self.commandPaletteSheetWindow = sheet;
+	}
+
+	[parentWindow beginSheet:self.commandPaletteSheetWindow completionHandler:nil];
+}
+
+- (IBAction)dismissCommandPalette:(id)sender
+{
+	NSWindow *parentWindow = self.commandPaletteSheetWindow.sheetParent ?: (self.view.window ?: _appDelegate.window);
+	if (parentWindow && self.commandPaletteSheetWindow)
+	{
+		[parentWindow endSheet:self.commandPaletteSheetWindow];
+	}
 }
 
 - (IBAction)runHomebrewCleanup:(id)sender

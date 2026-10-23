@@ -114,6 +114,13 @@
 		[BPPreferences setAutomaticAppUpdateCheckEnabled:enabled];
 		[strongSelf syncSwiftUIHost];
 	};
+	host.onShowMenuBarExtraChanged = ^(BOOL enabled) {
+		typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		[BPPreferences setShowMenuBarExtra:enabled];
+		[BPAppDelegateRef updateMenuBarExtra];
+		[strongSelf syncSwiftUIHost];
+	};
 	host.onCheckForAppUpdates = ^{
 		[BPAppDelegateRef checkForAppUpdates:nil];
 	};
@@ -142,6 +149,7 @@
 {
 	if (!self.preferencesHost) return;
 	NSString *actionTitle = self.helperActionButton.hidden ? nil : self.helperActionButton.title;
+	self.preferencesHost.showMenuBarExtra = [BPPreferences showMenuBarExtra];
 	[self.preferencesHost syncWithBackgroundCheckEnabled:[BPPreferences backgroundCheckEnabled]
 												interval:[BPPreferences backgroundCheckInterval]
 												  greedy:[BPPreferences greedyCaskUpgrades]
