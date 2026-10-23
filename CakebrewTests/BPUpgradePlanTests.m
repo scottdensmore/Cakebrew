@@ -5,64 +5,6 @@
 #import "BPHomebrewManager.h"
 #import "BPHomebrewInterface.h"
 
-@interface BPHomebrewInterface (UpgradeTesting)
-- (BOOL)performAsyncBrewCommandWithArguments:(NSArray *)arguments
-                   wrapsSynchronousRequest:(BOOL)synchronous
-                                  progress:(NSProgress *)progress
-                           dataReturnBlock:(void (^)(NSString *))output;
-- (void)sendDelegateFormulaeUpdatedCallForCommand:(NSString *)command;
-@end
-
-/// Exercises the real selected-upgrade adapter without processes, preferences,
-/// the shared interface, or a manager reload.
-@interface BPUpgradeInterfaceRecorder : BPHomebrewInterface
-@property (strong) NSMutableArray<NSArray<NSString *> *> *commands;
-@property (strong) NSProgress *seenProgress;
-@property NSUInteger reloads;
-@property BOOL failFirst;
-@property BOOL cancelFirst;
-@end
-
-@implementation BPUpgradeInterfaceRecorder
-- (BOOL)performAsyncBrewCommandWithArguments:(NSArray *)arguments
-                   wrapsSynchronousRequest:(BOOL)synchronous
-                                  progress:(NSProgress *)progress
-                           dataReturnBlock:(void (^)(NSString *))output
-{
-    XCTAssertFalse(synchronous);
-    XCTAssertEqual(self.reloads, 0u, @"Reload must wait until every attempted batch exits");
-    self.seenProgress = progress;
-    [self.commands addObject:arguments];
-    if (output) output(@"batch output\n");
-    if (self.cancelFirst) [progress cancel];
-    return !self.failFirst;
-}
-- (void)sendDelegateFormulaeUpdatedCallForCommand:(NSString *)command
-{
-    XCTAssertEqualObjects(command, @"upgrade");
-    self.reloads++;
-}
-@end
-
-@interface BPUpdatesReadRecorder : BPHomebrewInterface
-@property BOOL readSucceeded;
-@property (copy) NSString *readOutput;
-@property (copy) NSArray *readArguments;
-@end
-@implementation BPUpdatesReadRecorder
-- (BOOL)performCleanReadOnlyBrewCommandWithArguments:(NSArray *)arguments output:(NSString *__autoreleasing *)output
-{
-    self.readArguments = arguments;
-    *output = self.readOutput;
-    return self.readSucceeded;
-}
-- (NSString *)performSyncBrewCommandWithArguments:(NSArray *)arguments
-{
-    XCTFail(@"Update and pin inventories must preserve process success");
-    return self.readOutput;
-}
-@end
-
 @interface BPUpgradePlanTests : XCTestCase
 @end
 

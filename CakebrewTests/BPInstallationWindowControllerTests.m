@@ -65,37 +65,6 @@
 @implementation BPSheetApplicationRecorder
 @end
 
-@interface BPInertInstallationWindowController : BPInstallationWindowController
-@property (strong) BPSheetWindowRecorder *recordedWindow;
-@property (strong) NSWindow *parentAtExecution;
-@property BOOL busyAtExecution;
-@property NSUInteger executions;
-@end
-
-@implementation BPInertInstallationWindowController
-+ (BPAppDelegate *)applicationDelegate
-{
-	return (BPAppDelegate *)[(BPSheetApplicationRecorder *)NSApp delegate];
-}
-- (instancetype)initWithWindowNibName:(NSNibName)windowNibName
-{
-	if ((self = [super initWithWindow:nil])) {
-		_recordedWindow = [BPSheetWindowRecorder new];
-	}
-	return self;
-}
-- (NSWindow *)window { return (NSWindow *)self.recordedWindow; }
-- (void)executeInstallation
-{
-	self.executions++;
-	self.parentAtExecution = self.window.sheetParent;
-	BPSheetApplicationRecorder *application = (BPSheetApplicationRecorder *)NSApp;
-	self.busyAtExecution = application.delegate.runningBackgroundTask;
-	[application.events addObject:@"execute"];
-	[self setValue:@YES forKey:@"operationStatus"];
-}
-@end
-
 @interface BPUpgradeButtonRecorder : NSObject
 @property BOOL enabled;
 @end

@@ -3,40 +3,6 @@
 #import "BPServiceDetails.h"
 #import "BPService.h"
 
-@interface BPServicesViewController (DetailsTesting)
-@property (strong) NSArray<BPService *> *services;
-@property (strong) NSTableView *tableView;
-@property (strong) BPServiceDetails *details;
-@property (strong) NSTextView *detailsText;
-@property (strong) NSButton *revealButton;
-@property (strong) NSButton *logsButton;
-@property (strong) NSButton *outputCopyButton;
-- (void)fetchDetailsForName:(NSString *)name completion:(void (^)(BPServiceDetails *))completion;
-- (void)fetchServicesWithCompletion:(void (^)(NSArray<BPService *> *))completion;
-- (void)openLogURLs:(NSArray<NSURL *> *)urls;
-- (void)revealValidatedFileURL:(NSURL *)url;
-- (void)openServiceLogs:(id)sender;
-- (void)revealServiceFile:(id)sender;
-- (void)tableViewSelectionDidChange:(NSNotification *)notification;
-- (void)invalidateServiceDetails;
-@end
-
-@interface BPDeferredServicesController : BPServicesViewController
-@property (strong) NSMutableArray *completions;
-@property (copy) void (^listCompletion)(NSArray *);
-@property (copy) NSArray *openedURLs;
-@property (strong) NSURL *revealedURL;
-@end
-@implementation BPDeferredServicesController
-- (void)fetchDetailsForName:(NSString *)name completion:(void (^)(BPServiceDetails *))completion
-{
-	[self.completions addObject:[completion copy]];
-}
-- (void)fetchServicesWithCompletion:(void (^)(NSArray<BPService *> *))completion { self.listCompletion = completion; }
-- (void)openLogURLs:(NSArray<NSURL *> *)urls { self.openedURLs = urls; }
-- (void)revealValidatedFileURL:(NSURL *)url { self.revealedURL = url; }
-@end
-
 @interface BPServiceDetailsControllerTests : XCTestCase
 @end
 @implementation BPServiceDetailsControllerTests

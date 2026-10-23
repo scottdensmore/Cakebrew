@@ -3,67 +3,6 @@
 #import "BPHomebrewInterface.h"
 #import "BPHomebrewManager.h"
 
-@interface BPHomebrewInterface (RecoveryTesting)
-- (instancetype)initUniqueInstance;
-- (NSString *)getValidUserShellPath;
-@end
-
-@interface BPHomebrewManager (RecoveryTesting)
-- (instancetype)initUniqueInstance;
-- (BPHomebrewInterface *)homebrewInterface;
-- (BOOL)loadAllFormulaeCaches;
-- (void)storeAllFormulaeCaches;
-@end
-
-@interface BPRecoveryShellInterface : BPHomebrewInterface
-@property (copy) NSString *shell;
-@end
-@implementation BPRecoveryShellInterface
-- (NSString *)getValidUserShellPath { return self.shell; }
-@end
-
-@interface BPRecoveryFixtureInterface : BPHomebrewInterface
-@property BPHomebrewDiscoveryResult nextResult;
-@property NSUInteger discoveryCalls;
-@property NSUInteger listCalls;
-@property (strong) dispatch_semaphore_t holdDiscovery;
-@property (copy) void (^onDiscovery)(void);
-@end
-@implementation BPRecoveryFixtureInterface
-- (BPHomebrewDiscoveryResult)discoverHomebrew
-{
-	self.discoveryCalls++;
-	if (self.onDiscovery) self.onDiscovery();
-	if (self.holdDiscovery) dispatch_semaphore_wait(self.holdDiscovery, dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC));
-	return self.nextResult;
-}
-- (NSArray *)listMode:(BPListMode)mode
-{
-	@synchronized (self) { self.listCalls++; }
-	return @[[BPFormula formulaWithName:@"recovered"]];
-}
-- (NSArray *)listPinnedCasks
-{
-    @synchronized (self) { self.listCalls++; }
-    return @[];
-}
-- (NSArray *)listServices
-{
-	@synchronized (self) { self.listCalls++; }
-	return @[];
-}
-@end
-
-@interface BPRecoveryFixtureManager : BPHomebrewManager
-@property (strong) BPRecoveryFixtureInterface *fixture;
-@end
-@implementation BPRecoveryFixtureManager
-+ (id)allocWithZone:(NSZone *)zone { return class_createInstance(self, 0); }
-- (BPHomebrewInterface *)homebrewInterface { return self.fixture; }
-- (BOOL)loadAllFormulaeCaches { return NO; }
-- (void)storeAllFormulaeCaches {}
-@end
-
 @interface BPHomebrewRecoveryTests : XCTestCase <BPHomebrewManagerDelegate>
 @property (strong) BPRecoveryFixtureManager *manager;
 @property (copy) void (^onResult)(BOOL);

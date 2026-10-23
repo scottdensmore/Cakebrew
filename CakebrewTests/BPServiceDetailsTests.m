@@ -5,41 +5,6 @@
 #import "BPTask.h"
 #import <objc/runtime.h>
 
-@interface BPHomebrewInterface (ServiceDetailsTesting)
-- (instancetype)initUniqueInstance;
-- (BOOL)performAsyncBrewCommandWithArguments:(NSArray *)arguments wrapsSynchronousRequest:(BOOL)sync includesCompletionMessage:(BOOL)footer dataReturnBlock:(void (^)(NSString *))block;
-@end
-
-@interface BPServiceInfoFixtureInterface : BPHomebrewInterface
-@property (copy) NSArray *arguments;
-@property (copy) NSString *fixture;
-@property BOOL succeeded;
-@property BOOL readOnly;
-@property BOOL footer;
-@end
-@implementation BPServiceInfoFixtureInterface
-+ (id)allocWithZone:(NSZone *)zone { return class_createInstance(self, 0); }
-- (BOOL)performAsyncBrewCommandWithArguments:(NSArray *)arguments wrapsSynchronousRequest:(BOOL)sync includesCompletionMessage:(BOOL)footer dataReturnBlock:(void (^)(NSString *))block
-{
-	self.arguments = arguments;
-	self.readOnly = sync;
-	self.footer = footer;
-	block(self.fixture);
-	return self.succeeded;
-}
-@end
-
-@interface BPServiceInfoShellInterface : BPHomebrewInterface
-@property (copy) NSString *fixtureCommand;
-@end
-@implementation BPServiceInfoShellInterface
-+ (id)allocWithZone:(NSZone *)zone { return class_createInstance(self, 0); }
-- (NSArray *)formatArguments:(NSArray *)arguments sendOutputId:(BOOL)marker
-{
-	return @[@"-c", self.fixtureCommand];
-}
-@end
-
 @interface BPServiceDetailsTests : XCTestCase
 @end
 

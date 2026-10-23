@@ -21,68 +21,6 @@
 
 #import <Foundation/Foundation.h>
 #import "BPFormulaOption.h"
+#import "BPFormulaInformation-Swift.h"
 
 extern NSString *const BPFormulaDidUpdateNotification;
-
-@protocol BPFormulaDataProvider <NSObject>
-@required
-- (NSString *)informationForFormulaName:(NSString *)name;
-@optional
-- (NSString *)informationForCaskName:(NSString *)name;
-@end
-
-@interface BPFormula : NSObject <NSSecureCoding, NSCopying>
-
-@property (copy, readonly) NSString *name;
-@property (copy, readonly) NSString *version;
-@property (copy, readonly) NSString *latestVersion;
-@property (copy, readonly) NSString *shortLatestVersion;
-@property (copy, readonly) NSString *information;
-@property (nonatomic, copy, readonly) NSString *installPath;
-@property (nonatomic, copy, readonly) NSString *dependencies;
-@property (nonatomic, copy, readonly) NSString *conflicts;
-@property (nonatomic, copy, readonly) NSString *shortDescription;
-@property (nonatomic, strong, readonly) NSURL    *website;
-@property (nonatomic, strong, readonly) NSArray  *options;
-
-
-@property BOOL needsInformation;
-
-/**
- *  Whether this entry is a Homebrew cask (application bundle) rather than a
- *  formula. Operations dispatch on this: casks run `brew <op> --cask`.
- */
-@property BOOL cask;
-
-+ (instancetype)formulaWithName:(NSString*)name version:(NSString*)version andLatestVersion:(NSString*)latestVersion;
-+ (instancetype)formulaWithName:(NSString*)name andVersion:(NSString*)version;
-+ (instancetype)formulaWithName:(NSString*)name;
-
-/**
- *  Parses whitespace/newline-separated formula names (e.g. the output of
- *  `brew uses`) into a trimmed list, dropping blank entries.
- *
- *  @param output Raw command output.
- *  @return The formula names, in order, with empties removed.
- */
-+ (NSArray<NSString *> *)namesFromListOutput:(NSString *)output;
-
-/**
- *  The short name for the formula. Useful for taps. Returns the remaining substring after the last slash character.
- *
- *  @return The last substring after the last slash character.
- */
-- (NSString*)installedName;
-
-
-/**
- *  @return `YES` if the formula is installed, or `NO` otherwise.
- */
-- (BOOL)isInstalled;
-
-/**
- *  @return `YES` if the formula is installed and outdated, or `NO` otherwise.
- */
-- (BOOL)isOutdated;
-
-@end

@@ -1980,7 +1980,7 @@ public final class BPBrewError: NSObject {
 }
 
 @objc(BPCleanupPreview)
-public final class BPCleanupPreview: NSObject {
+public final class BPCleanupPreview: NSObject, @unchecked Sendable {
     private static let wouldRemovePrefix = "Would remove: "
 
     @objc public private(set) var itemCount: UInt = 0
@@ -2058,6 +2058,10 @@ public final class BPCleanupPreview: NSObject {
 @objc(BPBrewfile)
 public final class BPBrewfile: NSObject {
     private static let brewfileName = "Brewfile"
+
+    @objc public static func defaultFilename() -> String {
+        brewfileName
+    }
 
     @objc(isBrewfileURL:)
     public static func isBrewfileURL(_ url: URL?) -> Bool {
@@ -2509,7 +2513,7 @@ public final class BPEmptyState: NSObject {
 }
 
 @objc(BPServiceStatus)
-public enum BPServiceStatus: Int {
+public enum BPServiceStatus: Int, Sendable {
     case none = 0
     case started = 1
     case stopped = 2
@@ -2519,7 +2523,7 @@ public enum BPServiceStatus: Int {
 }
 
 @objc(BPService)
-public final class BPService: NSObject {
+public final class BPService: NSObject, @unchecked Sendable {
     @objc public var name: String?
     @objc public var user: String?
     @objc public var pid: NSNumber?
@@ -2613,7 +2617,7 @@ public final class BPService: NSObject {
 }
 
 @objc(BPServiceDetails)
-public final class BPServiceDetails: NSObject {
+public final class BPServiceDetails: NSObject, @unchecked Sendable {
     @objc public private(set) var available: Bool = false
     @objc public private(set) var service: BPService?
     @objc public private(set) var rawOutput: String = ""
@@ -2724,6 +2728,34 @@ public final class BPServiceDetails: NSObject {
     func update(withReturnBlock block: @escaping @Sendable (String) -> Void) -> Bool
     @objc(dependantsForFormulaName:onlyInstalled:)
     func dependants(forFormulaName name: String, onlyInstalled: Bool) -> String?
+    @objc(listServices)
+    func listServices() -> [BPService]?
+    @objc(serviceDetailsForName:)
+    func serviceDetails(forName name: String?) -> BPServiceDetails?
+    @objc(startService:withReturnBlock:)
+    func startService(_ name: String?, withReturnBlock block: @escaping @Sendable (String) -> Void) -> Bool
+    @objc(stopService:withReturnBlock:)
+    func stopService(_ name: String?, withReturnBlock block: @escaping @Sendable (String) -> Void) -> Bool
+    @objc(restartService:withReturnBlock:)
+    func restartService(_ name: String?, withReturnBlock block: @escaping @Sendable (String) -> Void) -> Bool
+    @objc(installCask:withReturnBlock:)
+    func installCask(_ name: String?, withReturnBlock block: @escaping @Sendable (String) -> Void) -> Bool
+    @objc(installFormula:withOptions:andReturnBlock:)
+    func installFormula(_ name: String?, withOptions options: [Any]?, andReturnBlock block: @escaping @Sendable (String) -> Void) -> Bool
+    @objc(uninstallCask:zap:withReturnBlock:)
+    func uninstallCask(_ name: String?, zap: Bool, withReturnBlock block: @escaping @Sendable (String) -> Void) -> Bool
+    @objc(uninstallFormula:withReturnBlock:)
+    func uninstallFormula(_ name: String?, withReturnBlock block: @escaping @Sendable (String) -> Void) -> Bool
+    @objc(upgradeSelectionReporting:progress:withReturnBlock:)
+    func upgradeSelectionReporting(_ formulae: [Any], progress: Progress?, withReturnBlock block: @escaping @Sendable (String) -> Void) -> BPUpgradeResult?
+    @objc(tapRepository:withReturnsBlock:)
+    func tapRepository(_ name: String?, withReturnsBlock block: @escaping @Sendable (String) -> Void) -> Bool
+    @objc(untapRepository:withReturnsBlock:)
+    func untapRepository(_ name: String?, withReturnsBlock block: @escaping @Sendable (String) -> Void) -> Bool
+    @objc(runCleanupWithReturnBlock:)
+    func runCleanup(withReturnBlock block: @escaping @Sendable (String) -> Void) -> Bool
+    @objc(cancelCurrentOperation)
+    func cancelCurrentOperation()
 }
 
 @objc public protocol BPHomebrewInterfaceClassObjCBridge: NSObjectProtocol {
@@ -2742,12 +2774,18 @@ public final class BPServiceDetails: NSObject {
     var installedCasks: [Any]? { get }
     var outdatedCasks: [Any]? { get }
     var allCasks: [Any]? { get }
+    var currentReloadGeneration: UInt { get }
+    var updatesSnapshot: BPUpdatesSnapshot? { get }
     @objc(statusForFormula:)
     func status(forFormula formula: AnyObject) -> Int
     @objc(isFormulaPinned:)
     func isFormulaPinned(_ formula: AnyObject) -> Bool
     @objc(refreshFormulaStateAfterRemovalWithCompletion:)
     func refreshFormulaStateAfterRemoval(withCompletion completion: @escaping @Sendable (Bool) -> Void)
+    @objc(reloadFromInterfaceRebuildingCache:)
+    func reloadFromInterface(rebuildingCache: Bool)
+    @objc(cleanUp)
+    func cleanUp()
 }
 
 @objc public protocol BPHomebrewManagerClassObjCBridge: NSObjectProtocol {
@@ -3220,12 +3258,12 @@ public final class BPUpgradePlan: NSObject, Sendable {
     private let batches: [[String]]
 
     @objc(initWithSelection:)
-    public init(selection: [Any]) {
+    public init(selection: [Any]?) {
         var formulae = ["upgrade", "--formula"]
         var casks = ["upgrade", "--cask"]
         var valid = true
 
-        for element in selection {
+        for element in selection ?? [] {
             guard let formula = bpAsFormula(element),
                   let rawName = formula.name else {
                 valid = false
@@ -3256,28 +3294,28 @@ public final class BPUpgradePlan: NSObject, Sendable {
 
     @discardableResult
     @objc(executeWithProgress:runner:)
-    public func execute(withProgress progress: Progress, runner: ([String]) -> Bool) -> Bool {
+    public func execute(withProgress progress: Progress?, runner: ([String]) -> Bool) -> Bool {
         executeReporting(withProgress: progress, runner: runner).succeeded
     }
 
     @objc(executeReportingWithProgress:runner:)
-    public func executeReporting(withProgress progress: Progress, runner: ([String]) -> Bool) -> BPUpgradeResult {
+    public func executeReporting(withProgress progress: Progress?, runner: ([String]) -> Bool) -> BPUpgradeResult {
         var results: [BPUpgradeBatchResult] = []
-        var stopped = progress.isCancelled
+        var stopped = (progress?.isCancelled == true)
         for arguments in batches {
             let batch = BPUpgradeBatchResult()
             batch.arguments = arguments
             batch.status = .unattempted
-            if !stopped && !progress.isCancelled {
+            if !stopped && progress?.isCancelled != true {
                 let succeeded = runner(arguments)
-                batch.status = progress.isCancelled ? .cancelled : (succeeded ? .succeeded : .failed)
+                batch.status = (progress?.isCancelled == true) ? .cancelled : (succeeded ? .succeeded : .failed)
                 stopped = (batch.status != .succeeded)
             }
             results.append(batch)
         }
         let result = BPUpgradeResult()
         result.batches = results
-        result.cancelled = progress.isCancelled
+        result.cancelled = (progress?.isCancelled == true)
         return result
     }
 }
@@ -3527,7 +3565,7 @@ private func bpObjCSyncEnter(_ obj: AnyObject) -> Int32
 @_silgen_name("objc_sync_exit")
 private func bpObjCSyncExit(_ obj: AnyObject) -> Int32
 
-private func bpSynchronized<T>(_ obj: AnyObject?, _ body: () throws -> T) rethrows -> T {
+internal func bpSynchronized<T>(_ obj: AnyObject?, _ body: () throws -> T) rethrows -> T {
     if let obj {
         _ = bpObjCSyncEnter(obj)
     }
@@ -3792,4 +3830,3623 @@ public final class BPTask: NSObject, @unchecked Sendable {
     }
 }
 
+@objc(BPHomebrewDiscoveryResult)
+public enum BPHomebrewDiscoveryResult: Int, Sendable {
+    @objc(BPHomebrewDiscoveryUnknown) case unknown = 0
+    @objc(BPHomebrewDiscoveryAvailable) case available = 1
+    @objc(BPHomebrewDiscoveryMissing) case missing = 2
+    @objc(BPHomebrewDiscoveryInvalidShell) case invalidShell = 3
+    @objc(BPHomebrewDiscoveryCheckFailed) case checkFailed = 4
+}
+
+@objc(BPBrewTransport)
+public enum BPBrewTransport: Int, Sendable {
+    @objc(kBPBrewTransportDirect) case direct = 0
+    @objc(kBPBrewTransportHelper) case helper = 1
+}
+
+@objc(BPListMode)
+public enum BPListMode: Int, Sendable {
+    @objc(kBPListAll) case all = 0
+    @objc(kBPListInstalled) case installed = 1
+    @objc(kBPListLeaves) case leaves = 2
+    @objc(kBPListOutdated) case outdated = 3
+    @objc(kBPListSearch) case search = 4
+    @objc(kBPListRepositories) case repositories = 5
+    @objc(kBPListPinned) case pinned = 6
+    @objc(kBPListInstalledCasks) case installedCasks = 7
+    @objc(kBPListOutdatedCasks) case outdatedCasks = 8
+    @objc(kBPListAllCasks) case allCasks = 9
+}
+
+@objc(BPFormulaDataProvider)
+public protocol BPFormulaDataProvider: NSObjectProtocol {
+    @objc(informationForFormulaName:)
+    func information(forFormulaName name: String?) -> String?
+
+    @objc(informationForCaskName:)
+    optional func information(forCaskName name: String?) -> String?
+}
+
+@objc(BPFormula)
+open class BPFormula: NSObject, NSSecureCoding, NSCopying, BPFormulaObjCBridge, @unchecked Sendable {
+    public static let didUpdateNotification = Notification.Name("BPFormulaDidUpdateNotification")
+
+    nonisolated(unsafe) private static var kvoContext: UInt8 = 0
+
+    private static let encodeFormulaName = "BP_ENCODE_FORMULA_NAME"
+    private static let encodeFormulaIver = "BP_ENCODE_FORMULA_IVER"
+    private static let encodeFormulaLver = "BP_ENCODE_FORMULA_LVER"
+    private static let encodeFormulaPath = "BP_ENCODE_FORMULA_PATH"
+    private static let encodeFormulaWurl = "BP_ENCODE_FORMULA_WURL"
+    private static let encodeFormulaDeps = "BP_ENCODE_FORMULA_DEPS"
+    private static let encodeFormulaInst = "BP_ENCODE_FORMULA_INST"
+    private static let encodeFormulaCask = "BP_ENCODE_FORMULA_CASK"
+    private static let encodeFormulaCnfl = "BP_ENCODE_FORMULA_CNFL"
+    private static let encodeFormulaSdsc = "BP_ENCODE_FORMULA_SDSC"
+    private static let encodeFormulaInfo = "BP_ENCODE_FORMULA_INFO"
+    private static let encodeFormulaOptn = "BP_ENCODE_FORMULA_OPTN"
+
+    private static let identifierDependencies = "==> Dependencies"
+    private static let identifierOptions = "==> Options"
+    private static let identifierCaveats = "==> Caveats"
+
+    @objc open var name: String?
+    @objc open var version: String?
+    @objc open var latestVersion: String?
+    @objc open var installPath: String?
+    @objc open var dependencies: String?
+    @objc open var conflicts: String?
+    @objc open var shortDescription: String?
+    @objc open var information: String?
+    @objc open var website: URL?
+    @objc open var options: [Any]?
+    @objc open var cask: Bool = false
+    @objc public var observerAdded: Bool = false
+    @objc public var customDataProvider: (any BPFormulaDataProvider)?
+
+    private var isObservingNeedsInformation: Bool = false
+    private var isSuppressingNeedsInformationKVO: Bool = false
+
+    @objc dynamic open var needsInformation: Bool = false
+
+    @objc open class var defaultDataProviderClass: AnyClass? {
+        nil
+    }
+
+    public static var supportsSecureCoding: Bool {
+        true
+    }
+
+    public required override init() {
+        super.init()
+    }
+
+    @objc(formulaWithName:version:andLatestVersion:)
+    open class func formula(withName name: String?, version: String?, andLatestVersion latestVersion: String?) -> Self {
+        let formula = self.init()
+        formula.name = name
+        formula.version = version
+        formula.latestVersion = latestVersion
+        formula.commonInit()
+        return formula
+    }
+
+    @objc(formulaWithName:andVersion:)
+    open class func formula(withName name: String?, andVersion version: String?) -> Self {
+        return self.formula(withName: name, version: version, andLatestVersion: nil)
+    }
+
+    @objc(formulaWithName:)
+    open class func formula(withName name: String?) -> Self {
+        return self.formula(withName: name, andVersion: nil)
+    }
+
+    @objc(namesFromListOutput:)
+    open class func names(fromListOutput output: String?) -> [String] {
+        guard let output else { return [] }
+        let separators = CharacterSet.whitespacesAndNewlines
+        return output.components(separatedBy: separators).filter { !$0.isEmpty }
+    }
+
+    open func encode(with aCoder: NSCoder) {
+        if let name { aCoder.encode(name, forKey: Self.encodeFormulaName) }
+        if let version { aCoder.encode(version, forKey: Self.encodeFormulaIver) }
+        if let latestVersion { aCoder.encode(latestVersion, forKey: Self.encodeFormulaLver) }
+        if let installPath { aCoder.encode(installPath, forKey: Self.encodeFormulaPath) }
+        if let website { aCoder.encode(website, forKey: Self.encodeFormulaWurl) }
+        if let dependencies { aCoder.encode(dependencies, forKey: Self.encodeFormulaDeps) }
+        if let conflicts { aCoder.encode(conflicts, forKey: Self.encodeFormulaCnfl) }
+        if let shortDescription { aCoder.encode(shortDescription, forKey: Self.encodeFormulaSdsc) }
+        if let information { aCoder.encode(information, forKey: Self.encodeFormulaInfo) }
+        if let options { aCoder.encode(options, forKey: Self.encodeFormulaOptn) }
+        aCoder.encode(NSNumber(value: isInstalled()), forKey: Self.encodeFormulaInst)
+        aCoder.encode(cask, forKey: Self.encodeFormulaCask)
+    }
+
+    public required init?(coder aDecoder: NSCoder) {
+        super.init()
+        self.name = aDecoder.decodeObject(of: NSString.self, forKey: Self.encodeFormulaName) as String?
+        self.version = aDecoder.decodeObject(of: NSString.self, forKey: Self.encodeFormulaIver) as String?
+        self.latestVersion = aDecoder.decodeObject(of: NSString.self, forKey: Self.encodeFormulaLver) as String?
+        self.installPath = aDecoder.decodeObject(of: NSString.self, forKey: Self.encodeFormulaPath) as String?
+        self.website = aDecoder.decodeObject(of: NSURL.self, forKey: Self.encodeFormulaWurl) as URL?
+        self.dependencies = aDecoder.decodeObject(of: NSString.self, forKey: Self.encodeFormulaDeps) as String?
+        self.conflicts = aDecoder.decodeObject(of: NSString.self, forKey: Self.encodeFormulaCnfl) as String?
+        self.shortDescription = aDecoder.decodeObject(of: NSString.self, forKey: Self.encodeFormulaSdsc) as String?
+        self.information = aDecoder.decodeObject(of: NSString.self, forKey: Self.encodeFormulaInfo) as String?
+        self.options = aDecoder.decodeObject(of: [NSArray.self, BPFormulaOption.self], forKey: Self.encodeFormulaOptn) as? [Any]
+        self.cask = aDecoder.decodeBool(forKey: Self.encodeFormulaCask)
+        commonInit()
+    }
+
+    @objc open func commonInit() {
+        if !isObservingNeedsInformation {
+            isObservingNeedsInformation = true
+            self.addObserver(self, forKeyPath: "needsInformation", options: [.new], context: &Self.kvoContext)
+        }
+    }
+
+    open override func addObserver(
+        _ observer: NSObject,
+        forKeyPath keyPath: String,
+        options: NSKeyValueObservingOptions = [],
+        context: UnsafeMutableRawPointer?
+    ) {
+        observerAdded = true
+        super.addObserver(observer, forKeyPath: keyPath, options: options, context: context)
+    }
+
+    open func copy(with zone: NSZone? = nil) -> Any {
+        let formula = type(of: self).init()
+        formula.name = self.name
+        formula.version = self.version
+        formula.latestVersion = self.latestVersion
+        formula.installPath = self.installPath
+        formula.website = self.website
+        formula.dependencies = self.dependencies
+        formula.conflicts = self.conflicts
+        formula.shortDescription = self.shortDescription
+        formula.information = self.information
+        formula.options = self.options
+        formula.cask = self.cask
+        formula.commonInit()
+        return formula
+    }
+
+    @objc open func installedName() -> String? {
+        guard let name else { return nil }
+        let nsName = name as NSString
+        let slashRange = nsName.range(of: "/", options: .backwards)
+        if slashRange.location != NSNotFound {
+            return nsName.substring(from: slashRange.location + 1)
+        }
+        return name
+    }
+
+    open override func observeValue(
+        forKeyPath keyPath: String?,
+        of object: Any?,
+        change: [NSKeyValueChangeKey: Any]?,
+        context: UnsafeMutableRawPointer?
+    ) {
+        if context == &Self.kvoContext {
+            if let obj = object as? BPFormula, obj === self, keyPath == "needsInformation" {
+                if !isSuppressingNeedsInformationKVO && self.needsInformation {
+                    _ = getInformation()
+                }
+            }
+        } else {
+            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
+        }
+    }
+
+    private func resetNeedsInformationFlag() {
+        isSuppressingNeedsInformationKVO = true
+        self.needsInformation = false
+        isSuppressingNeedsInformationKVO = false
+    }
+
+    private static func lineLooksLikeWebsite(_ line: String) -> Bool {
+        let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.contains("://")
+    }
+
+    @objc(preprocessedCaskInformation:)
+    open class func preprocessedCaskInformation(_ output: String?) -> String? {
+        guard let output else { return nil }
+        var lines = output.components(separatedBy: "\n")
+        guard !lines.isEmpty else { return output }
+
+        var header = lines[0]
+        if header.hasPrefix("==> ") {
+            header = String(header.dropFirst(4))
+        }
+        header = header.replacingOccurrences(of: " (auto_updates)", with: "")
+        lines[0] = header
+
+        for i in 1..<lines.count {
+            let line = lines[i]
+            if line == "Installed" || line.hasPrefix("Installed (") {
+                lines.remove(at: i)
+                break
+            }
+            if line == "Not installed" {
+                break
+            }
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    @objc(installLocationFromLines:startingAtIndex:)
+    open class func installLocation(fromLines lines: [String]?, startingAtIndex startIndex: UInt) -> String? {
+        guard let lines else { return nil }
+        let installedVersionsHeading = "==> Installed Versions"
+        let start = Int(startIndex)
+        guard start >= 0 && start < lines.count else { return nil }
+
+        for index in start..<lines.count {
+            let line = lines[index]
+            if line.hasPrefix("Aliases:") || line.hasPrefix("From:") || line.hasPrefix("License:") {
+                continue
+            }
+            if line == "Not installed" {
+                return nil
+            }
+            if line.hasPrefix("Installed") {
+                if index + 1 < lines.count {
+                    for versionIndex in (index + 1)..<lines.count {
+                        if lines[versionIndex] != installedVersionsHeading {
+                            continue
+                        }
+                        if versionIndex + 1 < lines.count {
+                            for buildIndex in (versionIndex + 1)..<lines.count {
+                                let build = lines[buildIndex]
+                                if !build.isEmpty {
+                                    return build.hasPrefix("==>") ? nil : build
+                                }
+                            }
+                        }
+                        return nil
+                    }
+                }
+                return nil
+            }
+            if line.hasPrefix("==>") {
+                return nil
+            }
+            if line.isEmpty {
+                return (index + 1 < lines.count) ? lines[index + 1] : nil
+            }
+            return line
+        }
+        return nil
+    }
+
+    @discardableResult
+    @objc open func getInformation() -> Bool {
+        if self.information == nil {
+            guard let provider = self.dataProvider() else {
+                resetNeedsInformationFlag()
+                return false
+            }
+            let infoSelector = self.cask
+                ? NSSelectorFromString("informationForCaskName:")
+                : NSSelectorFromString("informationForFormulaName:")
+            guard (provider as AnyObject).responds(to: infoSelector) else {
+                resetNeedsInformationFlag()
+                return false
+            }
+            let fetchedInfo: String?
+            if self.cask {
+                fetchedInfo = provider.information?(forCaskName: self.name)
+            } else {
+                fetchedInfo = provider.information(forFormulaName: self.name)
+            }
+            guard let fetchedInfo, (fetchedInfo as NSString).range(of: "\n").location != NSNotFound else {
+                return false
+            }
+            self.information = fetchedInfo
+        }
+
+        guard var output = self.information else {
+            resetNeedsInformationFlag()
+            return false
+        }
+
+        if output.isEmpty {
+            resetNeedsInformationFlag()
+            return true
+        }
+
+        if output.hasPrefix("Error") {
+            NSLog("Error parsing formula with name: %@", self.name ?? "")
+            resetNeedsInformationFlag()
+            self.information = nil
+            self.latestVersion = nil
+            self.version = nil
+            self.shortDescription = nil
+            return true
+        }
+
+        if self.cask, let preprocessed = Self.preprocessedCaskInformation(output) {
+            output = preprocessed
+        }
+
+        var lines = output.components(separatedBy: "\n")
+        if !lines.isEmpty && lines[0].hasPrefix("==> ") {
+            lines[0] = String(lines[0].dropFirst(4))
+        }
+
+        parseInformationBody(lines: lines, output: output)
+
+        resetNeedsInformationFlag()
+        NotificationCenter.default.post(name: Self.didUpdateNotification, object: self)
+        return true
+    }
+
+    private func parseInformationBody(lines: [String], output: String) {
+        guard !lines.isEmpty else { return }
+        let line0 = lines[0] as NSString
+        let colonRange = line0.range(of: ":")
+        guard colonRange.location != NSNotFound, colonRange.location + 2 <= line0.length else {
+            return
+        }
+        self.latestVersion = line0.substring(from: colonRange.location + 2)
+
+        var lineIndex = 1
+        guard lineIndex < lines.count else { return }
+        var line = lines[lineIndex]
+
+        if Self.lineLooksLikeWebsite(line) {
+            self.website = URL(string: line)
+        } else {
+            self.shortDescription = line
+            lineIndex = 2
+            guard lineIndex < lines.count else { return }
+            line = lines[lineIndex]
+            self.website = URL(string: line)
+        }
+
+        lineIndex += 1
+        guard lineIndex < lines.count else { return }
+        line = lines[lineIndex]
+        if (line as NSString).range(of: "Conflicts with:").location != NSNotFound {
+            if line == "Conflicts with:" {
+                var conflictList: [String] = []
+                repeat {
+                    lineIndex += 1
+                    guard lineIndex < lines.count else { return }
+                    line = lines[lineIndex]
+                    if line.hasPrefix("  ") {
+                        conflictList.append(line.trimmingCharacters(in: .whitespacesAndNewlines))
+                    }
+                } while line.hasPrefix("  ")
+                self.conflicts = conflictList.joined(separator: ", ")
+            } else {
+                let nsLine = line as NSString
+                guard 16 <= nsLine.length else { return }
+                self.conflicts = nsLine.substring(from: 16)
+                lineIndex += 1
+            }
+        }
+
+        self.installPath = Self.installLocation(fromLines: lines, startingAtIndex: UInt(max(0, lineIndex)))
+
+        let nsOutput = output as NSString
+        var rangeDeps = nsOutput.range(of: Self.identifierDependencies)
+        let rangeOpts = nsOutput.range(of: Self.identifierOptions)
+        var rangeCvts = nsOutput.range(of: Self.identifierCaveats)
+
+        if rangeDeps.location != NSNotFound {
+            let startLoc = rangeDeps.length + rangeDeps.location + 1
+            let depLen: Int
+            if rangeOpts.location != NSNotFound {
+                depLen = rangeOpts.location - startLoc
+            } else if rangeCvts.location != NSNotFound {
+                depLen = rangeCvts.location - startLoc
+            } else {
+                depLen = nsOutput.length - startLoc
+            }
+            guard startLoc >= 0, depLen >= 0, startLoc + depLen <= nsOutput.length else {
+                return
+            }
+            rangeDeps = NSRange(location: startLoc, length: depLen)
+            var deps: [String] = []
+            let finishedTitle = NSLocalizedString("Homebrew_Task_Finished", comment: "")
+            nsOutput.enumerateSubstrings(in: rangeDeps, options: .byLines) { substring, _, _, _ in
+                if let substring, (substring as NSString).range(of: finishedTitle).location == NSNotFound {
+                    deps.append(substring)
+                }
+            }
+            self.dependencies = deps.joined(separator: "; ")
+        } else {
+            self.dependencies = nil
+        }
+
+        if rangeOpts.location != NSNotFound {
+            let startLoc = rangeOpts.length + rangeOpts.location + 1
+            guard startLoc >= 0, startLoc <= nsOutput.length else { return }
+            var optionsString = nsOutput.substring(from: startLoc) as NSString
+            var parsedOptions: [BPFormulaOption] = []
+            rangeCvts = optionsString.range(of: Self.identifierCaveats)
+            if rangeCvts.location != NSNotFound {
+                optionsString = optionsString.substring(to: rangeCvts.location) as NSString
+            }
+            var currentOption: BPFormulaOption?
+            (optionsString as String).enumerateLines { optLine, stop in
+                if optLine.hasPrefix("--") {
+                    let opt = BPFormulaOption()
+                    opt.name = optLine
+                    currentOption = opt
+                } else if let opt = currentOption {
+                    opt.explanation = optLine.trimmingCharacters(in: .whitespacesAndNewlines)
+                    parsedOptions.append(opt)
+                    currentOption = nil
+                } else {
+                    stop = true
+                }
+            }
+            self.options = parsedOptions
+        } else {
+            self.options = nil
+        }
+    }
+
+    @objc open func isInstalled() -> Bool {
+        guard let mgr = bpSharedHomebrewManager() else { return false }
+        return mgr.status(forFormula: self) != 0
+    }
+
+    @objc open func isOutdated() -> Bool {
+        guard let mgr = bpSharedHomebrewManager() else { return false }
+        return mgr.status(forFormula: self) == 2
+    }
+
+    open override var description: String {
+        let ptr = Unmanaged.passUnretained(self).toOpaque()
+        return "\(NSStringFromClass(type(of: self))) <\(ptr)> name:\(name ?? "(null)") version:\(version ?? "(null)") latestVerson:\(latestVersion ?? "(null)")"
+    }
+
+    @objc open var shortLatestVersion: String? {
+        guard let latestVersion else { return nil }
+        let components = latestVersion.components(separatedBy: " ")
+        if components.count == 3 || components.count == 4 {
+            return components[1]
+        }
+        return latestVersion
+    }
+
+    @objc open func dataProvider() -> (any BPFormulaDataProvider)? {
+        if let customDataProvider {
+            return customDataProvider
+        }
+        if let providerClass = type(of: self).defaultDataProviderClass as? NSObject.Type {
+            return providerClass.init() as? any BPFormulaDataProvider
+        }
+        return bpSharedHomebrewInterface() as? any BPFormulaDataProvider
+    }
+
+    deinit {
+        if isObservingNeedsInformation {
+            super.removeObserver(self, forKeyPath: "needsInformation", context: &Self.kvoContext)
+        }
+    }
+}
+
+@objc(BPCustomFormula)
+public final class BPCustomFormula: BPFormula, @unchecked Sendable {
+    public override class var defaultDataProviderClass: AnyClass? {
+        NSClassFromString("BPFormulaTestDataProvider")
+    }
+}
+
+@objc(BPInformationCachedFormula)
+public final class BPInformationCachedFormula: BPFormula, @unchecked Sendable {
+    public override var information: String? {
+        get { "cached mock information" }
+        set { super.information = newValue }
+    }
+}
+
+@objc(BPModernFormula)
+public final class BPModernFormula: BPFormula, @unchecked Sendable {
+    public override class var defaultDataProviderClass: AnyClass? {
+        NSClassFromString("BPModernInfoDataProvider")
+    }
+}
+
+@objc(BPCompatFormula)
+public final class BPCompatFormula: BPFormula, @unchecked Sendable {
+    @objc public var provider: (any BPFormulaDataProvider)? {
+        get { customDataProvider }
+        set { customDataProvider = newValue }
+    }
+}
+
+// MARK: - BPHomebrewInterface, BPMockHomebrewInterface, BPHomebrewManager & Test Subclasses
+
+@objc(BPFormulaStatus)
+public enum BPFormulaStatus: Int, Sendable {
+    @objc(kBPFormulaNotInstalled) case notInstalled = 0
+    @objc(kBPFormulaInstalled) case installed = 1
+    @objc(kBPFormulaOutdated) case outdated = 2
+}
+
+@objc(BPHomebrewInterfaceDelegate)
+public protocol BPHomebrewInterfaceDelegate: NSObjectProtocol {
+    @objc(homebrewInterfaceDidUpdateFormulaeRebuildingCatalogs:)
+    func homebrewInterfaceDidUpdateFormulaeRebuildingCatalogs(_ shouldRebuildCatalogs: Bool)
+
+    @objc(homebrewInterfaceShouldDisplayNoBrewMessage:)
+    func homebrewInterfaceShouldDisplayNoBrewMessage(_ yesOrNo: Bool)
+}
+
+@objc private protocol BPHelperClientClassBridge: NSObjectProtocol {
+    @objc(sharedClient)
+    func sharedClient() -> AnyObject?
+}
+
+@objc private protocol BPHelperClientInstanceBridge: NSObjectProtocol {
+    @objc(cancelCurrentCommand)
+    func cancelCurrentCommand()
+
+    @objc(runBrewWithArguments:outputMarker:outputBlock:)
+    func runBrew(
+        withArguments arguments: [Any],
+        outputMarker marker: String?,
+        outputBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool
+}
+
+@inline(__always)
+private func bpSharedHelperClient() -> BPHelperClientInstanceBridge? {
+    guard let cls = NSClassFromString("BPHelperClient") else { return nil }
+    let classBridge = unsafeBitCast(cls as AnyObject, to: BPHelperClientClassBridge.self)
+    guard let obj = classBridge.sharedClient() else { return nil }
+    return unsafeBitCast(obj, to: BPHelperClientInstanceBridge.self)
+}
+
+@objc(BPHomebrewInterfaceListCall)
+open class BPHomebrewInterfaceListCall: NSObject, @unchecked Sendable {
+    private var _argumentsStorage: NSArray?
+
+    @objc public var arguments: [Any] {
+        (_argumentsStorage as? [Any]) ?? []
+    }
+
+    @objc(initWithArguments:)
+    public init(arguments: [Any]?) {
+        self._argumentsStorage = (arguments as NSArray?)?.copy() as? NSArray
+        super.init()
+    }
+
+    public override convenience init() {
+        self.init(arguments: [])
+    }
+
+    @objc(parseData:)
+    open func parseData(_ data: String?) -> [BPFormula] {
+        guard let data else { return [] }
+        var dataLines = data.components(separatedBy: "\n")
+        if !dataLines.isEmpty {
+            dataLines.removeLast()
+        }
+        var formulae: [BPFormula] = []
+        formulae.reserveCapacity(dataLines.count)
+        for item in dataLines {
+            if let formula = parseFormulaItem(item) {
+                formulae.append(formula)
+            }
+        }
+        return formulae
+    }
+
+    @objc(parseFormulaItem:)
+    open func parseFormulaItem(_ item: String) -> BPFormula? {
+        BPFormula.formula(withName: item)
+    }
+}
+
+@objc(BPHomebrewInterfaceListCallInstalled)
+open class BPHomebrewInterfaceListCallInstalled: BPHomebrewInterfaceListCall, @unchecked Sendable {
+    @objc public init() {
+        super.init(arguments: ["list", "--versions"])
+    }
+
+    public override init(arguments: [Any]?) {
+        super.init(arguments: arguments)
+    }
+
+    open override func parseFormulaItem(_ item: String) -> BPFormula? {
+        let aux = item.components(separatedBy: " ")
+        return BPFormula.formula(withName: aux.first, andVersion: aux.last)
+    }
+}
+
+@objc(BPHomebrewInterfaceListCallAll)
+open class BPHomebrewInterfaceListCallAll: BPHomebrewInterfaceListCall, @unchecked Sendable {
+    @objc public init() {
+        super.init(arguments: ["formulae"])
+    }
+}
+
+@objc(BPHomebrewInterfaceListCallLeaves)
+open class BPHomebrewInterfaceListCallLeaves: BPHomebrewInterfaceListCall, @unchecked Sendable {
+    @objc public init() {
+        super.init(arguments: ["leaves"])
+    }
+}
+
+@objc(BPHomebrewInterfaceListCallUpgradeable)
+open class BPHomebrewInterfaceListCallUpgradeable: BPHomebrewInterfaceListCall, @unchecked Sendable {
+    @objc public init() {
+        super.init(arguments: ["outdated", "--formula", "--verbose"])
+    }
+
+    public override init(arguments: [Any]?) {
+        super.init(arguments: arguments)
+    }
+
+    open override func parseFormulaItem(_ item: String) -> BPFormula? {
+        let regexString = "(\\S+)\\s\\(((.*, )*(.*))\\) (?:<|!=) (\\S+)"
+        var formula: BPFormula?
+        if let regex = try? NSRegularExpression(pattern: regexString, options: .caseInsensitive) {
+            let nsItem = item as NSString
+            regex.enumerateMatches(in: item, options: [], range: NSRange(location: 0, length: nsItem.length)) { result, _, _ in
+                guard let result, result.resultType == .regularExpression, result.numberOfRanges >= 4 else { return }
+                let formulaName = nsItem.substring(with: result.range(at: 1))
+                let installedVersion = nsItem.substring(with: result.range(at: result.numberOfRanges - 2))
+                let latestVersion = nsItem.substring(with: result.range(at: result.numberOfRanges - 1))
+                formula = BPFormula.formula(withName: formulaName, version: installedVersion, andLatestVersion: latestVersion)
+            }
+        }
+        return formula ?? BPFormula.formula(withName: item)
+    }
+}
+
+@objc(BPHomebrewInterfaceListCallRepositories)
+open class BPHomebrewInterfaceListCallRepositories: BPHomebrewInterfaceListCall, @unchecked Sendable {
+    @objc public init() {
+        super.init(arguments: ["tap"])
+    }
+}
+
+@objc(BPHomebrewInterfaceListCallPinned)
+open class BPHomebrewInterfaceListCallPinned: BPHomebrewInterfaceListCall, @unchecked Sendable {
+    @objc public init() {
+        super.init(arguments: ["list", "--formula", "--pinned"])
+    }
+}
+
+@objc(BPHomebrewInterfaceListCallPinnedCasks)
+open class BPHomebrewInterfaceListCallPinnedCasks: BPHomebrewInterfaceListCall, @unchecked Sendable {
+    @objc public init() {
+        super.init(arguments: ["list", "--cask", "--pinned"])
+    }
+
+    open override func parseFormulaItem(_ item: String) -> BPFormula? {
+        let formula = super.parseFormulaItem(item)
+        formula?.cask = true
+        return formula
+    }
+}
+
+@objc(BPHomebrewInterfaceListCallInstalledCasks)
+open class BPHomebrewInterfaceListCallInstalledCasks: BPHomebrewInterfaceListCallInstalled, @unchecked Sendable {
+    @objc public override init() {
+        super.init(arguments: ["list", "--cask", "--versions"])
+    }
+
+    open override func parseFormulaItem(_ item: String) -> BPFormula? {
+        let cask = super.parseFormulaItem(item)
+        cask?.cask = true
+        return cask
+    }
+}
+
+@objc(BPHomebrewInterfaceListCallOutdatedCasks)
+open class BPHomebrewInterfaceListCallOutdatedCasks: BPHomebrewInterfaceListCallUpgradeable, @unchecked Sendable {
+    @objc public override init() {
+        var arguments = ["outdated", "--cask", "--verbose"]
+        if BPPreferences.greedyCaskUpgrades {
+            arguments.append("--greedy")
+        }
+        super.init(arguments: arguments)
+    }
+
+    open override func parseFormulaItem(_ item: String) -> BPFormula? {
+        let cask = super.parseFormulaItem(item)
+        cask?.cask = true
+        return cask
+    }
+}
+
+@objc(BPHomebrewInterfaceListCallAllCasks)
+open class BPHomebrewInterfaceListCallAllCasks: BPHomebrewInterfaceListCall, @unchecked Sendable {
+    @objc public init() {
+        super.init(arguments: ["casks"])
+    }
+
+    open override func parseFormulaItem(_ item: String) -> BPFormula? {
+        let cask = super.parseFormulaItem(item)
+        cask?.cask = true
+        return cask
+    }
+}
+
+@objc(BPHomebrewInterface)
+open class BPHomebrewInterface: NSObject, BPFormulaDataProvider, BPTaskCompleted, @unchecked Sendable {
+    private static let cakebrewOutputIdentifier = "+++++Cakebrew+++++"
+    private static let kDebugWarningFormat = "User Shell: %@\nCommand: %@\nOS X Version: %@\n\nThe outputs are going to be different if run from Xcode!!\nInstalling and upgrading formulas is not advised in DEBUG mode!\n\n"
+
+    #if DEBUG
+    nonisolated(unsafe) private static var sTestingSharedInterface: BPHomebrewInterface?
+    #endif
+    nonisolated(unsafe) private static var sDefaultSharedInterface: BPHomebrewInterface?
+
+    // All stored properties have zero-byte defaults so class_createInstance(Cls, 0) works safely.
+    @objc public weak var delegate: (any BPHomebrewInterfaceDelegate)?
+    @objc public var brewTransport: BPBrewTransport = .direct
+    private var _pathShellStorage: NSString?
+    private var _tasksStorage: NSMutableDictionary?
+    private var _taskOperationsQueueStorage: DispatchQueue?
+    private var _currentOperationTaskStorage: BPTask?
+
+    @objc public var path_shell: String? {
+        get { _pathShellStorage as String? }
+        set { _pathShellStorage = (newValue as NSString?)?.copy() as? NSString }
+    }
+
+    @objc public var currentOperationTask: BPTask? {
+        get { _currentOperationTaskStorage }
+        set { _currentOperationTaskStorage = newValue }
+    }
+
+    @objc public var tasks: NSMutableDictionary {
+        get {
+            bpSynchronized(self) {
+                if let existing = _tasksStorage {
+                    return existing
+                }
+                let created = NSMutableDictionary()
+                _tasksStorage = created
+                return created
+            }
+        }
+        set {
+            bpSynchronized(self) {
+                _tasksStorage = newValue
+            }
+        }
+    }
+
+    @objc public var taskOperationsQueue: DispatchQueue {
+        get {
+            bpSynchronized(self) {
+                if let existing = _taskOperationsQueueStorage {
+                    return existing
+                }
+                let created = DispatchQueue(
+                    label: "com.brunophilipe.Cakebrew.BPHomebrewInterface.Tasks",
+                    qos: .userInitiated,
+                    attributes: .concurrent
+                )
+                _taskOperationsQueueStorage = created
+                return created
+            }
+        }
+        set {
+            bpSynchronized(self) {
+                _taskOperationsQueueStorage = newValue
+            }
+        }
+    }
+
+    #if DEBUG
+    @objc(setSharedInterfaceForTesting:)
+    public class func setSharedInterfaceForTesting(_ interface: BPHomebrewInterface?) {
+        bpSynchronized(self) {
+            sTestingSharedInterface = interface
+        }
+    }
+    #endif
+
+    @objc public class func sharedInterface() -> BPHomebrewInterface {
+        bpSynchronized(self) {
+            #if DEBUG
+            if let testing = sTestingSharedInterface {
+                return testing
+            }
+            #endif
+            if let existing = sDefaultSharedInterface {
+                return existing
+            }
+            let instance: BPHomebrewInterface
+            if ProcessInfo.processInfo.arguments.contains("-BPMockBrew"),
+               let mockClass = NSClassFromString("BPMockHomebrewInterface") as? BPHomebrewInterface.Type {
+                instance = mockClass.init(uniqueInstance: ())
+            } else {
+                instance = BPHomebrewInterface(uniqueInstance: ())
+            }
+            sDefaultSharedInterface = instance
+            return instance
+        }
+    }
+
+    @objc(initUniqueInstance)
+    public required init(uniqueInstance: Void = ()) {
+        super.init()
+        _tasksStorage = NSMutableDictionary()
+        _taskOperationsQueueStorage = DispatchQueue(
+            label: "com.brunophilipe.Cakebrew.BPHomebrewInterface.Tasks",
+            qos: .userInitiated,
+            attributes: .concurrent
+        )
+        brewTransport = Self.defaultTransport(whenSandboxed: Self.isRunningSandboxed())
+    }
+
+    public override init() {
+        super.init()
+        _tasksStorage = NSMutableDictionary()
+        _taskOperationsQueueStorage = DispatchQueue(
+            label: "com.brunophilipe.Cakebrew.BPHomebrewInterface.Tasks",
+            qos: .userInitiated,
+            attributes: .concurrent
+        )
+        brewTransport = Self.defaultTransport(whenSandboxed: Self.isRunningSandboxed())
+    }
+
+    @objc open func cleanup() {
+        let dict = self.tasks
+        let snapshot: [BPTask] = bpSynchronized(dict) {
+            (dict.allValues as? [BPTask]) ?? []
+        }
+        for task in snapshot {
+            task.cleanup()
+        }
+    }
+
+    @objc open func cancelAllRunningTasks() {
+        let dict = self.tasks
+        let snapshot: [BPTask] = bpSynchronized(dict) {
+            (dict.allValues as? [BPTask]) ?? []
+        }
+        for task in snapshot {
+            task.cancel()
+        }
+        currentOperationTask?.cancel()
+    }
+
+    @objc open func cancelCurrentOperation() {
+        if brewTransport == .helper {
+            bpSharedHelperClient()?.cancelCurrentCommand()
+            return
+        }
+        currentOperationTask?.cancel()
+    }
+
+    @objc open var hasCancellableOperation: Bool {
+        if brewTransport == .helper {
+            return true
+        }
+        return currentOperationTask != nil
+    }
+
+    @objc public class func installationURL() -> URL {
+        URL(string: "https://brew.sh")!
+    }
+
+    @objc(discoveryResultForOutput:exitStatus:)
+    public class func discoveryResult(forOutput output: String?, exitStatus status: Int32) -> BPHomebrewDiscoveryResult {
+        guard let output else { return .checkFailed }
+        let start = output.components(separatedBy: "+++++Cakebrew Discovery+++++\n")
+        guard start.count == 2, let last = start.last else { return .checkFailed }
+        let end = last.components(separatedBy: "+++++Cakebrew Discovery End+++++\n")
+        guard end.count == 2, let first = end.first else { return .checkFailed }
+        let path = first.trimmingCharacters(in: .whitespacesAndNewlines)
+        if status == 1 && path.isEmpty {
+            return .missing
+        }
+        let nsPath = path as NSString
+        if status != 0 || !nsPath.isAbsolutePath || nsPath.rangeOfCharacter(from: .newlines).location != NSNotFound {
+            return .checkFailed
+        }
+        var directory: ObjCBool = false
+        let files = FileManager.default
+        let isExec = files.fileExists(atPath: path, isDirectory: &directory)
+            && !directory.boolValue
+            && files.isExecutableFile(atPath: path)
+        return isExec ? .available : .checkFailed
+    }
+
+    @objc open func discoverHomebrew() -> BPHomebrewDiscoveryResult {
+        self.path_shell = getValidUserShellPath()
+        guard let shell = self.path_shell else { return .invalidShell }
+        let command = "printf '\\n+++++Cakebrew Discovery+++++\\n'; command -v brew; cakebrew_status=$?; printf '+++++Cakebrew Discovery End+++++\\n'; exit \"$cakebrew_status\""
+        let task = BPTask(path: shell, arguments: ["-l", "-c", command])
+        let status = task.execute()
+        return Self.discoveryResult(forOutput: task.output, exitStatus: status)
+    }
+
+    @objc open func getValidUserShellPath() -> String? {
+        guard let userShell = ProcessInfo.processInfo.environment["SHELL"], !userShell.isEmpty else {
+            return nil
+        }
+        var isValidShell = false
+        if let shellsContent = try? String(contentsOfFile: "/etc/shells", encoding: .utf8) {
+            for validShell in shellsContent.components(separatedBy: .newlines) {
+                if validShell.trimmingCharacters(in: .whitespacesAndNewlines) == userShell {
+                    isValidShell = true
+                    break
+                }
+            }
+        }
+        guard isValidShell, FileManager.default.isExecutableFile(atPath: userShell) else {
+            return nil
+        }
+        #if DEBUG
+        NSLog("shell: %@", userShell)
+        #endif
+        return userShell
+    }
+
+    @objc(formatArguments:sendOutputId:)
+    open func formatArguments(_ extraArguments: [Any]?, sendOutputId sendOutputID: Bool) -> [Any] {
+        let command = sendOutputID
+            ? "echo \"\(Self.cakebrewOutputIdentifier)\";brew \"$@\""
+            : "brew \"$@\""
+        var arguments: [Any] = ["-l", "-c", command, "brew"]
+        if let extraArguments {
+            arguments.append(contentsOf: extraArguments)
+        }
+        return arguments
+    }
+
+    @objc(task:didFinishWithOutput:error:)
+    open func task(_ task: BPTask, didFinishWithOutput output: String, error: String) {
+        let dict = self.tasks
+        let key = String(format: "%p", Int(bitPattern: Unmanaged.passUnretained(task).toOpaque()))
+        bpSynchronized(dict) {
+            dict.removeObject(forKey: key)
+        }
+    }
+
+    @objc(formatAutoremoveArguments:)
+    open func formatAutoremoveArguments(_ arguments: [Any]) -> [Any] {
+        var result: [Any] = [
+            "-l",
+            "-c",
+            "printf '\\n+++++Cakebrew Autoremove+++++\\n'; /usr/bin/env HOMEBREW_NO_AUTOREMOVE=1 HOMEBREW_NO_AUTO_UPDATE=1 brew \"$@\"",
+            "brew"
+        ]
+        result.append(contentsOf: arguments)
+        return result
+    }
+
+    @objc(executeAutoremoveArguments:progress:output:)
+    open func executeAutoremoveArguments(
+        _ arguments: [Any],
+        progress: Progress?,
+        output: (@Sendable (String) -> Void)?
+    ) -> Int32 {
+        guard brewTransport == .direct, let shell = path_shell, progress?.isCancelled != true else {
+            return -1
+        }
+        let task = BPTask(path: shell, arguments: formatAutoremoveArguments(arguments))
+        task.delegate = self
+        let preview = (arguments.first as? String) == "autoremove"
+        task.updateBlock = preview ? nil : output
+        task.cancellationProgress = progress
+        progress?.cancellationHandler = {
+            DispatchQueue.global(qos: .userInitiated).async {
+                task.cancel()
+            }
+        }
+        if progress?.isCancelled == true {
+            task.cancel()
+        }
+        let dict = self.tasks
+        let key = String(format: "%p", Int(bitPattern: Unmanaged.passUnretained(task).toOpaque()))
+        bpSynchronized(dict) {
+            dict[key] = task
+        }
+        let status = task.execute()
+        progress?.cancellationHandler = nil
+        task.cancellationProgress = nil
+        if preview {
+            let nsOut = task.output as NSString
+            let marker = nsOut.range(of: "+++++Cakebrew Autoremove+++++\n")
+            let clean = marker.location == NSNotFound
+                ? task.output
+                : nsOut.substring(from: marker.location + marker.length)
+            if let output {
+                let sep = task.error.isEmpty ? "" : "\n"
+                output("\(clean)\(sep)\(task.error)")
+            }
+            if marker.location == NSNotFound {
+                return -1
+            }
+        }
+        return status
+    }
+
+    @objc(previewAutoremoveWithProgress:)
+    open func previewAutoremove(withProgress progress: Progress?) -> BPAutoremovePreview {
+        if brewTransport != .direct {
+            return BPAutoremovePreview.preview(
+                withOutput: NSLocalizedString(
+                    "Unused dependency removal requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported.",
+                    comment: ""
+                ),
+                succeeded: false
+            )
+        }
+        nonisolated(unsafe) let raw = NSMutableString()
+        let status = executeAutoremoveArguments(["autoremove", "--dry-run"], progress: progress) { chunk in
+            raw.append(chunk)
+        }
+        return BPAutoremovePreview.preview(
+            withOutput: raw as String,
+            succeeded: status == 0 && progress?.isCancelled != true
+        )
+    }
+
+    @objc(removeUnusedFormulae:progress:output:)
+    open func removeUnusedFormulae(
+        _ names: [String]?,
+        progress: Progress?,
+        output: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        let count = names?.count ?? 0
+        let suffix = count == 1 ? "" : "e"
+        let header = String(format: "==> Would autoremove %lu unneeded formula%@:\n", UInt(count), suffix)
+        let body = (names ?? []).joined(separator: "\n")
+        let validated = BPAutoremovePreview.preview(withOutput: header + body, succeeded: true)
+        guard validated.valid, count > 0, progress?.isCancelled != true, brewTransport == .direct else {
+            return false
+        }
+        let args: [Any] = ["uninstall", "--formula"] + validated.names
+        let status = executeAutoremoveArguments(args, progress: progress, output: output)
+        output?(String(format: NSLocalizedString("\nHomebrew exit status: %d\n", comment: ""), status))
+        return status == 0 && progress?.isCancelled != true
+    }
+
+    @objc(performBrewCommandWithArguments:dataReturnBlock:)
+    open func performBrewCommand(
+        withArguments arguments: [Any]?,
+        dataReturnBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        performAsyncBrewCommand(withArguments: arguments, wrapsSynchronousRequest: false, dataReturnBlock: block)
+    }
+
+    @objc(performAsyncBrewCommandWithArguments:wrapsSynchronousRequest:dataReturnBlock:)
+    open func performAsyncBrewCommand(
+        withArguments arguments: [Any]?,
+        wrapsSynchronousRequest isSynchronous: Bool,
+        dataReturnBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        performAsyncBrewCommand(
+            withArguments: arguments,
+            wrapsSynchronousRequest: isSynchronous,
+            progress: nil,
+            dataReturnBlock: block
+        )
+    }
+
+    @objc(performAsyncBrewCommandWithArguments:wrapsSynchronousRequest:progress:dataReturnBlock:)
+    open func performAsyncBrewCommand(
+        withArguments arguments: [Any]?,
+        wrapsSynchronousRequest isSynchronous: Bool,
+        progress: Progress?,
+        dataReturnBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        performAsyncBrewCommand(
+            withArguments: arguments,
+            wrapsSynchronousRequest: isSynchronous,
+            progress: progress,
+            includesCompletionMessage: true,
+            dataReturnBlock: block
+        )
+    }
+
+    @objc(performAsyncBrewCommandWithArguments:wrapsSynchronousRequest:includesCompletionMessage:dataReturnBlock:)
+    open func performAsyncBrewCommand(
+        withArguments arguments: [Any]?,
+        wrapsSynchronousRequest isSynchronous: Bool,
+        includesCompletionMessage: Bool,
+        dataReturnBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        performAsyncBrewCommand(
+            withArguments: arguments,
+            wrapsSynchronousRequest: isSynchronous,
+            progress: nil,
+            includesCompletionMessage: includesCompletionMessage,
+            dataReturnBlock: block
+        )
+    }
+
+    @objc(performAsyncBrewCommandWithArguments:wrapsSynchronousRequest:progress:includesCompletionMessage:dataReturnBlock:)
+    open func performAsyncBrewCommand(
+        withArguments arguments: [Any]?,
+        wrapsSynchronousRequest isSynchronous: Bool,
+        progress: Progress?,
+        includesCompletionMessage: Bool,
+        dataReturnBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        if brewTransport == .helper {
+            guard let client = bpSharedHelperClient() else { return false }
+            return client.runBrew(
+                withArguments: arguments ?? [],
+                outputMarker: isSynchronous ? Self.cakebrewOutputIdentifier : nil,
+                outputBlock: block
+            )
+        }
+
+        let formattedArgs = formatArguments(arguments, sendOutputId: isSynchronous)
+        guard let shell = path_shell, !formattedArgs.isEmpty else {
+            return false
+        }
+
+        let task = BPTask(path: shell, arguments: formattedArgs)
+        task.delegate = self
+        task.updateBlock = block
+        if let progress {
+            task.cancellationProgress = progress
+            progress.cancellationHandler = {
+                DispatchQueue.global(qos: .userInitiated).async {
+                    task.cancel()
+                }
+            }
+            if progress.isCancelled {
+                task.cancel()
+            }
+        }
+
+        if !isSynchronous {
+            currentOperationTask = task
+        }
+
+        let dict = self.tasks
+        let key = String(format: "%p", Int(bitPattern: Unmanaged.passUnretained(task).toOpaque()))
+        bpSynchronized(dict) {
+            dict[key] = task
+        }
+
+        #if DEBUG
+        if !isSynchronous {
+            let joined = formattedArgs.compactMap { $0 as? String }.joined(separator: " ")
+            let warning = String(
+                format: Self.kDebugWarningFormat,
+                shell,
+                joined,
+                ProcessInfo.processInfo.operatingSystemVersionString
+            )
+            invokeOutputBlock(block, withString: warning)
+        }
+        #endif
+
+        let status = task.execute()
+        progress?.cancellationHandler = nil
+        task.cancellationProgress = nil
+
+        if currentOperationTask === task {
+            currentOperationTask = nil
+        }
+
+        let taskDoneString = String(
+            format: "%@: (%d) %@ %@!",
+            NSLocalizedString("Homebrew_Task_Finished", comment: ""),
+            status,
+            NSLocalizedString("Homebrew_Task_Finished_At", comment: ""),
+            DateFormatter.localizedString(from: Date(), dateStyle: .short, timeStyle: .short)
+        )
+        if includesCompletionMessage {
+            invokeOutputBlock(block, withString: taskDoneString)
+        }
+
+        return status == 0
+    }
+
+    @objc(invokeOutputBlock:withString:)
+    open func invokeOutputBlock(_ block: ((String) -> Void)?, withString string: String) {
+        block?(string)
+    }
+
+    @objc open func isRunningBackgroundTask() -> Bool {
+        let dict = self.tasks
+        return bpSynchronized(dict) {
+            dict.count > 0
+        }
+    }
+
+    @objc(performSyncBrewCommandWithArguments:)
+    open func performSyncBrewCommand(withArguments arguments: [Any]?) -> String? {
+        var finalOutput: String?
+        let queue = self.taskOperationsQueue
+        queue.sync {
+            nonisolated(unsafe) let output = NSMutableString()
+            _ = self.performAsyncBrewCommand(withArguments: arguments, wrapsSynchronousRequest: true) { partialOutput in
+                output.append(partialOutput)
+            }
+            finalOutput = output.copy() as? String
+        }
+        return removeLoginShellOutput(fromString: finalOutput)
+    }
+
+    @objc(defaultTransportWhenSandboxed:)
+    public class func defaultTransport(whenSandboxed sandboxed: Bool) -> BPBrewTransport {
+        sandboxed ? .helper : .direct
+    }
+
+    @objc public class func isRunningSandboxed() -> Bool {
+        ProcessInfo.processInfo.environment["APP_SANDBOX_CONTAINER_ID"] != nil
+    }
+
+    @objc(isValidTapName:)
+    public class func isValidTapName(_ name: String?) -> Bool {
+        guard let name else { return false }
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let pattern = "^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$"
+        let nsTrimmed = trimmed as NSString
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return false }
+        return regex.numberOfMatches(in: trimmed, options: [], range: NSRange(location: 0, length: nsTrimmed.length)) == 1
+    }
+
+    @objc open func listPinnedCasks() -> [BPFormula]? {
+        let call = BPHomebrewInterfaceListCallPinnedCasks()
+        var output: NSString?
+        let succeeded = performCleanReadOnlyBrewCommand(withArguments: call.arguments, output: &output)
+        guard succeeded, let output else { return nil }
+        return call.parseData(output as String)
+    }
+
+    @objc(listMode:)
+    open func listMode(_ mode: BPListMode) -> [BPFormula]? {
+        let listCall: BPHomebrewInterfaceListCall
+        switch mode {
+        case .installed:
+            listCall = BPHomebrewInterfaceListCallInstalled()
+        case .all:
+            listCall = BPHomebrewInterfaceListCallAll()
+        case .leaves:
+            listCall = BPHomebrewInterfaceListCallLeaves()
+        case .outdated:
+            listCall = BPHomebrewInterfaceListCallUpgradeable()
+        case .repositories:
+            listCall = BPHomebrewInterfaceListCallRepositories()
+        case .pinned:
+            listCall = BPHomebrewInterfaceListCallPinned()
+        case .installedCasks:
+            listCall = BPHomebrewInterfaceListCallInstalledCasks()
+        case .outdatedCasks:
+            listCall = BPHomebrewInterfaceListCallOutdatedCasks()
+        case .allCasks:
+            listCall = BPHomebrewInterfaceListCallAllCasks()
+        default:
+            return nil
+        }
+
+        if mode == .outdated || mode == .outdatedCasks || mode == .pinned {
+            var output: NSString?
+            let succeeded = performCleanReadOnlyBrewCommand(withArguments: listCall.arguments, output: &output)
+            guard succeeded, let output else { return nil }
+            return listCall.parseData(output as String)
+        }
+
+        guard let string = performSyncBrewCommand(withArguments: listCall.arguments) else {
+            return nil
+        }
+        return listCall.parseData(string)
+    }
+
+    @objc(informationForFormulaName:)
+    open func information(forFormulaName name: String?) -> String? {
+        guard let name else { return nil }
+        return performSyncBrewCommand(withArguments: ["info", name])
+    }
+
+    @objc(listModeForRemovalRefresh:)
+    open func listMode(forRemovalRefresh mode: BPListMode) -> [BPFormula]? {
+        guard brewTransport == .direct else { return nil }
+        let listCall: BPHomebrewInterfaceListCall
+        switch mode {
+        case .installed:
+            listCall = BPHomebrewInterfaceListCallInstalled()
+        case .leaves:
+            listCall = BPHomebrewInterfaceListCallLeaves()
+        case .outdated:
+            listCall = BPHomebrewInterfaceListCallUpgradeable()
+        default:
+            return nil
+        }
+        var output: NSString?
+        guard performCleanReadOnlyBrewCommand(withArguments: listCall.arguments, output: &output),
+              let output else {
+            return nil
+        }
+        return listCall.parseData(output as String)
+    }
+
+    @objc open func listServicesForRemovalRefresh() -> [BPService]? {
+        guard brewTransport == .direct else { return nil }
+        var output: NSString?
+        guard performCleanReadOnlyBrewCommand(withArguments: ["services", "list", "--json"], output: &output) else {
+            return nil
+        }
+        return BPService.validatedServices(fromJSONString: output as String?)
+    }
+
+    @objc(informationForCaskName:)
+    open func information(forCaskName name: String?) -> String? {
+        guard let name else { return nil }
+        return performSyncBrewCommand(withArguments: ["info", "--cask", name])
+    }
+
+    @objc(serviceDetailsForName:)
+    open func serviceDetails(forName name: String?) -> BPServiceDetails {
+        guard let name, !name.isEmpty, !name.hasPrefix("-") else {
+            return BPServiceDetails.details(forName: name, output: "", succeeded: false)
+        }
+        if brewTransport == .helper {
+            return BPServiceDetails.details(
+                forName: name,
+                output: NSLocalizedString("Services_Details_Helper_Unavailable", comment: ""),
+                succeeded: false
+            )
+        }
+        var output: NSString?
+        let succeeded = performCleanReadOnlyBrewCommand(
+            withArguments: ["services", "info", "--json", name],
+            output: &output
+        )
+        return BPServiceDetails.details(forName: name, output: output as String?, succeeded: succeeded)
+    }
+
+    @objc(performCleanReadOnlyBrewCommandWithArguments:output:)
+    open func performCleanReadOnlyBrewCommand(
+        withArguments arguments: [Any]?,
+        output result: AutoreleasingUnsafeMutablePointer<NSString?>?
+    ) -> Bool {
+        var succeeded = false
+        var transcript: String?
+        let queue = self.taskOperationsQueue
+        queue.sync {
+            nonisolated(unsafe) let output = NSMutableString()
+            succeeded = self.performAsyncBrewCommand(
+                withArguments: arguments,
+                wrapsSynchronousRequest: true,
+                includesCompletionMessage: false
+            ) { chunk in
+                output.append(chunk)
+            }
+            transcript = self.removeLoginShellOutput(fromString: output as String)
+        }
+        result?.pointee = transcript as NSString?
+        return succeeded
+    }
+
+    @objc open func listServices() -> [BPService] {
+        if brewTransport == .direct {
+            var output: NSString?
+            let succeeded = performCleanReadOnlyBrewCommand(
+                withArguments: ["services", "list", "--json"],
+                output: &output
+            )
+            return succeeded ? BPService.services(fromJSONString: output as String?) : []
+        }
+        let output = performSyncBrewCommand(withArguments: ["services", "list", "--json"])
+        return output != nil ? BPService.services(fromJSONString: output) : []
+    }
+
+    @objc(startService:withReturnBlock:)
+    open func startService(_ name: String?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        guard let name else { return false }
+        return performBrewCommand(withArguments: ["services", "start", name], dataReturnBlock: block)
+    }
+
+    @objc(stopService:withReturnBlock:)
+    open func stopService(_ name: String?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        guard let name else { return false }
+        return performBrewCommand(withArguments: ["services", "stop", name], dataReturnBlock: block)
+    }
+
+    @objc(restartService:withReturnBlock:)
+    open func restartService(_ name: String?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        guard let name else { return false }
+        return performBrewCommand(withArguments: ["services", "restart", name], dataReturnBlock: block)
+    }
+
+    @objc(dependantsForFormulaName:onlyInstalled:)
+    open func dependants(forFormulaName name: String?, onlyInstalled: Bool) -> String? {
+        guard let name else { return nil }
+        var arguments = ["uses"]
+        if onlyInstalled {
+            arguments.append("--installed")
+        }
+        arguments.append(name)
+        return performSyncBrewCommand(withArguments: arguments)
+    }
+
+    @objc(removeLoginShellOutputFromString:)
+    open func removeLoginShellOutput(fromString string: String?) -> String? {
+        guard let string else { return nil }
+        let nsString = string as NSString
+        let range = nsString.range(of: Self.cakebrewOutputIdentifier)
+        if range.location != NSNotFound && range.location + range.length + 1 <= nsString.length {
+            return nsString.substring(from: range.location + range.length + 1)
+        }
+        return string
+    }
+
+    @objc(updateWithReturnBlock:)
+    open func update(withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        let val = performBrewCommand(withArguments: ["update"], dataReturnBlock: block)
+        sendDelegateFormulaeUpdatedCall(forCommand: "update")
+        return val
+    }
+
+    private class func upgradeArguments(withPrefix prefix: [String], names: [Any]?) -> [String] {
+        var arguments = prefix
+        if let names {
+            for raw in names {
+                if let name = raw as? String {
+                    let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !trimmed.isEmpty {
+                        arguments.append(trimmed)
+                    }
+                }
+            }
+        }
+        return arguments
+    }
+
+    @objc(argumentsForUpgradingFormulae:)
+    public class func arguments(forUpgradingFormulae formulae: [Any]?) -> [String] {
+        upgradeArguments(withPrefix: ["upgrade"], names: formulae)
+    }
+
+    @objc(argumentsForUpgradingCasks:)
+    public class func arguments(forUpgradingCasks casks: [Any]?) -> [String] {
+        upgradeArguments(withPrefix: ["upgrade", "--cask"], names: casks)
+    }
+
+    @objc(upgradeFormulae:withReturnBlock:)
+    open func upgradeFormulae(_ formulae: [Any]?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        let val = performBrewCommand(
+            withArguments: Self.arguments(forUpgradingFormulae: formulae),
+            dataReturnBlock: block
+        )
+        sendDelegateFormulaeUpdatedCall(forCommand: "upgrade")
+        return val
+    }
+
+    @objc(upgradeSelectedFormulae:progress:withReturnBlock:)
+    open func upgradeSelectedFormulae(
+        _ formulae: [BPFormula]?,
+        progress: Progress?,
+        withReturnBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        upgradeSelectionReporting(formulae, progress: progress, withReturnBlock: block).succeeded
+    }
+
+    @objc(upgradeSelectionReporting:progress:withReturnBlock:)
+    open func upgradeSelectionReporting(
+        _ formulae: [BPFormula]?,
+        progress: Progress?,
+        withReturnBlock block: (@Sendable (String) -> Void)?
+    ) -> BPUpgradeResult {
+        let plan = BPUpgradePlan(selection: formulae)
+        var attempted = false
+        let result = plan.executeReporting(withProgress: progress) { [weak self] arguments in
+            guard let self else { return false }
+            attempted = true
+            return self.performAsyncBrewCommand(
+                withArguments: arguments,
+                wrapsSynchronousRequest: false,
+                progress: progress,
+                dataReturnBlock: block
+            )
+        }
+        if attempted {
+            sendDelegateFormulaeUpdatedCall(forCommand: "upgrade")
+        }
+        return result
+    }
+
+    @objc(upgradeCasks:withReturnBlock:)
+    open func upgradeCasks(_ casks: [Any]?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        let val = performBrewCommand(
+            withArguments: Self.arguments(forUpgradingCasks: casks),
+            dataReturnBlock: block
+        )
+        sendDelegateFormulaeUpdatedCall(forCommand: "upgrade")
+        return val
+    }
+
+    @objc(installFormula:withOptions:andReturnBlock:)
+    open func installFormula(
+        _ formula: String?,
+        withOptions options: [Any]?,
+        andReturnBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        guard let formula else { return false }
+        var params: [Any] = ["install", formula]
+        if let options {
+            params.append(contentsOf: options)
+        }
+        let val = performBrewCommand(withArguments: params, dataReturnBlock: block)
+        sendDelegateFormulaeUpdatedCall(forCommand: "install")
+        return val
+    }
+
+    @objc(installCask:withReturnBlock:)
+    open func installCask(_ cask: String?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        guard let cask else { return false }
+        let val = performBrewCommand(withArguments: ["install", "--cask", cask], dataReturnBlock: block)
+        sendDelegateFormulaeUpdatedCall(forCommand: "install")
+        return val
+    }
+
+    @objc(uninstallFormula:withReturnBlock:)
+    open func uninstallFormula(_ formula: String?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        guard let formula else { return false }
+        let val = performBrewCommand(withArguments: ["uninstall", formula], dataReturnBlock: block)
+        sendDelegateFormulaeUpdatedCall(forCommand: "uninstall")
+        return val
+    }
+
+    @objc(argumentsForUninstallingCask:zap:)
+    public class func arguments(forUninstallingCask cask: String?, zap: Bool) -> [String] {
+        var arguments = ["uninstall", "--cask"]
+        if zap {
+            arguments.append("--zap")
+        }
+        if let token = cask?.trimmingCharacters(in: .whitespacesAndNewlines), !token.isEmpty {
+            arguments.append(token)
+        }
+        return arguments
+    }
+
+    @objc(uninstallCask:withReturnBlock:)
+    open func uninstallCask(_ cask: String?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        uninstallCask(cask, zap: false, withReturnBlock: block)
+    }
+
+    @objc(uninstallCask:zap:withReturnBlock:)
+    open func uninstallCask(
+        _ cask: String?,
+        zap: Bool,
+        withReturnBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        let val = performBrewCommand(
+            withArguments: Self.arguments(forUninstallingCask: cask, zap: zap),
+            dataReturnBlock: block
+        )
+        sendDelegateFormulaeUpdatedCall(forCommand: "uninstall")
+        return val
+    }
+
+    @objc(tapRepository:withReturnsBlock:)
+    open func tapRepository(_ repository: String?, withReturnsBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        guard let repository else { return false }
+        let val = performBrewCommand(withArguments: ["tap", repository], dataReturnBlock: block)
+        sendDelegateFormulaeUpdatedCall(forCommand: "tap")
+        return val
+    }
+
+    @objc(untapRepository:withReturnsBlock:)
+    open func untapRepository(_ repository: String?, withReturnsBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        guard let repository else { return false }
+        let val = performBrewCommand(withArguments: ["untap", repository], dataReturnBlock: block)
+        sendDelegateFormulaeUpdatedCall(forCommand: "untap")
+        return val
+    }
+
+    @objc(pinFormula:withReturnBlock:)
+    open func pinFormula(_ formula: String?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        guard let formula else { return false }
+        let val = performBrewCommand(withArguments: ["pin", formula], dataReturnBlock: block)
+        sendDelegateFormulaeUpdatedCall(forCommand: "pin")
+        return val
+    }
+
+    @objc(unpinFormula:withReturnBlock:)
+    open func unpinFormula(_ formula: String?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        guard let formula else { return false }
+        let val = performBrewCommand(withArguments: ["unpin", formula], dataReturnBlock: block)
+        sendDelegateFormulaeUpdatedCall(forCommand: "unpin")
+        return val
+    }
+
+    @objc(runCleanupWithReturnBlock:)
+    open func runCleanup(withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        performBrewCommand(withArguments: ["cleanup"], dataReturnBlock: block)
+    }
+
+    @objc public class func argumentsForCleanupDryRun() -> [String] {
+        ["cleanup", "--dry-run"]
+    }
+
+    @objc open func previewCleanup() -> BPCleanupPreview {
+        let output = performSyncBrewCommand(withArguments: Self.argumentsForCleanupDryRun())
+        return BPCleanupPreview.preview(fromOutput: output)
+    }
+
+    @objc(runDoctorWithReturnBlock:)
+    open func runDoctor(withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        let val = performBrewCommand(withArguments: ["doctor"], dataReturnBlock: block)
+        sendDelegateFormulaeUpdatedCall(forCommand: "doctor")
+        return val
+    }
+
+    @objc(runBrewExportToolWithPath:)
+    open func runBrewExportTool(withPath path: String?) -> NSError? {
+        guard let path else {
+            return NSError(
+                domain: "Cakebrew.Brewfile.Export",
+                code: 1,
+                userInfo: [
+                    NSLocalizedDescriptionKey: NSLocalizedString(
+                        "Homebrew could not export the Brewfile. Check the destination and try again.",
+                        comment: ""
+                    )
+                ]
+            )
+        }
+        nonisolated(unsafe) let output = NSMutableString()
+        let succeeded = performAsyncBrewCommand(
+            withArguments: ["bundle", "dump", "--force", "--file=\(path)"],
+            wrapsSynchronousRequest: false,
+            includesCompletionMessage: false
+        ) { chunk in
+            output.append(chunk)
+            if output.length > 1500 {
+                output.deleteCharacters(in: NSRange(location: 0, length: output.length - 1500))
+            }
+        }
+        if succeeded {
+            return nil
+        }
+        var description = (output as String).trimmingCharacters(in: .whitespacesAndNewlines)
+        if description.isEmpty {
+            description = NSLocalizedString(
+                "Homebrew could not export the Brewfile. Check the destination and try again.",
+                comment: ""
+            )
+        }
+        return NSError(
+            domain: "Cakebrew.Brewfile.Export",
+            code: 1,
+            userInfo: [NSLocalizedDescriptionKey: description]
+        )
+    }
+
+    @objc(runBrewImportToolWithPath:withReturnsBlock:)
+    open func runBrewImportTool(
+        withPath path: String?,
+        withReturnsBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        guard let path else { return false }
+        let arguments = ["bundle", "--file=\(path)"]
+        let result = performBrewCommand(withArguments: arguments, dataReturnBlock: block)
+        sendDelegateFormulaeUpdatedCall(forCommand: "bundle")
+        return result
+    }
+
+    @objc(runBrewImportToolWithPath:progress:withReturnsBlock:)
+    open func runBrewImportTool(
+        withPath path: String?,
+        progress: Progress?,
+        withReturnsBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        guard let path, brewTransport == .direct, progress?.isCancelled != true else {
+            return false
+        }
+        let result = performAsyncBrewCommand(
+            withArguments: ["bundle", "--file=\(path)"],
+            wrapsSynchronousRequest: false,
+            progress: progress,
+            dataReturnBlock: block
+        )
+        sendDelegateFormulaeUpdatedCall(forCommand: "bundle")
+        return result && progress?.isCancelled != true
+    }
+
+    private static let catalogChangingCommands: Set<String> = ["update", "tap", "untap", "bundle"]
+
+    @objc(brewCommandChangesCatalogMembership:)
+    public class func brewCommandChangesCatalogMembership(_ command: String?) -> Bool {
+        guard let command, !command.isEmpty else { return false }
+        return catalogChangingCommands.contains(command.lowercased())
+    }
+
+    @objc(sendDelegateFormulaeUpdatedCallForCommand:)
+    open func sendDelegateFormulaeUpdatedCall(forCommand command: String?) {
+        let rebuildCatalogs = Self.brewCommandChangesCatalogMembership(command)
+        guard let delegate = self.delegate else { return }
+        DispatchQueue.main.async {
+            delegate.homebrewInterfaceDidUpdateFormulaeRebuildingCatalogs(rebuildCatalogs)
+        }
+    }
+}
+
+#if DEBUG
+@objc(BPMockHomebrewInterface)
+open class BPMockHomebrewInterface: BPHomebrewInterface, @unchecked Sendable {
+    // All stored properties have zero-byte defaults so class_createInstance(Cls, 0) works safely.
+    @objc public var discoveryAttempts: UInt = 0
+    @objc public var autoremovePreviews: UInt = 0
+    private var _catalogConditionStorage: NSCondition?
+    @objc public var catalogHoldReleased: Bool = false
+
+    @objc public var catalogCondition: NSCondition {
+        get {
+            bpSynchronized(self) {
+                if let existing = _catalogConditionStorage {
+                    return existing
+                }
+                let created = makeCatalogCondition()
+                _catalogConditionStorage = created
+                return created
+            }
+        }
+        set {
+            bpSynchronized(self) {
+                _catalogConditionStorage = newValue
+            }
+        }
+    }
+
+    @objc(initUniqueInstance)
+    public required init(uniqueInstance: Void = ()) {
+        super.init(uniqueInstance: ())
+        _catalogConditionStorage = makeCatalogCondition()
+    }
+
+    public override init() {
+        super.init()
+        _catalogConditionStorage = makeCatalogCondition()
+    }
+
+    @objc open func makeCatalogCondition() -> NSCondition {
+        NSCondition()
+    }
+
+    @objc(mockArgumentEnabled:)
+    open func mockArgumentEnabled(_ argument: String) -> Bool {
+        ProcessInfo.processInfo.arguments.contains(argument)
+    }
+
+    @objc(releaseHeldCatalogs:)
+    open func releaseHeldCatalogs(_ sender: Any?) {
+        let cond = self.catalogCondition
+        cond.lock()
+        catalogHoldReleased = true
+        cond.broadcast()
+        cond.unlock()
+    }
+
+    open override func cancelAllRunningTasks() {
+        releaseHeldCatalogs(nil)
+        super.cancelAllRunningTasks()
+    }
+
+    open override func listMode(forRemovalRefresh mode: BPListMode) -> [BPFormula]? {
+        guard mode == .installed || mode == .leaves || mode == .outdated else {
+            return nil
+        }
+        return listMode(mode)
+    }
+
+    open override func listServicesForRemovalRefresh() -> [BPService]? {
+        if ProcessInfo.processInfo.arguments.contains("-BPMockFailedAutoremoveRefresh") {
+            return nil
+        }
+        return listServices()
+    }
+
+    open override func previewAutoremove(withProgress progress: Progress?) -> BPAutoremovePreview {
+        autoremovePreviews += 1
+        let arguments = ProcessInfo.processInfo.arguments
+        var output = "==> Would autoremove 1 unneeded formula:\nmockunused\n"
+        if arguments.contains("-BPMockEmptyAutoremove")
+            || (arguments.contains("-BPMockChangedAutoremove") && autoremovePreviews > 1) {
+            output = ""
+        }
+        if arguments.contains("-BPMockInvalidAutoremove") {
+            output = "MOCK_UNRECOGNIZED\n"
+        }
+        return BPAutoremovePreview.preview(withOutput: output, succeeded: progress?.isCancelled != true)
+    }
+
+    open override func removeUnusedFormulae(
+        _ names: [String]?,
+        progress: Progress?,
+        output: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        if progress?.isCancelled == true {
+            return false
+        }
+        output?("MOCK_AUTOREMOVE_STARTED\n")
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("-BPMockSlowAutoremove") {
+            let deadline = Date(timeIntervalSinceNow: 10)
+            while progress?.isCancelled != true && deadline.timeIntervalSinceNow > 0 {
+                Thread.sleep(forTimeInterval: 0.05)
+            }
+        }
+        if progress?.isCancelled == true {
+            output?("MOCK_AUTOREMOVE_CANCELLED\n")
+            return false
+        }
+        if arguments.contains("-BPMockFailedAutoremove") {
+            output?("MOCK_AUTOREMOVE_FAILED\n")
+            return false
+        }
+        output?("MOCK_AUTOREMOVE_OK\n")
+        return true
+    }
+
+    open override func discoverHomebrew() -> BPHomebrewDiscoveryResult {
+        discoveryAttempts += 1
+        let arguments = ProcessInfo.processInfo.arguments
+        if discoveryAttempts > 1 && arguments.contains("-BPMockSlowHomebrewRetry") {
+            Thread.sleep(forTimeInterval: 3.0)
+        }
+        if arguments.contains("-BPMockHomebrewInvalidShell") {
+            return .invalidShell
+        }
+        if arguments.contains("-BPMockHomebrewCheckFailed") {
+            return .checkFailed
+        }
+        if arguments.contains("-BPMockHomebrewMissing")
+            || (arguments.contains("-BPMockHomebrewRecovers") && discoveryAttempts == 1) {
+            return .missing
+        }
+        return .available
+    }
+
+    open override func listPinnedCasks() -> [BPFormula]? {
+        []
+    }
+
+    open override func listMode(_ mode: BPListMode) -> [BPFormula]? {
+        if mode == .all || mode == .allCasks {
+            if mockArgumentEnabled("-BPMockHoldCatalogUntilCancelled")
+                || mockArgumentEnabled("-BPMockHoldCatalogUntilReleased") {
+                let cond = self.catalogCondition
+                cond.lock()
+                while !catalogHoldReleased {
+                    cond.wait()
+                }
+                cond.unlock()
+            } else if mockArgumentEnabled("-BPMockSlowCatalog") {
+                Thread.sleep(forTimeInterval: 6.0)
+            }
+        }
+
+        switch mode {
+        case .installed:
+            return [
+                BPFormula.formula(withName: "mockwget", andVersion: "1.0.0"),
+                BPFormula.formula(withName: "mockgit", andVersion: "2.39.0"),
+                BPFormula.formula(withName: "mockcurl", andVersion: "8.0.0")
+            ].compactMap { $0 }
+        case .outdated:
+            if ProcessInfo.processInfo.arguments.contains("-BPMockEmptyOutdated") {
+                return []
+            }
+            return [
+                BPFormula.formula(withName: "mockgit", version: "2.39.0", andLatestVersion: "2.40.0")
+            ].compactMap { $0 }
+        case .leaves:
+            return [
+                BPFormula.formula(withName: "mockwget", andVersion: "1.0.0")
+            ].compactMap { $0 }
+        case .all:
+            return [
+                BPFormula.formula(withName: "mockwget"),
+                BPFormula.formula(withName: "mockgit"),
+                BPFormula.formula(withName: "mockcurl"),
+                BPFormula.formula(withName: "mockhtop")
+            ].compactMap { $0 }
+        case .repositories:
+            return [
+                BPFormula.formula(withName: "homebrew/core"),
+                BPFormula.formula(withName: "homebrew/cask")
+            ].compactMap { $0 }
+        case .pinned:
+            if ProcessInfo.processInfo.arguments.contains("-BPMockMixedUpdates") {
+                return []
+            }
+            return [
+                BPFormula.formula(withName: "mockgit")
+            ].compactMap { $0 }
+        case .installedCasks:
+            return Self.casks(fromFormulae: [
+                BPFormula.formula(withName: "mockchrome", andVersion: "120.0"),
+                BPFormula.formula(withName: "mockvscode", andVersion: "1.85.0")
+            ].compactMap { $0 })
+        case .outdatedCasks:
+            if ProcessInfo.processInfo.arguments.contains("-BPMockEmptyOutdatedCasks") {
+                return []
+            }
+            return Self.casks(fromFormulae: [
+                BPFormula.formula(withName: "mockchrome", version: "120.0", andLatestVersion: "121.0")
+            ].compactMap { $0 })
+        case .allCasks:
+            return Self.casks(fromFormulae: [
+                BPFormula.formula(withName: "mockchrome"),
+                BPFormula.formula(withName: "mockvscode"),
+                BPFormula.formula(withName: "mockfirefox")
+            ].compactMap { $0 })
+        default:
+            return []
+        }
+    }
+
+    @objc(casksFromFormulae:)
+    public class func casks(fromFormulae formulae: [BPFormula]) -> [BPFormula] {
+        for formula in formulae {
+            formula.cask = true
+        }
+        return formulae
+    }
+
+    open override func runDoctor(withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        if let block {
+            block("MOCK_DOCTOR_OK\n")
+            block("Checking for common problems...\n")
+            block("MOCK_DOCTOR_DONE\nYour system is ready to brew.\n")
+        }
+        return true
+    }
+
+    open override func update(withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        block?("MOCK_UPDATE_OK\nAlready up-to-date.\n")
+        return true
+    }
+
+    open override func runCleanup(withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        block?("MOCK_CLEANUP_OK\nFreed 0 bytes.\n")
+        return true
+    }
+
+    open override func previewCleanup() -> BPCleanupPreview {
+        if ProcessInfo.processInfo.arguments.contains("-BPMockEmptyCleanup") {
+            return BPCleanupPreview.preview(fromOutput: "")
+        }
+        return BPCleanupPreview.preview(
+            fromOutput: "Would remove: /Users/mock/Library/Caches/Homebrew/mockwget--1.0.0.tar.gz (1.5MB)\n"
+                + "Would remove: /opt/homebrew/Cellar/mockgit/2.38.0 (1,234 files, 45.6MB)\n"
+                + "Would remove: /Users/mock/Library/Caches/Homebrew/mockcurl--7.9.0.tar.gz (2.1MB)\n"
+                + "==> This operation would free approximately 49.2MB of disk space.\n"
+        )
+    }
+
+    open override func information(forFormulaName name: String?) -> String? {
+        let fName = name ?? ""
+        return "\(fName): stable 1.0.0\n"
+            + "A mock formula used for Cakebrew UI tests.\n"
+            + "https://example.com\n"
+            + "Not installed\n"
+            + "==> Options\n"
+            + "--with-debug\n"
+            + "\tBuild with debug symbols\n"
+            + "--HEAD\n"
+            + "\tInstall HEAD version\n"
+    }
+
+    open override func dependants(forFormulaName name: String?, onlyInstalled: Bool) -> String? {
+        if name == "mockwget" {
+            return onlyInstalled ? "mockcurl\n" : "mockcurl\nmockhtop\n"
+        }
+        return ""
+    }
+
+    open override func information(forCaskName name: String?) -> String? {
+        let cName = name ?? ""
+        return "==> \(cName) (Mock App): 1.0.0 (auto_updates)\n"
+            + "A mock cask used for Cakebrew UI tests.\n"
+            + "https://example.com/cask\n"
+            + "Installed (on request)\n"
+            + "/usr/local/Caskroom/\(cName)/1.0.0 (10MB)\n"
+            + "From: https://example.com/\(cName).rb\n"
+    }
+
+    open override func pinFormula(_ formula: String?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        block?("MOCK_PIN_OK\n")
+        return true
+    }
+
+    open override func uninstallCask(_ cask: String?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        uninstallCask(cask, zap: false, withReturnBlock: block)
+    }
+
+    open override func uninstallCask(
+        _ cask: String?,
+        zap: Bool,
+        withReturnBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        block?(zap ? "MOCK_UNINSTALL_CASK_ZAP_OK\n" : "MOCK_UNINSTALL_CASK_OK\n")
+        return true
+    }
+
+    open override func upgradeFormulae(_ formulae: [Any]?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        block?("MOCK_UPGRADE_OK\nUpgraded 0 formulae.\n")
+        return true
+    }
+
+    open override func upgradeCasks(_ casks: [Any]?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        true
+    }
+
+    open override func upgradeSelectedFormulae(
+        _ formulae: [BPFormula]?,
+        progress: Progress?,
+        withReturnBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        upgradeSelectionReporting(formulae, progress: progress, withReturnBlock: block).succeeded
+    }
+
+    open override func upgradeSelectionReporting(
+        _ formulae: [BPFormula]?,
+        progress: Progress?,
+        withReturnBlock block: (@Sendable (String) -> Void)?
+    ) -> BPUpgradeResult {
+        let plan = BPUpgradePlan(selection: formulae)
+        return plan.executeReporting(withProgress: progress) { arguments in
+            let procArgs = ProcessInfo.processInfo.arguments
+            if procArgs.contains("-BPMockSlowUpgrade") {
+                block?("MOCK_UPGRADE_STARTED\n")
+                for _ in 0..<100 {
+                    if progress?.isCancelled == true { break }
+                    Thread.sleep(forTimeInterval: 0.1)
+                }
+                if progress?.isCancelled == true {
+                    block?("MOCK_UPGRADE_CANCELLING\n")
+                    Thread.sleep(forTimeInterval: 5.0)
+                    return false
+                }
+            }
+            block?("MOCK_UPGRADE_OK\nMOCK_UPGRADE_ARGUMENTS: \(arguments.joined(separator: " "))\nUpgraded 0 packages.\n")
+            if procArgs.contains("-BPMockFailedCaskUpgrade") && arguments.contains("--cask") {
+                return false
+            }
+            return true
+        }
+    }
+
+    open override func installCask(_ cask: String?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        block?("MOCK_INSTALL_CASK_OK\n")
+        return true
+    }
+
+    open override func listServices() -> [BPService] {
+        BPService.services(
+            fromJSONString: "[{\"name\":\"mockpostgres\",\"status\":\"started\",\"user\":\"mockuser\",\"pid\":123},"
+                + "{\"name\":\"mockredis\",\"status\":\"none\",\"user\":null,\"pid\":null}]"
+        )
+    }
+
+    open override func startService(_ name: String?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        block?("MOCK_SERVICE_START_OK\n")
+        return true
+    }
+
+    open override func serviceDetails(forName name: String?) -> BPServiceDetails {
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("-BPMockServiceDetailsFailure") {
+            return BPServiceDetails.details(
+                forName: name,
+                output: "Error: mock service details unavailable\nThe mock service list is still available.",
+                succeeded: false
+            )
+        }
+        if arguments.contains("-BPMockSlowServiceDetails") {
+            Thread.sleep(forTimeInterval: 2.0)
+        }
+        let sName = name ?? ""
+        let running = (sName == "mockpostgres")
+        let record: [String: Any] = [
+            "name": sName,
+            "status": running ? "started" : "none",
+            "pid": running ? NSNumber(value: 123) : NSNull(),
+            "user": running ? "mockuser" : NSNull(),
+            "file": "/cakebrew-mock-missing/service.plist",
+            "log_path": "/cakebrew-mock-missing/service.log",
+            "error_log_path": "/cakebrew-mock-missing/service.log",
+            "exit_code": NSNull()
+        ]
+        let data = try? JSONSerialization.data(withJSONObject: [record], options: [])
+        let output = data.flatMap { String(data: $0, encoding: .utf8) }
+        return BPServiceDetails.details(forName: name, output: output, succeeded: true)
+    }
+
+    open override func stopService(_ name: String?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        block?("MOCK_SERVICE_STOP_OK\n")
+        return true
+    }
+
+    open override func restartService(_ name: String?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        block?("MOCK_SERVICE_RESTART_OK\n")
+        return true
+    }
+
+    open override func unpinFormula(_ formula: String?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        block?("MOCK_UNPIN_OK\n")
+        return true
+    }
+
+    open override func installFormula(
+        _ formula: String?,
+        withOptions options: [Any]?,
+        andReturnBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        block?("MOCK_INSTALL_OK\nInstalled 1 formula.\n")
+        return true
+    }
+
+    open override func uninstallFormula(_ formula: String?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        block?("MOCK_UNINSTALL_OK\nUninstalled 1 formula.\n")
+        return true
+    }
+
+    open override func tapRepository(_ repository: String?, withReturnsBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        block?("MOCK_TAP_OK\nTapped 1 repository.\n")
+        return true
+    }
+
+    open override func untapRepository(_ repository: String?, withReturnsBlock block: (@Sendable (String) -> Void)?) -> Bool {
+        block?("MOCK_UNTAP_OK\nUntapped 1 repository.\n")
+        return true
+    }
+
+    open override func runBrewExportTool(withPath path: String?) -> NSError? {
+        let args = ProcessInfo.processInfo.arguments
+        if args.contains("-BPMockSlowExport") {
+            Thread.sleep(forTimeInterval: 10.0)
+        }
+        if args.contains("-BPMockExportFails") {
+            return NSError(
+                domain: "Cakebrew.Mock.Export",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "MOCK_EXPORT_FAILED: destination is not writable."]
+            )
+        }
+        return nil
+    }
+
+    open override func runBrewImportTool(
+        withPath path: String?,
+        withReturnsBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        block?("MOCK_IMPORT_OK\nBrewfile applied.\n")
+        return true
+    }
+
+    @objc open func brewfileImportDeadline() -> Date {
+        Date(timeIntervalSinceNow: 5.0)
+    }
+
+    @objc open func pauseBrewfileImport() {
+        Thread.sleep(forTimeInterval: 0.05)
+    }
+
+    open override func runBrewImportTool(
+        withPath path: String?,
+        progress: Progress?,
+        withReturnsBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        if progress?.isCancelled == true {
+            return false
+        }
+        block?("MOCK_IMPORT_STARTED\n")
+        let holdUntilCancelled = mockArgumentEnabled("-BPMockHoldBrewfileImportUntilCancelled")
+        if holdUntilCancelled || mockArgumentEnabled("-BPMockSlowBrewfileImport") {
+            let deadline = brewfileImportDeadline()
+            while progress?.isCancelled != true && (holdUntilCancelled || deadline.timeIntervalSinceNow > 0) {
+                pauseBrewfileImport()
+            }
+        }
+        if progress?.isCancelled == true {
+            block?("MOCK_IMPORT_CANCELLED\n")
+            return false
+        }
+        if mockArgumentEnabled("-BPMockBrewfileImportFails") {
+            block?("MOCK_IMPORT_FAILED\n")
+            return false
+        }
+        block?("MOCK_IMPORT_OK\n")
+        return true
+    }
+}
+#endif
+
+@objc(BPHomebrewManagerDelegate)
+public protocol BPHomebrewManagerDelegate: NSObjectProtocol {
+    @objc(homebrewManagerFinishedUpdating:)
+    func homebrewManagerFinishedUpdating(_ manager: BPHomebrewManager)
+
+    @objc(homebrewManagerDidBeginDiscovery:)
+    optional func homebrewManagerDidBeginDiscovery(_ manager: BPHomebrewManager)
+
+    @objc(homebrewManager:didPublishListForMode:)
+    optional func homebrewManager(_ manager: BPHomebrewManager, didPublishListForMode mode: BPListMode)
+
+    @objc(homebrewManager:didBeginStepForMode:)
+    optional func homebrewManager(_ manager: BPHomebrewManager, didBeginStepForMode mode: BPListMode)
+
+    @objc(homebrewManagerFinishedStepping:)
+    optional func homebrewManagerFinishedStepping(_ manager: BPHomebrewManager)
+
+    @objc(homebrewManager:didUpdateSearchResults:)
+    func homebrewManager(_ manager: BPHomebrewManager, didUpdateSearchResults searchResults: [Any]?)
+
+    @objc(homebrewManager:shouldDisplayNoBrewMessage:)
+    func homebrewManager(_ manager: BPHomebrewManager, shouldDisplayNoBrewMessage yesOrNo: Bool)
+}
+
+public let kBPCacheLastUpdateKey = "BPCacheLastUpdateKey"
+public let kBPCacheDataKey = "BPCacheDataKey"
+public let kBPCacheCasksDataKey = "BPCacheCasksDataKey"
+public let kBPCacheVersionKey = "BPCacheVersionKey"
+public let kBPCacheStoredDateKey = "BPCacheStoredDateKey"
+
+public let BPHomebrewManagerUpdatesSnapshotDidChangeNotification = "BPHomebrewManagerUpdatesSnapshotDidChangeNotification"
+public let BPHomebrewManagerDidPublishOutdatedSnapshotNotification = "BPHomebrewManagerDidPublishOutdatedSnapshotNotification"
+public let BPOutdatedSnapshotFormulaeCountKey = "formulae-count"
+public let BPOutdatedSnapshotCaskCountKey = "cask-count"
+public let BPOutdatedSnapshotGenerationKey = "generation"
+
+@objc(BPHomebrewManager)
+open class BPHomebrewManager: NSObject, BPHomebrewInterfaceDelegate, @unchecked Sendable {
+    private static let kBPCacheVersion: Int = 2
+    private static let kBPSecondsInADay: TimeInterval = 86400
+
+    nonisolated(unsafe) private static var sharedInstance: BPHomebrewManager?
+
+    // All stored properties have zero-byte defaults so class_createInstance(Cls, 0) works safely.
+    private var _currentSearchQuery: NSString?
+    @objc public var reloadInFlight: Bool = false
+    private var _reloadRequestedWhileRunning: Bool = false
+    @objc public var reloadGeneration: UInt = 0
+    private var _pendingRebuildCache: Bool = false
+    private var _updatesGeneration: UInt = 0
+    private var _updatesInputs: NSMutableDictionary?
+    private var _updatesSnapshot: BPUpdatesSnapshot?
+    private var _outdatedSnapshotGeneration: UInt = 0
+    private var _outdatedSnapshotFormulaeCount: NSNumber?
+    private var _outdatedSnapshotCaskCount: NSNumber?
+    private var _didPublishOutdatedSnapshot: Bool = false
+    @objc public var discoveryInFlight: Bool = false
+    private var _formulaRefreshRequested: Bool = false
+    private var _formulaRefreshCompletions: NSMutableArray?
+    private var _discoveryResultRaw: Int = 0
+
+    private var _installedFormulaeStorage: NSArray?
+    private var _outdatedFormulaeStorage: NSArray?
+    private var _allFormulaeStorage: NSArray?
+    private var _leavesFormulaeStorage: NSArray?
+    private var _searchFormulaeStorage: NSArray?
+    private var _repositoriesFormulaeStorage: NSArray?
+    private var _pinnedFormulaeStorage: NSArray?
+    private var _installedCasksStorage: NSArray?
+    private var _outdatedCasksStorage: NSArray?
+    private var _allCasksStorage: NSArray?
+    private var _servicesStorage: NSArray?
+
+    private var _installedFormulaNamesSet: NSSet?
+    private var _outdatedFormulaNamesSet: NSSet?
+    private var _installedCaskNamesSet: NSSet?
+    private var _outdatedCaskNamesSet: NSSet?
+    private var _pinnedFormulaNamesSet: NSSet?
+
+    @objc public weak var delegate: (any BPHomebrewManagerDelegate)?
+
+    @objc dynamic public var allFormulae: [BPFormula]? {
+        get { bpSynchronized(self) { _allFormulaeStorage as? [BPFormula] } }
+        set { bpSynchronized(self) { _allFormulaeStorage = newValue as NSArray? } }
+    }
+
+    @objc dynamic public var leavesFormulae: [BPFormula]? {
+        get { bpSynchronized(self) { _leavesFormulaeStorage as? [BPFormula] } }
+        set { bpSynchronized(self) { _leavesFormulaeStorage = newValue as NSArray? } }
+    }
+
+    @objc dynamic public var searchFormulae: [BPFormula]? {
+        get { bpSynchronized(self) { _searchFormulaeStorage as? [BPFormula] } }
+        set { bpSynchronized(self) { _searchFormulaeStorage = newValue as NSArray? } }
+    }
+
+    @objc dynamic public var repositoriesFormulae: [BPFormula]? {
+        get { bpSynchronized(self) { _repositoriesFormulaeStorage as? [BPFormula] } }
+        set { bpSynchronized(self) { _repositoriesFormulaeStorage = newValue as NSArray? } }
+    }
+
+    @objc dynamic public var allCasks: [BPFormula]? {
+        get { bpSynchronized(self) { _allCasksStorage as? [BPFormula] } }
+        set { bpSynchronized(self) { _allCasksStorage = newValue as NSArray? } }
+    }
+
+    @objc dynamic public var services: [BPService]? {
+        get { bpSynchronized(self) { _servicesStorage as? [BPService] } }
+        set { bpSynchronized(self) { _servicesStorage = newValue as NSArray? } }
+    }
+
+    @objc public class func sharedManager() -> BPHomebrewManager {
+        bpSynchronized(self) {
+            if let existing = sharedInstance {
+                return existing
+            }
+            let instance = BPHomebrewManager(uniqueInstance: ())
+            sharedInstance = instance
+            return instance
+        }
+    }
+
+    @objc(initUniqueInstance)
+    public required init(uniqueInstance: Void = ()) {
+        super.init()
+    }
+
+    public override init() {
+        super.init()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    @objc(shouldStartReloadWhenInFlight:)
+    public class func shouldStartReload(whenInFlight inFlight: Bool) -> Bool {
+        !inFlight
+    }
+
+    @objc(shouldPublishReloadGeneration:current:)
+    public class func shouldPublishReloadGeneration(_ generation: UInt, current: UInt) -> Bool {
+        generation == current
+    }
+
+    @objc public var currentReloadGeneration: UInt {
+        bpSynchronized(self) {
+            reloadGeneration
+        }
+    }
+
+    @objc open var updatesSnapshot: BPUpdatesSnapshot? {
+        bpSynchronized(self) {
+            guard let snap = _updatesSnapshot, snap.generation == reloadGeneration else {
+                return nil
+            }
+            return snap
+        }
+    }
+
+    @objc(selectionForConfirmedUpdatesSnapshot:)
+    open func selection(forConfirmedUpdatesSnapshot snapshot: BPUpdatesSnapshot?) -> [BPFormula]? {
+        bpSynchronized(self) {
+            guard let snapshot,
+                  snapshot === self.updatesSnapshot,
+                  snapshot.generation == reloadGeneration else {
+                return nil
+            }
+            return snapshot.eligibleSelection() as? [BPFormula]
+        }
+    }
+
+    private func notifyUpdatesSnapshotChanged() {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in
+                self?.notifyUpdatesSnapshotChanged()
+            }
+            return
+        }
+        NotificationCenter.default.post(
+            name: Notification.Name(BPHomebrewManagerUpdatesSnapshotDidChangeNotification),
+            object: self
+        )
+    }
+
+    private func publishUpdatesInput(_ input: [Any]?, key: String, generation: UInt) {
+        if !Thread.isMainThread {
+            nonisolated(unsafe) let inputBox = input as NSArray?
+            DispatchQueue.main.async { [weak self] in
+                self?.publishUpdatesInput(inputBox as? [Any], key: key, generation: generation)
+            }
+            return
+        }
+        bpSynchronized(self) {
+            guard generation == reloadGeneration else { return }
+            if _updatesInputs == nil || _updatesGeneration != generation {
+                _updatesGeneration = generation
+                _updatesInputs = NSMutableDictionary()
+                _updatesSnapshot = nil
+            }
+            if let input {
+                _updatesInputs?[key] = input as NSArray
+            } else {
+                _updatesInputs?.removeObject(forKey: key)
+            }
+            _updatesSnapshot = BPUpdatesSnapshot(
+                generation: generation,
+                formulaItems: _updatesInputs?["formulae"] as? [BPUpdateItem],
+                caskItems: _updatesInputs?["casks"] as? [BPUpdateItem],
+                pinnedFormulaNames: _updatesInputs?["formulaPins"] as? [String],
+                pinnedCaskNames: _updatesInputs?["caskPins"] as? [String]
+            )
+        }
+        notifyUpdatesSnapshotChanged()
+    }
+
+    @objc(publishPinnedCasks:generation:)
+    open func publishPinnedCasks(_ casks: [BPFormula]?, generation: UInt) {
+        let names: [String]? = casks?.compactMap { ($0.name as NSString?)?.copy() as? String }
+        publishUpdatesInput(names, key: "caskPins", generation: generation)
+    }
+
+    @objc open func cancelReload() {
+        bpSynchronized(self) {
+            reloadGeneration &+= 1
+            _reloadRequestedWhileRunning = false
+            _pendingRebuildCache = false
+        }
+        notifyUpdatesSnapshotChanged()
+        BPHomebrewInterface.sharedInterface().cancelAllRunningTasks()
+        delegate?.homebrewManagerFinishedStepping?(self)
+    }
+
+    @objc(announceStepForMode:generation:)
+    open func announceStep(forMode mode: BPListMode, generation: UInt) {
+        guard Self.shouldPublishReloadGeneration(generation, current: currentReloadGeneration) else {
+            return
+        }
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in
+                self?.announceStep(forMode: mode, generation: generation)
+            }
+            return
+        }
+        delegate?.homebrewManager?(self, didBeginStepForMode: mode)
+    }
+
+    @objc(publishList:forMode:generation:)
+    open func publishList(_ list: [BPFormula]?, forMode mode: BPListMode, generation: UInt) {
+        var key: String?
+        var frozen: [Any]?
+        if mode == .outdated || mode == .outdatedCasks {
+            key = (mode == .outdated) ? "formulae" : "casks"
+            frozen = list.map { BPUpdateItem.items(fromFormulae: $0, cask: mode == .outdatedCasks) }
+        } else if mode == .pinned {
+            key = "formulaPins"
+            frozen = list?.compactMap { ($0.name as NSString?)?.copy() as? String }
+        }
+        if let key {
+            publishUpdatesInput(frozen, key: key, generation: generation)
+        }
+
+        guard Self.shouldPublishReloadGeneration(generation, current: currentReloadGeneration) else {
+            return
+        }
+
+        if !Thread.isMainThread {
+            nonisolated(unsafe) let listBox = list as NSArray?
+            DispatchQueue.main.async { [weak self] in
+                self?.publishListOnMain(listBox as? [BPFormula], forMode: mode, generation: generation)
+            }
+            return
+        }
+        publishListOnMain(list, forMode: mode, generation: generation)
+    }
+
+    private func publishListOnMain(_ list: [BPFormula]?, forMode mode: BPListMode, generation: UInt) {
+        guard generation == currentReloadGeneration else { return }
+
+        switch mode {
+        case .installed:
+            self.installedFormulae = list
+        case .leaves:
+            self.leavesFormulae = list
+        case .outdated:
+            self.outdatedFormulae = list
+        case .repositories:
+            self.repositoriesFormulae = list
+        case .pinned:
+            self.pinnedFormulae = list
+        case .installedCasks:
+            self.installedCasks = list
+        case .outdatedCasks:
+            self.outdatedCasks = list
+        case .all:
+            self.allFormulae = list
+        case .allCasks:
+            self.allCasks = list
+        case .search:
+            return
+        }
+
+        publishOutdatedSnapshot(forList: list, mode: mode, generation: generation)
+        delegate?.homebrewManager?(self, didPublishListForMode: mode)
+    }
+
+    private func publishOutdatedSnapshot(forList list: [BPFormula]?, mode: BPListMode, generation: UInt) {
+        guard mode == .outdated || mode == .outdatedCasks else { return }
+        var snapshot: [String: Any]?
+        bpSynchronized(self) {
+            guard generation == reloadGeneration else { return }
+            if _outdatedSnapshotGeneration != generation {
+                _outdatedSnapshotGeneration = generation
+                _outdatedSnapshotFormulaeCount = nil
+                _outdatedSnapshotCaskCount = nil
+                _didPublishOutdatedSnapshot = false
+            }
+            guard let list, !_didPublishOutdatedSnapshot else { return }
+            if mode == .outdated {
+                _outdatedSnapshotFormulaeCount = NSNumber(value: list.count)
+            } else {
+                _outdatedSnapshotCaskCount = NSNumber(value: list.count)
+            }
+            guard let formulaeCount = _outdatedSnapshotFormulaeCount,
+                  let caskCount = _outdatedSnapshotCaskCount else {
+                return
+            }
+            snapshot = [
+                BPOutdatedSnapshotFormulaeCountKey: formulaeCount,
+                BPOutdatedSnapshotCaskCountKey: caskCount,
+                BPOutdatedSnapshotGenerationKey: NSNumber(value: generation)
+            ]
+            _didPublishOutdatedSnapshot = true
+        }
+        if let snapshot {
+            NotificationCenter.default.post(
+                name: Notification.Name(BPHomebrewManagerDidPublishOutdatedSnapshotNotification),
+                object: self,
+                userInfo: snapshot
+            )
+        }
+    }
+
+    @objc open func homebrewInterface() -> BPHomebrewInterface? {
+        BPHomebrewInterface.sharedInterface()
+    }
+
+    @objc(refreshFormulaStateAfterRemovalWithCompletion:)
+    open func refreshFormulaStateAfterRemoval(withCompletion completion: (@Sendable (Bool) -> Void)?) {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in
+                self?.refreshFormulaStateAfterRemoval(withCompletion: completion)
+            }
+            return
+        }
+        var generation: UInt = 0
+        var shouldStart = false
+        bpSynchronized(self) {
+            if _formulaRefreshCompletions == nil {
+                _formulaRefreshCompletions = NSMutableArray()
+            }
+            if let completion {
+                _formulaRefreshCompletions?.add(completion as AnyObject)
+            }
+            if reloadInFlight {
+                _formulaRefreshRequested = true
+                return
+            }
+            shouldStart = true
+            _formulaRefreshRequested = false
+            reloadInFlight = true
+            let caskCount = (_outdatedSnapshotGeneration == reloadGeneration) ? _outdatedSnapshotCaskCount : nil
+            let baseline = self.updatesSnapshot
+            reloadGeneration &+= 1
+            generation = reloadGeneration
+            _updatesGeneration = generation
+            _updatesSnapshot = nil
+            let inputs = NSMutableDictionary()
+            if let baseline {
+                inputs["casks"] = baseline.casks as NSArray
+                inputs["formulaPins"] = baseline.pinnedFormulaNames as NSArray
+                inputs["caskPins"] = baseline.pinnedCaskNames as NSArray
+            }
+            _updatesInputs = inputs
+            _outdatedSnapshotGeneration = generation
+            _outdatedSnapshotFormulaeCount = nil
+            _outdatedSnapshotCaskCount = caskCount
+            _didPublishOutdatedSnapshot = false
+        }
+        guard shouldStart else { return }
+        notifyUpdatesSnapshotChanged()
+
+        let capturedGeneration = generation
+        let interface = self.homebrewInterface()
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let installed = interface?.listMode(forRemovalRefresh: .installed)
+            let leaves = interface?.listMode(forRemovalRefresh: .leaves)
+            let outdated = interface?.listMode(forRemovalRefresh: .outdated)
+            let services = interface?.listServicesForRemovalRefresh()
+            DispatchQueue.main.async {
+                guard let self else { return }
+                var succeeded = (installed != nil && leaves != nil && outdated != nil && services != nil)
+                if let installed {
+                    self.publishList(installed, forMode: .installed, generation: capturedGeneration)
+                }
+                if let leaves {
+                    self.publishList(leaves, forMode: .leaves, generation: capturedGeneration)
+                }
+                if let outdated {
+                    self.publishList(outdated, forMode: .outdated, generation: capturedGeneration)
+                }
+                if capturedGeneration == self.currentReloadGeneration, let services {
+                    self.services = services
+                }
+                succeeded = succeeded && (capturedGeneration == self.currentReloadGeneration)
+
+                var completions: [(@Sendable (Bool) -> Void)] = []
+                var rerun = false
+                var rebuild = false
+                var formulaRerun = false
+                bpSynchronized(self) {
+                    self.reloadInFlight = false
+                    completions = (self._formulaRefreshCompletions as? [(@Sendable (Bool) -> Void)]) ?? []
+                    self._formulaRefreshCompletions?.removeAllObjects()
+                    rerun = self._reloadRequestedWhileRunning
+                    rebuild = self._pendingRebuildCache
+                    formulaRerun = self._formulaRefreshRequested
+                    self._reloadRequestedWhileRunning = false
+                    self._pendingRebuildCache = false
+                }
+                for done in completions {
+                    done(succeeded)
+                }
+                if formulaRerun {
+                    self.refreshFormulaStateAfterRemoval(withCompletion: nil)
+                }
+                if rerun {
+                    self.reloadFromInterface(rebuildingCache: rebuild)
+                }
+            }
+        }
+    }
+
+    @objc open var discoveryResult: BPHomebrewDiscoveryResult {
+        bpSynchronized(self) {
+            BPHomebrewDiscoveryResult(rawValue: _discoveryResultRaw) ?? .unknown
+        }
+    }
+
+    @objc open var checkingHomebrew: Bool {
+        bpSynchronized(self) {
+            discoveryInFlight
+        }
+    }
+
+    @objc open func isCheckingHomebrew() -> Bool {
+        checkingHomebrew
+    }
+
+    @objc open func retryHomebrewDiscovery() {
+        bpSynchronized(self) {
+            if reloadInFlight { return }
+            reloadFromInterface(rebuildingCache: false)
+        }
+    }
+
+    @objc(reloadFromInterfaceRebuildingCache:)
+    open func reloadFromInterface(rebuildingCache shouldRebuildCache: Bool) {
+        var generation: UInt = 0
+        var needsDiscovery = false
+        var shouldStart = false
+
+        bpSynchronized(self) {
+            if discoveryInFlight { return }
+            if !Self.shouldStartReload(whenInFlight: reloadInFlight) {
+                _reloadRequestedWhileRunning = true
+                _pendingRebuildCache = _pendingRebuildCache || shouldRebuildCache
+                return
+            }
+            shouldStart = true
+            reloadInFlight = true
+            reloadGeneration &+= 1
+            generation = reloadGeneration
+            needsDiscovery = (BPHomebrewDiscoveryResult(rawValue: _discoveryResultRaw) != .available)
+            discoveryInFlight = needsDiscovery
+        }
+        guard shouldStart else { return }
+
+        notifyUpdatesSnapshotChanged()
+        if needsDiscovery {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.delegate?.homebrewManagerDidBeginDiscovery?(self)
+            }
+        }
+
+        let capturedGeneration = generation
+        let capturedNeedsDiscovery = needsDiscovery
+        let previousCountOfAllFormulae = self.allFormulae?.count ?? 0
+
+        DispatchQueue.global(qos: .background).async { [weak self] in
+            guard let self else { return }
+            let interface = self.homebrewInterface()
+            interface?.delegate = self
+            if capturedNeedsDiscovery {
+                let result = interface?.discoverHomebrew() ?? .checkFailed
+                let current = bpSynchronized(self) { capturedGeneration == self.reloadGeneration }
+                if result != .available || !current {
+                    DispatchQueue.main.async {
+                        var pendingFormulaCompletions: [(@Sendable (Bool) -> Void)] = []
+                        var publishFailure = false
+                        bpSynchronized(self) {
+                            self.discoveryInFlight = false
+                            self.reloadInFlight = false
+                            self._reloadRequestedWhileRunning = false
+                            self._pendingRebuildCache = false
+                            pendingFormulaCompletions = (self._formulaRefreshCompletions as? [(@Sendable (Bool) -> Void)]) ?? []
+                            self._formulaRefreshCompletions?.removeAllObjects()
+                            self._formulaRefreshRequested = false
+                            publishFailure = (capturedGeneration == self.reloadGeneration)
+                            if publishFailure {
+                                self._discoveryResultRaw = result.rawValue
+                            }
+                        }
+                        for done in pendingFormulaCompletions {
+                            done(false)
+                        }
+                        if publishFailure {
+                            self.delegate?.homebrewManager(self, shouldDisplayNoBrewMessage: true)
+                        }
+                    }
+                    return
+                }
+                DispatchQueue.main.async {
+                    var shouldNotify = false
+                    bpSynchronized(self) {
+                        self.discoveryInFlight = false
+                        if capturedGeneration == self.reloadGeneration {
+                            self._discoveryResultRaw = result.rawValue
+                            shouldNotify = true
+                        }
+                    }
+                    if shouldNotify {
+                        self.delegate?.homebrewManager(self, shouldDisplayNoBrewMessage: false)
+                    }
+                }
+            }
+
+            let fanOut = DispatchQueue.global(qos: .utility)
+            let group = DispatchGroup()
+
+            nonisolated(unsafe) var fetchedServices: [BPService]?
+            var didFetchCatalogs = false
+
+            self.announceStep(forMode: .installed, generation: capturedGeneration)
+
+            group.enter()
+            DispatchQueue.global(qos: .userInitiated).async {
+                defer { group.leave() }
+                self.publishList(interface?.listMode(.installed), forMode: .installed, generation: capturedGeneration)
+            }
+
+            let fastModes: [BPListMode] = [.leaves, .outdated, .repositories, .pinned, .installedCasks, .outdatedCasks]
+            for mode in fastModes {
+                group.enter()
+                fanOut.async {
+                    defer { group.leave() }
+                    self.publishList(interface?.listMode(mode), forMode: mode, generation: capturedGeneration)
+                }
+            }
+
+            group.enter()
+            fanOut.async {
+                defer { group.leave() }
+                self.publishPinnedCasks(interface?.listPinnedCasks(), generation: capturedGeneration)
+            }
+
+            group.enter()
+            fanOut.async {
+                defer { group.leave() }
+                fetchedServices = interface?.listServices()
+            }
+
+            group.wait()
+
+            if !self.loadAllFormulaeCaches()
+                || previousCountOfAllFormulae <= 100
+                || self.allCasks == nil
+                || shouldRebuildCache {
+                didFetchCatalogs = true
+                self.announceStep(forMode: .allCasks, generation: capturedGeneration)
+
+                group.enter()
+                fanOut.async {
+                    defer { group.leave() }
+                    self.publishList(interface?.listMode(.all), forMode: .all, generation: capturedGeneration)
+                }
+
+                group.enter()
+                fanOut.async {
+                    defer { group.leave() }
+                    self.publishList(interface?.listMode(.allCasks), forMode: .allCasks, generation: capturedGeneration)
+                }
+
+                group.wait()
+            }
+
+            let finalServices = fetchedServices
+            let finalDidFetchCatalogs = didFetchCatalogs
+            DispatchQueue.main.async {
+                var rerun = false
+                var rerunRebuild = false
+                var currentGen: UInt = 0
+                var formulaRefreshReq = false
+
+                bpSynchronized(self) {
+                    self.reloadInFlight = false
+                    rerun = self._reloadRequestedWhileRunning
+                    rerunRebuild = self._pendingRebuildCache
+                    self._reloadRequestedWhileRunning = false
+                    self._pendingRebuildCache = false
+                    currentGen = self.reloadGeneration
+                    formulaRefreshReq = self._formulaRefreshRequested
+                }
+
+                if Self.shouldPublishReloadGeneration(capturedGeneration, current: currentGen) {
+                    if finalDidFetchCatalogs {
+                        DispatchQueue.global(qos: .utility).async {
+                            self.storeAllFormulaeCaches()
+                        }
+                    }
+                    self.services = finalServices
+                    self.delegate?.homebrewManagerFinishedUpdating(self)
+                    self.delegate?.homebrewManagerFinishedStepping?(self)
+                }
+
+                if formulaRefreshReq {
+                    self.refreshFormulaStateAfterRemoval(withCompletion: nil)
+                }
+                if rerun {
+                    self.reloadFromInterface(rebuildingCache: rerunRebuild)
+                }
+            }
+        }
+    }
+
+    @objc(formulae:casks:matchingQuery:)
+    public class func formulae(
+        _ formulae: [BPFormula]?,
+        casks: [BPFormula]?,
+        matchingQuery query: String?
+    ) -> [BPFormula] {
+        guard let query, !query.isEmpty else { return [] }
+        var matches: [BPFormula] = []
+        for namespace in [formulae ?? [], casks ?? []] {
+            for entry in namespace {
+                if let entryName = entry.name as NSString?,
+                   entryName.range(of: query, options: .caseInsensitive).location != NSNotFound {
+                    matches.append(entry)
+                }
+            }
+        }
+        return matches
+    }
+
+    @objc(shouldPublishResultsForQuery:currentQuery:)
+    public class func shouldPublishResults(forQuery query: String?, currentQuery: String?) -> Bool {
+        guard let query, let currentQuery else { return false }
+        return query == currentQuery
+    }
+
+    @objc(updateSearchWithName:)
+    open func updateSearch(withName name: String?) {
+        bpSynchronized(self) {
+            _currentSearchQuery = (name as NSString?)?.copy() as? NSString
+        }
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self else { return }
+            let matches = Self.formulae(self.allFormulae, casks: self.allCasks, matchingQuery: name)
+            DispatchQueue.main.async {
+                let current = bpSynchronized(self) { self._currentSearchQuery as String? }
+                guard Self.shouldPublishResults(forQuery: name, currentQuery: current) else {
+                    return
+                }
+                self.searchFormulae = matches
+                self.delegate?.homebrewManager(self, didUpdateSearchResults: matches)
+            }
+        }
+    }
+
+    @objc open func cancelSearch() {
+        bpSynchronized(self) {
+            _currentSearchQuery = nil
+        }
+    }
+
+    @objc open func loadAllFormulaeCaches() -> Bool {
+        guard let cachesFolder = BPAppDelegate.urlForApplicationCachesFolder() else {
+            return false
+        }
+        let allFormulaeFile = cachesFolder.appendingPathComponent("allFormulae.cache.bin")
+        guard FileManager.default.fileExists(atPath: allFormulaeFile.relativePath),
+              let data = try? Data(contentsOf: allFormulaeFile) else {
+            return false
+        }
+
+        let classes: [AnyClass] = [
+            NSDictionary.self,
+            NSArray.self,
+            NSMutableArray.self,
+            BPFormula.self,
+            NSString.self,
+            NSURL.self,
+            NSNumber.self,
+            NSDate.self,
+            BPFormulaOption.self
+        ]
+        let cacheDict: [String: Any]?
+        do {
+            cacheDict = try NSKeyedUnarchiver.unarchivedObject(ofClasses: classes, from: data) as? [String: Any]
+        } catch {
+            NSLog("Discarding unreadable catalog cache: %@", error.localizedDescription)
+            discardCatalogCache()
+            return false
+        }
+
+        guard let cacheDict else {
+            discardCatalogCache()
+            return false
+        }
+
+        guard (cacheDict[kBPCacheVersionKey] as? NSNumber)?.intValue == Self.kBPCacheVersion else {
+            discardCatalogCache()
+            return false
+        }
+
+        guard let storedDate = cacheDict[kBPCacheStoredDateKey] as? Date,
+              Date().timeIntervalSince(storedDate) <= Self.kBPSecondsInADay else {
+            discardCatalogCache()
+            return false
+        }
+
+        guard let formulae = cacheDict[kBPCacheDataKey] as? [BPFormula] else {
+            discardCatalogCache()
+            return false
+        }
+
+        self.allFormulae = formulae
+        self.allCasks = cacheDict[kBPCacheCasksDataKey] as? [BPFormula]
+        return true
+    }
+
+    @objc open func discardCatalogCache() {
+        if let cachesFolder = BPAppDelegate.urlForApplicationCachesFolder() {
+            let allFormulaeFile = cachesFolder.appendingPathComponent("allFormulae.cache.bin")
+            try? FileManager.default.removeItem(at: allFormulaeFile)
+        }
+        UserDefaults.standard.removeObject(forKey: kBPCacheLastUpdateKey)
+    }
+
+    @objc open func storeAllFormulaeCaches() {
+        guard let allFormulae = self.allFormulae else { return }
+        guard let cachesFolder = BPAppDelegate.urlForApplicationCachesFolder() else {
+            NSLog("Could not store cache file. BPAppDelegate function returned nil!")
+            return
+        }
+        let allFormulaeFile = cachesFolder.appendingPathComponent("allFormulae.cache.bin")
+        let cacheDict: NSDictionary = [
+            kBPCacheVersionKey: NSNumber(value: Self.kBPCacheVersion),
+            kBPCacheStoredDateKey: Date() as NSDate,
+            kBPCacheDataKey: allFormulae as NSArray,
+            kBPCacheCasksDataKey: (self.allCasks ?? []) as NSArray
+        ]
+
+        let cacheData: Data
+        do {
+            cacheData = try NSKeyedArchiver.archivedData(withRootObject: cacheDict, requiringSecureCoding: true)
+        } catch {
+            NSLog("Failed encoding data: %@", error.localizedDescription)
+            return
+        }
+
+        do {
+            try cacheData.write(to: allFormulaeFile, options: .atomic)
+        } catch {
+            NSLog("Failed writing cache: %@", error.localizedDescription)
+            return
+        }
+
+        UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey: kBPCacheLastUpdateKey)
+    }
+
+    @objc(installedNameSetFromFormulae:)
+    public class func installedNameSet(fromFormulae formulae: [Any]?) -> Set<String> {
+        guard let formulae, !formulae.isEmpty else { return [] }
+        var names = Set<String>(minimumCapacity: formulae.count)
+        for item in formulae {
+            guard let formula = item as? BPFormula,
+                  let installedName = formula.installedName(),
+                  !installedName.isEmpty else {
+                continue
+            }
+            names.insert(installedName)
+        }
+        return names
+    }
+
+    @objc dynamic public var installedFormulae: [BPFormula]? {
+        get { bpSynchronized(self) { _installedFormulaeStorage as? [BPFormula] } }
+        set {
+            let names = Self.installedNameSet(fromFormulae: newValue) as NSSet
+            bpSynchronized(self) {
+                _installedFormulaeStorage = newValue as NSArray?
+                _installedFormulaNamesSet = names
+            }
+        }
+    }
+
+    @objc dynamic public var outdatedFormulae: [BPFormula]? {
+        get { bpSynchronized(self) { _outdatedFormulaeStorage as? [BPFormula] } }
+        set {
+            let names = Self.installedNameSet(fromFormulae: newValue) as NSSet
+            bpSynchronized(self) {
+                _outdatedFormulaeStorage = newValue as NSArray?
+                _outdatedFormulaNamesSet = names
+            }
+        }
+    }
+
+    @objc dynamic public var installedCasks: [BPFormula]? {
+        get { bpSynchronized(self) { _installedCasksStorage as? [BPFormula] } }
+        set {
+            let names = Self.installedNameSet(fromFormulae: newValue) as NSSet
+            bpSynchronized(self) {
+                _installedCasksStorage = newValue as NSArray?
+                _installedCaskNamesSet = names
+            }
+        }
+    }
+
+    @objc dynamic public var outdatedCasks: [BPFormula]? {
+        get { bpSynchronized(self) { _outdatedCasksStorage as? [BPFormula] } }
+        set {
+            let names = Self.installedNameSet(fromFormulae: newValue) as NSSet
+            bpSynchronized(self) {
+                _outdatedCasksStorage = newValue as NSArray?
+                _outdatedCaskNamesSet = names
+            }
+        }
+    }
+
+    @objc dynamic public var pinnedFormulae: [BPFormula]? {
+        get { bpSynchronized(self) { _pinnedFormulaeStorage as? [BPFormula] } }
+        set {
+            let names = Self.installedNameSet(fromFormulae: newValue) as NSSet
+            bpSynchronized(self) {
+                _pinnedFormulaeStorage = newValue as NSArray?
+                _pinnedFormulaNamesSet = names
+            }
+        }
+    }
+
+    @objc(statusForFormula:)
+    open func status(forFormula formula: Any?) -> BPFormulaStatus {
+        guard let formula = formula as? BPFormula,
+              let installedName = formula.installedName(),
+              !installedName.isEmpty else {
+            return .notInstalled
+        }
+        var installed: NSSet?
+        var outdated: NSSet?
+        bpSynchronized(self) {
+            installed = formula.cask ? _installedCaskNamesSet : _installedFormulaNamesSet
+            outdated = formula.cask ? _outdatedCaskNamesSet : _outdatedFormulaNamesSet
+        }
+        if installed?.contains(installedName) == true {
+            if outdated?.contains(installedName) == true {
+                return .outdated
+            }
+            return .installed
+        }
+        return .notInstalled
+    }
+
+    @objc(isFormulaPinned:)
+    open func isFormulaPinned(_ formula: Any?) -> Bool {
+        guard let formula = formula as? BPFormula,
+              !formula.cask,
+              let installedName = formula.installedName(),
+              !installedName.isEmpty else {
+            return false
+        }
+        let pinned = bpSynchronized(self) { _pinnedFormulaNamesSet }
+        return pinned?.contains(installedName) == true
+    }
+
+    @objc open func cleanUp() {
+        BPHomebrewInterface.sharedInterface().cleanup()
+    }
+
+    // MARK: - BPHomebrewInterfaceDelegate
+
+    @objc(homebrewInterfaceDidUpdateFormulaeRebuildingCatalogs:)
+    open func homebrewInterfaceDidUpdateFormulaeRebuildingCatalogs(_ shouldRebuildCatalogs: Bool) {
+        reloadFromInterface(rebuildingCache: shouldRebuildCatalogs)
+    }
+
+    @objc(homebrewInterfaceShouldDisplayNoBrewMessage:)
+    open func homebrewInterfaceShouldDisplayNoBrewMessage(_ yesOrNo: Bool) {
+        delegate?.homebrewManager(self, shouldDisplayNoBrewMessage: yesOrNo)
+    }
+}
+
+// MARK: - Test Subclasses for CakebrewTests
+
+// 1. BPAutoremoveTests Subclasses
+@objc(CB150RefreshInterface)
+open class CB150RefreshInterface: BPHomebrewInterface, @unchecked Sendable {
+    @objc public var modes: NSMutableArray?
+    @objc public var serviceCalls: UInt = 0
+    @objc public var fail: Bool = false
+    @objc public var discoveryEntered: (() -> Void)?
+    @objc public var finishDiscovery: DispatchSemaphore?
+
+    open override func discoverHomebrew() -> BPHomebrewDiscoveryResult {
+        discoveryEntered?()
+        if let finishDiscovery {
+            _ = finishDiscovery.wait(timeout: .now() + 5.0)
+        }
+        return .missing
+    }
+
+    open override func listMode(_ mode: BPListMode) -> [BPFormula]? {
+        modes?.add(NSNumber(value: mode.rawValue))
+        return fail ? nil : []
+    }
+
+    open override func listServices() -> [BPService] {
+        serviceCalls += 1
+        return fail ? [] : []
+    }
+
+    open override func listMode(forRemovalRefresh mode: BPListMode) -> [BPFormula]? {
+        listMode(mode)
+    }
+
+    open override func listServicesForRemovalRefresh() -> [BPService]? {
+        serviceCalls += 1
+        return fail ? nil : []
+    }
+}
+
+@objc(CB150Manager)
+open class CB150Manager: BPHomebrewManager, @unchecked Sendable {
+    @objc public var fixtureInterface: BPHomebrewInterface?
+
+    open override func homebrewInterface() -> BPHomebrewInterface? {
+        fixtureInterface
+    }
+}
+
+@objc(CB150Interface)
+open class CB150Interface: BPHomebrewInterface, @unchecked Sendable {
+    @objc public var preview: BPAutoremovePreview?
+    @objc public var previewCalls: UInt = 0
+    @objc public var removalCalls: UInt = 0
+    @objc public var removed: NSArray?
+    @objc public var removalSuccess: Bool = false
+
+    open override func previewAutoremove(withProgress progress: Progress?) -> BPAutoremovePreview {
+        previewCalls += 1
+        return preview ?? BPAutoremovePreview.preview(withOutput: "", succeeded: false)
+    }
+
+    open override func removeUnusedFormulae(
+        _ names: [String]?,
+        progress: Progress?,
+        output: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        precondition(!Thread.isMainThread, "removeUnusedFormulae must run off the main thread")
+        removalCalls += 1
+        removed = (names as NSArray?)?.copy() as? NSArray
+        output?("fixture stream")
+        return removalSuccess
+    }
+}
+
+@objc(CB150CommandInterface)
+open class CB150CommandInterface: BPHomebrewInterface, @unchecked Sendable {
+    @objc public var arguments: NSArray?
+    @objc public var fixture: NSString?
+    @objc public var status: Int32 = 0
+
+    open override func executeAutoremoveArguments(
+        _ arguments: [Any],
+        progress: Progress?,
+        output: (@Sendable (String) -> Void)?
+    ) -> Int32 {
+        self.arguments = (arguments as NSArray).copy() as? NSArray
+        output?((fixture as String?) ?? "")
+        return status
+    }
+}
+
+@objc(CB150TaskInterface)
+open class CB150TaskInterface: BPHomebrewInterface, @unchecked Sendable {
+    @objc public var script: NSString?
+    @objc public var formatting: (() -> Void)?
+
+    open override func formatAutoremoveArguments(_ arguments: [Any]) -> [Any] {
+        formatting?()
+        return ["-c", (script as String?) ?? ""]
+    }
+}
+
+@objc(CB150RefreshShellInterface)
+open class CB150RefreshShellInterface: BPHomebrewInterface, @unchecked Sendable {
+    @objc public var outputs: NSDictionary?
+    @objc public var statuses: NSDictionary?
+    @objc public var commands: NSMutableArray?
+
+    open override func formatArguments(_ extraArguments: [Any]?, sendOutputId sendOutputID: Bool) -> [Any] {
+        let key = (extraArguments ?? []).compactMap { $0 as? String }.joined(separator: " ")
+        commands?.add(key)
+        let outVal = (outputs?[key] as? String) ?? ""
+        let statusVal = (statuses?[key] as? NSNumber)?.stringValue ?? "0"
+        return [
+            "-c",
+            "printf 'login banner\\n+++++Cakebrew+++++\\n'; printf '%s' \"$1\"; exit \"$2\"",
+            "fixture",
+            outVal,
+            statusVal
+        ]
+    }
+}
+
+// 2. BPBrewfileTests Subclasses
+@objc(CB151ImportInterface)
+open class CB151ImportInterface: BPHomebrewInterface, @unchecked Sendable {
+    @objc public var snapshotPath: NSString?
+    @objc public var entered: (() -> Void)?
+    @objc public var releaseCommand: DispatchSemaphore?
+    @objc public var calls: UInt = 0
+
+    open override func runBrewImportTool(
+        withPath path: String?,
+        progress: Progress?,
+        withReturnsBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        calls += 1
+        snapshotPath = (path as NSString?)?.copy() as? NSString
+        precondition(!Thread.isMainThread, "Import must run off the main thread")
+        if let path {
+            precondition(FileManager.default.fileExists(atPath: path), "Snapshot file must exist")
+        }
+        block?("fixture output")
+        entered?()
+        if let releaseCommand {
+            _ = releaseCommand.wait(timeout: .now() + 10.0)
+        }
+        return progress?.isCancelled != true
+    }
+}
+
+@objc(CB151DirectInterface)
+open class CB151DirectInterface: BPHomebrewInterface, @unchecked Sendable {
+    @objc public var duringFormatting: (() -> Void)?
+    @objc public var receivedArguments: NSArray?
+
+    open override func formatArguments(_ extraArguments: [Any]?, sendOutputId sendOutputID: Bool) -> [Any] {
+        receivedArguments = (extraArguments as NSArray?)?.copy() as? NSArray
+        duringFormatting?()
+        return ["-c", "printf 'ACTUAL_FIXTURE_LAUNCH\\n'"]
+    }
+}
+
+@objc(CBExportInterface)
+open class CBExportInterface: BPHomebrewInterface, @unchecked Sendable {
+    @objc public var commandSucceeded: Bool = false
+    @objc public var commandOutput: NSString?
+    @objc public var exportArguments: NSArray?
+
+    open override func performSyncBrewCommand(withArguments arguments: [Any]?) -> String? {
+        exportArguments = (arguments as NSArray?)?.copy() as? NSArray
+        return commandOutput as String?
+    }
+
+    open override func performAsyncBrewCommand(
+        withArguments arguments: [Any]?,
+        wrapsSynchronousRequest isSynchronous: Bool,
+        includesCompletionMessage: Bool,
+        dataReturnBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        exportArguments = (arguments as NSArray?)?.copy() as? NSArray
+        if let commandOutput {
+            block?(commandOutput as String)
+        }
+        return commandSucceeded
+    }
+}
+
+@objc(CBDelayedExportInterface)
+open class CBDelayedExportInterface: BPHomebrewInterface, @unchecked Sendable {
+    @objc public var entered: (() -> Void)?
+    @objc public var releaseCommand: DispatchSemaphore?
+    @objc public var calls: UInt = 0
+    @objc public var exportError: NSError?
+
+    open override func runBrewExportTool(withPath path: String?) -> NSError? {
+        precondition(!Thread.isMainThread, "Export must run off the main thread")
+        precondition(path == "/fixture/Brewfile", "Unexpected export path")
+        calls += 1
+        entered?()
+        if let releaseCommand {
+            _ = releaseCommand.wait(timeout: .now() + 10.0)
+        }
+        return exportError
+    }
+}
+
+// 3. BPHomebrewRecoveryTests Subclasses
+@objc(BPRecoveryShellInterface)
+open class BPRecoveryShellInterface: BPHomebrewInterface, @unchecked Sendable {
+    @objc public var shell: NSString?
+
+    open override func getValidUserShellPath() -> String? {
+        shell as String?
+    }
+}
+
+@objc(BPRecoveryFixtureInterface)
+open class BPRecoveryFixtureInterface: BPHomebrewInterface, @unchecked Sendable {
+    @objc public var nextResult: BPHomebrewDiscoveryResult = .unknown
+    @objc public var discoveryCalls: UInt = 0
+    @objc public var listCalls: UInt = 0
+    @objc public var holdDiscovery: DispatchSemaphore?
+    @objc public var onDiscovery: (() -> Void)?
+
+    open override func discoverHomebrew() -> BPHomebrewDiscoveryResult {
+        discoveryCalls += 1
+        onDiscovery?()
+        if let holdDiscovery {
+            _ = holdDiscovery.wait(timeout: .now() + 5.0)
+        }
+        return nextResult
+    }
+
+    open override func listMode(_ mode: BPListMode) -> [BPFormula]? {
+        bpSynchronized(self) { listCalls += 1 }
+        return [BPFormula.formula(withName: "recovered")].compactMap { $0 }
+    }
+
+    open override func listPinnedCasks() -> [BPFormula]? {
+        bpSynchronized(self) { listCalls += 1 }
+        return []
+    }
+
+    open override func listServices() -> [BPService] {
+        bpSynchronized(self) { listCalls += 1 }
+        return []
+    }
+}
+
+@objc(BPRecoveryFixtureManager)
+open class BPRecoveryFixtureManager: BPHomebrewManager, @unchecked Sendable {
+    @objc public var fixture: BPRecoveryFixtureInterface?
+
+    open override func homebrewInterface() -> BPHomebrewInterface? {
+        fixture
+    }
+
+    open override func loadAllFormulaeCaches() -> Bool {
+        false
+    }
+
+    open override func storeAllFormulaeCaches() {}
+}
+
+// 4. BPUpgradePlanTests Subclasses
+@objc(BPUpgradeInterfaceRecorder)
+open class BPUpgradeInterfaceRecorder: BPHomebrewInterface, @unchecked Sendable {
+    @objc public var commands: NSMutableArray?
+    @objc public var seenProgress: Progress?
+    @objc public var reloads: UInt = 0
+    @objc public var failFirst: Bool = false
+    @objc public var cancelFirst: Bool = false
+
+    open override func performAsyncBrewCommand(
+        withArguments arguments: [Any]?,
+        wrapsSynchronousRequest isSynchronous: Bool,
+        progress: Progress?,
+        dataReturnBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        precondition(!isSynchronous, "Upgrade command must not be synchronous")
+        precondition(reloads == 0, "Reload must wait until every attempted batch exits")
+        seenProgress = progress
+        if let arguments {
+            commands?.add(arguments as NSArray)
+        }
+        block?("batch output\n")
+        if cancelFirst {
+            progress?.cancel()
+        }
+        return !failFirst
+    }
+
+    open override func sendDelegateFormulaeUpdatedCall(forCommand command: String?) {
+        precondition(command == "upgrade", "Expected upgrade command")
+        reloads += 1
+    }
+}
+
+@objc(BPUpdatesReadRecorder)
+open class BPUpdatesReadRecorder: BPHomebrewInterface, @unchecked Sendable {
+    @objc public var readSucceeded: Bool = false
+    @objc public var readOutput: NSString?
+    @objc public var readArguments: NSArray?
+
+    open override func performCleanReadOnlyBrewCommand(
+        withArguments arguments: [Any]?,
+        output result: AutoreleasingUnsafeMutablePointer<NSString?>?
+    ) -> Bool {
+        readArguments = (arguments as NSArray?)?.copy() as? NSArray
+        result?.pointee = readOutput
+        return readSucceeded
+    }
+
+    open override func performSyncBrewCommand(withArguments arguments: [Any]?) -> String? {
+        preconditionFailure("Update and pin inventories must preserve process success")
+    }
+}
+
+// 5. BPMockFidelityTests Subclasses
+#if DEBUG
+@objc(CBCatalogCondition)
+open class CBCatalogCondition: NSCondition, @unchecked Sendable {
+    @objc public var observedArrivalCount: UInt = 0
+    @objc public var waitingThreads: NSMutableSet = NSMutableSet()
+
+    public override init() {
+        super.init()
+        waitingThreads = NSMutableSet()
+    }
+
+    open override func wait() {
+        let current = Thread.current
+        if !waitingThreads.contains(current) {
+            waitingThreads.add(current)
+            observedArrivalCount = UInt(waitingThreads.count)
+        }
+        super.wait()
+    }
+}
+
+@objc(CBHeldCatalogInterface)
+open class CBHeldCatalogInterface: BPMockHomebrewInterface, @unchecked Sendable {
+    @objc public var observedCondition: CBCatalogCondition?
+    @objc public var slowCatalogEnabled: Bool = false
+    @objc public var normalReleaseEnabled: Bool = false
+    @objc public var cancellations: UInt = 0
+
+    @objc(initUniqueInstance)
+    public required init(uniqueInstance: Void = ()) {
+        super.init(uniqueInstance: ())
+        if observedCondition == nil {
+            let cond = CBCatalogCondition()
+            observedCondition = cond
+            self.catalogCondition = cond
+        }
+    }
+
+    public override init() {
+        super.init()
+        if observedCondition == nil {
+            let cond = CBCatalogCondition()
+            observedCondition = cond
+            self.catalogCondition = cond
+        }
+    }
+
+    open override func makeCatalogCondition() -> NSCondition {
+        let cond = CBCatalogCondition()
+        observedCondition = cond
+        return cond
+    }
+
+    open override func mockArgumentEnabled(_ argument: String) -> Bool {
+        if argument == "-BPMockHoldCatalogUntilCancelled" {
+            return !normalReleaseEnabled
+        }
+        if argument == "-BPMockHoldCatalogUntilReleased" {
+            return normalReleaseEnabled
+        }
+        if argument == "-BPMockSlowCatalog" {
+            return slowCatalogEnabled
+        }
+        return false
+    }
+
+    open override func cancelAllRunningTasks() {
+        cancellations += 1
+        super.cancelAllRunningTasks()
+    }
+}
+
+@objc(CBHeldImportInterface)
+open class CBHeldImportInterface: BPMockHomebrewInterface, @unchecked Sendable {
+    @objc public var arguments: NSSet?
+    @objc public var pauseCondition: NSCondition?
+    @objc public var pauseCount: UInt = 0
+    @objc public var returned: Bool = false
+    @objc public var pauseReleased: Bool = false
+
+    open override func mockArgumentEnabled(_ argument: String) -> Bool {
+        arguments?.contains(argument) == true
+    }
+
+    open override func brewfileImportDeadline() -> Date {
+        Date.distantPast
+    }
+
+    open override func pauseBrewfileImport() {
+        pauseCondition?.lock()
+        pauseCount += 1
+        while !pauseReleased {
+            pauseCondition?.wait()
+        }
+        pauseCondition?.unlock()
+    }
+
+    @objc open func releasePause() {
+        pauseCondition?.lock()
+        pauseReleased = true
+        pauseCondition?.broadcast()
+        pauseCondition?.unlock()
+    }
+}
+
+@objc(CBCatalogCompletionManager)
+open class CBCatalogCompletionManager: BPHomebrewManager, @unchecked Sendable {
+    @objc public var fixture: CBHeldCatalogInterface?
+
+    open override func homebrewInterface() -> BPHomebrewInterface? {
+        fixture
+    }
+
+    open override func loadAllFormulaeCaches() -> Bool {
+        false
+    }
+
+    open override func storeAllFormulaeCaches() {}
+}
+#endif
+
+// 6. BPServiceDetailsTests Subclasses
+@objc(BPServiceInfoFixtureInterface)
+open class BPServiceInfoFixtureInterface: BPHomebrewInterface, @unchecked Sendable {
+    @objc public var arguments: NSArray?
+    @objc public var fixture: NSString?
+    @objc public var succeeded: Bool = false
+    @objc public var readOnly: Bool = false
+    @objc public var footer: Bool = false
+
+    open override func performAsyncBrewCommand(
+        withArguments arguments: [Any]?,
+        wrapsSynchronousRequest isSynchronous: Bool,
+        includesCompletionMessage: Bool,
+        dataReturnBlock block: (@Sendable (String) -> Void)?
+    ) -> Bool {
+        self.arguments = (arguments as NSArray?)?.copy() as? NSArray
+        self.readOnly = isSynchronous
+        self.footer = includesCompletionMessage
+        block?((fixture as String?) ?? "")
+        return succeeded
+    }
+}
+
+@objc(BPServiceInfoShellInterface)
+open class BPServiceInfoShellInterface: BPHomebrewInterface, @unchecked Sendable {
+    @objc public var fixtureCommand: NSString?
+
+    open override func formatArguments(_ extraArguments: [Any]?, sendOutputId sendOutputID: Bool) -> [Any] {
+        ["-c", (fixtureCommand as String?) ?? ""]
+    }
+}
 

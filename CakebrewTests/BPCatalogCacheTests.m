@@ -18,8 +18,6 @@
 #import "BPFormula.h"
 #import "BPAppDelegate.h"
 
-extern NSString *const kBPCacheLastUpdateKey;
-
 @interface BPHomebrewManager (BPCatalogCacheTests)
 - (BOOL)loadAllFormulaeCaches;
 - (void)storeAllFormulaeCaches;

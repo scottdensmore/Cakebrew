@@ -12,46 +12,6 @@
 #import "BPFormula.h"
 #import "BPHomebrewInterface.h"
 
-// Exposes the private output-block helper for the nil-safety regression tests.
-@interface BPHomebrewInterface (Testing)
-- (void)invokeOutputBlock:(void (^)(NSString *))block withString:(NSString *)string;
-- (NSArray *)formatArguments:(NSArray *)extraArguments sendOutputId:(BOOL)sendOutputID;
-@end
-
-@interface BPHomebrewInterfaceListCall : NSObject
-@property (strong, readonly) NSArray *arguments;
-- (instancetype)initWithArguments:(NSArray *)arguments;
-- (NSArray<BPFormula *> *)parseData:(NSString *)data;
-- (BPFormula *)parseFormulaItem:(NSString *)item;
-@end
-
-@interface BPHomebrewInterfaceListCallInstalled : BPHomebrewInterfaceListCall
-- (instancetype)init;
-@end
-
-@interface BPHomebrewInterfaceListCallUpgradeable : BPHomebrewInterfaceListCall
-- (instancetype)init;
-@end
-
-@interface BPHomebrewInterfaceListCallPinned : BPHomebrewInterfaceListCall
-- (instancetype)init;
-@end
-
-@interface BPHomebrewInterfaceListCallPinnedCasks : BPHomebrewInterfaceListCall
-@end
-
-@interface BPHomebrewInterfaceListCallInstalledCasks : BPHomebrewInterfaceListCallInstalled
-- (instancetype)init;
-@end
-
-@interface BPHomebrewInterfaceListCallOutdatedCasks : BPHomebrewInterfaceListCallUpgradeable
-- (instancetype)init;
-@end
-
-@interface BPHomebrewInterfaceListCallAllCasks : BPHomebrewInterfaceListCall
-- (instancetype)init;
-@end
-
 @interface BPHomebrewInterfaceListCallTests : XCTestCase
 @end
 

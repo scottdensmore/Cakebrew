@@ -24,156 +24,40 @@
 #import "BPService.h"
 #import "BPHomebrewInterface.h"
 
+#ifndef BPHomebrewManagerDidPublishOutdatedSnapshotNotification
+#define BPHomebrewManagerDidPublishOutdatedSnapshotNotification @"BPHomebrewManagerDidPublishOutdatedSnapshotNotification"
+#endif
+#ifndef BPOutdatedSnapshotFormulaeCountKey
+#define BPOutdatedSnapshotFormulaeCountKey @"formulae-count"
+#endif
+#ifndef BPOutdatedSnapshotCaskCountKey
+#define BPOutdatedSnapshotCaskCountKey @"cask-count"
+#endif
+#ifndef BPOutdatedSnapshotGenerationKey
+#define BPOutdatedSnapshotGenerationKey @"generation"
+#endif
+#ifndef BPHomebrewManagerUpdatesSnapshotDidChangeNotification
+#define BPHomebrewManagerUpdatesSnapshotDidChangeNotification @"BPHomebrewManagerUpdatesSnapshotDidChangeNotification"
+#endif
+#ifndef kBPCacheLastUpdateKey
+#define kBPCacheLastUpdateKey @"BPCacheLastUpdateKey"
+#endif
+#ifndef kBPCacheDataKey
+#define kBPCacheDataKey @"BPCacheDataKey"
+#endif
+#ifndef kBPCacheCasksDataKey
+#define kBPCacheCasksDataKey @"BPCacheCasksDataKey"
+#endif
+#ifndef kBPCacheVersionKey
+#define kBPCacheVersionKey @"BPCacheVersionKey"
+#endif
+#ifndef kBPCacheStoredDateKey
+#define kBPCacheStoredDateKey @"BPCacheStoredDateKey"
+#endif
+
+#ifdef BP_BRIDGING_HEADER_IMPORT
 @class BPHomebrewManager;
-
-/// Posted on the main thread once both successful outdated lists of a reload
-/// have arrived. The object is the manager; userInfo is an immutable count and
-/// generation snapshot, independent of later incremental list changes.
-extern NSNotificationName const BPHomebrewManagerDidPublishOutdatedSnapshotNotification;
-extern NSString *const BPOutdatedSnapshotFormulaeCountKey;
-extern NSString *const BPOutdatedSnapshotCaskCountKey;
-extern NSString *const BPOutdatedSnapshotGenerationKey;
-
-typedef NS_ENUM(NSInteger, BPFormulaStatus) {
-	kBPFormulaNotInstalled,
-	kBPFormulaInstalled,
-	kBPFormulaOutdated,
-};
-
-@protocol BPHomebrewManagerDelegate <NSObject>
-
-- (void)homebrewManagerFinishedUpdating:(BPHomebrewManager*)manager;
-
-@optional
-/// Discovery has begun; a recovery view can disable its retry action.
-- (void)homebrewManagerDidBeginDiscovery:(BPHomebrewManager *)manager;
-
-/**
- *  One list of a reload has landed and its property is set.
- *
- *  Fired as each brew call returns rather than once at the end, so the fast
- *  lists are on screen while the cask catalog is still fetching. Sent on the
- *  main queue. Optional: a delegate that only wants the final state can ignore
- *  it.
- */
-- (void)homebrewManager:(BPHomebrewManager *)manager didPublishListForMode:(BPListMode)mode;
-
-/**
- *  A reload has started a step worth telling the user about.
- *
- *  Not fired per brew call: the lists fan out concurrently, so there is no
- *  single "current step" to report. It fires twice — once when the reload
- *  begins, and once when the slow catalog phase does, which is the one that
- *  can take a minute. Sent on the main queue.
- */
-- (void)homebrewManager:(BPHomebrewManager *)manager didBeginStepForMode:(BPListMode)mode;
-
-/// The reload has finished, whether or not anything changed. Paired with
-/// -homebrewManager:didBeginStepForMode: so a progress message can be cleared.
-- (void)homebrewManagerFinishedStepping:(BPHomebrewManager *)manager;
-
-@required
-- (void)homebrewManager:(BPHomebrewManager *)manager didUpdateSearchResults:(NSArray *)searchResults;
-- (void)homebrewManager:(BPHomebrewManager *)manager shouldDisplayNoBrewMessage:(BOOL)yesOrNo;
-
-@end
-
-@class BPUpdatesSnapshot;
-extern NSNotificationName const BPHomebrewManagerUpdatesSnapshotDidChangeNotification;
-
-@interface BPHomebrewManager : NSObject
-
-/// The reload currently allowed to publish. A reload carries the generation it
-/// started with; anything older has been superseded and must stay silent.
-@property (readonly) NSUInteger currentReloadGeneration;
-/// nil until all four successful update inputs belong to the current reload.
-@property (readonly, strong) BPUpdatesSnapshot *updatesSnapshot;
-- (NSArray<BPFormula *> *)selectionForConfirmedUpdatesSnapshot:(BPUpdatesSnapshot *)snapshot;
-- (void)publishPinnedCasks:(NSArray<BPFormula *> *)casks generation:(NSUInteger)generation;
-@property (readonly) BPHomebrewDiscoveryResult discoveryResult;
-@property (readonly) BOOL checkingHomebrew;
-/// A retry during discovery or the recovered reload is ignored.
-- (void)retryHomebrewDiscovery;
-
-@property (strong) NSArray<BPFormula*> *installedFormulae;
-@property (strong) NSArray<BPFormula*> *outdatedFormulae;
-@property (strong) NSArray<BPFormula*> *allFormulae;
-@property (strong) NSArray<BPFormula*> *leavesFormulae;
-@property (strong) NSArray<BPFormula*> *searchFormulae;
-@property (strong) NSArray<BPFormula*> *repositoriesFormulae;
-@property (strong) NSArray<BPFormula*> *pinnedFormulae;
-@property (strong) NSArray<BPFormula*> *installedCasks;
-@property (strong) NSArray<BPFormula*> *outdatedCasks;
-@property (strong) NSArray<BPFormula*> *allCasks;
-@property (strong) NSArray<BPService*> *services;
-
-@property (weak) id<BPHomebrewManagerDelegate> delegate;
-
-+ (instancetype)sharedManager;
-+ (instancetype)alloc __attribute__((unavailable("alloc not available, call sharedManager instead")));
-- (instancetype)init __attribute__((unavailable("init not available, call sharedManager instead")));
-+ (instancetype)new __attribute__((unavailable("new not available, call sharedManager instead")));
-
-/**
- *  Sets the property for one list and tells the delegate, on the main queue.
- *
- *  Does nothing if `generation` has been superseded: incremental publishing
- *  means a cancelled reload can still have brew calls in flight, and its stale
- *  lists must not overwrite a newer reload's.
- */
-- (void)publishList:(NSArray *)list forMode:(BPListMode)mode generation:(NSUInteger)generation;
-
-/// Tells the delegate a reload has begun a step worth naming. Same generation
-/// guard as publishing: a superseded reload must not talk over the newer one.
-- (void)announceStepForMode:(BPListMode)mode generation:(NSUInteger)generation;
-
-/**
- *  Stops the running reload.
- *
- *  Bumps the generation so nothing still in flight publishes, and terminates
- *  the brew calls it fanned out. Deliberately does not clear the in-flight
- *  flag: the running pipeline clears that as it unwinds, and clearing it here
- *  would let a new reload start alongside the dying one.
- */
-- (void)cancelReload;
-
-- (void)reloadFromInterfaceRebuildingCache:(BOOL)shouldRebuildCache;
-
-/// Refresh only formula state and services after removal. Failed lists retain
-/// their previous value. Completion is on main; NO means refresh was incomplete.
-- (void)refreshFormulaStateAfterRemovalWithCompletion:(void (^)(BOOL succeeded))completion;
-
-/// Whether a request should start a pipeline. A request arriving while one runs
-/// coalesces into a single pending re-run instead.
-+ (BOOL)shouldStartReloadWhenInFlight:(BOOL)inFlight;
-
-/// Whether a finished pipeline may publish. Only the newest may: results used
-/// to be published by whichever finished last, so a slower older snapshot could
-/// clobber a newer one.
-+ (BOOL)shouldPublishReloadGeneration:(NSUInteger)generation current:(NSUInteger)current;
-- (void)updateSearchWithName:(NSString *)name;
-
-/**
- *  Catalog entries whose name contains `query`, formulae first then casks.
- *
- *  Casks were never searched, so typing a cask token returned nothing even
- *  though the browse lists showed it. Matches keep their `cask` flag, which is
- *  what statusForFormula:, the detail pane and operation dispatch branch on.
- */
-+ (NSArray<BPFormula *> *)formulae:(NSArray<BPFormula *> *)formulae
-							 casks:(NSArray<BPFormula *> *)casks
-					 matchingQuery:(NSString *)query;
-
-/// Whether results computed for `query` are still wanted. Scanning 8.5k names
-/// is slow enough that an earlier keystroke can finish after a later one.
-+ (BOOL)shouldPublishResultsForQuery:(NSString *)query currentQuery:(NSString *)currentQuery;
-
-- (BPFormulaStatus)statusForFormula:(BPFormula*)formula;
-- (BOOL)isFormulaPinned:(BPFormula*)formula;
-
-/// Forgets the current query, so results still in flight are discarded.
-- (void)cancelSearch;
-
-- (void)cleanUp;
-
-@end
+@protocol BPHomebrewManagerDelegate;
+#else
+#import "BPFormulaInformation-Swift.h"
+#endif

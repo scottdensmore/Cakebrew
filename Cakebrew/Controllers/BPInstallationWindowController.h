@@ -21,27 +21,4 @@
 
 #import <Cocoa/Cocoa.h>
 #import "BPHomebrewViewController.h"
-
-@interface BPInstallationWindowController : NSWindowController
-
-- (void)executeInstallation;
-
-/// As above, but asks Homebrew to run a cask's zap stanza as well. Ignored for
-/// formulae, which have no such stanza.
-+ (BPInstallationWindowController *)runWithOperation:(BPWindowOperation)windowOperation
-                                            formulae:(NSArray *)formulae
-                                             options:(NSArray *)options
-                                                 zap:(BOOL)zap;
-
-+ (BPInstallationWindowController *)runWithOperation:(BPWindowOperation)windowOperation
-                                            formulae:(NSArray *)formulae
-                                             options:(NSArray *)options;
-
-+ (BPInstallationWindowController *)runWithOperation:(BPWindowOperation)windowOperation
-											formulae:(NSArray *)formulae
-											 options:(NSArray *)options
-										  completion:(void (^)(BOOL))completionBlock;
-
-- (void)setCompletionBlock:(void (^)(BOOL))completionBlock;
-
-@end
+#import "BPFormulaInformation-Swift.h"

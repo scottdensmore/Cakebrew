@@ -18,11 +18,11 @@
 - (BOOL)getInformation;
 @end
 
-@interface BPFormulaDataProvider : NSObject <BPFormulaDataProvider>
+@interface BPFormulaTestDataProvider : NSObject <BPFormulaDataProvider>
 - (NSString *)informationForFormulaName:(NSString *)name;
 @end
 
-@implementation BPFormulaDataProvider
+@implementation BPFormulaTestDataProvider
 
 - (NSString *)informationForFormulaName:(NSString *)name
 {
@@ -58,27 +58,6 @@
 	return fileContent;
 }
 
-@end
-
-@interface BPCustomFormula : BPFormula {
-@public
-	BOOL observerAdded;
-}
-- (void)addObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath options:(NSKeyValueObservingOptions)options context:(void *)context;
-@end
-
-@implementation BPCustomFormula
-
-- (id<BPFormulaDataProvider>)dataProvider
-{
-	return [[BPFormulaDataProvider alloc] init];
-}
-- (void)addObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath
-			options:(NSKeyValueObservingOptions)options
-			context:(void *)context{
-	observerAdded = YES;
-	[super addObserver:observer forKeyPath:keyPath options:options context:context];
-}
 @end
 
 static BPCustomFormula *ffmpegFormula;
@@ -167,7 +146,7 @@ static BPCustomFormula *nmapFormula;
 
 - (void)testFormulaConsoleInformation
 {
-	BPFormulaDataProvider *provider = [[BPFormulaDataProvider alloc] init];
+	BPFormulaTestDataProvider *provider = [[BPFormulaTestDataProvider alloc] init];
 	NSString *ffmpegOutput = [provider informationForFormulaName:@"ffmpeg"];
 	XCTAssertEqualObjects(ffmpegFormula.information, ffmpegOutput);
 	NSString *mysqlOutput = [provider informationForFormulaName:@"mysql"];
@@ -314,9 +293,9 @@ static BPCustomFormula *nmapFormula;
 - (void)testFormulaObserverAddition
 {
 	BPCustomFormula *observerFormula = [BPCustomFormula formulaWithName:@"acme"];
-	XCTAssertTrue(observerFormula->observerAdded);
+	XCTAssertTrue(observerFormula.observerAdded);
 	BPCustomFormula *formulaCopy = [observerFormula copy];
-	XCTAssertTrue(formulaCopy->observerAdded);
+	XCTAssertTrue(formulaCopy.observerAdded);
 }
 
 - (void)testFormulaNotificationUpdate

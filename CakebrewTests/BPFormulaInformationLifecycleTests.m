@@ -190,12 +190,6 @@
 }
 @end
 
-@interface BPInformationCachedFormula : BPFormula
-@end
-@implementation BPInformationCachedFormula
-- (NSString *)information { return @"cached mock information"; }
-@end
-
 @interface BPFormulaInformationLifecycleTests : XCTestCase
 @property (strong) BPFormulaPopoverViewController *controller;
 @property (strong) BPInformationTestPopover *popover;

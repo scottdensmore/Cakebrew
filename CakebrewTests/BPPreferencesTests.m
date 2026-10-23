@@ -13,14 +13,6 @@
 #import "BPFormula.h"
 #import "BPAppDelegate.h"
 
-@interface BPHomebrewInterfaceListCall : NSObject
-@property (strong, readonly) NSArray *arguments;
-@end
-
-@interface BPHomebrewInterfaceListCallOutdatedCasks : BPHomebrewInterfaceListCall
-- (instancetype)init;
-@end
-
 @interface BPPreferencesTests : XCTestCase
 @end
 

@@ -20,32 +20,6 @@
 #import "BPService.h"
 #import "BPHomebrewInterface.h"
 
-// The list parsers are private to BPHomebrewInterface.m (compiled into this
-// target); re-declared here exactly as BPHomebrewInterfaceListCallTests does.
-@interface BPHomebrewInterfaceListCall : NSObject
-- (NSArray<BPFormula *> *)parseData:(NSString *)data;
-@end
-
-@interface BPHomebrewInterfaceListCallInstalled : BPHomebrewInterfaceListCall
-- (instancetype)init;
-@end
-
-@interface BPHomebrewInterfaceListCallUpgradeable : BPHomebrewInterfaceListCall
-- (instancetype)init;
-@end
-
-@interface BPHomebrewInterfaceListCallInstalledCasks : BPHomebrewInterfaceListCallInstalled
-- (instancetype)init;
-@end
-
-@interface BPHomebrewInterfaceListCallAllCasks : BPHomebrewInterfaceListCall
-- (instancetype)init;
-@end
-
-@interface BPFormula (BPBrewCompatibilityTestsPrivate)
-- (BOOL)getInformation;
-@end
-
 /// Feeds one canned string, so BPFormula parses real `brew info` output.
 @interface BPLiteralInfoProvider : NSObject <BPFormulaDataProvider>
 @property (copy) NSString *info;
@@ -53,14 +27,6 @@
 
 @implementation BPLiteralInfoProvider
 - (NSString *)informationForFormulaName:(NSString *)name { return self.info; }
-@end
-
-@interface BPCompatFormula : BPFormula
-@property (strong) BPLiteralInfoProvider *provider;
-@end
-
-@implementation BPCompatFormula
-- (id<BPFormulaDataProvider>)dataProvider { return self.provider; }
 @end
 
 @interface BPBrewCompatibilityTests : XCTestCase
