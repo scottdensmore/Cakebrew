@@ -942,23 +942,125 @@ public struct BPDisabledRecoveryState: Equatable, Sendable {
     }
 }
 
+public enum BPConsoleDiagnosticSeverity: Int, Equatable, Sendable {
+    case idle = 0
+    case running = 1
+    case healthy = 2
+    case warnings = 3
+    case errors = 4
+}
+
+private func BPSplitLogLines(_ text: String) -> [String] {
+    guard !text.isEmpty else { return [] }
+    var lines = text.components(separatedBy: .newlines)
+    while lines.last == "" {
+        lines.removeLast()
+    }
+    return lines
+}
+
+private func BPFilterLogLines(_ lines: [String], query: String) -> [String] {
+    let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty else { return lines }
+    return lines.filter { $0.localizedCaseInsensitiveContains(trimmed) }
+}
+
 public struct BPConsoleToolState: Equatable, Sendable {
     public var title: String
     public var subtitle: String?
     public var runButtonTitle: String
     public var clearButtonTitle: String
     public var isRunning: Bool
+    public var logText: String
+    public var filterQuery: String
 
     public init(title: String = "",
                 subtitle: String? = nil,
                 runButtonTitle: String = "",
                 clearButtonTitle: String = "",
-                isRunning: Bool = false) {
+                isRunning: Bool = false,
+                logText: String = "",
+                filterQuery: String = "") {
         self.title = title
         self.subtitle = subtitle
         self.runButtonTitle = runButtonTitle
         self.clearButtonTitle = clearButtonTitle
         self.isRunning = isRunning
+        self.logText = logText
+        self.filterQuery = filterQuery
+    }
+
+    public var trimmedFilterQuery: String {
+        filterQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    public var allLines: [String] {
+        BPSplitLogLines(logText)
+    }
+
+    public var filteredLines: [String] {
+        BPFilterLogLines(allLines, query: filterQuery)
+    }
+
+    public var filteredOutputText: String {
+        trimmedFilterQuery.isEmpty ? logText : filteredLines.joined(separator: "\n")
+    }
+
+    public var totalLineCount: Int {
+        allLines.count
+    }
+
+    public var matchingLineCount: Int {
+        filteredLines.count
+    }
+
+    public var warningCount: Int {
+        allLines.reduce(into: 0) { count, line in
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.range(of: "warning:", options: [.caseInsensitive, .anchored]) != nil {
+                count += 1
+            }
+        }
+    }
+
+    public var errorCount: Int {
+        allLines.reduce(into: 0) { count, line in
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.range(of: "error:", options: [.caseInsensitive, .anchored]) != nil {
+                count += 1
+            }
+        }
+    }
+
+    public var diagnosticSeverity: BPConsoleDiagnosticSeverity {
+        if isRunning {
+            return .running
+        }
+        if logText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return .idle
+        }
+        if errorCount > 0 {
+            return .errors
+        }
+        if warningCount > 0 {
+            return .warnings
+        }
+        return .healthy
+    }
+
+    public var diagnosticSummaryText: String {
+        switch diagnosticSeverity {
+        case .idle:
+            return ""
+        case .running:
+            return NSLocalizedString("VoiceOver_Operation_Progress", comment: "")
+        case .healthy:
+            return NSLocalizedString("Homebrew_Task_Finished", comment: "")
+        case .warnings:
+            return "\(warningCount) \(NSLocalizedString("Generic_Attention", comment: ""))"
+        case .errors:
+            return "\(errorCount) \(NSLocalizedString("Generic_Error", comment: ""))"
+        }
     }
 }
 
@@ -970,6 +1072,9 @@ public struct BPAutoremoveSheetState: Equatable, Sendable {
     public var removeEnabled: Bool
     public var cancelEnabled: Bool
     public var isBusy: Bool
+    public var candidateCount: Int
+    public var logText: String
+    public var filterQuery: String
 
     public init(statusText: String = "",
                 warningText: String = "",
@@ -977,7 +1082,10 @@ public struct BPAutoremoveSheetState: Equatable, Sendable {
                 cancelButtonTitle: String = "",
                 removeEnabled: Bool = false,
                 cancelEnabled: Bool = true,
-                isBusy: Bool = true) {
+                isBusy: Bool = true,
+                candidateCount: Int = 0,
+                logText: String = "",
+                filterQuery: String = "") {
         self.statusText = statusText
         self.warningText = warningText
         self.removeButtonTitle = removeButtonTitle
@@ -985,6 +1093,33 @@ public struct BPAutoremoveSheetState: Equatable, Sendable {
         self.removeEnabled = removeEnabled
         self.cancelEnabled = cancelEnabled
         self.isBusy = isBusy
+        self.candidateCount = candidateCount
+        self.logText = logText
+        self.filterQuery = filterQuery
+    }
+
+    public var trimmedFilterQuery: String {
+        filterQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    public var allLines: [String] {
+        BPSplitLogLines(logText)
+    }
+
+    public var filteredLines: [String] {
+        BPFilterLogLines(allLines, query: filterQuery)
+    }
+
+    public var filteredOutputText: String {
+        trimmedFilterQuery.isEmpty ? logText : filteredLines.joined(separator: "\n")
+    }
+
+    public var totalLineCount: Int {
+        allLines.count
+    }
+
+    public var matchingLineCount: Int {
+        filteredLines.count
     }
 }
 
@@ -1004,6 +1139,8 @@ public struct BPBundleSheetState: Equatable, Sendable {
     public var isRunning: Bool
     public var hasFinished: Bool
     public var succeeded: Bool
+    public var logText: String
+    public var filterQuery: String
 
     public init(mode: BPBundleOperationMode = .importing,
                 headerTitle: String = "",
@@ -1014,7 +1151,9 @@ public struct BPBundleSheetState: Equatable, Sendable {
                 actionEnabled: Bool = true,
                 isRunning: Bool = true,
                 hasFinished: Bool = false,
-                succeeded: Bool = false) {
+                succeeded: Bool = false,
+                logText: String = "",
+                filterQuery: String = "") {
         self.mode = mode
         self.headerTitle = headerTitle
         self.subtitleText = subtitleText
@@ -1025,6 +1164,32 @@ public struct BPBundleSheetState: Equatable, Sendable {
         self.isRunning = isRunning
         self.hasFinished = hasFinished
         self.succeeded = succeeded
+        self.logText = logText
+        self.filterQuery = filterQuery
+    }
+
+    public var trimmedFilterQuery: String {
+        filterQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    public var allLines: [String] {
+        BPSplitLogLines(logText)
+    }
+
+    public var filteredLines: [String] {
+        BPFilterLogLines(allLines, query: filterQuery)
+    }
+
+    public var filteredOutputText: String {
+        trimmedFilterQuery.isEmpty ? logText : filteredLines.joined(separator: "\n")
+    }
+
+    public var totalLineCount: Int {
+        allLines.count
+    }
+
+    public var matchingLineCount: Int {
+        filteredLines.count
     }
 }
 
@@ -1101,6 +1266,8 @@ public struct BPInstallationSheetState: Equatable, Sendable {
     public var isRunning: Bool
     public var okEnabled: Bool
     public var cancelEnabled: Bool
+    public var logText: String
+    public var filterQuery: String
 
     public init(windowTitle: String = "",
                 formulaNamesText: String = "",
@@ -1108,7 +1275,9 @@ public struct BPInstallationSheetState: Equatable, Sendable {
                 cancelTitle: String = "",
                 isRunning: Bool = true,
                 okEnabled: Bool = false,
-                cancelEnabled: Bool = true) {
+                cancelEnabled: Bool = true,
+                logText: String = "",
+                filterQuery: String = "") {
         self.windowTitle = windowTitle
         self.formulaNamesText = formulaNamesText
         self.okTitle = okTitle
@@ -1116,6 +1285,32 @@ public struct BPInstallationSheetState: Equatable, Sendable {
         self.isRunning = isRunning
         self.okEnabled = okEnabled
         self.cancelEnabled = cancelEnabled
+        self.logText = logText
+        self.filterQuery = filterQuery
+    }
+
+    public var trimmedFilterQuery: String {
+        filterQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    public var allLines: [String] {
+        BPSplitLogLines(logText)
+    }
+
+    public var filteredLines: [String] {
+        BPFilterLogLines(allLines, query: filterQuery)
+    }
+
+    public var filteredOutputText: String {
+        trimmedFilterQuery.isEmpty ? logText : filteredLines.joined(separator: "\n")
+    }
+
+    public var totalLineCount: Int {
+        allLines.count
+    }
+
+    public var matchingLineCount: Int {
+        filteredLines.count
     }
 }
 

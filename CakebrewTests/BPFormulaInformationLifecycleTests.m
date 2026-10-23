@@ -1455,4 +1455,45 @@
     XCTAssertGreaterThan(cleanupHost.formattedByteCount.length, 0u);
 }
 
+- (void)testEndToEndConsoleDoctorDiagnosticsAndOperationSheetLogFilterCopy
+{
+    BPDoctorViewController *doctorVC = [[BPDoctorViewController alloc] init];
+    [doctorVC loadView];
+    BPConsoleToolHost *doctorHost = [doctorVC valueForKey:@"consoleHost"];
+    NSTextView *doctorTextView = [doctorVC valueForKey:@"doctorTextView"];
+    XCTAssertNotNil(doctorHost);
+    XCTAssertNotNil(doctorTextView);
+    XCTAssertEqual(doctorHost.diagnosticSeverityRawValue, 0);
+
+    doctorTextView.string = @"Warning: Unlinked kegs found in Cellar\nWarning: Deprecated tap in use\nAll checks complete.\n";
+    [doctorHost syncLogFromTextView];
+    XCTAssertEqual(doctorHost.warningCount, 2);
+    XCTAssertEqual(doctorHost.diagnosticSeverityRawValue, 3);
+    XCTAssertEqual(doctorHost.totalLineCount, 3);
+    doctorHost.filterQuery = @"Unlinked";
+    XCTAssertEqual(doctorHost.matchingLineCount, 1);
+    NSString *copiedDoctor = [doctorHost copyOutputToPasteboard];
+    XCTAssertEqualObjects(copiedDoctor, @"Warning: Unlinked kegs found in Cellar");
+
+    if (doctorHost.onClear) {
+        doctorHost.onClear();
+    }
+    XCTAssertEqual(doctorHost.totalLineCount, 0);
+    XCTAssertEqual(doctorHost.diagnosticSeverityRawValue, 0);
+
+    BPUpdateViewController *updateVC = [[BPUpdateViewController alloc] init];
+    [updateVC loadView];
+    BPConsoleToolHost *updateHost = [updateVC valueForKey:@"consoleHost"];
+    NSTextView *updateTextView = [updateVC valueForKey:@"updateTextView"];
+    updateTextView.string = @"Already up-to-date.\n";
+    [updateHost syncLogFromTextView];
+    XCTAssertEqual(updateHost.diagnosticSeverityRawValue, 2);
+    XCTAssertEqualObjects([updateHost copyOutputToPasteboard], @"Already up-to-date.\n");
+
+    if (updateHost.onClear) {
+        updateHost.onClear();
+    }
+    XCTAssertEqual(updateHost.totalLineCount, 0);
+}
+
 @end

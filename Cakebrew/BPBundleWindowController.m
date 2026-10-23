@@ -235,17 +235,22 @@ static const void *kBPBrewfileReviewHostAssocKey = &kBPBrewfileReviewHostAssocKe
 	self.importOperation = [[BPBrewfileImportOperation alloc] initWithPlan:plan interface:[BPHomebrewInterface sharedInterface]];
 	[self.importOperation startWithOutput:^(NSString *output) {
 		[self.textViewImport appendOutput:output];
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[self.bundleHost syncLogFromTextView];
+		});
 	} completion:^(BOOL success, BOOL cancelled, NSError *error) {
 		NSString *status = cancelled ? NSLocalizedString(@"Import cancelled. Some changes may already have been made.", nil) :
 			success ? NSLocalizedString(@"Import finished.", nil) : NSLocalizedString(@"Import failed. Review the output for details.", nil);
 		self.progressLabelImport.stringValue = status;
 		if (error) [self.textViewImport appendOutput:error.localizedDescription];
+		[self.textViewImport flushPendingOutput];
 		self.buttonClose.title = NSLocalizedString(@"Close", nil);
 		self.buttonClose.enabled = YES;
 		[self.bundleHost configureImportWithStatusText:status
 										   actionTitle:NSLocalizedString(@"Close", nil)
 										 actionEnabled:YES
 											   running:NO];
+		[self.bundleHost syncLogFromTextView];
 	}];
 }
 

@@ -826,4 +826,77 @@ final class BPFormulaInformationTests: XCTestCase {
         XCTAssertEqual(cleanupState.formattedByteCount, "49.2 MB")
     }
 
+    @MainActor
+    func testConsoleAndOperationSheetLogFilterDiagnosticBadgesAndCopyOutput() {
+        let doctorText = NSTextView()
+        let consoleHost = BPConsoleToolHost(
+            textView: doctorText,
+            title: "Homebrew Doctor",
+            subtitle: nil,
+            runButtonTitle: "Run Doctor",
+            clearButtonTitle: "Clear Log"
+        )
+        XCTAssertEqual(consoleHost.diagnosticSeverityRawValue, BPConsoleDiagnosticSeverity.idle.rawValue)
+        XCTAssertEqual(consoleHost.totalLineCount, 0)
+
+        doctorText.string = "Your system is ready to brew.\n"
+        consoleHost.syncLogFromTextView()
+        XCTAssertEqual(consoleHost.diagnosticSeverityRawValue, BPConsoleDiagnosticSeverity.healthy.rawValue)
+        XCTAssertEqual(consoleHost.warningCount, 0)
+        XCTAssertEqual(consoleHost.errorCount, 0)
+        XCTAssertEqual(consoleHost.totalLineCount, 1)
+
+        doctorText.string = """
+        Warning: Unbrewed dylibs were found in /usr/local/lib.
+        If you didn't put them there on purpose they could cause problems.
+        Warning: You have unlinked kegs in your Cellar.
+        """
+        consoleHost.syncLogFromTextView()
+        XCTAssertEqual(consoleHost.diagnosticSeverityRawValue, BPConsoleDiagnosticSeverity.warnings.rawValue)
+        XCTAssertEqual(consoleHost.warningCount, 2)
+        XCTAssertEqual(consoleHost.totalLineCount, 3)
+
+        consoleHost.filterQuery = "unlinked"
+        XCTAssertEqual(consoleHost.matchingLineCount, 1)
+        let copiedConsole = consoleHost.copyOutputToPasteboard()
+        XCTAssertEqual(copiedConsole, "Warning: You have unlinked kegs in your Cellar.")
+        XCTAssertEqual(NSPasteboard.general.string(forType: .string), copiedConsole)
+
+        doctorText.string = "Error: Failed to download bottle for wget\n"
+        consoleHost.filterQuery = ""
+        consoleHost.syncLogFromTextView()
+        XCTAssertEqual(consoleHost.diagnosticSeverityRawValue, BPConsoleDiagnosticSeverity.errors.rawValue)
+        XCTAssertEqual(consoleHost.errorCount, 1)
+
+        let installText = NSTextView()
+        installText.string = "==> Downloading wget\n==> Pouring wget--1.25.0.bottle.tar.gz\n🍺  /opt/homebrew/Cellar/wget/1.25.0\n"
+        let installHost = BPInstallationHost(recordTextView: installText)
+        installHost.syncLogFromTextView()
+        XCTAssertEqual(installHost.totalLineCount, 3)
+        installHost.filterQuery = "Cellar"
+        XCTAssertEqual(installHost.matchingLineCount, 1)
+        let copiedInstall = installHost.copyOutputToPasteboard()
+        XCTAssertEqual(copiedInstall, "🍺  /opt/homebrew/Cellar/wget/1.25.0")
+
+        let bundleText = NSTextView()
+        bundleText.string = "Using homebrew/core\nInstalling ripgrep\nHomebrew Bundle complete!\n"
+        let bundleHost = BPBundleOperationHost(importTextView: bundleText)
+        bundleHost.syncLogFromTextView()
+        XCTAssertEqual(bundleHost.totalLineCount, 3)
+        bundleHost.filterQuery = "ripgrep"
+        XCTAssertEqual(bundleHost.matchingLineCount, 1)
+        XCTAssertEqual(bundleHost.copyOutputToPasteboard(), "Installing ripgrep")
+
+        let autoremoveText = NSTextView()
+        autoremoveText.string = "==> Would uninstall 2 unneeded formulae:\nlibnghttp2\nca-certificates\n"
+        let autoremoveHost = BPAutoremoveHost(outputTextView: autoremoveText)
+        autoremoveHost.candidateCount = 2
+        autoremoveHost.syncLogFromTextView()
+        XCTAssertEqual(autoremoveHost.candidateCount, 2)
+        XCTAssertEqual(autoremoveHost.totalLineCount, 3)
+        autoremoveHost.filterQuery = "libnghttp2"
+        XCTAssertEqual(autoremoveHost.matchingLineCount, 1)
+        XCTAssertEqual(autoremoveHost.copyOutputToPasteboard(), "libnghttp2")
+    }
+
 }
