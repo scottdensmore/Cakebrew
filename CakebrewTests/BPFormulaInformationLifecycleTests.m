@@ -24,6 +24,9 @@
 #import "BPPreferences.h"
 #import "BPPreferencesWindowController.h"
 #import "BPAutoScrollTextView.h"
+#import "BPMainWindowController.h"
+#import "BPStyle.h"
+#import "BPTask.h"
 #import "DCOAboutWindowController.h"
 #import "BPFormulaInformation-Swift.h"
 
@@ -1321,6 +1324,61 @@
     [BPPreferences setShowMenuBarExtra:NO];
     [appDelegate updateMenuBarExtra];
     XCTAssertNil(appDelegate.statusItem);
+}
+
+- (void)testEndToEndStatusBarHostPopoverCopyAndUnifiedWindowStyling
+{
+    // 1. SwiftUI Tahoe Status Bar Host (BPStatusBarHost + BPHomebrewViewController)
+    NSWindow *mainWindow = nil;
+    BPHomebrewViewController *vc = [self makeWiredHomebrewViewControllerInWindow:&mainWindow];
+    XCTAssertNotNil(vc.statusBarHost);
+    XCTAssertEqualObjects(vc.statusBarHost.message, vc.label_information.stringValue);
+    XCTAssertGreaterThan(vc.statusBarHost.installedCount, 0);
+    XCTAssertGreaterThan(vc.statusBarHost.outdatedCount, 0);
+
+    [[NSNotificationCenter defaultCenter] postNotificationName:kDidBeginBackgroundActivityNotification object:nil];
+    XCTAssertTrue(vc.statusBarHost.isBusy);
+    [[NSNotificationCenter defaultCenter] postNotificationName:kDidEndBackgroundActivityNotification object:nil];
+    XCTAssertFalse(vc.statusBarHost.isBusy);
+
+    [vc.statusBarHost triggerUnifiedUpdates];
+    XCTAssertEqual(vc.sidebarController.sidebar.selectedRow, (NSInteger)FormulaeSideBarItemUnifiedUpdates);
+    XCTAssertEqualObjects(vc.statusBarHost.message, vc.label_information.stringValue);
+
+    [vc.statusBarHost triggerCommandPalette];
+    XCTAssertNotNil(vc.commandPaletteHost);
+    [vc dismissCommandPalette:nil];
+
+    // 2. Nibless BPFormulaPopoverViewController + BPFormulaInformationHost copyInformationToPasteboard
+    BPFormulaPopoverViewController *popoverVC = [[BPFormulaPopoverViewController alloc] init];
+    XCTAssertNotNil(popoverVC.view);
+    XCTAssertNotNil(popoverVC.formulaPopover);
+
+    BPFormulaInformationHost *infoHost = [[BPFormulaInformationHost alloc] init];
+    uint64_t gen = [infoHost beginWithName:@"mockwget" cask:NO infoType:kBPFormulaInfoTypeGeneral];
+    [infoHost receiveInformation:@"mockwget: Internet file retriever"
+                         website:[NSURL URLWithString:@"https://www.gnu.org/software/wget/"]
+                            name:@"mockwget"
+                            cask:NO
+                        infoType:kBPFormulaInfoTypeGeneral
+                      generation:gen];
+    NSString *copied = [infoHost copyInformationToPasteboard];
+    XCTAssertEqualObjects(copied, @"mockwget: Internet file retriever");
+    XCTAssertEqualObjects([NSPasteboard.generalPasteboard stringForType:NSPasteboardTypeString], copied);
+
+    // 3. BPMainWindowController unified toolbar style & sidebar thickness bounds + BPStyle Tahoe defaults
+    BPMainWindowController *mainWC = [[BPMainWindowController alloc] initWithWindow:mainWindow];
+    NSScrollView *sidebarScroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 200, 400)];
+    NSView *contentContainer = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 600, 400)];
+    mainWC.sidebarView = sidebarScroll;
+    mainWC.windowContentView = contentContainer;
+    [mainWC setUpViews];
+    XCTAssertEqual(mainWindow.toolbarStyle, NSWindowToolbarStyleUnified);
+    NSSplitViewItem *sidebarItem = mainWC.splitViewController.splitViewItems.firstObject;
+    XCTAssertEqualWithAccuracy(sidebarItem.minimumThickness, 190.0, 0.1);
+    XCTAssertEqualWithAccuracy(sidebarItem.maximumThickness, 280.0, 0.1);
+    XCTAssertEqual([BPStyle toolbarSize], NSToolbarSizeModeDefault);
+    XCTAssertNotNil([BPStyle defaultFixedWidthFont]);
 }
 
 @end

@@ -29,7 +29,7 @@
 	
 	if (!font)
 	{
-		font = [NSFont fontWithName:@"Andale Mono" size:12];
+		font = [NSFont monospacedSystemFontOfSize:12.0 weight:NSFontWeightRegular];
 		if (!font)
 			font = [NSFont fontWithName:@"Menlo" size:12];
 		if (!font)
@@ -43,7 +43,7 @@
 
 + (NSToolbarSizeMode)toolbarSize
 {
-	return NSToolbarSizeModeSmall;
+	return NSToolbarSizeModeDefault;
 }
 
 + (NSImage *)toolbarImageForInstall
@@ -128,7 +128,11 @@
 
 + (NSImage *)appropriateIconForToolbarWithName:(NSString *)name orSymbol:(NSString *)symbol
 {
-	return [NSImage imageWithSystemSymbolName:symbol accessibilityDescription:name];
+	NSImage *image = [NSImage imageWithSystemSymbolName:symbol accessibilityDescription:name];
+	NSImageSymbolConfiguration *config = [NSImageSymbolConfiguration configurationWithScale:NSImageSymbolScaleMedium];
+	NSImage *configured = [image imageWithSymbolConfiguration:config] ?: image;
+	configured.template = YES;
+	return configured;
 }
 
 #pragma mark Popover

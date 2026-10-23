@@ -48,6 +48,16 @@ public final class BPFormulaInformationHost: NSObject {
     @objc public func close() {
         presentation.state.close()
     }
+
+    @objc
+    @discardableResult
+    public func copyInformationToPasteboard() -> String {
+        let text = presentation.state.information ?? ""
+        guard !text.isEmpty else { return "" }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        return text
+    }
 }
 
 func BPFormulaInformationAttributedText(_ information: String) -> AttributedString {
@@ -69,6 +79,25 @@ private struct BPFormulaInformationView: View {
 
     private var mode: BPFormulaInformationMode {
         presentation.state.request?.identity.mode ?? .general
+    }
+
+    private var isCask: Bool {
+        presentation.state.request?.identity.cask ?? false
+    }
+
+    private var headerSymbolName: String {
+        switch mode {
+        case .general:
+            return isCask ? "macwindow" : "shippingbox.fill"
+        case .installedDependents, .allDependents:
+            return "point.3.connected.trianglepath.dotted"
+        }
+    }
+
+    private var kindBadgeText: String {
+        isCask
+            ? BPLocalizedWithFallback("Casks", fallback: "Cask")
+            : BPLocalizedWithFallback("Formulae", fallback: "Formula")
     }
 
     private var titleText: String {
@@ -110,11 +139,57 @@ private struct BPFormulaInformationView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(titleText)
-                .font(.headline)
-                .textSelection(.enabled)
-                .accessibilityAddTraits(.isHeader)
-                .accessibilityIdentifier(titleIdentifier)
+            HStack(spacing: 10) {
+                Image(systemName: headerSymbolName)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Color.accentColor)
+                    .frame(width: 26, height: 26)
+                    .background(
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .fill(Color.accentColor.opacity(0.12))
+                    )
+
+                Text(titleText)
+                    .font(.headline)
+                    .textSelection(.enabled)
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityIdentifier(titleIdentifier)
+
+                Text(kindBadgeText)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 2)
+                    .background(
+                        Capsule(style: .continuous)
+                            .fill(Color.primary.opacity(0.06))
+                    )
+
+                Spacer(minLength: 4)
+
+                if let website = presentation.state.website {
+                    Button {
+                        NSWorkspace.shared.open(website)
+                    } label: {
+                        Image(systemName: "safari")
+                    }
+                    .buttonStyle(.borderless)
+                    .help(website.absoluteString)
+                    .accessibilityIdentifier("formula.information.website")
+                }
+
+                if let info = presentation.state.information, !info.isEmpty {
+                    Button {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(info, forType: .string)
+                    } label: {
+                        Image(systemName: "doc.on.doc")
+                    }
+                    .buttonStyle(.borderless)
+                    .help(BPLocalizedWithFallback("Services_Copy_Output", fallback: "Copy Output"))
+                    .accessibilityIdentifier("formula.information.copy")
+                }
+            }
             Divider()
             if presentation.state.isLoading {
                 ProgressView(NSLocalizedString("Loading_Status_Default", comment: ""))
@@ -3879,5 +3954,185 @@ private struct BPCommandPaletteView: View {
         }
         .padding(16)
         .frame(width: 520, height: 380)
+    }
+}
+
+// MARK: - SwiftUI Tahoe Status Bar Host
+
+@MainActor
+private final class BPStatusBarPresentation: ObservableObject {
+    @Published var state = BPStatusBarState()
+    var onOpenCommandPalette: (() -> Void)?
+    var onOpenUnifiedUpdates: (() -> Void)?
+}
+
+@MainActor
+@objc(BPStatusBarHost)
+public final class BPStatusBarHost: NSObject {
+    private let presentation = BPStatusBarPresentation()
+    @objc public let viewController: NSViewController
+
+    @objc public var onOpenCommandPalette: (() -> Void)? {
+        get { presentation.onOpenCommandPalette }
+        set { presentation.onOpenCommandPalette = newValue }
+    }
+
+    @objc public var onOpenUnifiedUpdates: (() -> Void)? {
+        get { presentation.onOpenUnifiedUpdates }
+        set { presentation.onOpenUnifiedUpdates = newValue }
+    }
+
+    @objc public var message: String {
+        get { presentation.state.message }
+        set { presentation.state.message = newValue }
+    }
+
+    @objc public var isBusy: Bool {
+        get { presentation.state.isBusy }
+        set { presentation.state.isBusy = newValue }
+    }
+
+    @objc public var installedCount: Int {
+        get { presentation.state.installedCount }
+        set { presentation.state.installedCount = newValue }
+    }
+
+    @objc public var outdatedCount: Int {
+        get { presentation.state.outdatedCount }
+        set { presentation.state.outdatedCount = newValue }
+    }
+
+    @objc public var pinnedCount: Int {
+        get { presentation.state.pinnedCount }
+        set { presentation.state.pinnedCount = newValue }
+    }
+
+    @objc public override init() {
+        let presentation = self.presentation
+        let host = NSHostingController(rootView: BPStatusBarView(presentation: presentation))
+        host.sizingOptions = []
+        viewController = host
+        super.init()
+    }
+
+    @objc(updateWithMessage:isBusy:installedCount:outdatedCount:pinnedCount:)
+    public func update(message: String,
+                       isBusy: Bool,
+                       installedCount: Int,
+                       outdatedCount: Int,
+                       pinnedCount: Int) {
+        presentation.state = BPStatusBarState(
+            message: message,
+            isBusy: isBusy,
+            installedCount: installedCount,
+            outdatedCount: outdatedCount,
+            pinnedCount: pinnedCount
+        )
+    }
+
+    @objc public func triggerCommandPalette() {
+        presentation.onOpenCommandPalette?()
+    }
+
+    @objc public func triggerUnifiedUpdates() {
+        presentation.onOpenUnifiedUpdates?()
+    }
+}
+
+@MainActor
+private struct BPStatusBarView: View {
+    @ObservedObject var presentation: BPStatusBarPresentation
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Divider()
+                .opacity(0.6)
+
+            HStack(spacing: 10) {
+                if presentation.state.isBusy {
+                    ProgressView()
+                        .controlSize(.small)
+                        .scaleEffect(0.72)
+                        .frame(width: 14, height: 14)
+                        .accessibilityIdentifier("statusBar.activity")
+                } else {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+
+                Text(presentation.state.message)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .accessibilityIdentifier("statusBar.message")
+
+                Spacer(minLength: 8)
+
+                if presentation.state.installedCount > 0 {
+                    HStack(spacing: 4) {
+                        Image(systemName: "shippingbox")
+                            .font(.system(size: 10, weight: .semibold))
+                        Text("\(presentation.state.installedCount)")
+                            .font(.system(size: 10.5, weight: .semibold).monospacedDigit())
+                    }
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(
+                        Capsule(style: .continuous)
+                            .fill(Color.primary.opacity(0.05))
+                    )
+                    .accessibilityIdentifier("statusBar.installedCount")
+                }
+
+                if presentation.state.outdatedCount > 0 {
+                    Button {
+                        presentation.onOpenUnifiedUpdates?()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.down.circle.fill")
+                                .font(.system(size: 10, weight: .semibold))
+                            Text("\(presentation.state.outdatedCount)")
+                                .font(.system(size: 10.5, weight: .semibold).monospacedDigit())
+                        }
+                        .foregroundStyle(Color.orange)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 2)
+                        .background(
+                            Capsule(style: .continuous)
+                                .fill(Color.orange.opacity(0.14))
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("statusBar.outdatedButton")
+                }
+
+                Button {
+                    presentation.onOpenCommandPalette?()
+                } label: {
+                    HStack(spacing: 3) {
+                        Image(systemName: "command")
+                            .font(.system(size: 9.5, weight: .semibold))
+                        Text("K")
+                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    }
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(
+                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                            .fill(Color.primary.opacity(0.06))
+                    )
+                }
+                .buttonStyle(.plain)
+                .help(BPLocalizedWithFallback("Command_Palette_Title", fallback: "Command Palette"))
+                .accessibilityIdentifier("statusBar.commandPaletteButton")
+            }
+            .padding(.horizontal, 12)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .background(.ultraThinMaterial)
     }
 }

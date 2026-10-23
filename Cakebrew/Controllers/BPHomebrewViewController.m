@@ -104,6 +104,7 @@ NSOpenSavePanelDelegate>
 @property (strong, nonatomic) BPInstalledPackageListHost		*installedPackageListHost;
 @property (strong, nonatomic) BPUnifiedUpdatesHost				*unifiedUpdatesHost;
 @property (strong, nonatomic, readwrite) BPCommandPaletteHost	*commandPaletteHost;
+@property (strong, nonatomic, readwrite) BPStatusBarHost		*statusBarHost;
 @property (strong, nonatomic) NSWindow							*commandPaletteSheetWindow;
 @property (strong, nonatomic) BPFormulaOptionsWindowController	*formulaOptionsWindowController;
 @property (strong, nonatomic) NSWindowController				*operationWindowController;
@@ -177,6 +178,7 @@ NSOpenSavePanelDelegate>
 - (void)updatesSnapshotChanged:(NSNotification *)notification
 {
     self.enableUpgradeAllMenu = _homebrewManager.updatesSnapshot.hasEligibleUpdates;
+    [self syncStatusBarHost];
 }
 
 - (void)didReceiveBackgroundActivityNotification:(NSNotification*)notification
@@ -185,11 +187,13 @@ NSOpenSavePanelDelegate>
 	{
 		[[self backgroundActivityIndicator] performSelectorOnMainThread:@selector(startAnimation:)
 															 withObject:self waitUntilDone:YES];
+		self.statusBarHost.isBusy = YES;
 	}
 	else if ([[notification name] isEqualToString:kDidEndBackgroundActivityNotification])
 	{
 		[[self backgroundActivityIndicator] performSelectorOnMainThread:@selector(stopAnimation:)
 															 withObject:self waitUntilDone:YES];
+		self.statusBarHost.isBusy = NO;
 	}
 }
 
@@ -204,6 +208,7 @@ NSOpenSavePanelDelegate>
 	self.formulaeTableView.dataSource = self.formulaeDataSource;
 	[self setUpInstalledPackageListHost];
 	[self setUpUnifiedUpdatesHost];
+	[self setUpStatusBarHost];
 
 	// Restore the sort the user last chose, so the header indicator and the row
 	// order agree with each other on launch.
@@ -538,6 +543,50 @@ NSOpenSavePanelDelegate>
 	};
 }
 
+- (void)setUpStatusBarHost
+{
+	BPStatusBarHost *host = [[BPStatusBarHost alloc] init];
+	__weak typeof(self) weakSelf = self;
+	host.onOpenCommandPalette = ^{
+		[weakSelf showCommandPalette:nil];
+	};
+	host.onOpenUnifiedUpdates = ^{
+		[weakSelf showUnifiedUpdates:nil];
+	};
+	self.statusBarHost = host;
+
+	NSView *footerContainer = self.label_information.superview;
+	if (footerContainer)
+	{
+		self.label_information.alphaValue = 0.0;
+		self.backgroundActivityIndicator.alphaValue = 0.0;
+		NSView *barView = host.viewController.view;
+		barView.translatesAutoresizingMaskIntoConstraints = NO;
+		[footerContainer addSubview:barView];
+		[NSLayoutConstraint activateConstraints:@[
+			[barView.leadingAnchor constraintEqualToAnchor:footerContainer.leadingAnchor],
+			[barView.trailingAnchor constraintEqualToAnchor:footerContainer.trailingAnchor],
+			[barView.bottomAnchor constraintEqualToAnchor:footerContainer.bottomAnchor],
+			[barView.heightAnchor constraintEqualToConstant:26.0]
+		]];
+	}
+	[self syncStatusBarHost];
+}
+
+- (void)syncStatusBarHost
+{
+	if (!self.statusBarHost) return;
+	NSString *message = self.label_information.stringValue ?: @"";
+	NSInteger installedCount = (NSInteger)(_homebrewManager.installedFormulae.count + _homebrewManager.installedCasks.count);
+	NSInteger outdatedCount = (NSInteger)(_homebrewManager.outdatedFormulae.count + _homebrewManager.outdatedCasks.count);
+	NSInteger pinnedCount = (NSInteger)_homebrewManager.pinnedFormulae.count;
+	[self.statusBarHost updateWithMessage:message
+								   isBusy:self.statusBarHost.isBusy
+						   installedCount:installedCount
+							outdatedCount:outdatedCount
+							  pinnedCount:pinnedCount];
+}
+
 - (void)syncUnifiedUpdatesHostRows
 {
 	if (!self.unifiedUpdatesHost) return;
@@ -854,6 +903,7 @@ NSOpenSavePanelDelegate>
 	[self.label_information setStringValue:resolved];
 	NSWindow *window = self.view.window ?: _appDelegate.window;
 	window.subtitle = resolved;
+	[self syncStatusBarHost];
 }
 
 #pragma mark - Homebrew Manager Delegate
@@ -911,6 +961,7 @@ NSOpenSavePanelDelegate>
 	// runs once per list — which is how the app lost the row the user had
 	// reopened on.
 	[self.sidebarController refreshBadgeForListMode:mode];
+	[self syncStatusBarHost];
 
 	if (mode == kBPListOutdated)
 	{

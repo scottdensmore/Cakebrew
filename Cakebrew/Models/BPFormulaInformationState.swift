@@ -1282,3 +1282,23 @@ public struct BPCommandPaletteState: Equatable, Sendable {
         self.selectedItemID = current[nextIndex].id
     }
 }
+
+public struct BPStatusBarState: Equatable, Sendable {
+    public var message: String
+    public var isBusy: Bool
+    public var installedCount: Int
+    public var outdatedCount: Int
+    public var pinnedCount: Int
+
+    public init(message: String = "",
+                isBusy: Bool = false,
+                installedCount: Int = 0,
+                outdatedCount: Int = 0,
+                pinnedCount: Int = 0) {
+        self.message = message
+        self.isBusy = isBusy
+        self.installedCount = installedCount
+        self.outdatedCount = outdatedCount
+        self.pinnedCount = pinnedCount
+    }
+}
