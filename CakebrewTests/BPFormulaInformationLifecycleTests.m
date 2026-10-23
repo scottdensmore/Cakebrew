@@ -28,6 +28,8 @@
 #import "BPStyle.h"
 #import "BPTask.h"
 #import "DCOAboutWindowController.h"
+#import "BPFormulaeTableAction.h"
+#import "BPCleanupPreview.h"
 #import "BPFormulaInformation-Swift.h"
 
 @interface BPHomebrewInterface (BPTestingInjection)
@@ -1379,6 +1381,78 @@
     XCTAssertEqualWithAccuracy(sidebarItem.maximumThickness, 280.0, 0.1);
     XCTAssertEqual([BPStyle toolbarSize], NSToolbarSizeModeDefault);
     XCTAssertNotNil([BPStyle defaultFixedWidthFont]);
+}
+
+- (void)testEndToEndSidebarHostInteractiveInspectorAndOperationAccessoryCards
+{
+    // 1. BPSideBarController + BPSidebarHost synchronization + programmatic cell fallback
+    NSWindow *mainWindow = nil;
+    BPHomebrewViewController *vc = [self makeWiredHomebrewViewControllerInWindow:&mainWindow];
+    BPSideBarController *sidebarController = vc.sidebarController;
+    XCTAssertNotNil(sidebarController.sidebarHost);
+    XCTAssertEqual(sidebarController.sidebarHost.sectionCount, 3);
+    XCTAssertEqual(sidebarController.sidebarHost.selectableRowCount, 13);
+    XCTAssertGreaterThan([sidebarController.sidebarHost badgeCountForRowIndex:FormulaeSideBarItemInstalled], 0);
+
+    [sidebarController.sidebarHost selectRowAtIndex:FormulaeSideBarItemPinned];
+    XCTAssertEqual(sidebarController.sidebarHost.selectedRowIndex, (NSInteger)FormulaeSideBarItemPinned);
+    XCTAssertEqual(sidebarController.sidebar.selectedRow, (NSInteger)FormulaeSideBarItemPinned);
+
+    // Programmatic cell builder fallback when NSOutlineView has no XIB cell templates
+    NSOutlineView *plainOutline = [[NSOutlineView alloc] initWithFrame:NSMakeRect(0, 0, 200, 300)];
+    NSTableColumn *col = [[NSTableColumn alloc] initWithIdentifier:@"Main"];
+    [plainOutline addTableColumn:col];
+    plainOutline.outlineTableColumn = col;
+    id groupItem = [sidebarController outlineView:plainOutline child:0 ofItem:nil];
+    NSView *headerCell = [sidebarController outlineView:plainOutline viewForTableColumn:col item:groupItem];
+    XCTAssertTrue([headerCell isKindOfClass:BPSidebarTableCellView.class]);
+    id rowItem = [sidebarController outlineView:plainOutline child:0 ofItem:groupItem];
+    BPSidebarTableCellView *mainCell = (BPSidebarTableCellView *)[sidebarController outlineView:plainOutline
+                                                                             viewForTableColumn:col
+                                                                                           item:rowItem];
+    XCTAssertTrue([mainCell isKindOfClass:BPSidebarTableCellView.class]);
+    XCTAssertEqualObjects(mainCell.textField.accessibilityIdentifier, @"sidebar.formulae.installed");
+    XCTAssertNotNil(mainCell.badgeView);
+
+    // 2. Interactive Package Inspector (BPSelectedFormulaViewController + BPSelectedFormulaHost + BPHomebrewViewController)
+    [sidebarController.sidebarHost selectRowAtIndex:FormulaeSideBarItemInstalled];
+    BPSelectedFormulaViewController *selectedVC = [vc valueForKey:@"selectedFormulaeViewController"];
+    XCTAssertNotNil(selectedVC);
+    XCTAssertNotNil(selectedVC.inspectorHost);
+
+    BPFormula *wget = [BPFormula formulaWithName:@"mockwget" version:@"1.21" andLatestVersion:@"1.21"];
+    [wget setValue:@"/tmp (10 files, 1MB)" forKey:@"installPath"];
+    [wget setValue:@"mockgit, openssl" forKey:@"dependencies"];
+    selectedVC.formulae = @[wget];
+
+    NSString *copiedPath = [selectedVC.inspectorHost copyInstallPathToPasteboard];
+    XCTAssertEqualObjects(copiedPath, @"/tmp (10 files, 1MB)");
+    XCTAssertEqualObjects([NSPasteboard.generalPasteboard stringForType:NSPasteboardTypeString], copiedPath);
+
+    [selectedVC.inspectorHost selectRelatedPackageNamed:@"mockgit"];
+    XCTAssertEqual(vc.sidebarController.sidebar.selectedRow, (NSInteger)FormulaeSideBarItemInstalled);
+    XCTAssertEqualObjects([vc selectedFormula].name, @"mockgit");
+
+    // 3. SwiftUI Operation Accessory Cards (BPTapInputHost & BPCleanupPreviewHost)
+    NSTextField *tapField = nil;
+    NSAlert *tapAlert = [BPPackageOperationPresenter tapInputAlertWithInputField:&tapField];
+    BPTapInputHost *tapHost = [BPPackageOperationPresenter tapInputHostForAlert:tapAlert];
+    XCTAssertNotNil(tapHost);
+    XCTAssertEqual(tapHost.inputField, tapField);
+    XCTAssertFalse(tapHost.isValidFormat);
+    tapHost.repositoryName = @"scottdensmore/cakebrew";
+    XCTAssertTrue(tapHost.isValidFormat);
+    XCTAssertEqualObjects(tapField.stringValue, @"scottdensmore/cakebrew");
+
+    BPCleanupPreview *cleanupPreview = [BPCleanupPreview previewFromOutput:
+        @"Would remove: /Users/x/Library/Caches/Homebrew/wget--1.21.3.tar.gz (1.5MB)\n"
+        @"==> This operation would free approximately 49.2MB of disk space.\n"];
+    NSAlert *cleanupAlert = [BPPackageOperationPresenter cleanupAlertForPreview:cleanupPreview];
+    BPCleanupPreviewHost *cleanupHost = [BPPackageOperationPresenter cleanupPreviewHostForAlert:cleanupAlert];
+    XCTAssertNotNil(cleanupHost);
+    XCTAssertEqual(cleanupHost.itemCount, 1);
+    XCTAssertGreaterThan(cleanupHost.reclaimableBytes, 0ull);
+    XCTAssertGreaterThan(cleanupHost.formattedByteCount.length, 0u);
 }
 
 @end

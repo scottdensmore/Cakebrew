@@ -5,6 +5,8 @@
 
 @class BPCleanupPreview;
 @class BPUpdatesSnapshot;
+@class BPTapInputHost;
+@class BPCleanupPreviewHost;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -66,6 +68,8 @@ typedef NS_ENUM(NSInteger, BPFormulaeTableAction) {
 
 + (NSAlert *)tapInputAlertWithInputField:(NSTextField * _Nullable * _Nullable)outField;
 
++ (nullable BPTapInputHost *)tapInputHostForAlert:(nullable NSAlert *)alert;
+
 + (NSAlert *)invalidTapAlert;
 
 + (nullable NSAlert *)untapAlertForFormula:(nullable BPFormula *)formula;
@@ -73,6 +77,8 @@ typedef NS_ENUM(NSInteger, BPFormulaeTableAction) {
 + (NSString *)cleanupConfirmationBodyForPreview:(BPCleanupPreview *)preview;
 
 + (NSAlert *)cleanupAlertForPreview:(BPCleanupPreview *)preview;
+
++ (nullable BPCleanupPreviewHost *)cleanupPreviewHostForAlert:(nullable NSAlert *)alert;
 
 + (NSDictionary<NSString *, NSArray<NSString *> *> *)brewfileInventoriesForInstalledFormulae:(nullable NSArray<BPFormula *> *)formulae
                                                                               installedCasks:(nullable NSArray<BPFormula *> *)casks

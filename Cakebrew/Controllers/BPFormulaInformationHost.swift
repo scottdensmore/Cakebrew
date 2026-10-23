@@ -219,6 +219,9 @@ private struct BPFormulaInformationView: View {
 @MainActor
 private final class BPSelectedFormulaPresentation: ObservableObject {
     @Published var state = BPSelectedFormulaState()
+    var onSelectRelatedPackage: ((String) -> Void)?
+    var onShowMoreInfo: (() -> Void)?
+    var onOpenWebsite: (() -> Void)?
 }
 
 @MainActor
@@ -226,6 +229,21 @@ private final class BPSelectedFormulaPresentation: ObservableObject {
 public final class BPSelectedFormulaHost: NSObject {
     private let presentation = BPSelectedFormulaPresentation()
     @objc public let viewController: NSViewController
+
+    @objc public var onSelectRelatedPackage: ((String) -> Void)? {
+        get { presentation.onSelectRelatedPackage }
+        set { presentation.onSelectRelatedPackage = newValue }
+    }
+
+    @objc public var onShowMoreInfo: (() -> Void)? {
+        get { presentation.onShowMoreInfo }
+        set { presentation.onShowMoreInfo = newValue }
+    }
+
+    @objc public var onOpenWebsite: (() -> Void)? {
+        get { presentation.onOpenWebsite }
+        set { presentation.onOpenWebsite = newValue }
+    }
 
     public override init() {
         let presentation = self.presentation
@@ -295,6 +313,49 @@ public final class BPSelectedFormulaHost: NSObject {
             identity: BPFormulaInformationIdentity(name: name, cask: cask, mode: .general),
             generation: generation)
         presentation.state.receiveDependents(dependents, for: request)
+    }
+
+    @objc public func copyInstallPathToPasteboard() -> String {
+        guard case .single(let snapshot) = presentation.state.selection,
+              snapshot.isInstalled,
+              let path = snapshot.installPath,
+              !path.isEmpty else {
+            return ""
+        }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(path, forType: .string)
+        return path
+    }
+
+    @objc public func revealInstallPathInFinder() -> Bool {
+        guard case .single(let snapshot) = presentation.state.selection,
+              snapshot.isInstalled,
+              let rawPath = snapshot.installPath,
+              !rawPath.isEmpty else {
+            return false
+        }
+        let firstToken = rawPath.components(separatedBy: " ").first ?? rawPath
+        let url = URL(fileURLWithPath: firstToken)
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return false
+        }
+        NSWorkspace.shared.activateFileViewerSelecting([url])
+        return true
+    }
+
+    @objc(selectRelatedPackageNamed:)
+    public func selectRelatedPackage(named name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        presentation.onSelectRelatedPackage?(trimmed)
+    }
+
+    @objc public func triggerShowMoreInfo() {
+        presentation.onShowMoreInfo?()
+    }
+
+    @objc public func triggerOpenWebsite() {
+        presentation.onOpenWebsite?()
     }
 }
 
@@ -396,6 +457,29 @@ private struct BPSelectedFormulaInspectorView: View {
         return "info.circle"
     }
 
+    private var relatedPackageNames: [String] {
+        guard case .single(let snapshot) = presentation.state.selection,
+              !snapshot.identity.cask else {
+            return []
+        }
+        var seen = Set<String>()
+        var result: [String] = []
+        for dep in snapshot.dependencyNames {
+            if seen.insert(dep).inserted {
+                result.append(dep)
+            }
+        }
+        if let dependents = presentation.state.dependents {
+            for dep in dependents {
+                let trimmed = dep.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmed.isEmpty && seen.insert(trimmed).inserted {
+                    result.append(trimmed)
+                }
+            }
+        }
+        return result
+    }
+
     var body: some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 6) {
@@ -409,17 +493,57 @@ private struct BPSelectedFormulaInspectorView: View {
                         .accessibilityAddTraits(.isHeader)
                         .accessibilityIdentifier("formula.detail.header")
                     Spacer()
-                    if let path = copyableInstallPath {
-                        Button {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(path, forType: .string)
-                        } label: {
-                            Image(systemName: "doc.on.doc")
-                                .font(.system(size: 11))
+                    if case .single = presentation.state.selection {
+                        if let path = copyableInstallPath {
+                            Button {
+                                let firstToken = path.components(separatedBy: " ").first ?? path
+                                let url = URL(fileURLWithPath: firstToken)
+                                if FileManager.default.fileExists(atPath: url.path) {
+                                    NSWorkspace.shared.activateFileViewerSelecting([url])
+                                }
+                            } label: {
+                                Image(systemName: "folder")
+                                    .font(.system(size: 11))
+                            }
+                            .buttonStyle(.borderless)
+                            .help(NSLocalizedString("Services_Reveal_File", comment: ""))
+                            .accessibilityIdentifier("formula.detail.revealPath")
+
+                            Button {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(path, forType: .string)
+                            } label: {
+                                Image(systemName: "doc.on.doc")
+                                    .font(.system(size: 11))
+                            }
+                            .buttonStyle(.borderless)
+                            .help(NSLocalizedString("Services_Copy_Output", comment: ""))
+                            .accessibilityIdentifier("formula.detail.copyPath")
                         }
-                        .buttonStyle(.borderless)
-                        .help(NSLocalizedString("Services_Copy_Output", comment: ""))
-                        .accessibilityIdentifier("formula.detail.copyPath")
+
+                        if presentation.onShowMoreInfo != nil {
+                            Button {
+                                presentation.onShowMoreInfo?()
+                            } label: {
+                                Image(systemName: "info.circle")
+                                    .font(.system(size: 11))
+                            }
+                            .buttonStyle(.borderless)
+                            .help(NSLocalizedString("Toolbar_More_Information", comment: ""))
+                            .accessibilityIdentifier("formula.detail.moreInfo")
+                        }
+
+                        if presentation.onOpenWebsite != nil {
+                            Button {
+                                presentation.onOpenWebsite?()
+                            } label: {
+                                Image(systemName: "safari")
+                                    .font(.system(size: 11))
+                            }
+                            .buttonStyle(.borderless)
+                            .help(NSLocalizedString("Toolbar_Formula_Website", comment: ""))
+                            .accessibilityIdentifier("formula.detail.website")
+                        }
                     }
                 }
 
@@ -461,6 +585,36 @@ private struct BPSelectedFormulaInspectorView: View {
                             voiceOverLabel: NSLocalizedString("Sidebar_Item_Pinned", comment: ""),
                             identifier: "formula.detail.pinned")
                     }
+                }
+
+                if presentation.onSelectRelatedPackage != nil && !relatedPackageNames.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 5) {
+                            ForEach(relatedPackageNames.prefix(8), id: \.self) { pkgName in
+                                Button {
+                                    presentation.onSelectRelatedPackage?(pkgName)
+                                } label: {
+                                    HStack(spacing: 3) {
+                                        Image(systemName: "arrow.turn.down.right")
+                                            .font(.system(size: 8.5, weight: .semibold))
+                                        Text(pkgName)
+                                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                                            .accessibilityIdentifier("formula.detail.chipLabel.\(pkgName)")
+                                    }
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(
+                                        Capsule(style: .continuous)
+                                            .fill(Color.primary.opacity(0.06))
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityIdentifier("formula.detail.chip.\(pkgName)")
+                            }
+                        }
+                    }
+                    .padding(.top, 2)
                 }
             }
             .padding(.horizontal, 10)
@@ -4134,5 +4288,365 @@ private struct BPStatusBarView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(.ultraThinMaterial)
+    }
+}
+
+// MARK: - SwiftUI Tahoe Sidebar Host & Operation Accessory Cards
+
+@MainActor
+private final class BPSidebarPresentation: ObservableObject {
+    @Published var state = BPSidebarState()
+    var onSelectRow: ((Int) -> Void)?
+}
+
+@MainActor
+@objc(BPSidebarHost)
+public final class BPSidebarHost: NSObject {
+    private let presentation = BPSidebarPresentation()
+    @objc public let viewController: NSViewController
+
+    @objc public var onSelectRow: ((Int) -> Void)? {
+        get { presentation.onSelectRow }
+        set { presentation.onSelectRow = newValue }
+    }
+
+    @objc public var selectedRowIndex: Int {
+        get { presentation.state.selectedRowIndex }
+        set { presentation.state.selectedRowIndex = newValue }
+    }
+
+    @objc public var sectionCount: Int {
+        presentation.state.sections.count
+    }
+
+    @objc public var selectableRowCount: Int {
+        presentation.state.allRows.count
+    }
+
+    @objc public override init() {
+        let presentation = self.presentation
+        let host = NSHostingController(rootView: BPSidebarView(presentation: presentation))
+        host.sizingOptions = []
+        viewController = host
+        super.init()
+    }
+
+    @objc public func removeAllSections() {
+        presentation.state.sections.removeAll()
+    }
+
+    @objc(addSectionWithRowIndex:title:)
+    public func addSection(rowIndex: Int, title: String) {
+        presentation.state.sections.append(BPSidebarSectionState(rowIndex: rowIndex, title: title))
+    }
+
+    @objc(addRowToSectionAtRowIndex:rowIndex:title:groupTitle:symbolName:badgeCount:accessibilityIdentifier:accessibilityLabel:)
+    public func addRow(toSectionAtRowIndex sectionRowIndex: Int,
+                       rowIndex: Int,
+                       title: String,
+                       groupTitle: String,
+                       symbolName: String,
+                       badgeCount: Int,
+                       accessibilityIdentifier: String,
+                       accessibilityLabel: String) {
+        guard let sectionIdx = presentation.state.sections.firstIndex(where: { $0.rowIndex == sectionRowIndex }) else {
+            return
+        }
+        let row = BPSidebarRowState(
+            rowIndex: rowIndex,
+            title: title,
+            groupTitle: groupTitle,
+            symbolName: symbolName,
+            badgeCount: badgeCount,
+            accessibilityIdentifier: accessibilityIdentifier,
+            accessibilityLabel: accessibilityLabel
+        )
+        presentation.state.sections[sectionIdx].rows.append(row)
+    }
+
+    @objc(badgeCountForRowIndex:)
+    public func badgeCount(forRowIndex rowIndex: Int) -> Int {
+        presentation.state.badgeCount(forRowIndex: rowIndex)
+    }
+
+    @objc(selectRowAtIndex:)
+    public func selectRow(atIndex rowIndex: Int) {
+        presentation.state.selectedRowIndex = rowIndex
+        presentation.onSelectRow?(rowIndex)
+    }
+}
+
+@MainActor
+private struct BPSidebarView: View {
+    @ObservedObject var presentation: BPSidebarPresentation
+
+    var body: some View {
+        ScrollView(.vertical) {
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(presentation.state.sections) { section in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(section.title)
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 10)
+                            .padding(.bottom, 2)
+
+                        ForEach(section.rows) { row in
+                            let isSelected = presentation.state.selectedRowIndex == row.rowIndex
+                            Button {
+                                presentation.state.selectedRowIndex = row.rowIndex
+                                presentation.onSelectRow?(row.rowIndex)
+                            } label: {
+                                HStack(spacing: 8) {
+                                    Image(systemName: row.symbolName.isEmpty ? "folder" : row.symbolName)
+                                        .font(.system(size: 12.5, weight: .medium))
+                                        .foregroundStyle(isSelected ? Color.white : Color.accentColor)
+                                        .frame(width: 16)
+
+                                    Text(row.title)
+                                        .font(.system(size: 12.5, weight: isSelected ? .semibold : .regular))
+                                        .foregroundStyle(isSelected ? Color.white : Color.primary)
+                                        .lineLimit(1)
+                                        .accessibilityIdentifier(row.accessibilityIdentifier)
+                                        .accessibilityLabel(row.accessibilityLabel.isEmpty ? row.title : row.accessibilityLabel)
+
+                                    Spacer(minLength: 4)
+
+                                    if row.badgeCount >= 0 {
+                                        Text("\(row.badgeCount)")
+                                            .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                                            .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+                                            .padding(.horizontal, 7)
+                                            .padding(.vertical, 1.5)
+                                            .background(
+                                                Capsule(style: .continuous)
+                                                    .fill(isSelected ? Color.white.opacity(0.92) : Color.secondary.opacity(0.14))
+                                            )
+                                    }
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                        .fill(isSelected ? Color.accentColor : Color.clear)
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
+            .padding(8)
+        }
+        .accessibilityLabel(NSLocalizedString("Sidebar_VoiceOver_Sidebar", comment: ""))
+    }
+}
+
+private struct BPAppKitTextFieldWrapper: NSViewRepresentable {
+    let textField: NSTextField
+
+    func makeNSView(context: Context) -> NSTextField {
+        textField
+    }
+
+    func updateNSView(_ nsView: NSTextField, context: Context) {}
+}
+
+@MainActor
+private final class BPTapInputPresentation: ObservableObject {
+    @Published var state = BPTapInputState()
+}
+
+@MainActor
+@objc(BPTapInputHost)
+public final class BPTapInputHost: NSObject, NSTextFieldDelegate {
+    private let presentation = BPTapInputPresentation()
+    @objc public let inputField: NSTextField
+    @objc public let viewController: NSViewController
+
+    @objc public var repositoryName: String {
+        get { presentation.state.repositoryName }
+        set {
+            inputField.stringValue = newValue
+            presentation.state.repositoryName = newValue
+        }
+    }
+
+    @objc public var isValidFormat: Bool {
+        presentation.state.isValidFormat
+    }
+
+    @objc public override init() {
+        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 280, height: 24))
+        field.placeholderString = "user/repo"
+        field.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+        field.bezelStyle = .roundedBezel
+        inputField = field
+
+        let presentation = self.presentation
+        let host = NSHostingController(
+            rootView: BPTapInputCardView(presentation: presentation, inputField: field)
+        )
+        host.sizingOptions = []
+        host.view.frame = NSRect(x: 0, y: 0, width: 320, height: 68)
+        viewController = host
+        super.init()
+        field.delegate = self
+    }
+
+    public func controlTextDidChange(_ obj: Notification) {
+        presentation.state.repositoryName = inputField.stringValue
+    }
+}
+
+@MainActor
+private struct BPTapInputCardView: View {
+    @ObservedObject var presentation: BPTapInputPresentation
+    let inputField: NSTextField
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            BPAppKitTextFieldWrapper(textField: inputField)
+                .frame(height: 24)
+
+            HStack(spacing: 5) {
+                if presentation.state.trimmedName.isEmpty {
+                    Image(systemName: "building.columns")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                    Text("user/repo (e.g. homebrew/cask-fonts)")
+                        .font(.system(size: 10.5, weight: .medium, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                } else if presentation.state.isValidFormat {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 10.5, weight: .semibold))
+                        .foregroundStyle(.green)
+                    Text(presentation.state.trimmedName)
+                        .font(.system(size: 10.5, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                } else {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 10.5, weight: .semibold))
+                        .foregroundStyle(.orange)
+                    Text(NSLocalizedString("Message_Tap_Invalid_Title", comment: ""))
+                        .font(.system(size: 10.5, weight: .medium))
+                        .foregroundStyle(.orange)
+                }
+            }
+            .accessibilityIdentifier("tap.input.validation")
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .frame(width: 320, height: 68, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.primary.opacity(0.04))
+        )
+    }
+}
+
+@MainActor
+private final class BPCleanupPreviewPresentation: ObservableObject {
+    @Published var state: BPCleanupPreviewState
+
+    init(state: BPCleanupPreviewState) {
+        self.state = state
+    }
+}
+
+@MainActor
+@objc(BPCleanupPreviewHost)
+public final class BPCleanupPreviewHost: NSObject {
+    private let presentation: BPCleanupPreviewPresentation
+    @objc public let viewController: NSViewController
+
+    @objc public var itemCount: Int {
+        presentation.state.itemCount
+    }
+
+    @objc public var reclaimableBytes: UInt64 {
+        presentation.state.reclaimableBytes
+    }
+
+    @objc public var formattedByteCount: String {
+        presentation.state.formattedByteCount
+    }
+
+    @objc(initWithItemCount:reclaimableBytes:formattedByteCount:samplePaths:)
+    public init(itemCount: Int,
+                reclaimableBytes: UInt64,
+                formattedByteCount: String,
+                samplePaths: [String]) {
+        let state = BPCleanupPreviewState(
+            itemCount: itemCount,
+            reclaimableBytes: reclaimableBytes,
+            formattedByteCount: formattedByteCount,
+            samplePaths: samplePaths
+        )
+        let presentation = BPCleanupPreviewPresentation(state: state)
+        self.presentation = presentation
+        let host = NSHostingController(rootView: BPCleanupPreviewCardView(presentation: presentation))
+        host.sizingOptions = []
+        host.view.frame = NSRect(x: 0, y: 0, width: 340, height: 84)
+        viewController = host
+        super.init()
+    }
+}
+
+@MainActor
+private struct BPCleanupPreviewCardView: View {
+    @ObservedObject var presentation: BPCleanupPreviewPresentation
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Image(systemName: "internaldrive")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.accentColor)
+
+                Text(
+                    presentation.state.itemCount == 1
+                        ? BPLocalizedWithFallback("Cleanup_Item_Count_One", fallback: "1 item")
+                        : String(
+                            format: BPLocalizedWithFallback("Cleanup_Item_Count_Other", fallback: "%lu items"),
+                            UInt(max(0, presentation.state.itemCount))
+                        )
+                )
+                .font(.system(size: 12, weight: .semibold).monospacedDigit())
+                .foregroundStyle(.primary)
+                .accessibilityIdentifier("cleanup.preview.itemCount")
+
+                Spacer()
+
+                if !presentation.state.formattedByteCount.isEmpty {
+                    Text(presentation.state.formattedByteCount)
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(Color.accentColor)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(
+                            Capsule(style: .continuous)
+                                .fill(Color.accentColor.opacity(0.14))
+                        )
+                        .accessibilityIdentifier("cleanup.preview.byteCount")
+                }
+            }
+
+            if let firstPath = presentation.state.samplePaths.first {
+                Text((firstPath as NSString).lastPathComponent)
+                    .font(.system(size: 10.5, weight: .regular, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .accessibilityIdentifier("cleanup.preview.samplePath")
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(width: 340, height: 84, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.primary.opacity(0.04))
+        )
     }
 }

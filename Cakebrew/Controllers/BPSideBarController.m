@@ -9,6 +9,7 @@
 #import "BPSideBarController.h"
 #import "BPPreferences.h"
 #import "BPHomebrewManager.h"
+#import "BPFormulaInformation-Swift.h"
 
 @interface BPSidebarItem ()
 @property (strong) NSMutableArray<BPSidebarItem *> *mutableChildren;
@@ -190,6 +191,7 @@ static NSString *BPSpokenSeparator(void)
 @interface BPSideBarController()
 
 @property (strong, nonatomic) BPSidebarItem *rootSidebarCategory;
+@property (strong, nonatomic, readwrite) BPSidebarHost *sidebarHost;
 
 @property (strong, nonatomic) BPSidebarItem *installedFormulaeSidebarItem;
 @property (strong, nonatomic) BPSidebarItem *outdatedFormulaeSidebarItem;
@@ -210,7 +212,20 @@ static NSString *BPSpokenSeparator(void)
 {
 	self = [super init];
 	if (self) {
+		_sidebarHost = [[BPSidebarHost alloc] init];
+		__weak typeof(self) weakSelf = self;
+		_sidebarHost.onSelectRow = ^(NSInteger rowIndex) {
+			__strong typeof(weakSelf) strongSelf = weakSelf;
+			if (!strongSelf) return;
+			if (strongSelf.sidebar && strongSelf.sidebar.selectedRow != rowIndex) {
+				[strongSelf.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:(NSUInteger)rowIndex]
+								byExtendingSelection:NO];
+			} else if ([strongSelf.delegate respondsToSelector:@selector(sourceListSelectionDidChange)]) {
+				[strongSelf.delegate sourceListSelectionDidChange];
+			}
+		};
 		[self buildSidebarTree];
+		[self syncSidebarHost];
 	}
 	return self;
 }
@@ -226,36 +241,42 @@ static NSString *BPSpokenSeparator(void)
 
 	_installedFormulaeSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Installed", nil)
 													 identifier:@"item"];
+	_installedFormulaeSidebarItem.symbolName = @"checkmark.square";
 	_installedFormulaeSidebarItem.icon = [self installedSidebarIconImage];
 	_installedFormulaeSidebarItem.accessibilityIdentifier = @"sidebar.formulae.installed";
 	[parent addChildItem:_installedFormulaeSidebarItem];
 
 	_outdatedFormulaeSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Outdated", nil)
 													 identifier:@"item"];
+	_outdatedFormulaeSidebarItem.symbolName = @"clock.arrow.circlepath";
 	_outdatedFormulaeSidebarItem.icon = [self outdatedSidebarIconImage];
 	_outdatedFormulaeSidebarItem.accessibilityIdentifier = @"sidebar.formulae.outdated";
 	[parent addChildItem:_outdatedFormulaeSidebarItem];
 
 	_allFormulaeSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_All", nil)
 												identifier:@"item"];
+	_allFormulaeSidebarItem.symbolName = @"books.vertical";
 	_allFormulaeSidebarItem.icon = [self allFormulaeSidebarIconImage];
 	_allFormulaeSidebarItem.accessibilityIdentifier = @"sidebar.formulae.all";
 	[parent addChildItem:_allFormulaeSidebarItem];
 
 	_leavesFormulaeSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Leaves", nil)
 												   identifier:@"item"];
+	_leavesFormulaeSidebarItem.symbolName = @"leaf";
 	_leavesFormulaeSidebarItem.icon = [self leavesSidebarIconImage];
 	_leavesFormulaeSidebarItem.accessibilityIdentifier = @"sidebar.formulae.leaves";
 	[parent addChildItem:_leavesFormulaeSidebarItem];
 
 	_pinnedFormulaeSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Pinned", nil)
 												   identifier:@"item"];
+	_pinnedFormulaeSidebarItem.symbolName = @"pin";
 	_pinnedFormulaeSidebarItem.icon = [self pinnedSidebarIconImage];
 	_pinnedFormulaeSidebarItem.accessibilityIdentifier = @"sidebar.formulae.pinned";
 	[parent addChildItem:_pinnedFormulaeSidebarItem];
 
 	_repositoriesFormulaeSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Repos", nil)
 														 identifier:@"item"];
+	_repositoriesFormulaeSidebarItem.symbolName = @"building.columns";
 	_repositoriesFormulaeSidebarItem.icon = [self repositoriesSidebarIconImage];
 	_repositoriesFormulaeSidebarItem.accessibilityIdentifier = @"sidebar.formulae.repositories";
 	[parent addChildItem:_repositoriesFormulaeSidebarItem];
@@ -266,18 +287,21 @@ static NSString *BPSpokenSeparator(void)
 
 	_installedCasksSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Installed", nil)
 											   identifier:@"item"];
+	_installedCasksSidebarItem.symbolName = @"macwindow";
 	_installedCasksSidebarItem.icon = [self casksSidebarIconImage];
 	_installedCasksSidebarItem.accessibilityIdentifier = @"sidebar.casks.installed";
 	[parent addChildItem:_installedCasksSidebarItem];
 
 	_outdatedCasksSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Outdated", nil)
 											  identifier:@"item"];
+	_outdatedCasksSidebarItem.symbolName = @"clock.arrow.circlepath";
 	_outdatedCasksSidebarItem.icon = [self outdatedSidebarIconImage];
 	_outdatedCasksSidebarItem.accessibilityIdentifier = @"sidebar.casks.outdated";
 	[parent addChildItem:_outdatedCasksSidebarItem];
 
 	_allCasksSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_AllCasks", nil)
 											 identifier:@"item"];
+	_allCasksSidebarItem.symbolName = @"square.stack.3d.up";
 	_allCasksSidebarItem.icon = [self allCasksSidebarIconImage];
 	_allCasksSidebarItem.accessibilityIdentifier = @"sidebar.casks.all";
 	[parent addChildItem:_allCasksSidebarItem];
@@ -289,6 +313,7 @@ static NSString *BPSpokenSeparator(void)
 	item = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Doctor", nil)
 							 identifier:@"item"];
 	[item setBadgeValue:@(-1)];
+	item.symbolName = @"stethoscope";
 	item.accessibilityIdentifier = @"sidebar.tools.doctor";
 	[item setIcon:[self doctorSidebarIconImage]];
 	[parent addChildItem:item];
@@ -296,6 +321,7 @@ static NSString *BPSpokenSeparator(void)
 	item = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Update", nil)
 							 identifier:@"item"];
 	[item setBadgeValue:@(-1)];
+	item.symbolName = @"arrow.triangle.2.circlepath.circle";
 	item.accessibilityIdentifier = @"sidebar.tools.update";
 	[item setIcon:[self updateSidebarIconImage]];
 	[parent addChildItem:item];
@@ -303,15 +329,42 @@ static NSString *BPSpokenSeparator(void)
 	item = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Services", nil)
 							 identifier:@"item"];
 	[item setBadgeValue:@(-1)];
+	item.symbolName = @"gearshape.2";
 	item.accessibilityIdentifier = @"sidebar.tools.services";
 	[item setIcon:[self servicesSidebarIconImage]];
 	[parent addChildItem:item];
 
 	_unifiedUpdatesSidebarItem = [BPSidebarItem itemWithTitle:NSLocalizedString(@"Sidebar_Item_Unified_Updates", nil)
 												   identifier:@"item"];
+	_unifiedUpdatesSidebarItem.symbolName = @"arrow.down.circle";
 	_unifiedUpdatesSidebarItem.accessibilityIdentifier = @"sidebar.tools.updates";
 	_unifiedUpdatesSidebarItem.icon = [self unifiedUpdatesSidebarIconImage];
 	[parent addChildItem:_unifiedUpdatesSidebarItem];
+}
+
+- (void)syncSidebarHost
+{
+	if (!self.sidebarHost) return;
+	[self.sidebarHost removeAllSections];
+	NSInteger currentRowIndex = 0;
+	for (BPSidebarItem *group in self.rootSidebarCategory.children) {
+		NSInteger groupRowIndex = currentRowIndex++;
+		[self.sidebarHost addSectionWithRowIndex:groupRowIndex title:group.title ?: @""];
+		for (BPSidebarItem *row in group.children) {
+			NSInteger itemRowIndex = currentRowIndex++;
+			NSString *axLabel = [BPSideBarController accessibilityLabelForGroup:group.title
+																		  title:row.title
+																		  badge:row.badgeValue];
+			[self.sidebarHost addRowToSectionAtRowIndex:groupRowIndex
+											   rowIndex:itemRowIndex
+												  title:row.title ?: @""
+											 groupTitle:group.title ?: @""
+											 symbolName:row.symbolName ?: @""
+											 badgeCount:row.badgeValue ? row.badgeValue.integerValue : -1
+								accessibilityIdentifier:row.accessibilityIdentifier ?: @""
+									 accessibilityLabel:axLabel ?: @""];
+		}
+	}
 }
 
 - (NSImage *)installedSidebarIconImage
@@ -438,10 +491,13 @@ static NSString *BPSpokenSeparator(void)
 	[self.sidebar reloadData];
 	[self.sidebar expandItem:nil expandChildren:YES];
 	// Reopen where the user left off rather than always on Installed.
+	NSInteger rowCount = self.sidebar ? [self.sidebar numberOfRows] : 16;
 	FormulaeSideBarItem row = [BPSideBarController restorableRowFrom:[BPPreferences lastSelectedSidebarRow]
-															rowCount:[self.sidebar numberOfRows]];
+															rowCount:rowCount];
 	[self.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
 	[self.sidebar setAccessibilityLabel:NSLocalizedString(@"Sidebar_VoiceOver_Sidebar", nil)];
+	self.sidebarHost.selectedRowIndex = (NSInteger)row;
+	[self syncSidebarHost];
 }
 
 + (NSString *)accessibilityLabelForGroup:(NSString *)group
@@ -541,6 +597,7 @@ static NSString *BPSpokenSeparator(void)
 	self.allCasksSidebarItem.badgeValue				= @([[[BPHomebrewManager sharedManager] allCasks] count]);
 	self.unifiedUpdatesSidebarItem.badgeValue		= @([[[BPHomebrewManager sharedManager] outdatedFormulae] count] +
 														[[[BPHomebrewManager sharedManager] outdatedCasks] count]);
+	[self syncSidebarHost];
 }
 
 #pragma mark - NSOutlineView Data Source
@@ -585,12 +642,69 @@ static NSString *BPSpokenSeparator(void)
 	return NO;
 }
 
+- (BPSidebarTableCellView *)makeProgrammaticHeaderCellView
+{
+	BPSidebarTableCellView *headerView = [[BPSidebarTableCellView alloc] initWithFrame:NSMakeRect(0, 0, 180, 20)];
+	headerView.identifier = @"HeaderCell";
+	NSTextField *label = [NSTextField labelWithString:@""];
+	label.font = [NSFont systemFontOfSize:11.0 weight:NSFontWeightSemibold];
+	label.textColor = NSColor.secondaryLabelColor;
+	label.translatesAutoresizingMaskIntoConstraints = NO;
+	[headerView addSubview:label];
+	headerView.textField = label;
+	[NSLayoutConstraint activateConstraints:@[
+		[label.leadingAnchor constraintEqualToAnchor:headerView.leadingAnchor constant:4.0],
+		[label.trailingAnchor constraintEqualToAnchor:headerView.trailingAnchor constant:-4.0],
+		[label.centerYAnchor constraintEqualToAnchor:headerView.centerYAnchor],
+	]];
+	return headerView;
+}
+
+- (BPSidebarTableCellView *)makeProgrammaticMainCellView
+{
+	BPSidebarTableCellView *cellView = [[BPSidebarTableCellView alloc] initWithFrame:NSMakeRect(0, 0, 180, 24)];
+	cellView.identifier = @"MainCell";
+
+	NSImageView *iconView = [[NSImageView alloc] initWithFrame:NSMakeRect(0, 0, 16, 16)];
+	iconView.translatesAutoresizingMaskIntoConstraints = NO;
+	[cellView addSubview:iconView];
+	cellView.imageView = iconView;
+
+	NSTextField *label = [NSTextField labelWithString:@""];
+	label.font = [NSFont systemFontOfSize:12.5 weight:NSFontWeightRegular];
+	label.lineBreakMode = NSLineBreakByTruncatingTail;
+	label.translatesAutoresizingMaskIntoConstraints = NO;
+	[cellView addSubview:label];
+	cellView.textField = label;
+
+	BPSidebarBadgeView *badgeView = [[BPSidebarBadgeView alloc] initWithFrame:NSMakeRect(0, 0, 28, 16)];
+	badgeView.translatesAutoresizingMaskIntoConstraints = NO;
+	[cellView addSubview:badgeView];
+	cellView.badgeView = badgeView;
+
+	[NSLayoutConstraint activateConstraints:@[
+		[iconView.leadingAnchor constraintEqualToAnchor:cellView.leadingAnchor constant:4.0],
+		[iconView.centerYAnchor constraintEqualToAnchor:cellView.centerYAnchor],
+		[iconView.widthAnchor constraintEqualToConstant:16.0],
+		[iconView.heightAnchor constraintEqualToConstant:16.0],
+		[label.leadingAnchor constraintEqualToAnchor:iconView.trailingAnchor constant:6.0],
+		[label.centerYAnchor constraintEqualToAnchor:cellView.centerYAnchor],
+		[badgeView.leadingAnchor constraintGreaterThanOrEqualToAnchor:label.trailingAnchor constant:4.0],
+		[badgeView.trailingAnchor constraintEqualToAnchor:cellView.trailingAnchor constant:-6.0],
+		[badgeView.centerYAnchor constraintEqualToAnchor:cellView.centerYAnchor],
+	]];
+	return cellView;
+}
+
 - (NSView *)outlineView:(NSOutlineView *)outlineView viewForTableColumn:(NSTableColumn *)tableColumn item:(id)item
 {
 	BPSidebarItem *sidebarItem = item;
 
 	if ([sidebarItem.identifier isEqualToString:@"group"]) {
 		BPSidebarTableCellView *headerView = [outlineView makeViewWithIdentifier:@"HeaderCell" owner:self];
+		if (!headerView) {
+			headerView = [self makeProgrammaticHeaderCellView];
+		}
 		headerView.textField.stringValue = sidebarItem.title;
 		// Use the semantic secondary label color so group headers match the system
 		// source-list style and adapt to light/dark, instead of the hardcoded
@@ -600,6 +714,9 @@ static NSString *BPSpokenSeparator(void)
 	}
 
 	BPSidebarTableCellView *cellView = [outlineView makeViewWithIdentifier:@"MainCell" owner:self];
+	if (!cellView) {
+		cellView = [self makeProgrammaticMainCellView];
+	}
 	cellView.textField.stringValue = sidebarItem.title;
 
 	// Both of these go on the text field, not the cell view: an NSTableCellView
@@ -627,6 +744,9 @@ static NSString *BPSpokenSeparator(void)
 
 - (void)outlineViewSelectionDidChange:(NSNotification *)notification
 {
+	if (self.sidebar && self.sidebar.selectedRow >= 0) {
+		self.sidebarHost.selectedRowIndex = self.sidebar.selectedRow;
+	}
 	if ([self.delegate respondsToSelector:@selector(sourceListSelectionDidChange)]) {
 		[self.delegate sourceListSelectionDidChange];
 	}
@@ -636,7 +756,9 @@ static NSString *BPSpokenSeparator(void)
 
 - (IBAction)selectSideBarRowWithSenderTag:(id)sender
 {
-	[self.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:[sender tag]] byExtendingSelection:NO];
+	NSInteger tag = [sender tag];
+	self.sidebarHost.selectedRowIndex = tag;
+	[self.sidebar selectRowIndexes:[NSIndexSet indexSetWithIndex:(NSUInteger)tag] byExtendingSelection:NO];
 }
 
 @end

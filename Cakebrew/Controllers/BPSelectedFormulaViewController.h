@@ -10,15 +10,23 @@
 
 #import "BPFormula.h"
 
+@class BPSelectedFormulaHost;
+
 @protocol BPSelectedFormulaViewControllerDelegate <NSObject>
 
 - (void)selectedFormulaViewDidUpdateFormulaInfoForFormula:(BPFormula*)formula;
+
+@optional
+- (void)selectedFormulaViewDidRequestSelectRelatedFormulaNamed:(NSString *)formulaName;
+- (void)selectedFormulaViewDidRequestShowMoreInformation;
+- (void)selectedFormulaViewDidRequestOpenWebsite;
 
 @end
 
 @interface BPSelectedFormulaViewController : NSViewController
 
 @property (strong, nonatomic) NSArray *formulae;
+@property (strong, nonatomic, readonly) BPSelectedFormulaHost *inspectorHost;
 
 @property (weak) id<BPSelectedFormulaViewControllerDelegate> delegate;
 @property (copy, nonatomic) NSString *(^dependentsProvider)(NSString *name, BOOL onlyInstalled);

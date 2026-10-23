@@ -1,6 +1,11 @@
 #import "BPFormulaeTableAction.h"
 #import "BPCleanupPreview.h"
 #import "BPUpdatesSnapshot.h"
+#import "BPFormulaInformation-Swift.h"
+#import <objc/runtime.h>
+
+static const void *kBPTapInputHostKey = &kBPTapInputHostKey;
+static const void *kBPCleanupPreviewHostKey = &kBPCleanupPreviewHostKey;
 
 @implementation BPFormulaeTableActions
 + (BPFormulaeTableAction)actionForRequest:(BPFormulaeTableRequest)request
@@ -283,12 +288,19 @@ static NSString *BPOperationLocalizedFormat(NSString *key, NSString *fallback)
     [alert addButtonWithTitle:NSLocalizedString(@"Generic_Cancel", nil)];
     alert.informativeText = NSLocalizedString(@"Message_Tap_Body", nil);
 
-    NSTextField *input = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 200, 24)];
-    alert.accessoryView = input;
+    BPTapInputHost *host = [[BPTapInputHost alloc] init];
+    objc_setAssociatedObject(alert, kBPTapInputHostKey, host, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    alert.accessoryView = host.viewController.view;
     if (outField) {
-        *outField = input;
+        *outField = host.inputField;
     }
     return alert;
+}
+
++ (nullable BPTapInputHost *)tapInputHostForAlert:(nullable NSAlert *)alert
+{
+    if (!alert) return nil;
+    return objc_getAssociatedObject(alert, kBPTapInputHostKey);
 }
 
 + (NSAlert *)invalidTapAlert
@@ -355,7 +367,26 @@ static NSString *BPOperationLocalizedFormat(NSString *key, NSString *fallback)
     [alert addButtonWithTitle:NSLocalizedString(@"Generic_Yes", nil)];
     [alert addButtonWithTitle:NSLocalizedString(@"Generic_Cancel", nil)];
     alert.informativeText = [self cleanupConfirmationBodyForPreview:preview];
+
+    NSString *formattedSize = @"";
+    if (preview.reclaimableBytes > 0) {
+        NSByteCountFormatter *formatter = [[NSByteCountFormatter alloc] init];
+        formatter.countStyle = NSByteCountFormatterCountStyleBinary;
+        formattedSize = [formatter stringFromByteCount:(long long)preview.reclaimableBytes] ?: @"";
+    }
+    BPCleanupPreviewHost *host = [[BPCleanupPreviewHost alloc] initWithItemCount:(NSInteger)preview.itemCount
+                                                                reclaimableBytes:preview.reclaimableBytes
+                                                              formattedByteCount:formattedSize
+                                                                     samplePaths:preview.paths ?: @[]];
+    objc_setAssociatedObject(alert, kBPCleanupPreviewHostKey, host, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    alert.accessoryView = host.viewController.view;
     return alert;
+}
+
++ (nullable BPCleanupPreviewHost *)cleanupPreviewHostForAlert:(nullable NSAlert *)alert
+{
+    if (!alert) return nil;
+    return objc_getAssociatedObject(alert, kBPCleanupPreviewHostKey);
 }
 
 + (NSDictionary<NSString *, NSArray<NSString *> *> *)brewfileInventoriesForInstalledFormulae:(nullable NSArray<BPFormula *> *)formulae

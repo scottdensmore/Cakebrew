@@ -178,7 +178,14 @@ NSOpenSavePanelDelegate>
 - (void)updatesSnapshotChanged:(NSNotification *)notification
 {
     self.enableUpgradeAllMenu = _homebrewManager.updatesSnapshot.hasEligibleUpdates;
-    [self syncStatusBarHost];
+    if ([NSThread isMainThread]) {
+        [self syncStatusBarHost];
+    } else {
+        __weak typeof(self) weakSelf = self;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf syncStatusBarHost];
+        });
+    }
 }
 
 - (void)didReceiveBackgroundActivityNotification:(NSNotification*)notification
@@ -187,13 +194,27 @@ NSOpenSavePanelDelegate>
 	{
 		[[self backgroundActivityIndicator] performSelectorOnMainThread:@selector(startAnimation:)
 															 withObject:self waitUntilDone:YES];
-		self.statusBarHost.isBusy = YES;
+		if ([NSThread isMainThread]) {
+			self.statusBarHost.isBusy = YES;
+		} else {
+			__weak typeof(self) weakSelf = self;
+			dispatch_async(dispatch_get_main_queue(), ^{
+				weakSelf.statusBarHost.isBusy = YES;
+			});
+		}
 	}
 	else if ([[notification name] isEqualToString:kDidEndBackgroundActivityNotification])
 	{
 		[[self backgroundActivityIndicator] performSelectorOnMainThread:@selector(stopAnimation:)
 															 withObject:self waitUntilDone:YES];
-		self.statusBarHost.isBusy = NO;
+		if ([NSThread isMainThread]) {
+			self.statusBarHost.isBusy = NO;
+		} else {
+			__weak typeof(self) weakSelf = self;
+			dispatch_async(dispatch_get_main_queue(), ^{
+				weakSelf.statusBarHost.isBusy = NO;
+			});
+		}
 	}
 }
 
@@ -1277,6 +1298,33 @@ NSOpenSavePanelDelegate>
 - (void)selectedFormulaViewDidUpdateFormulaInfoForFormula:(BPFormula *)formula
 {
 	if (formula) [self setCurrentFormula:formula];
+}
+
+- (void)selectedFormulaViewDidRequestSelectRelatedFormulaNamed:(NSString *)formulaName
+{
+	if (formulaName.length == 0) return;
+	BOOL isInstalled = NO;
+	for (BPFormula *candidate in _homebrewManager.installedFormulae) {
+		if ([candidate isKindOfClass:BPFormula.class] && [candidate.name isEqualToString:formulaName]) {
+			isInstalled = YES;
+			break;
+		}
+	}
+	FormulaeSideBarItem targetRow = isInstalled ? FormulaeSideBarItemInstalled : FormulaeSideBarItemAll;
+	[self showOutdatedSidebarRow:targetRow];
+	BPFormula *formula = [BPFormula formulaWithName:formulaName version:nil andLatestVersion:nil];
+	formula.cask = NO;
+	[self restoreSelectedFormula:formula];
+}
+
+- (void)selectedFormulaViewDidRequestShowMoreInformation
+{
+	[self showFormulaInfo:nil];
+}
+
+- (void)selectedFormulaViewDidRequestOpenWebsite
+{
+	[self openSelectedFormulaWebsite:nil];
 }
 
 #pragma mark - BPSideBarDelegate Delegate

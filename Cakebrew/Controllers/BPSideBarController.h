@@ -29,6 +29,8 @@ typedef NS_ENUM(NSUInteger, FormulaeSideBarItem)
 	FormulaeSideBarItemUnifiedUpdates = 15,
 };
 
+@class BPSidebarHost;
+
 @protocol BPSideBarControllerDelegate <NSObject>
 - (void)sourceListSelectionDidChange;
 @end
@@ -37,6 +39,7 @@ typedef NS_ENUM(NSUInteger, FormulaeSideBarItem)
 
 @property (copy) NSString *title;
 @property (copy) NSString *identifier;
+@property (copy) NSString *symbolName;
 @property (strong) NSImage *icon;
 @property (strong) NSNumber *badgeValue;
 @property (readonly) NSArray<BPSidebarItem *> *children;
@@ -91,6 +94,7 @@ typedef NS_ENUM(NSUInteger, FormulaeSideBarItem)
 
 
 @property (assign) IBOutlet NSOutlineView *sidebar;
+@property (strong, nonatomic, readonly) BPSidebarHost *sidebarHost;
 
 @property (weak) id <BPSideBarControllerDelegate>delegate;
 
