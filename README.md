@@ -38,6 +38,14 @@ the background — without remembering a command for each of them.
 
 **Around the edges**
 * Built with Swift 6 and SwiftUI for macOS Tahoe
+* Quick Command Palette (`⌘K`) to jump to any sidebar section, run Homebrew tools,
+  or select any installed formula or cask from the keyboard
+* Interactive Package Inspector with one-click install path copy, Reveal in Finder,
+  More Information popover, homepage launch, and clickable dependency/dependent chips
+* Live SwiftUI Tahoe status bar with activity indicator, package count pills, and
+  one-click outdated updates badge
+* Optional Menu Bar Extra in Settings for instant access to outdated package counts,
+  Update Homebrew, Upgrade All Outdated, and Command Palette
 * Optional background checking, with a Dock badge and a notification when
   something new goes out of date
 * In-app update discovery (`Cakebrew ▸ Check for Updates…`) with SHA-256 and

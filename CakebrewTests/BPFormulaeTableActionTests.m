@@ -3,6 +3,7 @@
 #import "BPFormulaeTableAction.h"
 #import "BPCleanupPreview.h"
 #import "BPUpdatesSnapshot.h"
+#import "BPFormulaInformation-Swift.h"
 
 @interface BPFormulaeTableView (ActionTesting)
 - (void)performDoubleClickAction:(id)sender;
@@ -500,7 +501,14 @@
     NSAlert *tapAlert = [BPPackageOperationPresenter tapInputAlertWithInputField:&inputField];
     XCTAssertNotNil(tapAlert);
     XCTAssertNotNil(inputField);
-    XCTAssertEqual(tapAlert.accessoryView, inputField);
+    XCTAssertNotNil(tapAlert.accessoryView);
+    BPTapInputHost *tapHost = [BPPackageOperationPresenter tapInputHostForAlert:tapAlert];
+    XCTAssertNotNil(tapHost);
+    XCTAssertEqual(tapHost.inputField, inputField);
+    XCTAssertFalse(tapHost.isValidFormat);
+    tapHost.repositoryName = @"homebrew/cask";
+    XCTAssertTrue(tapHost.isValidFormat);
+    XCTAssertEqualObjects(inputField.stringValue, @"homebrew/cask");
     XCTAssertEqual(tapAlert.buttons.count, 2u);
 
     NSAlert *invalidTap = [BPPackageOperationPresenter invalidTapAlert];
@@ -516,12 +524,16 @@
     BPCleanupPreview *emptyPreview = [BPCleanupPreview previewFromOutput:@""];
     NSAlert *emptyCleanupAlert = [BPPackageOperationPresenter cleanupAlertForPreview:emptyPreview];
     XCTAssertEqual(emptyCleanupAlert.buttons.count, 1u);
+    XCTAssertNil([BPPackageOperationPresenter cleanupPreviewHostForAlert:emptyCleanupAlert]);
 
     BPCleanupPreview *noSizePreview = [BPCleanupPreview previewFromOutput:@"Would remove: /tmp/a\n"];
     NSString *noSizeBody = [BPPackageOperationPresenter cleanupConfirmationBodyForPreview:noSizePreview];
     XCTAssertGreaterThan(noSizeBody.length, 0u);
     NSAlert *nonEmptyCleanupAlert = [BPPackageOperationPresenter cleanupAlertForPreview:noSizePreview];
     XCTAssertEqual(nonEmptyCleanupAlert.buttons.count, 2u);
+    BPCleanupPreviewHost *cleanupHost = [BPPackageOperationPresenter cleanupPreviewHostForAlert:nonEmptyCleanupAlert];
+    XCTAssertNotNil(cleanupHost);
+    XCTAssertEqual(cleanupHost.itemCount, 1);
 
     BPCleanupPreview *sizedPreview = [BPCleanupPreview previewFromOutput:
         @"Would remove: /tmp/a (10KB)\nWould remove: /tmp/b (20KB)\n==> This operation would free approximately 100MB of disk space.\n"];

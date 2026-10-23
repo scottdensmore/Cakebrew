@@ -15,7 +15,7 @@
 @interface BPSelectedFormulaViewController ()
 
 @property (strong) BPTimedDispatch *timedDispatch;
-@property (strong) BPSelectedFormulaHost *inspectorHost;
+@property (strong, nonatomic, readwrite) BPSelectedFormulaHost *inspectorHost;
 
 @end
 
@@ -27,8 +27,42 @@
 	if (self) {
 		_timedDispatch = [BPTimedDispatch new];
 		_inspectorHost = [BPSelectedFormulaHost new];
+		[self configureInspectorHostCallbacks];
 	}
 	return self;
+}
+
+- (void)configureInspectorHostCallbacks
+{
+	if (!self.inspectorHost) return;
+	__weak typeof(self) weakSelf = self;
+	if ([self.inspectorHost respondsToSelector:@selector(setOnSelectRelatedPackage:)]) {
+		self.inspectorHost.onSelectRelatedPackage = ^(NSString *packageName) {
+			__strong typeof(weakSelf) strongSelf = weakSelf;
+			if (!strongSelf || packageName.length == 0) return;
+			if ([strongSelf.delegate respondsToSelector:@selector(selectedFormulaViewDidRequestSelectRelatedFormulaNamed:)]) {
+				[strongSelf.delegate selectedFormulaViewDidRequestSelectRelatedFormulaNamed:packageName];
+			}
+		};
+	}
+	if ([self.inspectorHost respondsToSelector:@selector(setOnShowMoreInfo:)]) {
+		self.inspectorHost.onShowMoreInfo = ^{
+			__strong typeof(weakSelf) strongSelf = weakSelf;
+			if (!strongSelf) return;
+			if ([strongSelf.delegate respondsToSelector:@selector(selectedFormulaViewDidRequestShowMoreInformation)]) {
+				[strongSelf.delegate selectedFormulaViewDidRequestShowMoreInformation];
+			}
+		};
+	}
+	if ([self.inspectorHost respondsToSelector:@selector(setOnOpenWebsite:)]) {
+		self.inspectorHost.onOpenWebsite = ^{
+			__strong typeof(weakSelf) strongSelf = weakSelf;
+			if (!strongSelf) return;
+			if ([strongSelf.delegate respondsToSelector:@selector(selectedFormulaViewDidRequestOpenWebsite)]) {
+				[strongSelf.delegate selectedFormulaViewDidRequestOpenWebsite];
+			}
+		};
+	}
 }
 
 - (void)loadView
@@ -38,7 +72,9 @@
 	}
 	if (!self.inspectorHost) {
 		self.inspectorHost = [BPSelectedFormulaHost new];
+		[self configureInspectorHostCallbacks];
 	}
+	[self configureInspectorHostCallbacks];
 	self.view = self.inspectorHost.viewController.view;
 }
 
@@ -64,6 +100,7 @@
 
 	if (!self.inspectorHost) {
 		self.inspectorHost = [BPSelectedFormulaHost new];
+		[self configureInspectorHostCallbacks];
 	}
 	if (!self.timedDispatch) {
 		self.timedDispatch = [BPTimedDispatch new];

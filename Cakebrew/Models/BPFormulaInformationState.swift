@@ -99,6 +99,22 @@ public struct BPSelectedFormulaSnapshot: Equatable, Sendable {
         self.conflicts = conflicts.flatMap { $0.isEmpty ? nil : $0 }
         self.shortDescription = shortDescription.flatMap { $0.isEmpty ? nil : $0 }
     }
+
+    public var dependencyNames: [String] {
+        guard let dependencies else { return [] }
+        return dependencies
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
+
+    public var conflictNames: [String] {
+        guard let conflicts else { return [] }
+        return conflicts
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
 }
 
 public struct BPSelectedFormulaState: Sendable {
@@ -1300,5 +1316,109 @@ public struct BPStatusBarState: Equatable, Sendable {
         self.installedCount = installedCount
         self.outdatedCount = outdatedCount
         self.pinnedCount = pinnedCount
+    }
+}
+
+public struct BPSidebarRowState: Identifiable, Equatable, Sendable {
+    public let id: String
+    public let rowIndex: Int
+    public let title: String
+    public let groupTitle: String
+    public let symbolName: String
+    public var badgeCount: Int
+    public let accessibilityIdentifier: String
+    public var accessibilityLabel: String
+
+    public init(rowIndex: Int,
+                title: String,
+                groupTitle: String,
+                symbolName: String,
+                badgeCount: Int = -1,
+                accessibilityIdentifier: String,
+                accessibilityLabel: String = "") {
+        self.id = accessibilityIdentifier.isEmpty ? "row.\(rowIndex)" : accessibilityIdentifier
+        self.rowIndex = rowIndex
+        self.title = title
+        self.groupTitle = groupTitle
+        self.symbolName = symbolName
+        self.badgeCount = badgeCount
+        self.accessibilityIdentifier = accessibilityIdentifier
+        self.accessibilityLabel = accessibilityLabel
+    }
+}
+
+public struct BPSidebarSectionState: Identifiable, Equatable, Sendable {
+    public let id: String
+    public let rowIndex: Int
+    public let title: String
+    public var rows: [BPSidebarRowState]
+
+    public init(rowIndex: Int, title: String, rows: [BPSidebarRowState] = []) {
+        self.id = "section.\(rowIndex)"
+        self.rowIndex = rowIndex
+        self.title = title
+        self.rows = rows
+    }
+}
+
+public struct BPSidebarState: Equatable, Sendable {
+    public var sections: [BPSidebarSectionState]
+    public var selectedRowIndex: Int
+
+    public init(sections: [BPSidebarSectionState] = [], selectedRowIndex: Int = 1) {
+        self.sections = sections
+        self.selectedRowIndex = selectedRowIndex
+    }
+
+    public var allRows: [BPSidebarRowState] {
+        sections.flatMap(\.rows)
+    }
+
+    public var selectedRow: BPSidebarRowState? {
+        allRows.first(where: { $0.rowIndex == selectedRowIndex })
+    }
+
+    public func badgeCount(forRowIndex rowIndex: Int) -> Int {
+        allRows.first(where: { $0.rowIndex == rowIndex })?.badgeCount ?? -1
+    }
+}
+
+public struct BPTapInputState: Equatable, Sendable {
+    public var repositoryName: String
+
+    public init(repositoryName: String = "") {
+        self.repositoryName = repositoryName
+    }
+
+    public var trimmedName: String {
+        repositoryName.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    public var isValidFormat: Bool {
+        let trimmed = trimmedName
+        guard !trimmed.isEmpty else { return false }
+        let parts = trimmed.split(separator: "/", omittingEmptySubsequences: false)
+        guard parts.count == 2 else { return false }
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_."))
+        return parts.allSatisfy { part in
+            !part.isEmpty && part.unicodeScalars.allSatisfy { allowed.contains($0) }
+        }
+    }
+}
+
+public struct BPCleanupPreviewState: Equatable, Sendable {
+    public var itemCount: Int
+    public var reclaimableBytes: UInt64
+    public var formattedByteCount: String
+    public var samplePaths: [String]
+
+    public init(itemCount: Int = 0,
+                reclaimableBytes: UInt64 = 0,
+                formattedByteCount: String = "",
+                samplePaths: [String] = []) {
+        self.itemCount = itemCount
+        self.reclaimableBytes = reclaimableBytes
+        self.formattedByteCount = formattedByteCount
+        self.samplePaths = samplePaths
     }
 }

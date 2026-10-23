@@ -768,4 +768,62 @@ final class BPFormulaInformationTests: XCTestCase {
         XCTAssertNotNil(installHost.viewController.view)
     }
 
+    func testSidebarStateTapInputStateCleanupPreviewStateAndSnapshotDependencies() {
+        let snapshot = BPSelectedFormulaSnapshot(
+            name: "ffmpeg",
+            cask: false,
+            isInstalled: true,
+            isPinned: false,
+            installPath: "/opt/homebrew/Cellar/ffmpeg/7.1",
+            latestVersion: "7.1",
+            dependencies: "dav1d, lame, x264, x265",
+            conflicts: "ffmpeg@6, libav",
+            shortDescription: "Play, record, convert, and stream audio and video"
+        )
+        XCTAssertEqual(snapshot.dependencyNames, ["dav1d", "lame", "x264", "x265"])
+        XCTAssertEqual(snapshot.conflictNames, ["ffmpeg@6", "libav"])
+
+        let row1 = BPSidebarRowState(
+            rowIndex: 1,
+            title: "Installed",
+            groupTitle: "Formulae",
+            symbolName: "checkmark.square",
+            badgeCount: 42,
+            accessibilityIdentifier: "sidebar.formulae.installed",
+            accessibilityLabel: "Formulae, Installed, 42 items"
+        )
+        let row2 = BPSidebarRowState(
+            rowIndex: 2,
+            title: "Outdated",
+            groupTitle: "Formulae",
+            symbolName: "clock.arrow.circlepath",
+            badgeCount: 3,
+            accessibilityIdentifier: "sidebar.formulae.outdated",
+            accessibilityLabel: "Formulae, Outdated, 3 items"
+        )
+        let section = BPSidebarSectionState(rowIndex: 0, title: "Formulae", rows: [row1, row2])
+        let sidebarState = BPSidebarState(sections: [section], selectedRowIndex: 2)
+        XCTAssertEqual(sidebarState.allRows.count, 2)
+        XCTAssertEqual(sidebarState.selectedRow?.accessibilityIdentifier, "sidebar.formulae.outdated")
+        XCTAssertEqual(sidebarState.badgeCount(forRowIndex: 1), 42)
+        XCTAssertEqual(sidebarState.badgeCount(forRowIndex: 99), -1)
+
+        var tapState = BPTapInputState()
+        XCTAssertFalse(tapState.isValidFormat)
+        tapState.repositoryName = "invalid-tap-without-slash"
+        XCTAssertFalse(tapState.isValidFormat)
+        tapState.repositoryName = "  homebrew/cask-fonts  "
+        XCTAssertTrue(tapState.isValidFormat)
+        XCTAssertEqual(tapState.trimmedName, "homebrew/cask-fonts")
+
+        let cleanupState = BPCleanupPreviewState(
+            itemCount: 3,
+            reclaimableBytes: 51_589_939,
+            formattedByteCount: "49.2 MB",
+            samplePaths: ["/Users/x/Library/Caches/Homebrew/wget--1.21.3.tar.gz"]
+        )
+        XCTAssertEqual(cleanupState.itemCount, 3)
+        XCTAssertEqual(cleanupState.formattedByteCount, "49.2 MB")
+    }
+
 }
