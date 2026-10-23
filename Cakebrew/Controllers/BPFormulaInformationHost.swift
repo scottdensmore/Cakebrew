@@ -3012,6 +3012,7 @@ private struct BPConsoleToolView: View {
 private final class BPServicesPresentation: ObservableObject {
     let tableScrollView: NSView
     let detailsScrollView: NSView
+    @Published var state = BPServicesState()
     @Published var startEnabled = false
     @Published var stopEnabled = false
     @Published var restartEnabled = false
@@ -3025,6 +3026,7 @@ private final class BPServicesPresentation: ObservableObject {
     var onRevealFile: (() -> Void)?
     var onOpenLogs: (() -> Void)?
     var onCopyOutput: (() -> Void)?
+    var onFilterChanged: (() -> Void)?
 
     init(tableScrollView: NSView, detailsScrollView: NSView) {
         self.tableScrollView = tableScrollView
@@ -3037,6 +3039,49 @@ private final class BPServicesPresentation: ObservableObject {
 public final class BPServicesHost: NSObject {
     private let presentation: BPServicesPresentation
     @objc public let viewController: NSViewController
+
+    @objc public var statusFilterRawValue: Int {
+        get { presentation.state.statusFilter.rawValue }
+        set {
+            let filter = BPServiceStatusFilter(rawValue: newValue) ?? .all
+            presentation.state.statusFilter = filter
+            presentation.onFilterChanged?()
+        }
+    }
+
+    @objc public var filterQuery: String {
+        get { presentation.state.filterQuery }
+        set {
+            presentation.state.filterQuery = newValue
+            presentation.onFilterChanged?()
+        }
+    }
+
+    @objc public var runningCount: Int {
+        presentation.state.runningCount
+    }
+
+    @objc public var stoppedCount: Int {
+        presentation.state.stoppedCount
+    }
+
+    @objc public var errorCount: Int {
+        presentation.state.errorCount
+    }
+
+    @objc public var totalCount: Int {
+        presentation.state.totalCount
+    }
+
+    @objc public var serviceFilePath: String {
+        get { presentation.state.serviceFilePath }
+        set { presentation.state.serviceFilePath = newValue }
+    }
+
+    @objc public var logFilePath: String {
+        get { presentation.state.logFilePath }
+        set { presentation.state.logFilePath = newValue }
+    }
 
     @objc public var onStart: (() -> Void)? {
         get { presentation.onStart }
@@ -3068,6 +3113,11 @@ public final class BPServicesHost: NSObject {
         set { presentation.onCopyOutput = newValue }
     }
 
+    @objc public var onFilterChanged: (() -> Void)? {
+        get { presentation.onFilterChanged }
+        set { presentation.onFilterChanged = newValue }
+    }
+
     @objc(initWithTableScrollView:detailsScrollView:)
     public init(tableScrollView: NSView, detailsScrollView: NSView) {
         let presentation = BPServicesPresentation(
@@ -3095,18 +3145,146 @@ public final class BPServicesHost: NSObject {
         presentation.logsEnabled = logsEnabled
         presentation.copyEnabled = copyEnabled
     }
+
+    @objc(syncCountsWithRunning:stopped:error:)
+    public func syncCounts(running: Int, stopped: Int, error: Int) {
+        presentation.state.runningCount = running
+        presentation.state.stoppedCount = stopped
+        presentation.state.errorCount = error
+    }
+
+    @objc(syncPathsWithServiceFile:logFile:)
+    public func syncPaths(serviceFile: String?, logFile: String?) {
+        presentation.state.serviceFilePath = serviceFile ?? ""
+        presentation.state.logFilePath = logFile ?? ""
+    }
+
+    @objc
+    @discardableResult
+    public func copyServiceFilePathToPasteboard() -> String {
+        let path = presentation.state.serviceFilePath
+        guard !path.isEmpty else { return "" }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(path, forType: .string)
+        return path
+    }
+
+    @objc
+    @discardableResult
+    public func copyLogPathToPasteboard() -> String {
+        let path = presentation.state.logFilePath
+        guard !path.isEmpty else { return "" }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(path, forType: .string)
+        return path
+    }
 }
 
 @MainActor
 private struct BPServicesView: View {
     @ObservedObject var presentation: BPServicesPresentation
 
+    private var queryBinding: Binding<String> {
+        Binding(
+            get: { presentation.state.filterQuery },
+            set: { newValue in
+                presentation.state.filterQuery = newValue
+                presentation.onFilterChanged?()
+            }
+        )
+    }
+
+    private func selectFilter(_ filter: BPServiceStatusFilter) {
+        presentation.state.statusFilter = filter
+        presentation.onFilterChanged?()
+    }
+
+    @ViewBuilder
+    private func filterPill(filter: BPServiceStatusFilter,
+                            title: String,
+                            count: Int,
+                            color: Color,
+                            accessibilityID: String) -> some View {
+        let isSelected = (presentation.state.statusFilter == filter)
+        Button {
+            selectFilter(filter)
+        } label: {
+            HStack(spacing: 4) {
+                Text(title)
+                    .font(.caption)
+                Text("\(count)")
+                    .font(.system(.caption2, design: .monospaced).weight(.semibold))
+            }
+            .foregroundStyle(isSelected ? .white : color)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(isSelected ? color : color.opacity(0.12))
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(accessibilityID)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(NSLocalizedString("Services_Title", comment: ""))
-                .font(.system(size: 16, weight: .semibold))
-                .accessibilityAddTraits(.isHeader)
-                .accessibilityValue(NSLocalizedString("Services_Title", comment: ""))
+            HStack(alignment: .center, spacing: 8) {
+                Text(NSLocalizedString("Services_Title", comment: ""))
+                    .font(.system(size: 16, weight: .semibold))
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityValue(NSLocalizedString("Services_Title", comment: ""))
+
+                Spacer()
+
+                filterPill(
+                    filter: .all,
+                    title: NSLocalizedString("Services_Title", comment: ""),
+                    count: presentation.state.totalCount,
+                    color: .accentColor,
+                    accessibilityID: "services.filter.all"
+                )
+                filterPill(
+                    filter: .running,
+                    title: NSLocalizedString("Services_Status_Started", comment: ""),
+                    count: presentation.state.runningCount,
+                    color: .green,
+                    accessibilityID: "services.filter.running"
+                )
+                filterPill(
+                    filter: .stopped,
+                    title: NSLocalizedString("Services_Status_Stopped", comment: ""),
+                    count: presentation.state.stoppedCount,
+                    color: .secondary,
+                    accessibilityID: "services.filter.stopped"
+                )
+                if presentation.state.errorCount > 0 || presentation.state.statusFilter == .error {
+                    filterPill(
+                        filter: .error,
+                        title: NSLocalizedString("Services_Status_Error", comment: ""),
+                        count: presentation.state.errorCount,
+                        color: .red,
+                        accessibilityID: "services.filter.error"
+                    )
+                }
+
+                HStack(spacing: 5) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    TextField(NSLocalizedString("Toolbar_Search", comment: ""), text: queryBinding)
+                        .textFieldStyle(.plain)
+                        .font(.caption)
+                        .accessibilityIdentifier("services.searchField")
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .frame(width: 150)
+                .background(
+                    Capsule(style: .continuous)
+                        .fill(Color.primary.opacity(0.05))
+                )
+            }
 
             BPNSViewContainerRepresentable(view: presentation.tableScrollView)
                 .frame(minHeight: 90, maxHeight: .infinity)
@@ -3151,6 +3329,30 @@ private struct BPServicesView: View {
                 }
                 .disabled(!presentation.copyEnabled)
                 .accessibilityIdentifier("services.copyOutput")
+
+                if !presentation.state.serviceFilePath.isEmpty {
+                    Button {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(presentation.state.serviceFilePath, forType: .string)
+                    } label: {
+                        Label(URL(fileURLWithPath: presentation.state.serviceFilePath).lastPathComponent, systemImage: "doc.on.doc")
+                    }
+                    .controlSize(.small)
+                    .help(presentation.state.serviceFilePath)
+                    .accessibilityIdentifier("services.copyServicePath")
+                }
+
+                if !presentation.state.logFilePath.isEmpty {
+                    Button {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(presentation.state.logFilePath, forType: .string)
+                    } label: {
+                        Label(URL(fileURLWithPath: presentation.state.logFilePath).lastPathComponent, systemImage: "doc.text")
+                    }
+                    .controlSize(.small)
+                    .help(presentation.state.logFilePath)
+                    .accessibilityIdentifier("services.copyLogPath")
+                }
 
                 Spacer()
             }
@@ -3664,6 +3866,19 @@ public final class BPFormulaOptionsHost: NSObject {
         presentation.state.selectedOptionNames
     }
 
+    @objc public var appliedOptionCount: Int {
+        presentation.state.appliedOptionCount
+    }
+
+    @objc public var filteredOptionCount: Int {
+        presentation.state.filteredOptions.count
+    }
+
+    @objc public var filterQuery: String {
+        get { presentation.state.filterQuery }
+        set { presentation.state.filterQuery = newValue }
+    }
+
     @objc public var onOptionToggled: ((String, Bool) -> Void)? {
         get { presentation.onOptionToggled }
         set { presentation.onOptionToggled = newValue }
@@ -3718,6 +3933,15 @@ public final class BPFormulaOptionsHost: NSObject {
         presentation.state.setApplied(applied, forOptionID: name)
         presentation.onOptionToggled?(name, applied)
     }
+
+    @objc
+    public func clearAllAppliedOptions() {
+        let previouslyApplied = presentation.state.selectedOptionNames
+        presentation.state.clearAllApplied()
+        for name in previouslyApplied {
+            presentation.onOptionToggled?(name, false)
+        }
+    }
 }
 
 @MainActor
@@ -3728,6 +3952,13 @@ private struct BPFormulaOptionsView: View {
         Binding(
             get: { presentation.state.selectedOptionID },
             set: { presentation.state.selectedOptionID = $0 }
+        )
+    }
+
+    private var filterBinding: Binding<String> {
+        Binding(
+            get: { presentation.state.filterQuery },
+            set: { presentation.state.filterQuery = $0 }
         )
     }
 
@@ -3742,7 +3973,7 @@ private struct BPFormulaOptionsView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 6) {
                 Text(presentation.state.headerTitle)
                     .font(.system(size: 15))
@@ -3752,9 +3983,44 @@ private struct BPFormulaOptionsView: View {
                     .font(.system(size: 15, weight: .semibold))
                     .accessibilityValue(presentation.state.formulaName)
                     .accessibilityIdentifier("formula.options.formulaName")
+
+                if presentation.state.appliedOptionCount > 0 {
+                    Text("\(presentation.state.appliedOptionCount)")
+                        .font(.system(.caption2, design: .monospaced).weight(.semibold))
+                        .foregroundStyle(Color.accentColor)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 2)
+                        .background(
+                            Capsule(style: .continuous)
+                                .fill(Color.accentColor.opacity(0.14))
+                        )
+                        .accessibilityValue("\(presentation.state.appliedOptionCount)")
+                        .accessibilityIdentifier("formula.options.appliedBadge")
+                }
+
+                Spacer()
+
+                if !presentation.state.options.isEmpty {
+                    HStack(spacing: 5) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        TextField(NSLocalizedString("Toolbar_Search", comment: ""), text: filterBinding)
+                            .textFieldStyle(.plain)
+                            .font(.caption)
+                            .accessibilityIdentifier("formula.options.searchField")
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .frame(width: 140)
+                    .background(
+                        Capsule(style: .continuous)
+                            .fill(Color.primary.opacity(0.05))
+                    )
+                }
             }
 
-            List(presentation.state.options, selection: selectionBinding) { row in
+            List(presentation.state.filteredOptions, selection: selectionBinding) { row in
                 HStack(spacing: 8) {
                     Toggle("", isOn: toggleBinding(for: row))
                         .labelsHidden()
@@ -4258,6 +4524,20 @@ public final class BPBrewfileReviewHost: NSObject {
         presentation.state.canInstall
     }
 
+    @objc public var statusFilterRawValue: Int {
+        get { presentation.state.statusFilter.rawValue }
+        set { presentation.state.statusFilter = BPBrewfileEntryFilter(rawValue: newValue) ?? .all }
+    }
+
+    @objc public var filterQuery: String {
+        get { presentation.state.filterQuery }
+        set { presentation.state.filterQuery = newValue }
+    }
+
+    @objc public var matchingEntryCount: Int {
+        presentation.state.matchingEntryCount
+    }
+
     @objc(initWithEntriesTextView:fileName:installedCount:missingCount:notCheckedCount:formulaCount:caskCount:tapCount:otherCount:canInstall:summaryText:)
     public init(entriesTextView: NSTextView,
                 fileName: String,
@@ -4289,14 +4569,30 @@ public final class BPBrewfileReviewHost: NSObject {
         self.viewController = host
         super.init()
     }
+
+    @objc
+    @discardableResult
+    public func copySummaryToPasteboard() -> String {
+        let text = presentation.state.filteredSummaryText
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        return text
+    }
 }
 
 @MainActor
 private struct BPBrewfileReviewView: View {
     @ObservedObject var presentation: BPBrewfileReviewPresentation
 
+    private var filterBinding: Binding<String> {
+        Binding(
+            get: { presentation.state.filterQuery },
+            set: { presentation.state.filterQuery = $0 }
+        )
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Label(presentation.state.fileName, systemImage: "doc.text.magnifyingglass")
                     .font(.system(size: 13, weight: .semibold))
@@ -4305,15 +4601,26 @@ private struct BPBrewfileReviewView: View {
 
                 Spacer()
 
-                statusPill(
+                filterPillButton(
+                    filter: .all,
+                    count: presentation.state.totalEntryCount,
+                    label: BPLocalizedWithFallback("Brewfile", fallback: "All"),
+                    color: .accentColor,
+                    accessibilityID: "brewfile.review.filter.all"
+                )
+                filterPillButton(
+                    filter: .installed,
                     count: presentation.state.installedCount,
                     label: BPLocalizedWithFallback("Installed", fallback: "Installed"),
-                    color: .green
+                    color: .green,
+                    accessibilityID: "brewfile.review.filter.installed"
                 )
-                statusPill(
+                filterPillButton(
+                    filter: .missing,
                     count: presentation.state.missingCount,
                     label: BPLocalizedWithFallback("Missing", fallback: "Missing"),
-                    color: .orange
+                    color: .orange,
+                    accessibilityID: "brewfile.review.filter.missing"
                 )
                 if presentation.state.notCheckedCount > 0 {
                     statusPill(
@@ -4330,10 +4637,79 @@ private struct BPBrewfileReviewView: View {
                     .fill(Color.primary.opacity(0.04))
             )
 
-            BPTextViewContainerRepresentable(textView: presentation.entriesTextView)
-                .frame(maxWidth: .infinity, minHeight: 210, maxHeight: .infinity)
+            HStack(spacing: 8) {
+                HStack(spacing: 5) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    TextField(NSLocalizedString("Toolbar_Search", comment: ""), text: filterBinding)
+                        .textFieldStyle(.plain)
+                        .font(.caption)
+                        .accessibilityIdentifier("brewfile.review.searchField")
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .frame(maxWidth: 200)
+                .background(
+                    Capsule(style: .continuous)
+                        .fill(Color.primary.opacity(0.05))
+                )
+
+                Spacer()
+
+                Button {
+                    let text = presentation.state.filteredSummaryText
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(text, forType: .string)
+                } label: {
+                    Label(NSLocalizedString("Services_Copy_Output", comment: ""), systemImage: "doc.on.doc")
+                }
+                .controlSize(.small)
+                .disabled(presentation.state.summaryText.isEmpty)
+                .accessibilityIdentifier("brewfile.review.copySummary")
+            }
+
+            ZStack {
+                BPTextViewContainerRepresentable(textView: presentation.entriesTextView)
+                    .frame(maxWidth: .infinity, minHeight: 185, maxHeight: .infinity)
+
+                if presentation.state.isFiltering {
+                    BPFilteredLogOverlayView(
+                        filteredText: presentation.state.filteredSummaryText,
+                        accessibilityID: "brewfile.review.filteredEntries"
+                    )
+                }
+            }
         }
-        .frame(width: 570, height: 280)
+        .frame(width: 570, height: 296)
+    }
+
+    @ViewBuilder
+    private func filterPillButton(filter: BPBrewfileEntryFilter,
+                                  count: Int,
+                                  label: String,
+                                  color: Color,
+                                  accessibilityID: String) -> some View {
+        let isSelected = (presentation.state.statusFilter == filter)
+        Button {
+            presentation.state.statusFilter = filter
+        } label: {
+            HStack(spacing: 4) {
+                Text("\(count)")
+                    .font(.system(.caption, design: .monospaced).weight(.semibold))
+                Text(label)
+                    .font(.caption)
+            }
+            .foregroundStyle(isSelected ? .white : color)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(
+                Capsule()
+                    .fill(isSelected ? color : color.opacity(0.12))
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(accessibilityID)
     }
 
     @ViewBuilder

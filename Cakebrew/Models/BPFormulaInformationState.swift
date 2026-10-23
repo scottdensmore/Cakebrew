@@ -1217,6 +1217,7 @@ public struct BPFormulaOptionsSheetState: Equatable, Sendable {
     public var installTitle: String
     public var options: [BPFormulaOptionRow]
     public var selectedOptionID: String?
+    public var filterQuery: String
 
     public init(formulaName: String = "",
                 headerTitle: String = "",
@@ -1226,7 +1227,8 @@ public struct BPFormulaOptionsSheetState: Equatable, Sendable {
                 cancelTitle: String = "",
                 installTitle: String = "",
                 options: [BPFormulaOptionRow] = [],
-                selectedOptionID: String? = nil) {
+                selectedOptionID: String? = nil,
+                filterQuery: String = "") {
         self.formulaName = formulaName
         self.headerTitle = headerTitle
         self.helpText = helpText
@@ -1236,10 +1238,30 @@ public struct BPFormulaOptionsSheetState: Equatable, Sendable {
         self.installTitle = installTitle
         self.options = options
         self.selectedOptionID = selectedOptionID ?? options.first?.id
+        self.filterQuery = filterQuery
+    }
+
+    public var trimmedFilterQuery: String {
+        filterQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    public var filteredOptions: [BPFormulaOptionRow] {
+        let query = trimmedFilterQuery
+        guard !query.isEmpty else { return options }
+        return options.filter {
+            $0.name.localizedCaseInsensitiveContains(query)
+                || $0.explanation.localizedCaseInsensitiveContains(query)
+        }
     }
 
     public var selectedOptionNames: [String] {
         options.filter(\.isApplied).map(\.name)
+    }
+
+    public var appliedOptionCount: Int {
+        options.reduce(into: 0) { count, row in
+            if row.isApplied { count += 1 }
+        }
     }
 
     public var selectedOptionDescription: String {
@@ -1255,6 +1277,49 @@ public struct BPFormulaOptionsSheetState: Equatable, Sendable {
         guard let index = options.firstIndex(where: { $0.id == id }) else { return }
         options[index].isApplied = applied
         selectedOptionID = id
+    }
+
+    public mutating func clearAllApplied() {
+        for index in options.indices {
+            options[index].isApplied = false
+        }
+    }
+}
+
+public enum BPServiceStatusFilter: Int, Equatable, Sendable {
+    case all = 0
+    case running = 1
+    case stopped = 2
+    case error = 3
+}
+
+public struct BPServicesState: Equatable, Sendable {
+    public var statusFilter: BPServiceStatusFilter
+    public var filterQuery: String
+    public var runningCount: Int
+    public var stoppedCount: Int
+    public var errorCount: Int
+    public var serviceFilePath: String
+    public var logFilePath: String
+
+    public init(statusFilter: BPServiceStatusFilter = .all,
+                filterQuery: String = "",
+                runningCount: Int = 0,
+                stoppedCount: Int = 0,
+                errorCount: Int = 0,
+                serviceFilePath: String = "",
+                logFilePath: String = "") {
+        self.statusFilter = statusFilter
+        self.filterQuery = filterQuery
+        self.runningCount = runningCount
+        self.stoppedCount = stoppedCount
+        self.errorCount = errorCount
+        self.serviceFilePath = serviceFilePath
+        self.logFilePath = logFilePath
+    }
+
+    public var totalCount: Int {
+        runningCount + stoppedCount + errorCount
     }
 }
 
@@ -1348,6 +1413,12 @@ public struct BPAboutWindowState: Equatable, Sendable {
     }
 }
 
+public enum BPBrewfileEntryFilter: Int, Equatable, Sendable {
+    case all = 0
+    case installed = 1
+    case missing = 2
+}
+
 public struct BPBrewfileReviewState: Equatable, Sendable {
     public var fileName: String
     public var installedCount: Int
@@ -1359,6 +1430,8 @@ public struct BPBrewfileReviewState: Equatable, Sendable {
     public var otherCount: Int
     public var canInstall: Bool
     public var summaryText: String
+    public var statusFilter: BPBrewfileEntryFilter
+    public var filterQuery: String
 
     public init(fileName: String = "Brewfile",
                 installedCount: Int = 0,
@@ -1369,7 +1442,9 @@ public struct BPBrewfileReviewState: Equatable, Sendable {
                 tapCount: Int = 0,
                 otherCount: Int = 0,
                 canInstall: Bool = false,
-                summaryText: String = "") {
+                summaryText: String = "",
+                statusFilter: BPBrewfileEntryFilter = .all,
+                filterQuery: String = "") {
         self.fileName = fileName
         self.installedCount = installedCount
         self.missingCount = missingCount
@@ -1380,10 +1455,56 @@ public struct BPBrewfileReviewState: Equatable, Sendable {
         self.otherCount = otherCount
         self.canInstall = canInstall
         self.summaryText = summaryText
+        self.statusFilter = statusFilter
+        self.filterQuery = filterQuery
     }
 
     public var totalEntryCount: Int {
         formulaCount + caskCount + tapCount + otherCount
+    }
+
+    public var trimmedFilterQuery: String {
+        filterQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    public var isFiltering: Bool {
+        statusFilter != .all || !trimmedFilterQuery.isEmpty
+    }
+
+    public var filteredSummaryLines: [String] {
+        let lines = BPSplitLogLines(summaryText)
+        guard isFiltering else { return lines }
+        let installedToken = NSLocalizedString("Installed", comment: "")
+        let missingToken = NSLocalizedString("Missing", comment: "")
+        let query = trimmedFilterQuery
+        return lines.filter { line in
+            guard line.contains(" — ") || line.contains("[") else { return false }
+            let matchesStatus: Bool
+            switch statusFilter {
+            case .all:
+                matchesStatus = true
+            case .installed:
+                matchesStatus = line.localizedCaseInsensitiveContains(installedToken)
+                    || line.localizedCaseInsensitiveContains("Installed")
+            case .missing:
+                matchesStatus = line.localizedCaseInsensitiveContains(missingToken)
+                    || line.localizedCaseInsensitiveContains("Missing")
+            }
+            guard matchesStatus else { return false }
+            guard !query.isEmpty else { return true }
+            return line.localizedCaseInsensitiveContains(query)
+        }
+    }
+
+    public var filteredSummaryText: String {
+        isFiltering ? filteredSummaryLines.joined(separator: "\n") : summaryText
+    }
+
+    public var matchingEntryCount: Int {
+        if !isFiltering {
+            return totalEntryCount
+        }
+        return filteredSummaryLines.count
     }
 }
 
