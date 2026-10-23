@@ -1033,4 +1033,75 @@ final class BPFormulaInformationTests: XCTestCase {
         XCTAssertNotNil(aboutWC.aboutHost)
     }
 
+    @MainActor
+    func testSwift6Wave7OperationsControllersAndDataSources() {
+        // BPFormulaeTableActions
+        let toolbarMode = BPFormulaeTableActions.toolbarMode(
+            forSidebarRow: Int(FormulaeSideBarItem.outdated.rawValue),
+            selectedCount: 2,
+            selectedFormulaStatus: 1
+        )
+        XCTAssertEqual(toolbarMode, .updateMany)
+        XCTAssertFalse(BPFormulaeTableActions.shouldShowFormulaInfo(forSidebarRow: Int(FormulaeSideBarItem.repositories.rawValue)))
+        XCTAssertTrue(BPFormulaeTableActions.shouldShowFormulaInfo(forSidebarRow: Int(FormulaeSideBarItem.installed.rawValue)))
+
+        // BPPackageOperationPresenter
+        let tapAlert = BPPackageOperationPresenter.tapInputAlert()
+        let tapHost = BPPackageOperationPresenter.tapInputHost(for: tapAlert)
+        XCTAssertNotNil(tapHost)
+
+        // BPSideBarController
+        let sidebarController = BPSideBarController()
+        XCTAssertEqual(sidebarController.selectableRowAccessibilityIdentifiers().count, 13)
+        XCTAssertEqual(BPSideBarController.restorableRow(from: 99, rowCount: 16), .installed)
+
+        // BPTask
+        let task = BPTask(path: "/bin/sh", arguments: ["-c", "printf 'swift6-task'"])
+        XCTAssertEqual(task.execute(), 0)
+        XCTAssertEqual(task.output, "swift6-task")
+
+        // BPWindow
+        let window = BPWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 600, height: 400),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: true
+        )
+        XCTAssertTrue(window.titlebarAppearsTransparent)
+
+        // BPDoctorViewController & BPUpdateViewController
+        let doctorVC = BPDoctorViewController()
+        _ = doctorVC.view
+        XCTAssertNotNil(doctorVC.consoleHost)
+        XCTAssertNotNil(doctorVC.doctorTextView)
+
+        let updateVC = BPUpdateViewController()
+        _ = updateVC.view
+        XCTAssertNotNil(updateVC.consoleHost)
+        XCTAssertNotNil(updateVC.updateTextView)
+
+        // BPFormulaPopoverViewController & BPSelectedFormulaViewController
+        let popoverVC = BPFormulaPopoverViewController()
+        _ = popoverVC.view
+        XCTAssertEqual(popoverVC.infoType, .general)
+
+        let selectedVC = BPSelectedFormulaViewController(nibName: nil, bundle: nil)
+        _ = selectedVC.view
+        XCTAssertNotNil(selectedVC.inspectorHost)
+
+        // BPFormulaOptionsWindowController, BPPreferencesWindowController, BPBundleWindowController
+        let optionsWC = BPFormulaOptionsWindowController(windowNibName: "BPFormulaOptionsWindow")
+        _ = optionsWC.window
+        XCTAssertNotNil(optionsWC.optionsHost)
+
+        let prefsWC = BPPreferencesWindowController()
+        XCTAssertNotNil(prefsWC.window)
+        XCTAssertNotNil(prefsWC.preferencesHost)
+
+        let bundleWC = BPBundleWindowController.createWindow()
+        _ = bundleWC.window
+        bundleWC.windowDidLoad()
+        XCTAssertNotNil(bundleWC.bundleHost)
+    }
+
 }

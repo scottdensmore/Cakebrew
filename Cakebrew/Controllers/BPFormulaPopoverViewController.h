@@ -1,29 +1,11 @@
-//
-//  BPFormulaPopoverViewController.h
-//  Cakebrew
-//
-//  Created by Marek Hrusovsky on 05/09/14.
-//  Copyright (c) 2014 Bruno Philipe. All rights reserved.
-//
-
 #import <Cocoa/Cocoa.h>
 #import "BPFormula.h"
+#import "BPFormulaInformation-Swift.h"
 
-typedef NS_ENUM(NSInteger, BPFormulaInfoType) {
-	kBPFormulaInfoTypeGeneral,
-	kBPFormulaInfoTypeInstalledDependents,
-	kBPFormulaInfoTypeAllDependents
-};
+NS_ASSUME_NONNULL_BEGIN
 
-@interface BPFormulaPopoverViewController : NSViewController
-
-@property (strong) IBOutlet NSTextView *formulaTextView;
-@property (weak) IBOutlet NSTextField *formulaTitleLabel;
-@property (weak, nonatomic) BPFormula *formula;
-@property (weak) IBOutlet NSPopover *formulaPopover;
-@property (weak) IBOutlet NSProgressIndicator *progressIndicator;
-
-@property (nonatomic) BPFormulaInfoType infoType;
-@property (copy, nonatomic) NSString *(^dependentsProvider)(NSString *name, BOOL onlyInstalled);
-
+@interface BPFormulaPopoverViewController (TypedFormula)
+@property (weak, nonatomic, nullable) BPFormula *formula;
 @end
+
+NS_ASSUME_NONNULL_END

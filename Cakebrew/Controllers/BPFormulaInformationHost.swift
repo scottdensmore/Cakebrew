@@ -4538,6 +4538,10 @@ public final class BPBrewfileReviewHost: NSObject {
         presentation.state.matchingEntryCount
     }
 
+    @objc public var entriesTextView: NSTextView {
+        presentation.entriesTextView
+    }
+
     @objc(initWithEntriesTextView:fileName:installedCount:missingCount:notCheckedCount:formulaCount:caskCount:tapCount:otherCount:canInstall:summaryText:)
     public init(entriesTextView: NSTextView,
                 fileName: String,
@@ -5705,7 +5709,9 @@ public final class BPLoadingView: NSView {
 
     public override func awakeFromNib() {
         super.awakeFromNib()
-        progressIndicator?.startAnimation(self)
+        MainActor.assumeIsolated {
+            progressIndicator?.startAnimation(self)
+        }
     }
 
     public override init(frame frameRect: NSRect) {
@@ -6555,3 +6561,2889 @@ public final class BPToolbar: NSToolbar, NSToolbarDelegate, NSSearchFieldDelegat
         }
     }
 }
+
+// MARK: - Objective-C AppKit & Helper Runtime Bridges
+
+@objc private protocol BPAppDelegateObjCBridge: NSObjectProtocol {
+    var window: NSWindow? { get }
+    var isRunningBackgroundTask: Bool {
+        @objc(isRunningBackgroundTask) get
+        @objc(setRunningBackgroundTask:) set
+    }
+    var brewfileImportTarget: AnyObject? { get }
+    @objc(displayBackgroundWarning)
+    func displayBackgroundWarning()
+    @objc(requestUserAttentionWithMessageTitle:andDescription:)
+    func requestUserAttention(withMessageTitle title: String, andDescription desc: String)
+    @objc(updateMenuBarExtra)
+    func updateMenuBarExtra()
+    @objc(checkForAppUpdates:)
+    func checkForAppUpdates(_ sender: Any?)
+}
+
+@objc private protocol BPBrewfileImportingObjCBridge: NSObjectProtocol {
+    @objc(importBrewfileAtURL:)
+    func importBrewfile(at url: URL)
+}
+
+@objc private protocol BPHelperRegistrationObjCBridge: NSObjectProtocol {
+    @objc(currentState)
+    func currentState() -> Int
+    @objc(registerReturningError:)
+    func registerReturningError(_ error: NSErrorPointer) -> Bool
+}
+
+@objc private protocol BPHelperRegistrationClassObjCBridge: NSObjectProtocol {
+    @objc(sharedRegistration)
+    func sharedRegistration() -> AnyObject?
+    @objc(localizedDescriptionForState:)
+    func localizedDescription(forState state: Int) -> String
+    @objc(stateOffersLoginItemsShortcut:)
+    func stateOffersLoginItemsShortcut(_ state: Int) -> Bool
+    @objc(openLoginItemsSettings)
+    func openLoginItemsSettings()
+}
+
+@MainActor
+@inline(__always)
+private func bpSharedAppDelegate() -> BPAppDelegateObjCBridge? {
+    guard let delegate = NSApplication.shared.delegate else { return nil }
+    return unsafeBitCast(delegate as AnyObject, to: BPAppDelegateObjCBridge.self)
+}
+
+@inline(__always)
+private func bpHelperRegistrationClass() -> BPHelperRegistrationClassObjCBridge? {
+    guard let cls = NSClassFromString("BPHelperRegistration") else { return nil }
+    return unsafeBitCast(cls as AnyObject, to: BPHelperRegistrationClassObjCBridge.self)
+}
+
+@inline(__always)
+private func bpSharedHelperRegistration() -> BPHelperRegistrationObjCBridge? {
+    guard let obj = bpHelperRegistrationClass()?.sharedRegistration() else { return nil }
+    return unsafeBitCast(obj, to: BPHelperRegistrationObjCBridge.self)
+}
+
+// MARK: - Migrated Presenter, DataSource, Sidebar, Window & Controllers (Swift 6)
+
+@MainActor
+private var bpTapInputHostAssocKey: UInt8 = 0
+@MainActor
+private var bpCleanupPreviewHostAssocKey: UInt8 = 0
+@MainActor
+private var bpBrewfileReviewHostAssocKey: UInt8 = 0
+
+@MainActor
+@objc(BPPackageOperationPresenter)
+public final class BPPackageOperationPresenter: NSObject {
+    private static func operationLocalizedFormat(_ key: String, fallback: String) -> String {
+        Bundle.main.localizedString(forKey: key, value: fallback, table: nil)
+    }
+
+    @objc(installAlertForFormula:)
+    public static func installAlert(forFormula formula: Any?) -> NSAlert? {
+        guard let f = bpAsFormula(formula), let name = f.name, !name.isEmpty else { return nil }
+        let alert = NSAlert()
+        alert.messageText = NSLocalizedString("Generic_Attention", comment: "")
+        alert.addButton(withTitle: NSLocalizedString("Generic_Yes", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString("Generic_Cancel", comment: ""))
+        alert.informativeText = String(
+            format: operationLocalizedFormat(
+                "Confirmation_Install_Formula",
+                fallback: "Are you sure you want to install the formula '%@'?"
+            ),
+            name
+        )
+        return alert
+    }
+
+    @objc(uninstallAlertForFormula:initialZapState:)
+    public static func uninstallAlert(forFormula formula: Any?, initialZapState zapState: Bool) -> NSAlert? {
+        guard let f = bpAsFormula(formula), let name = f.name, !name.isEmpty else { return nil }
+        let alert = NSAlert()
+        alert.messageText = NSLocalizedString("Generic_Attention", comment: "")
+        alert.addButton(withTitle: NSLocalizedString("Generic_Yes", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString("Generic_Cancel", comment: ""))
+        alert.informativeText = String(
+            format: operationLocalizedFormat(
+                "Confirmation_Uninstall_Formula",
+                fallback: "Are you sure you want to uninstall the formula '%@'?"
+            ),
+            name
+        )
+        if f.cask {
+            let zapCheckbox = NSButton(
+                checkboxWithTitle: NSLocalizedString("Confirmation_Uninstall_Cask_Zap", comment: ""),
+                target: nil,
+                action: nil
+            )
+            zapCheckbox.sizeToFit()
+            zapCheckbox.state = zapState ? .on : .off
+            alert.accessoryView = zapCheckbox
+        }
+        return alert
+    }
+
+    @objc(upgradeAlertForFormulae:)
+    public static func upgradeAlert(forFormulae formulae: [Any]?) -> NSAlert? {
+        guard let formulae, !formulae.isEmpty else { return nil }
+        var names: [String] = []
+        names.reserveCapacity(formulae.count)
+        for item in formulae {
+            if let f = bpAsFormula(item), let name = f.name, !name.isEmpty {
+                names.append(name)
+            }
+        }
+        guard !names.isEmpty else { return nil }
+        let formulaNames = names.joined(separator: ", ")
+        let alert = NSAlert()
+        alert.messageText = NSLocalizedString("Message_Update_Formulae_Title", comment: "")
+        alert.addButton(withTitle: NSLocalizedString("Generic_Yes", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString("Generic_Cancel", comment: ""))
+        alert.informativeText = String(
+            format: operationLocalizedFormat(
+                "Message_Update_Formulae_Body",
+                fallback: "Are you sure you want to update these formulae: '%@'?"
+            ),
+            formulaNames
+        )
+        return alert
+    }
+
+    @objc(updatesReviewSummaryForSnapshot:)
+    public static func updatesReviewSummary(forSnapshot snapshot: BPUpdatesSnapshot?) -> String? {
+        guard let snapshot, snapshot.hasEligibleUpdates else { return nil }
+        var sections: [String] = []
+        if !snapshot.eligibleFormulae.isEmpty {
+            sections.append(String(
+                format: operationLocalizedFormat("Updates_Formula_Targets", fallback: "Formulae: %@"),
+                snapshot.eligibleFormulae.joined(separator: ", ")
+            ))
+        }
+        if !snapshot.eligibleCasks.isEmpty {
+            sections.append(String(
+                format: operationLocalizedFormat("Updates_Cask_Targets", fallback: "Casks: %@"),
+                snapshot.eligibleCasks.joined(separator: ", ")
+            ))
+        }
+        if !snapshot.excludedFormulae.isEmpty {
+            sections.append(String(
+                format: operationLocalizedFormat(
+                    "Updates_Pinned_Formula_Exclusions",
+                    fallback: "Pinned formulae will be skipped: %@"
+                ),
+                snapshot.excludedFormulae.joined(separator: ", ")
+            ))
+        }
+        if !snapshot.excludedCasks.isEmpty {
+            sections.append(String(
+                format: operationLocalizedFormat(
+                    "Updates_Pinned_Cask_Exclusions",
+                    fallback: "Pinned casks will be skipped: %@"
+                ),
+                snapshot.excludedCasks.joined(separator: ", ")
+            ))
+        }
+        return sections.joined(separator: "\n\n")
+    }
+
+    @objc(upgradeAllAlertForSnapshot:)
+    public static func upgradeAllAlert(forSnapshot snapshot: BPUpdatesSnapshot?) -> NSAlert? {
+        guard let summary = updatesReviewSummary(forSnapshot: snapshot) else { return nil }
+        let alert = NSAlert()
+        alert.messageText = NSLocalizedString("Updates_Confirm_Title", comment: "")
+        alert.informativeText = NSLocalizedString("Updates_Review_Body", comment: "")
+        let review = NSScrollView(frame: NSRect(x: 0, y: 0, width: 440, height: 180))
+        review.hasVerticalScroller = true
+        review.borderType = .bezelBorder
+        let targets = NSTextView(frame: review.contentView.bounds)
+        targets.isEditable = false
+        targets.isSelectable = true
+        targets.font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
+        targets.textContainerInset = NSSize(width: 8, height: 8)
+        targets.textContainer?.widthTracksTextView = true
+        targets.autoresizingMask = [.width]
+        targets.isVerticallyResizable = true
+        targets.isHorizontallyResizable = false
+        targets.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        targets.string = summary
+        targets.setAccessibilityIdentifier("updates.targets")
+        targets.setAccessibilityLabel(NSLocalizedString("Updates_Review_Targets", comment: ""))
+        review.documentView = targets
+        alert.accessoryView = review
+        alert.addButton(withTitle: NSLocalizedString("Updates_Confirm_Action", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString("Generic_Cancel", comment: ""))
+        alert.buttons.first?.setAccessibilityIdentifier("updates.confirm")
+        return alert
+    }
+
+    @objc public static func updatesChangedAlert() -> NSAlert {
+        let changed = NSAlert()
+        changed.messageText = NSLocalizedString("Updates_Changed_Title", comment: "")
+        changed.informativeText = NSLocalizedString("Updates_Changed_Body", comment: "")
+        changed.addButton(withTitle: NSLocalizedString("Generic_OK", comment: ""))
+        return changed
+    }
+
+    @objc public static func tapInputAlert() -> NSAlert {
+        let alert = NSAlert()
+        alert.messageText = NSLocalizedString("Message_Tap_Title", comment: "")
+        alert.addButton(withTitle: NSLocalizedString("Generic_OK", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString("Generic_Cancel", comment: ""))
+        alert.informativeText = NSLocalizedString("Message_Tap_Body", comment: "")
+
+        let host = BPTapInputHost()
+        objc_setAssociatedObject(alert, &bpTapInputHostAssocKey, host, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        alert.accessoryView = host.viewController.view
+        return alert
+    }
+
+    @objc(tapInputHostForAlert:)
+    public static func tapInputHost(for alert: NSAlert?) -> BPTapInputHost? {
+        guard let alert else { return nil }
+        return objc_getAssociatedObject(alert, &bpTapInputHostAssocKey) as? BPTapInputHost
+    }
+
+    @objc public static func invalidTapAlert() -> NSAlert {
+        let error = NSAlert()
+        error.messageText = NSLocalizedString("Message_Tap_Invalid_Title", comment: "")
+        error.informativeText = NSLocalizedString("Message_Tap_Invalid_Body", comment: "")
+        error.addButton(withTitle: NSLocalizedString("Generic_OK", comment: ""))
+        return error
+    }
+
+    @objc(untapAlertForFormula:)
+    public static func untapAlert(forFormula formula: Any?) -> NSAlert? {
+        guard let f = bpAsFormula(formula), let name = f.name, !name.isEmpty else { return nil }
+        let alert = NSAlert()
+        alert.messageText = NSLocalizedString("Message_Untap_Title", comment: "")
+        alert.addButton(withTitle: NSLocalizedString("Generic_OK", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString("Generic_Cancel", comment: ""))
+        alert.informativeText = String(
+            format: operationLocalizedFormat(
+                "Message_Untap_Body",
+                fallback: "Are you sure you want to untap the repository '%@'?"
+            ),
+            name
+        )
+        return alert
+    }
+
+    @objc(cleanupConfirmationBodyForPreview:)
+    public static func cleanupConfirmationBody(for preview: BPCleanupPreview) -> String {
+        let items = preview.itemCount == 1
+            ? operationLocalizedFormat("Cleanup_Item_Count_One", fallback: "1 item")
+            : String.localizedStringWithFormat(
+                operationLocalizedFormat("Cleanup_Item_Count_Other", fallback: "%lu items"),
+                UInt(preview.itemCount)
+            )
+
+        if preview.reclaimableBytes == 0 {
+            return String.localizedStringWithFormat(
+                operationLocalizedFormat(
+                    "Confirmation_Cleanup_No_Size",
+                    fallback: "Would remove %@ from Homebrew's cache and old installed versions.\n\nAre you sure you want to proceed?"
+                ),
+                items
+            )
+        }
+
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .binary
+        let size = formatter.string(fromByteCount: Int64(preview.reclaimableBytes))
+
+        return String.localizedStringWithFormat(
+            operationLocalizedFormat(
+                "Confirmation_Cleanup",
+                fallback: "Would remove %@ (%@) from Homebrew's cache and old installed versions.\n\nAre you sure you want to proceed?"
+            ),
+            items,
+            size
+        )
+    }
+
+    @objc(cleanupAlertForPreview:)
+    public static func cleanupAlert(for preview: BPCleanupPreview) -> NSAlert {
+        let alert = NSAlert()
+        if preview.empty {
+            alert.messageText = NSLocalizedString("Cleanup_Nothing_Title", comment: "")
+            alert.informativeText = NSLocalizedString("Cleanup_Nothing_Body", comment: "")
+            alert.addButton(withTitle: NSLocalizedString("Generic_OK", comment: ""))
+            return alert
+        }
+
+        alert.messageText = NSLocalizedString("Generic_Attention", comment: "")
+        alert.addButton(withTitle: NSLocalizedString("Generic_Yes", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString("Generic_Cancel", comment: ""))
+        alert.informativeText = cleanupConfirmationBody(for: preview)
+
+        var formattedSize = ""
+        if preview.reclaimableBytes > 0 {
+            let formatter = ByteCountFormatter()
+            formatter.countStyle = .binary
+            formattedSize = formatter.string(fromByteCount: Int64(preview.reclaimableBytes))
+        }
+        let host = BPCleanupPreviewHost(
+            itemCount: Int(preview.itemCount),
+            reclaimableBytes: preview.reclaimableBytes,
+            formattedByteCount: formattedSize,
+            samplePaths: preview.paths
+        )
+        objc_setAssociatedObject(alert, &bpCleanupPreviewHostAssocKey, host, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        alert.accessoryView = host.viewController.view
+        return alert
+    }
+
+    @objc(cleanupPreviewHostForAlert:)
+    public static func cleanupPreviewHost(for alert: NSAlert?) -> BPCleanupPreviewHost? {
+        guard let alert else { return nil }
+        return objc_getAssociatedObject(alert, &bpCleanupPreviewHostAssocKey) as? BPCleanupPreviewHost
+    }
+
+    @objc(brewfileInventoriesForInstalledFormulae:installedCasks:repositories:)
+    public static func brewfileInventories(
+        forInstalledFormulae formulae: [Any]?,
+        installedCasks casks: [Any]?,
+        repositories: [Any]?
+    ) -> [String: [String]] {
+        var inventories: [String: [String]] = [:]
+        if let formulae {
+            inventories["brew"] = formulae.compactMap { bpAsFormula($0)?.name }
+        }
+        if let casks {
+            inventories["cask"] = casks.compactMap { bpAsFormula($0)?.name }
+        }
+        if let repositories {
+            inventories["tap"] = repositories.compactMap { bpAsFormula($0)?.name }
+        }
+        return inventories
+    }
+
+    @objc(resolvedSelectionForFormulaNames:caskNames:outdatedFormulae:outdatedCasks:)
+    public static func resolvedSelection(
+        forFormulaNames formulaNames: [Any],
+        caskNames: [Any],
+        outdatedFormulae: [Any]?,
+        outdatedCasks: [Any]?
+    ) -> [Any] {
+        var result: [Any] = []
+        let formulaCls = bpFormulaClass()
+
+        var formulaByName: [String: AnyObject] = [:]
+        if let outdatedFormulae {
+            for item in outdatedFormulae {
+                if let f = bpAsFormula(item), let name = f.name, !name.isEmpty {
+                    formulaByName[name] = item as AnyObject
+                }
+            }
+        }
+        for rawName in formulaNames {
+            guard let name = rawName as? String, !name.isEmpty else { continue }
+            if let matched = formulaByName[name] {
+                result.append(matched)
+            } else if let fallback = formulaCls?.formula(withName: name), let f = bpAsFormula(fallback) {
+                f.cask = false
+                result.append(fallback)
+            }
+        }
+
+        var caskByName: [String: AnyObject] = [:]
+        if let outdatedCasks {
+            for item in outdatedCasks {
+                if let c = bpAsFormula(item), let name = c.name, !name.isEmpty {
+                    caskByName[name] = item as AnyObject
+                }
+            }
+        }
+        for rawName in caskNames {
+            guard let name = rawName as? String, !name.isEmpty else { continue }
+            if let matched = caskByName[name] {
+                result.append(matched)
+            } else if let fallback = formulaCls?.formula(withName: name), let c = bpAsFormula(fallback) {
+                c.cask = true
+                result.append(fallback)
+            }
+        }
+
+        return result
+    }
+}
+
+@objc(BPFormulaeDataSource)
+public final class BPFormulaeDataSource: NSObject, NSTableViewDataSource {
+    private static let columnIdentifierName = "Name"
+    private static let columnIdentifierVersion = "Version"
+    private static let columnIdentifierLatestVersion = "LatestVersion"
+    private static let columnIdentifierStatus = "Status"
+
+    @objc public var mode: Int = 0 {
+        didSet {
+            refreshBackingArray()
+        }
+    }
+
+    @objc public var sortDescriptors: [NSSortDescriptor]? {
+        didSet {
+            refreshBackingArray()
+        }
+    }
+
+    @objc public var formulaeArray: [Any]?
+
+    public convenience override init() {
+        self.init(mode: 0)
+    }
+
+    @objc(initWithMode:)
+    public init(mode aMode: Int) {
+        self.mode = aMode
+        super.init()
+        refreshBackingArray()
+    }
+
+    @objc(nameCellValueForFormula:pinned:)
+    public static func nameCellValue(forFormula formula: Any?, pinned: Bool) -> Any {
+        let name = bpAsFormula(formula)?.name ?? ""
+        if !pinned || name.isEmpty {
+            return name as NSString
+        }
+
+        let value = NSMutableAttributedString(string: name + " ")
+        if let pin = NSImage(
+            systemSymbolName: "pin.fill",
+            accessibilityDescription: NSLocalizedString("Sidebar_Item_Pinned", comment: "")
+        ) {
+            let config = NSImage.SymbolConfiguration(pointSize: NSFont.smallSystemFontSize, weight: .regular)
+            let attachment = NSTextAttachment()
+            attachment.image = pin.withSymbolConfiguration(config) ?? pin
+            value.append(NSAttributedString(attachment: attachment))
+        }
+        return value
+    }
+
+    public func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) {
+        self.sortDescriptors = tableView.sortDescriptors
+        let descriptor = tableView.sortDescriptors.first
+        BPPreferences.sortColumnIdentifier = descriptor?.key
+        BPPreferences.sortAscending = descriptor?.ascending ?? true
+        tableView.reloadData()
+    }
+
+    @objc public func refreshBackingArray() {
+        guard let manager = bpSharedHomebrewManager() else {
+            formulaeArray = []
+            return
+        }
+        switch mode {
+        case 0: // kBPListAll
+            formulaeArray = manager.allFormulae
+        case 1: // kBPListInstalled
+            formulaeArray = manager.installedFormulae
+        case 2: // kBPListLeaves
+            formulaeArray = manager.leavesFormulae
+        case 6: // kBPListPinned
+            formulaeArray = manager.pinnedFormulae
+        case 7: // kBPListInstalledCasks
+            formulaeArray = manager.installedCasks
+        case 8: // kBPListOutdatedCasks
+            formulaeArray = manager.outdatedCasks
+        case 9: // kBPListAllCasks
+            formulaeArray = manager.allCasks
+        case 3: // kBPListOutdated
+            formulaeArray = manager.outdatedFormulae
+        case 4: // kBPListSearch
+            formulaeArray = manager.searchFormulae
+        case 5: // kBPListRepositories
+            formulaeArray = manager.repositoriesFormulae
+        default:
+            break
+        }
+
+        if let sortDescriptors, !sortDescriptors.isEmpty {
+            formulaeArray = Self.formulae(formulaeArray, sortedBy: sortDescriptors)
+        }
+    }
+
+    public func numberOfRows(in aTableView: NSTableView) -> Int {
+        formulaeArray?.count ?? 0
+    }
+
+    @objc(formulaAtIndex:)
+    public func formula(at index: Int) -> Any? {
+        guard let array = formulaeArray, index >= 0, index < array.count else { return nil }
+        return array[index]
+    }
+
+    @objc(indexOfFormulaNamed:)
+    public func indexOfFormula(named name: String?) -> Int {
+        indexOfFormula(named: name, cask: false)
+    }
+
+    @objc(indexOfFormulaNamed:cask:)
+    public func indexOfFormula(named name: String?, cask: Bool) -> Int {
+        guard let name, !name.isEmpty, let array = formulaeArray else { return -1 }
+        for (idx, item) in array.enumerated() {
+            if let f = bpAsFormula(item), f.cask == cask, f.name == name {
+                return idx
+            }
+        }
+        return -1
+    }
+
+    private static func compareFormula(_ lhsObj: Any, to rhsObj: Any, forKey key: String) -> ComparisonResult {
+        guard let lhs = bpAsFormula(lhsObj), let rhs = bpAsFormula(rhsObj) else {
+            return .orderedSame
+        }
+        if key == columnIdentifierName {
+            return ((lhs.name ?? "") as NSString).localizedCaseInsensitiveCompare(rhs.name ?? "")
+        }
+        if key == columnIdentifierStatus {
+            guard let manager = bpSharedHomebrewManager() else { return .orderedSame }
+            let left = manager.status(forFormula: lhsObj as AnyObject)
+            let right = manager.status(forFormula: rhsObj as AnyObject)
+            if left == right { return .orderedSame }
+            return left < right ? .orderedAscending : .orderedDescending
+        }
+
+        let leftValue = (key == columnIdentifierLatestVersion ? lhs.shortLatestVersion : lhs.version) ?? ""
+        let rightValue = (key == columnIdentifierLatestVersion ? rhs.shortLatestVersion : rhs.version) ?? ""
+        if leftValue.isEmpty && rightValue.isEmpty { return .orderedSame }
+        if leftValue.isEmpty { return .orderedAscending }
+        if rightValue.isEmpty { return .orderedDescending }
+        return (leftValue as NSString).localizedStandardCompare(rightValue)
+    }
+
+    @objc(formulae:sortedBy:)
+    public static func formulae(_ formulae: [Any]?, sortedBy descriptors: [NSSortDescriptor]?) -> [Any] {
+        guard let formulae else { return [] }
+        guard let descriptor = descriptors?.first, let key = descriptor.key else {
+            return formulae
+        }
+        let ascending = descriptor.ascending
+        let positions = Array(0..<formulae.count)
+        let ordered = positions.sorted { l, r in
+            let cmp = compareFormula(formulae[l], to: formulae[r], forKey: key)
+            if cmp == .orderedSame {
+                return l < r
+            }
+            if ascending {
+                return cmp == .orderedAscending
+            } else {
+                return cmp == .orderedDescending
+            }
+        }
+        return ordered.map { formulae[$0] }
+    }
+
+    @objc(formulasAtIndexSet:)
+    public func formulas(at indexSet: IndexSet) -> [Any]? {
+        guard let array = formulaeArray,
+              !indexSet.isEmpty,
+              let last = indexSet.last,
+              last < array.count else {
+            return nil
+        }
+        return indexSet.map { array[$0] }
+    }
+
+    public func tableView(_ tableView: NSTableView, objectValueFor tableColumn: NSTableColumn?, row: Int) -> Any? {
+        guard let array = formulaeArray, row >= 0, row < array.count else { return "" }
+        let columnIdentifier = tableColumn?.identifier.rawValue ?? ""
+        let element = array[row]
+        if columnIdentifier == Self.columnIdentifierName {
+            if let f = bpAsFormula(element) {
+                let pinned = bpSharedHomebrewManager()?.isFormulaPinned(element as AnyObject) ?? false
+                return Self.nameCellValue(forFormula: f, pinned: pinned)
+            }
+            return element
+        } else if columnIdentifier == Self.columnIdentifierVersion {
+            if let f = bpAsFormula(element) {
+                return f.version
+            }
+            return element
+        } else if columnIdentifier == Self.columnIdentifierLatestVersion {
+            if let f = bpAsFormula(element) {
+                return f.shortLatestVersion
+            }
+            return element
+        } else if columnIdentifier == Self.columnIdentifierStatus {
+            if bpAsFormula(element) != nil {
+                let status = bpSharedHomebrewManager()?.status(forFormula: element as AnyObject) ?? -1
+                switch status {
+                case 1: // kBPFormulaInstalled
+                    return NSLocalizedString("Formula_Status_Installed", comment: "")
+                case 0: // kBPFormulaNotInstalled
+                    return NSLocalizedString("Formula_Status_Not_Installed", comment: "")
+                case 2: // kBPFormulaOutdated
+                    return NSLocalizedString("Formula_Status_Outdated", comment: "")
+                default:
+                    return ""
+                }
+            }
+            return element
+        }
+        return ""
+    }
+}
+
+@objc(BPSideBarControllerDelegate)
+public protocol BPSideBarControllerDelegate: NSObjectProtocol {
+    @objc func sourceListSelectionDidChange()
+}
+
+@objc(BPSidebarItem)
+public final class BPSidebarItem: NSObject {
+    @objc public var title: String?
+    @objc public var identifier: String?
+    @objc public var symbolName: String?
+    @objc public var icon: NSImage?
+    @objc public var badgeValue: NSNumber? = NSNumber(value: -1)
+    @objc public private(set) var children: [BPSidebarItem] = []
+    @objc public var accessibilityIdentifier: String?
+    @objc public private(set) weak var parentItem: BPSidebarItem?
+
+    @objc(itemWithTitle:identifier:)
+    public static func item(withTitle title: String?, identifier: String?) -> BPSidebarItem {
+        let item = BPSidebarItem()
+        item.title = title
+        item.identifier = identifier
+        return item
+    }
+
+    @objc(addChildItem:)
+    public func addChildItem(_ item: BPSidebarItem) {
+        item.parentItem = self
+        children.append(item)
+    }
+
+    @objc public func hasChildren() -> Bool {
+        !children.isEmpty
+    }
+}
+
+private func bpSpokenBadgeCount(_ badge: NSNumber) -> String {
+    let format = NSLocalizedString("Sidebar_VoiceOver_Badge_Count", comment: "")
+    if format.contains("%@") {
+        return String(format: format, badge)
+    }
+    return badge.stringValue
+}
+
+private func bpSpokenSeparator() -> String {
+    let separator = NSLocalizedString("Sidebar_VoiceOver_Separator", comment: "")
+    return separator == "Sidebar_VoiceOver_Separator" ? ", " : separator
+}
+
+@MainActor
+@objc(BPSidebarBadgeView)
+public final class BPSidebarBadgeView: NSView {
+    @objc public var badgeValue: UInt = 0 {
+        didSet {
+            if oldValue != badgeValue {
+                invalidateIntrinsicContentSize()
+                needsDisplay = true
+            }
+        }
+    }
+
+    @objc public var isEmphasized: Bool = false {
+        didSet {
+            if oldValue != isEmphasized {
+                needsDisplay = true
+            }
+        }
+    }
+
+    @objc public var emphasized: Bool {
+        get { isEmphasized }
+        set { isEmphasized = newValue }
+    }
+
+    override public func isAccessibilityElement() -> Bool {
+        true
+    }
+
+    override public func accessibilityRole() -> NSAccessibility.Role? {
+        .staticText
+    }
+
+    override public func accessibilityValue() -> Any? {
+        bpSpokenBadgeCount(NSNumber(value: badgeValue))
+    }
+
+    private var badgeText: String {
+        "\(badgeValue)"
+    }
+
+    private func textAttributes(with color: NSColor) -> [NSAttributedString.Key: Any] {
+        [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 11.0, weight: .semibold),
+            .foregroundColor: color
+        ]
+    }
+
+    override public var intrinsicContentSize: NSSize {
+        let textSize = (badgeText as NSString).size(withAttributes: textAttributes(with: .labelColor))
+        return NSSize(width: ceil(textSize.width) + 14.0, height: 16.0)
+    }
+
+    override public func draw(_ dirtyRect: NSRect) {
+        let backgroundColor: NSColor
+        let borderColor: NSColor
+        let textColor: NSColor
+        if isEmphasized {
+            backgroundColor = NSColor.white.withAlphaComponent(0.92)
+            borderColor = NSColor.white.withAlphaComponent(0.98)
+            textColor = NSColor.selectedContentBackgroundColor
+        } else {
+            backgroundColor = NSColor.secondaryLabelColor.withAlphaComponent(0.14)
+            borderColor = NSColor.secondaryLabelColor.withAlphaComponent(0.24)
+            textColor = NSColor.secondaryLabelColor
+        }
+
+        let pillHeight: CGFloat = 16.0
+        let rawPill = NSRect(
+            x: bounds.minX,
+            y: bounds.midY - pillHeight / 2.0,
+            width: bounds.width,
+            height: pillHeight
+        )
+        let pill = rawPill.insetBy(dx: 0.5, dy: 0.5)
+        let path = NSBezierPath(
+            roundedRect: pill,
+            xRadius: pill.height / 2.0,
+            yRadius: pill.height / 2.0
+        )
+        backgroundColor.setFill()
+        path.fill()
+        path.lineWidth = 0.75
+        borderColor.setStroke()
+        path.stroke()
+
+        let text = badgeText as NSString
+        let attributes = textAttributes(with: textColor)
+        let textSize = text.size(withAttributes: attributes)
+        let origin = NSPoint(
+            x: pill.midX - textSize.width / 2.0,
+            y: pill.midY - textSize.height / 2.0
+        )
+        text.draw(at: origin, withAttributes: attributes)
+    }
+}
+
+@MainActor
+@objc(BPSidebarTableCellView)
+public final class BPSidebarTableCellView: NSTableCellView {
+    @objc public weak var badgeView: BPSidebarBadgeView?
+
+    override public var backgroundStyle: NSView.BackgroundStyle {
+        didSet {
+            badgeView?.isEmphasized = (backgroundStyle == .emphasized)
+        }
+    }
+}
+
+@MainActor
+@objc(BPSideBarController)
+public final class BPSideBarController: NSObject, NSOutlineViewDataSource, NSOutlineViewDelegate {
+    @objc public weak var sidebar: NSOutlineView?
+    @objc public private(set) var sidebarHost: BPSidebarHost
+    @objc public weak var delegate: (any BPSideBarControllerDelegate)?
+
+    @objc public var rootSidebarCategory: BPSidebarItem
+    @objc public var installedFormulaeSidebarItem: BPSidebarItem
+    @objc public var outdatedFormulaeSidebarItem: BPSidebarItem
+    @objc public var allFormulaeSidebarItem: BPSidebarItem
+    @objc public var leavesFormulaeSidebarItem: BPSidebarItem
+    @objc public var pinnedFormulaeSidebarItem: BPSidebarItem
+    @objc public var repositoriesFormulaeSidebarItem: BPSidebarItem
+    @objc public var installedCasksSidebarItem: BPSidebarItem
+    @objc public var outdatedCasksSidebarItem: BPSidebarItem
+    @objc public var allCasksSidebarItem: BPSidebarItem
+    @objc public var unifiedUpdatesSidebarItem: BPSidebarItem
+
+    override public init() {
+        let host = BPSidebarHost()
+        self.sidebarHost = host
+        self.rootSidebarCategory = BPSidebarItem.item(withTitle: "", identifier: "root")
+        self.installedFormulaeSidebarItem = BPSidebarItem()
+        self.outdatedFormulaeSidebarItem = BPSidebarItem()
+        self.allFormulaeSidebarItem = BPSidebarItem()
+        self.leavesFormulaeSidebarItem = BPSidebarItem()
+        self.pinnedFormulaeSidebarItem = BPSidebarItem()
+        self.repositoriesFormulaeSidebarItem = BPSidebarItem()
+        self.installedCasksSidebarItem = BPSidebarItem()
+        self.outdatedCasksSidebarItem = BPSidebarItem()
+        self.allCasksSidebarItem = BPSidebarItem()
+        self.unifiedUpdatesSidebarItem = BPSidebarItem()
+        super.init()
+
+        host.onSelectRow = { [weak self] rowIndex in
+            guard let self else { return }
+            if let sidebar = self.sidebar, sidebar.selectedRow != rowIndex {
+                sidebar.selectRowIndexes(IndexSet(integer: rowIndex), byExtendingSelection: false)
+            } else {
+                self.delegate?.sourceListSelectionDidChange()
+            }
+        }
+        buildSidebarTree()
+        syncSidebarHost()
+    }
+
+    private func buildSidebarTree() {
+        rootSidebarCategory = BPSidebarItem.item(withTitle: "", identifier: "root")
+
+        let formulaeGroup = BPSidebarItem.item(
+            withTitle: NSLocalizedString("Sidebar_Group_Formulae", comment: ""),
+            identifier: "group"
+        )
+        rootSidebarCategory.addChildItem(formulaeGroup)
+
+        installedFormulaeSidebarItem = BPSidebarItem.item(
+            withTitle: NSLocalizedString("Sidebar_Item_Installed", comment: ""),
+            identifier: "item"
+        )
+        installedFormulaeSidebarItem.symbolName = "checkmark.square"
+        installedFormulaeSidebarItem.icon = NSImage(
+            systemSymbolName: "checkmark.square",
+            accessibilityDescription: NSLocalizedString("Sidebar_Item_Installed", comment: "")
+        )
+        installedFormulaeSidebarItem.accessibilityIdentifier = "sidebar.formulae.installed"
+        formulaeGroup.addChildItem(installedFormulaeSidebarItem)
+
+        outdatedFormulaeSidebarItem = BPSidebarItem.item(
+            withTitle: NSLocalizedString("Sidebar_Item_Outdated", comment: ""),
+            identifier: "item"
+        )
+        outdatedFormulaeSidebarItem.symbolName = "clock.arrow.circlepath"
+        outdatedFormulaeSidebarItem.icon = NSImage(
+            systemSymbolName: "clock.arrow.circlepath",
+            accessibilityDescription: NSLocalizedString("Sidebar_Item_Outdated", comment: "")
+        )
+        outdatedFormulaeSidebarItem.accessibilityIdentifier = "sidebar.formulae.outdated"
+        formulaeGroup.addChildItem(outdatedFormulaeSidebarItem)
+
+        allFormulaeSidebarItem = BPSidebarItem.item(
+            withTitle: NSLocalizedString("Sidebar_Item_All", comment: ""),
+            identifier: "item"
+        )
+        allFormulaeSidebarItem.symbolName = "books.vertical"
+        allFormulaeSidebarItem.icon = NSImage(
+            systemSymbolName: "books.vertical",
+            accessibilityDescription: NSLocalizedString("Sidebar_Item_All", comment: "")
+        )
+        allFormulaeSidebarItem.accessibilityIdentifier = "sidebar.formulae.all"
+        formulaeGroup.addChildItem(allFormulaeSidebarItem)
+
+        leavesFormulaeSidebarItem = BPSidebarItem.item(
+            withTitle: NSLocalizedString("Sidebar_Item_Leaves", comment: ""),
+            identifier: "item"
+        )
+        leavesFormulaeSidebarItem.symbolName = "leaf"
+        leavesFormulaeSidebarItem.icon = NSImage(
+            systemSymbolName: "leaf",
+            accessibilityDescription: NSLocalizedString("Sidebar_Item_Leaves", comment: "")
+        )
+        leavesFormulaeSidebarItem.accessibilityIdentifier = "sidebar.formulae.leaves"
+        formulaeGroup.addChildItem(leavesFormulaeSidebarItem)
+
+        pinnedFormulaeSidebarItem = BPSidebarItem.item(
+            withTitle: NSLocalizedString("Sidebar_Item_Pinned", comment: ""),
+            identifier: "item"
+        )
+        pinnedFormulaeSidebarItem.symbolName = "pin"
+        pinnedFormulaeSidebarItem.icon = NSImage(
+            systemSymbolName: "pin",
+            accessibilityDescription: NSLocalizedString("Sidebar_Item_Pinned", comment: "")
+        )
+        pinnedFormulaeSidebarItem.accessibilityIdentifier = "sidebar.formulae.pinned"
+        formulaeGroup.addChildItem(pinnedFormulaeSidebarItem)
+
+        repositoriesFormulaeSidebarItem = BPSidebarItem.item(
+            withTitle: NSLocalizedString("Sidebar_Item_Repos", comment: ""),
+            identifier: "item"
+        )
+        repositoriesFormulaeSidebarItem.symbolName = "building.columns"
+        repositoriesFormulaeSidebarItem.icon = NSImage(
+            systemSymbolName: "building.columns",
+            accessibilityDescription: NSLocalizedString("Sidebar_Item_Repos", comment: "")
+        )
+        repositoriesFormulaeSidebarItem.accessibilityIdentifier = "sidebar.formulae.repositories"
+        formulaeGroup.addChildItem(repositoriesFormulaeSidebarItem)
+
+        let casksGroup = BPSidebarItem.item(
+            withTitle: NSLocalizedString("Sidebar_Group_Casks", comment: ""),
+            identifier: "group"
+        )
+        rootSidebarCategory.addChildItem(casksGroup)
+
+        installedCasksSidebarItem = BPSidebarItem.item(
+            withTitle: NSLocalizedString("Sidebar_Item_Installed", comment: ""),
+            identifier: "item"
+        )
+        installedCasksSidebarItem.symbolName = "macwindow"
+        installedCasksSidebarItem.icon = NSImage(
+            systemSymbolName: "macwindow",
+            accessibilityDescription: NSLocalizedString("Sidebar_Group_Casks", comment: "")
+        )
+        installedCasksSidebarItem.accessibilityIdentifier = "sidebar.casks.installed"
+        casksGroup.addChildItem(installedCasksSidebarItem)
+
+        outdatedCasksSidebarItem = BPSidebarItem.item(
+            withTitle: NSLocalizedString("Sidebar_Item_Outdated", comment: ""),
+            identifier: "item"
+        )
+        outdatedCasksSidebarItem.symbolName = "clock.arrow.circlepath"
+        outdatedCasksSidebarItem.icon = NSImage(
+            systemSymbolName: "clock.arrow.circlepath",
+            accessibilityDescription: NSLocalizedString("Sidebar_Item_Outdated", comment: "")
+        )
+        outdatedCasksSidebarItem.accessibilityIdentifier = "sidebar.casks.outdated"
+        casksGroup.addChildItem(outdatedCasksSidebarItem)
+
+        allCasksSidebarItem = BPSidebarItem.item(
+            withTitle: NSLocalizedString("Sidebar_Item_AllCasks", comment: ""),
+            identifier: "item"
+        )
+        allCasksSidebarItem.symbolName = "square.stack.3d.up"
+        allCasksSidebarItem.icon = NSImage(
+            systemSymbolName: "square.stack.3d.up",
+            accessibilityDescription: NSLocalizedString("Sidebar_Item_AllCasks", comment: "")
+        )
+        allCasksSidebarItem.accessibilityIdentifier = "sidebar.casks.all"
+        casksGroup.addChildItem(allCasksSidebarItem)
+
+        let toolsGroup = BPSidebarItem.item(
+            withTitle: NSLocalizedString("Sidebar_Group_Tools", comment: ""),
+            identifier: "group"
+        )
+        rootSidebarCategory.addChildItem(toolsGroup)
+
+        let doctorItem = BPSidebarItem.item(
+            withTitle: NSLocalizedString("Sidebar_Item_Doctor", comment: ""),
+            identifier: "item"
+        )
+        doctorItem.badgeValue = NSNumber(value: -1)
+        doctorItem.symbolName = "stethoscope"
+        doctorItem.accessibilityIdentifier = "sidebar.tools.doctor"
+        doctorItem.icon = NSImage(
+            systemSymbolName: "stethoscope",
+            accessibilityDescription: NSLocalizedString("Sidebar_Item_Doctor", comment: "")
+        )
+        toolsGroup.addChildItem(doctorItem)
+
+        let updateItem = BPSidebarItem.item(
+            withTitle: NSLocalizedString("Sidebar_Item_Update", comment: ""),
+            identifier: "item"
+        )
+        updateItem.badgeValue = NSNumber(value: -1)
+        updateItem.symbolName = "arrow.triangle.2.circlepath.circle"
+        updateItem.accessibilityIdentifier = "sidebar.tools.update"
+        updateItem.icon = NSImage(
+            systemSymbolName: "arrow.triangle.2.circlepath.circle",
+            accessibilityDescription: NSLocalizedString("Sidebar_Item_Update", comment: "")
+        )
+        toolsGroup.addChildItem(updateItem)
+
+        let servicesItem = BPSidebarItem.item(
+            withTitle: NSLocalizedString("Sidebar_Item_Services", comment: ""),
+            identifier: "item"
+        )
+        servicesItem.badgeValue = NSNumber(value: -1)
+        servicesItem.symbolName = "gearshape.2"
+        servicesItem.accessibilityIdentifier = "sidebar.tools.services"
+        servicesItem.icon = NSImage(
+            systemSymbolName: "gearshape.2",
+            accessibilityDescription: NSLocalizedString("Sidebar_Item_Services", comment: "")
+        )
+        toolsGroup.addChildItem(servicesItem)
+
+        unifiedUpdatesSidebarItem = BPSidebarItem.item(
+            withTitle: NSLocalizedString("Sidebar_Item_Unified_Updates", comment: ""),
+            identifier: "item"
+        )
+        unifiedUpdatesSidebarItem.symbolName = "arrow.down.circle"
+        unifiedUpdatesSidebarItem.accessibilityIdentifier = "sidebar.tools.updates"
+        unifiedUpdatesSidebarItem.icon = NSImage(
+            systemSymbolName: "arrow.down.circle",
+            accessibilityDescription: NSLocalizedString("Sidebar_Item_Unified_Updates", comment: "")
+        )
+        toolsGroup.addChildItem(unifiedUpdatesSidebarItem)
+    }
+
+    @objc public func syncSidebarHost() {
+        sidebarHost.removeAllSections()
+        var currentRowIndex = 0
+        for group in rootSidebarCategory.children {
+            let groupRowIndex = currentRowIndex
+            currentRowIndex += 1
+            sidebarHost.addSection(rowIndex: groupRowIndex, title: group.title ?? "")
+            for row in group.children {
+                let itemRowIndex = currentRowIndex
+                currentRowIndex += 1
+                let axLabel = Self.accessibilityLabel(
+                    forGroup: group.title,
+                    title: row.title,
+                    badge: row.badgeValue
+                )
+                sidebarHost.addRow(
+                    toSectionAtRowIndex: groupRowIndex,
+                    rowIndex: itemRowIndex,
+                    title: row.title ?? "",
+                    groupTitle: group.title ?? "",
+                    symbolName: row.symbolName ?? "",
+                    badgeCount: row.badgeValue?.intValue ?? -1,
+                    accessibilityIdentifier: row.accessibilityIdentifier ?? "",
+                    accessibilityLabel: axLabel
+                )
+            }
+        }
+    }
+
+    @objc(restorableRowFrom:rowCount:)
+    public static func restorableRow(from storedRow: Int, rowCount: Int) -> FormulaeSideBarItem {
+        guard storedRow >= 0 && storedRow < rowCount,
+              let item = FormulaeSideBarItem(rawValue: UInt(storedRow)) else {
+            return .installed
+        }
+        switch item {
+        case .formulaeCategory, .casksCategory, .toolsCategory:
+            return .installed
+        default:
+            return item
+        }
+    }
+
+    @objc(infoKeyForRow:)
+    public static func infoKey(forRow row: Int) -> String? {
+        BPFormulaeTableActions.sidebarInfoKey(forRow: row)
+    }
+
+    @objc public func configureSidebarSettings() {
+        sidebar?.floatsGroupRows = false
+        sidebar?.reloadData()
+        sidebar?.expandItem(nil, expandChildren: true)
+        let rowCount = sidebar?.numberOfRows ?? 16
+        let row = Self.restorableRow(from: BPPreferences.lastSelectedSidebarRow, rowCount: rowCount)
+        sidebar?.selectRowIndexes(IndexSet(integer: Int(row.rawValue)), byExtendingSelection: false)
+        sidebar?.setAccessibilityLabel(NSLocalizedString("Sidebar_VoiceOver_Sidebar", comment: ""))
+        sidebarHost.selectedRowIndex = Int(row.rawValue)
+        syncSidebarHost()
+    }
+
+    @objc(accessibilityLabelForGroup:title:badge:)
+    public static func accessibilityLabel(forGroup group: String?, title: String?, badge: NSNumber?) -> String {
+        var parts: [String] = []
+        if let group, !group.isEmpty {
+            parts.append(group)
+        }
+        if let title, !title.isEmpty {
+            parts.append(title)
+        }
+        if let badge, badge.intValue >= 0 {
+            parts.append(bpSpokenBadgeCount(badge))
+        }
+        return parts.joined(separator: bpSpokenSeparator())
+    }
+
+    @objc public func selectableRowAccessibilityIdentifiers() -> [String] {
+        var identifiers: [String] = []
+        for group in rootSidebarCategory.children {
+            for row in group.children {
+                if let id = row.accessibilityIdentifier, !id.isEmpty {
+                    identifiers.append(id)
+                }
+            }
+        }
+        return identifiers
+    }
+
+    @objc(itemForListMode:)
+    public func item(forListMode mode: Int) -> BPSidebarItem? {
+        switch mode {
+        case 1: return installedFormulaeSidebarItem
+        case 3: return outdatedFormulaeSidebarItem
+        case 0: return allFormulaeSidebarItem
+        case 2: return leavesFormulaeSidebarItem
+        case 6: return pinnedFormulaeSidebarItem
+        case 5: return repositoriesFormulaeSidebarItem
+        case 7: return installedCasksSidebarItem
+        case 8: return outdatedCasksSidebarItem
+        case 9: return allCasksSidebarItem
+        default: return nil
+        }
+    }
+
+    @objc(refreshBadgeForListMode:)
+    public func refreshBadge(forListMode mode: Int) {
+        guard let item = item(forListMode: mode) else { return }
+        refreshSidebarBadges()
+        sidebar?.reloadItem(item)
+        if mode == 3 || mode == 8 {
+            sidebar?.reloadItem(unifiedUpdatesSidebarItem)
+        }
+    }
+
+    @objc public func refreshSidebarBadges() {
+        let manager = bpSharedHomebrewManager()
+        let installedCount = manager?.installedFormulae?.count ?? 0
+        let outdatedCount = manager?.outdatedFormulae?.count ?? 0
+        let allCount = manager?.allFormulae?.count ?? 0
+        let leavesCount = manager?.leavesFormulae?.count ?? 0
+        let pinnedCount = manager?.pinnedFormulae?.count ?? 0
+        let reposCount = manager?.repositoriesFormulae?.count ?? 0
+        let installedCasksCount = manager?.installedCasks?.count ?? 0
+        let outdatedCasksCount = manager?.outdatedCasks?.count ?? 0
+        let allCasksCount = manager?.allCasks?.count ?? 0
+
+        installedFormulaeSidebarItem.badgeValue = NSNumber(value: installedCount)
+        outdatedFormulaeSidebarItem.badgeValue = NSNumber(value: outdatedCount)
+        allFormulaeSidebarItem.badgeValue = NSNumber(value: allCount)
+        leavesFormulaeSidebarItem.badgeValue = NSNumber(value: leavesCount)
+        pinnedFormulaeSidebarItem.badgeValue = NSNumber(value: pinnedCount)
+        repositoriesFormulaeSidebarItem.badgeValue = NSNumber(value: reposCount)
+        installedCasksSidebarItem.badgeValue = NSNumber(value: installedCasksCount)
+        outdatedCasksSidebarItem.badgeValue = NSNumber(value: outdatedCasksCount)
+        allCasksSidebarItem.badgeValue = NSNumber(value: allCasksCount)
+        unifiedUpdatesSidebarItem.badgeValue = NSNumber(value: outdatedCount + outdatedCasksCount)
+        syncSidebarHost()
+    }
+
+    public func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
+        if let sidebarItem = item as? BPSidebarItem {
+            return sidebarItem.children.count
+        }
+        return rootSidebarCategory.children.count
+    }
+
+    public func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any {
+        if let sidebarItem = item as? BPSidebarItem {
+            return sidebarItem.children[index]
+        }
+        return rootSidebarCategory.children[index]
+    }
+
+    public func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {
+        (item as? BPSidebarItem)?.hasChildren() ?? false
+    }
+
+    public func outlineView(_ outlineView: NSOutlineView, isGroupItem item: Any) -> Bool {
+        (item as? BPSidebarItem)?.identifier == "group"
+    }
+
+    public func outlineView(_ outlineView: NSOutlineView, shouldSelectItem item: Any) -> Bool {
+        !self.outlineView(outlineView, isGroupItem: item)
+    }
+
+    public func outlineView(_ outlineView: NSOutlineView, shouldCollapseItem item: Any) -> Bool {
+        false
+    }
+
+    private func makeProgrammaticHeaderCellView() -> BPSidebarTableCellView {
+        let headerView = BPSidebarTableCellView(frame: NSRect(x: 0, y: 0, width: 180, height: 20))
+        headerView.identifier = NSUserInterfaceItemIdentifier("HeaderCell")
+        let label = NSTextField(labelWithString: "")
+        label.font = NSFont.systemFont(ofSize: 11.0, weight: .semibold)
+        label.textColor = .secondaryLabelColor
+        label.translatesAutoresizingMaskIntoConstraints = false
+        headerView.addSubview(label)
+        headerView.textField = label
+        NSLayoutConstraint.activate([
+            label.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 4.0),
+            label.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -4.0),
+            label.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
+        ])
+        return headerView
+    }
+
+    private func makeProgrammaticMainCellView() -> BPSidebarTableCellView {
+        let cellView = BPSidebarTableCellView(frame: NSRect(x: 0, y: 0, width: 180, height: 24))
+        cellView.identifier = NSUserInterfaceItemIdentifier("MainCell")
+
+        let iconView = NSImageView(frame: NSRect(x: 0, y: 0, width: 16, height: 16))
+        iconView.translatesAutoresizingMaskIntoConstraints = false
+        cellView.addSubview(iconView)
+        cellView.imageView = iconView
+
+        let label = NSTextField(labelWithString: "")
+        label.font = NSFont.systemFont(ofSize: 12.5, weight: .regular)
+        label.lineBreakMode = .byTruncatingTail
+        label.translatesAutoresizingMaskIntoConstraints = false
+        cellView.addSubview(label)
+        cellView.textField = label
+
+        let badgeView = BPSidebarBadgeView(frame: NSRect(x: 0, y: 0, width: 28, height: 16))
+        badgeView.translatesAutoresizingMaskIntoConstraints = false
+        cellView.addSubview(badgeView)
+        cellView.badgeView = badgeView
+
+        NSLayoutConstraint.activate([
+            iconView.leadingAnchor.constraint(equalTo: cellView.leadingAnchor, constant: 4.0),
+            iconView.centerYAnchor.constraint(equalTo: cellView.centerYAnchor),
+            iconView.widthAnchor.constraint(equalToConstant: 16.0),
+            iconView.heightAnchor.constraint(equalToConstant: 16.0),
+            label.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 6.0),
+            label.centerYAnchor.constraint(equalTo: cellView.centerYAnchor),
+            badgeView.leadingAnchor.constraint(greaterThanOrEqualTo: label.trailingAnchor, constant: 4.0),
+            badgeView.trailingAnchor.constraint(equalTo: cellView.trailingAnchor, constant: -6.0),
+            badgeView.centerYAnchor.constraint(equalTo: cellView.centerYAnchor)
+        ])
+        return cellView
+    }
+
+    public func outlineView(_ outlineView: NSOutlineView, viewFor tableColumn: NSTableColumn?, item: Any) -> NSView? {
+        guard let sidebarItem = item as? BPSidebarItem else { return nil }
+        if sidebarItem.identifier == "group" {
+            let headerView = (outlineView.makeView(withIdentifier: NSUserInterfaceItemIdentifier("HeaderCell"), owner: self) as? BPSidebarTableCellView)
+                ?? makeProgrammaticHeaderCellView()
+            headerView.textField?.stringValue = sidebarItem.title ?? ""
+            headerView.textField?.textColor = .secondaryLabelColor
+            return headerView
+        }
+
+        let cellView = (outlineView.makeView(withIdentifier: NSUserInterfaceItemIdentifier("MainCell"), owner: self) as? BPSidebarTableCellView)
+            ?? makeProgrammaticMainCellView()
+        cellView.textField?.stringValue = sidebarItem.title ?? ""
+        cellView.textField?.setAccessibilityIdentifier(sidebarItem.accessibilityIdentifier)
+        cellView.textField?.setAccessibilityLabel(
+            Self.accessibilityLabel(
+                forGroup: sidebarItem.parentItem?.title,
+                title: sidebarItem.title,
+                badge: sidebarItem.badgeValue
+            )
+        )
+
+        if let badge = sidebarItem.badgeValue, badge.intValue >= 0 {
+            cellView.badgeView?.badgeValue = UInt(badge.intValue)
+            cellView.badgeView?.isHidden = false
+        } else {
+            cellView.badgeView?.isHidden = true
+        }
+
+        if let icon = sidebarItem.icon {
+            cellView.imageView?.image = icon
+        }
+        return cellView
+    }
+
+    public func outlineViewSelectionDidChange(_ notification: Notification) {
+        if let sidebar, sidebar.selectedRow >= 0 {
+            sidebarHost.selectedRowIndex = sidebar.selectedRow
+        }
+        delegate?.sourceListSelectionDidChange()
+    }
+
+    @objc(selectSideBarRowWithSenderTag:)
+    public func selectSideBarRow(withSenderTag sender: Any?) {
+        let tag = (sender as AnyObject?)?.tag ?? 0
+        sidebarHost.selectedRowIndex = tag
+        sidebar?.selectRowIndexes(IndexSet(integer: tag), byExtendingSelection: false)
+    }
+}
+
+@MainActor
+@objc(BPWindow)
+public final class BPWindow: NSWindow {
+    override public init(
+        contentRect: NSRect,
+        styleMask style: NSWindow.StyleMask,
+        backing backingStoreType: NSWindow.BackingStoreType,
+        defer flag: Bool
+    ) {
+        super.init(contentRect: contentRect, styleMask: style, backing: backingStoreType, defer: flag)
+        sharedInit()
+    }
+
+    private func sharedInit() {
+        styleMask.insert(.fullSizeContentView)
+        titlebarAppearsTransparent = true
+        toolbarStyle = .unified
+        registerForDraggedTypes([.fileURL])
+    }
+
+    @objc public func draggingEntered(_ sender: any NSDraggingInfo) -> NSDragOperation {
+        brewfile(fromDrag: sender) != nil ? .copy : []
+    }
+
+    @objc public func draggingUpdated(_ sender: any NSDraggingInfo) -> NSDragOperation {
+        draggingEntered(sender)
+    }
+
+    @objc public func performDragOperation(_ sender: any NSDraggingInfo) -> Bool {
+        guard let brewfile = brewfile(fromDrag: sender) else { return false }
+        if let target = bpSharedAppDelegate()?.brewfileImportTarget {
+            let importer = unsafeBitCast(target, to: BPBrewfileImportingObjCBridge.self)
+            importer.importBrewfile(at: brewfile)
+        }
+        return true
+    }
+
+    @objc(brewfileFromDrag:)
+    public func brewfile(fromDrag sender: any NSDraggingInfo) -> URL? {
+        let urls = sender.draggingPasteboard.readObjects(
+            forClasses: [NSURL.self],
+            options: [.urlReadingFileURLsOnly: true]
+        ) as? [URL]
+        return BPBrewfile.brewfileURLs(from: urls).first
+    }
+}
+
+@MainActor
+@objc(BPDoctorViewController)
+public final class BPDoctorViewController: NSViewController {
+    @objc public var doctorTextView: BPAutoScrollTextView?
+    @objc public weak var progressIndicator: NSProgressIndicator?
+    @objc public var isPerformingDoctor: Bool = false
+    @objc public var consoleHost: BPConsoleToolHost?
+
+    override public func loadView() {
+        let textView = BPAutoScrollTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 232))
+        textView.isEditable = false
+        textView.isSelectable = true
+        textView.isRichText = false
+        textView.font = BPStyle.defaultFixedWidthFont()
+        textView.textColor = .textColor
+        textView.backgroundColor = .textBackgroundColor
+        textView.textContainerInset = NSSize(width: 8, height: 8)
+        textView.autoresizingMask = [.width]
+        textView.isVerticallyResizable = true
+        textView.textContainer?.widthTracksTextView = true
+        self.doctorTextView = textView
+        self.isPerformingDoctor = false
+
+        let title = Bundle.main.localizedString(
+            forKey: "UHp-GH-2qP.title",
+            value: NSLocalizedString("Homebrew Doctor", comment: ""),
+            table: "BPDoctorView"
+        )
+        let runTitle = Bundle.main.localizedString(
+            forKey: "YyI-zq-THZ.title",
+            value: NSLocalizedString("Run Doctor", comment: ""),
+            table: "BPDoctorView"
+        )
+        let clearTitle = Bundle.main.localizedString(
+            forKey: "AlR-6d-ju7.title",
+            value: NSLocalizedString("Clear Log", comment: ""),
+            table: "BPDoctorView"
+        )
+
+        let host = BPConsoleToolHost(
+            textView: textView,
+            title: title,
+            subtitle: nil,
+            runButtonTitle: runTitle,
+            clearButtonTitle: clearTitle
+        )
+        host.onRun = { [weak self] in
+            self?.runStopDoctor(nil)
+        }
+        host.onClear = { [weak self] in
+            self?.clearLogDoctor(nil)
+        }
+        self.consoleHost = host
+        self.view = host.viewController.view
+    }
+
+    override public func awakeFromNib() {
+        MainActor.assumeIsolated {
+            progressIndicator?.setAccessibilityLabel(NSLocalizedString("VoiceOver_Operation_Progress", comment: ""))
+            doctorTextView?.font = BPStyle.defaultFixedWidthFont()
+            isPerformingDoctor = false
+        }
+    }
+
+    override public var nibName: NSNib.Name? {
+        "BPDoctorView"
+    }
+
+    @objc(runStopDoctor:)
+    public func runStopDoctor(_ sender: Any?) {
+        guard let appDelegate = bpSharedAppDelegate() else { return }
+        if appDelegate.isRunningBackgroundTask {
+            appDelegate.displayBackgroundWarning()
+            return
+        }
+        appDelegate.isRunningBackgroundTask = true
+
+        doctorTextView?.clearOutput()
+        isPerformingDoctor = true
+        consoleHost?.isRunning = true
+        consoleHost?.syncLogFromTextView()
+        progressIndicator?.startAnimation(sender)
+
+        let textView = self.doctorTextView
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            _ = bpSharedHomebrewInterface()?.runDoctor { output in
+                textView?.appendOutput(output)
+                DispatchQueue.main.async {
+                    self?.consoleHost?.syncLogFromTextView()
+                }
+            }
+            DispatchQueue.main.async {
+                textView?.flushPendingOutput()
+                self?.progressIndicator?.stopAnimation(nil)
+                self?.isPerformingDoctor = false
+                self?.consoleHost?.isRunning = false
+                self?.consoleHost?.syncLogFromTextView()
+                bpSharedAppDelegate()?.isRunningBackgroundTask = false
+
+                let title = NSLocalizedString("Homebrew_Task_Finished", comment: "")
+                let desc = NSLocalizedString("Notification_Doctor", comment: "")
+                bpSharedAppDelegate()?.requestUserAttention(withMessageTitle: title, andDescription: desc)
+            }
+        }
+    }
+
+    @objc(clearLogDoctor:)
+    public func clearLogDoctor(_ sender: Any?) {
+        doctorTextView?.clearOutput()
+        doctorTextView?.string = ""
+        consoleHost?.syncLogFromTextView()
+    }
+}
+
+@MainActor
+@objc(BPUpdateViewController)
+public final class BPUpdateViewController: NSViewController {
+    @objc public var updateTextView: BPAutoScrollTextView?
+    @objc public weak var progressIndicator: NSProgressIndicator?
+    @objc public var isPerformingUpdate: Bool = false
+    @objc public var consoleHost: BPConsoleToolHost?
+
+    override public func loadView() {
+        let textView = BPAutoScrollTextView(frame: NSRect(x: 0, y: 0, width: 404, height: 232))
+        textView.isEditable = false
+        textView.isSelectable = true
+        textView.isRichText = false
+        textView.font = BPStyle.defaultFixedWidthFont()
+        textView.textColor = .textColor
+        textView.backgroundColor = .textBackgroundColor
+        textView.textContainerInset = NSSize(width: 8, height: 8)
+        textView.autoresizingMask = [.width]
+        textView.isVerticallyResizable = true
+        textView.textContainer?.widthTracksTextView = true
+        self.updateTextView = textView
+        self.isPerformingUpdate = false
+
+        let title = Bundle.main.localizedString(
+            forKey: "a3Y-VX-bpV.title",
+            value: NSLocalizedString("Homebrew Updater", comment: ""),
+            table: "BPUpdateView"
+        )
+        let runTitle = Bundle.main.localizedString(
+            forKey: "MVF-cn-lfW.title",
+            value: NSLocalizedString("Update Homebrew", comment: ""),
+            table: "BPUpdateView"
+        )
+        let clearTitle = Bundle.main.localizedString(
+            forKey: "EE6-5g-Jos.title",
+            value: NSLocalizedString("Clear Log", comment: ""),
+            table: "BPUpdateView"
+        )
+
+        let host = BPConsoleToolHost(
+            textView: textView,
+            title: title,
+            subtitle: nil,
+            runButtonTitle: runTitle,
+            clearButtonTitle: clearTitle
+        )
+        host.onRun = { [weak self] in
+            self?.runStopUpdate(nil)
+        }
+        host.onClear = { [weak self] in
+            self?.clearLogUpdate(nil)
+        }
+        self.consoleHost = host
+        self.view = host.viewController.view
+    }
+
+    override public func awakeFromNib() {
+        MainActor.assumeIsolated {
+            progressIndicator?.setAccessibilityLabel(NSLocalizedString("VoiceOver_Operation_Progress", comment: ""))
+            updateTextView?.font = BPStyle.defaultFixedWidthFont()
+            isPerformingUpdate = false
+        }
+    }
+
+    override public var nibName: NSNib.Name? {
+        "BPUpdateView"
+    }
+
+    @objc(runStopUpdate:)
+    public func runStopUpdate(_ sender: Any?) {
+        guard let appDelegate = bpSharedAppDelegate() else { return }
+        if appDelegate.isRunningBackgroundTask {
+            appDelegate.displayBackgroundWarning()
+            return
+        }
+        appDelegate.isRunningBackgroundTask = true
+
+        updateTextView?.clearOutput()
+        isPerformingUpdate = true
+        consoleHost?.isRunning = true
+        consoleHost?.syncLogFromTextView()
+        progressIndicator?.startAnimation(sender)
+
+        let textView = self.updateTextView
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            _ = bpSharedHomebrewInterface()?.update { output in
+                textView?.appendOutput(output)
+                DispatchQueue.main.async {
+                    self?.consoleHost?.syncLogFromTextView()
+                }
+            }
+            DispatchQueue.main.async {
+                textView?.flushPendingOutput()
+                self?.progressIndicator?.stopAnimation(nil)
+                self?.isPerformingUpdate = false
+                self?.consoleHost?.isRunning = false
+                self?.consoleHost?.syncLogFromTextView()
+                bpSharedAppDelegate()?.isRunningBackgroundTask = false
+
+                let title = NSLocalizedString("Homebrew_Task_Finished", comment: "")
+                let desc = NSLocalizedString("Notification_Update", comment: "")
+                bpSharedAppDelegate()?.requestUserAttention(withMessageTitle: title, andDescription: desc)
+            }
+        }
+    }
+
+    @objc(clearLogUpdate:)
+    public func clearLogUpdate(_ sender: Any?) {
+        updateTextView?.clearOutput()
+        updateTextView?.string = ""
+        consoleHost?.syncLogFromTextView()
+    }
+}
+
+@objc private protocol BPInformationHostMessaging: NSObjectProtocol {
+    var viewController: NSViewController { get }
+    @objc(beginWithName:cask:infoType:)
+    func begin(withName name: String?, cask: Bool, infoType: Int) -> UInt64
+    @objc(receiveInformation:website:name:cask:infoType:generation:)
+    func receiveInformation(
+        _ information: String?,
+        website: URL?,
+        name: String?,
+        cask: Bool,
+        infoType: Int,
+        generation: UInt64
+    )
+    @objc(close)
+    func close()
+}
+
+@objc private protocol BPPopoverMessaging: NSObjectProtocol {
+    var contentViewController: NSViewController? { get set }
+    var behavior: NSPopover.Behavior { get set }
+}
+
+@MainActor
+@objc(BPFormulaPopoverViewController)
+public final class BPFormulaPopoverViewController: NSViewController {
+    @objc public var formulaTextView: NSTextView?
+    @objc public weak var formulaTitleLabel: NSTextField?
+    @objc public weak var formulaPopover: NSPopover?
+    @objc public weak var progressIndicator: NSProgressIndicator?
+    @objc public var timedDispatch: BPTimedDispatch?
+    @objc public var informationHost: AnyObject?
+    @objc public var retainedPopover: NSPopover?
+    @objc public var dependentsProvider: (@Sendable (String, Bool) -> String?)?
+
+    @objc public var infoType: BPFormulaInfoType = .general {
+        didSet {
+            activeInformationHost?.close()
+            popoverBridge?.behavior = (infoType == .general) ? .transient : .semitransient
+        }
+    }
+
+    @objc(formulaObject) public weak var formula: AnyObject? {
+        didSet {
+            handleFormulaChanged()
+        }
+    }
+
+    private var activeInformationHost: BPInformationHostMessaging? {
+        guard let host = informationHost else { return nil }
+        return unsafeBitCast(host, to: BPInformationHostMessaging.self)
+    }
+
+    private var popoverBridge: BPPopoverMessaging? {
+        guard let pop = formulaPopover as AnyObject? else { return nil }
+        return unsafeBitCast(pop, to: BPPopoverMessaging.self)
+    }
+
+    override public func loadView() {
+        self.view = NSView(frame: NSRect(x: 0, y: 0, width: 460, height: 320))
+        if formulaPopover == nil {
+            let pop = NSPopover()
+            retainedPopover = pop
+            formulaPopover = pop
+        }
+        awakeFromNib()
+    }
+
+    override public func awakeFromNib() {
+        MainActor.assumeIsolated {
+            formulaTextView?.font = BPStyle.defaultFixedWidthFont()
+            formulaTextView?.textColor = BPStyle.popoverTextViewColor()
+            popoverBridge?.contentViewController = self
+            timedDispatch = BPTimedDispatch()
+            formulaTitleLabel?.textColor = BPStyle.popoverTitleColor()
+            infoType = .general
+            NotificationCenter.default.removeObserver(self, name: NSPopover.willCloseNotification, object: nil)
+            if let pop = formulaPopover {
+                NotificationCenter.default.addObserver(
+                    self,
+                    selector: #selector(informationPopoverWillClose(_:)),
+                    name: NSPopover.willCloseNotification,
+                    object: pop
+                )
+            }
+        }
+    }
+
+    @objc(informationPopoverWillClose:)
+    public func informationPopoverWillClose(_ notification: Notification) {
+        activeInformationHost?.close()
+    }
+
+    private func handleFormulaChanged() {
+        activeInformationHost?.close()
+        formulaTextView?.string = ""
+        progressIndicator?.stopAnimation(nil)
+        guard let formulaObj = formula, let f = bpAsFormula(formulaObj) else { return }
+
+        if informationHost == nil {
+            informationHost = BPFormulaInformationHost()
+        }
+        guard let host = activeInformationHost else { return }
+        let name = f.name ?? ""
+        let cask = f.cask
+        let currentInfoType = self.infoType
+        let generation = host.begin(withName: name, cask: cask, infoType: currentInfoType.rawValue)
+        popoverBridge?.contentViewController = host.viewController
+
+        if currentInfoType != .general {
+            if cask {
+                host.receiveInformation(
+                    nil,
+                    website: nil,
+                    name: name,
+                    cask: cask,
+                    infoType: currentInfoType.rawValue,
+                    generation: generation
+                )
+                return
+            }
+            let onlyInstalled = (currentInfoType == .installedDependents)
+            let provider = self.dependentsProvider
+            timedDispatch?.scheduleDispatch(
+                afterTimeInterval: 0.0,
+                in: DispatchQueue.global(qos: .background)
+            ) { [weak self] in
+                let dependents = provider != nil
+                    ? provider?(name, onlyInstalled)
+                    : bpSharedHomebrewInterface()?.dependants(forFormulaName: name, onlyInstalled: onlyInstalled)
+                DispatchQueue.main.async {
+                    self?.activeInformationHost?.receiveInformation(
+                        dependents,
+                        website: nil,
+                        name: name,
+                        cask: cask,
+                        infoType: currentInfoType.rawValue,
+                        generation: generation
+                    )
+                }
+            }
+            return
+        }
+
+        if let info = f.information {
+            host.receiveInformation(
+                info,
+                website: f.website,
+                name: name,
+                cask: cask,
+                infoType: currentInfoType.rawValue,
+                generation: generation
+            )
+            return
+        }
+
+        nonisolated(unsafe) let unsafeFormula = f
+        timedDispatch?.scheduleDispatch(
+            afterTimeInterval: 0.3,
+            in: DispatchQueue.global(qos: .background)
+        ) { [weak self] in
+            unsafeFormula.needsInformation = true
+            let information = unsafeFormula.information
+            let website = unsafeFormula.website
+            DispatchQueue.main.async {
+                self?.activeInformationHost?.receiveInformation(
+                    information,
+                    website: website,
+                    name: name,
+                    cask: cask,
+                    infoType: currentInfoType.rawValue,
+                    generation: generation
+                )
+            }
+        }
+    }
+
+    override public var nibName: NSNib.Name? {
+        "BPFormulaPopoverView"
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+}
+
+@objc(BPSelectedFormulaViewControllerDelegate)
+public protocol BPSelectedFormulaViewControllerDelegate: NSObjectProtocol {
+    @objc(selectedFormulaViewDidUpdateFormulaInfoForFormula:)
+    func selectedFormulaViewDidUpdateFormulaInfo(forFormula formula: Any?)
+    @objc optional func selectedFormulaViewDidRequestSelectRelatedFormulaNamed(_ formulaName: String)
+    @objc optional func selectedFormulaViewDidRequestShowMoreInformation()
+    @objc optional func selectedFormulaViewDidRequestOpenWebsite()
+}
+
+@objc private protocol BPSelectedFormulaHostMessaging: NSObjectProtocol {
+    var viewController: NSViewController { get }
+    @objc func clearSelection()
+    @objc func showMultipleSelection()
+    @objc(beginSelectionWithName:cask:installed:pinned:installPath:latestVersion:dependencies:conflicts:shortDescription:)
+    func beginSelection(
+        withName name: String,
+        cask: Bool,
+        installed: Bool,
+        pinned: Bool,
+        installPath: String?,
+        latestVersion: String?,
+        dependencies: String?,
+        conflicts: String?,
+        shortDescription: String?
+    ) -> UInt64
+    @objc(updateSelectionWithName:cask:installed:pinned:installPath:latestVersion:dependencies:conflicts:shortDescription:)
+    func updateSelection(
+        withName name: String,
+        cask: Bool,
+        installed: Bool,
+        pinned: Bool,
+        installPath: String?,
+        latestVersion: String?,
+        dependencies: String?,
+        conflicts: String?,
+        shortDescription: String?
+    )
+    @objc(receiveDependents:name:cask:generation:)
+    func receiveDependents(_ dependents: [String], name: String, cask: Bool, generation: UInt64)
+}
+
+@MainActor
+@objc(BPSelectedFormulaViewController)
+public final class BPSelectedFormulaViewController: NSViewController {
+    private static let formulaDidUpdateNotification = Notification.Name("BPFormulaDidUpdateNotification")
+
+    @objc public private(set) var inspectorHost: BPSelectedFormulaHost?
+    private var customInspectorHost: AnyObject?
+    @objc public var timedDispatch: BPTimedDispatch?
+
+    @objc public weak var delegate: (any BPSelectedFormulaViewControllerDelegate)?
+    @objc public var dependentsProvider: (@Sendable (String, Bool) -> String?)?
+
+    @objc public weak var formulaDescriptionLabel: NSTextField?
+    @objc public weak var formulaPathLabel: NSTextField?
+    @objc public weak var formulaVersionLabel: NSTextField?
+    @objc public weak var formulaDependenciesLabel: NSTextField?
+    @objc public weak var formulaConflictsLabel: NSTextField?
+    @objc public weak var formulaDependentsLabel: NSTextField?
+    @objc public weak var pinnedInfoRow: NSView?
+
+    private var activeInspectorHost: BPSelectedFormulaHostMessaging? {
+        guard let target = (customInspectorHost ?? inspectorHost) else { return nil }
+        return unsafeBitCast(target, to: BPSelectedFormulaHostMessaging.self)
+    }
+
+    override public func setValue(_ value: Any?, forKey key: String) {
+        if key == "inspectorHost" {
+            nonisolated(unsafe) let unsafeValue = value
+            MainActor.assumeIsolated {
+                if let host = unsafeValue as? BPSelectedFormulaHost {
+                    inspectorHost = host
+                    customInspectorHost = nil
+                } else {
+                    customInspectorHost = unsafeValue as AnyObject?
+                }
+                configureInspectorHostCallbacks()
+            }
+            return
+        }
+        super.setValue(value, forKey: key)
+    }
+
+    override public init(nibName nibNameOrNil: NSNib.Name?, bundle nibBundleOrNil: Bundle?) {
+        self.timedDispatch = BPTimedDispatch()
+        self.inspectorHost = BPSelectedFormulaHost()
+        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+        configureInspectorHostCallbacks()
+    }
+
+    required public init?(coder: NSCoder) {
+        self.timedDispatch = BPTimedDispatch()
+        self.inspectorHost = BPSelectedFormulaHost()
+        super.init(coder: coder)
+        configureInspectorHostCallbacks()
+    }
+
+    private func configureInspectorHostCallbacks() {
+        guard let host = inspectorHost, customInspectorHost == nil else { return }
+        host.onSelectRelatedPackage = { [weak self] packageName in
+            guard let self, !packageName.isEmpty else { return }
+            self.delegate?.selectedFormulaViewDidRequestSelectRelatedFormulaNamed?(packageName)
+        }
+        host.onShowMoreInfo = { [weak self] in
+            guard let self else { return }
+            self.delegate?.selectedFormulaViewDidRequestShowMoreInformation?()
+        }
+        host.onOpenWebsite = { [weak self] in
+            guard let self else { return }
+            self.delegate?.selectedFormulaViewDidRequestOpenWebsite?()
+        }
+    }
+
+    override public func loadView() {
+        if timedDispatch == nil {
+            timedDispatch = BPTimedDispatch()
+        }
+        if inspectorHost == nil && customInspectorHost == nil {
+            inspectorHost = BPSelectedFormulaHost()
+        }
+        configureInspectorHostCallbacks()
+        if let view = activeInspectorHost?.viewController.view {
+            self.view = view
+        } else {
+            self.view = NSView(frame: NSRect(x: 0, y: 0, width: 300, height: 120))
+        }
+    }
+
+    @objc public var formulae: [Any]? {
+        willSet {
+            if let old = formulae {
+                for item in old {
+                    NotificationCenter.default.removeObserver(
+                        self,
+                        name: Self.formulaDidUpdateNotification,
+                        object: item as AnyObject
+                    )
+                }
+            }
+        }
+        didSet {
+            if let current = formulae {
+                for item in current {
+                    NotificationCenter.default.addObserver(
+                        self,
+                        selector: #selector(updateFormulaInformation(_:)),
+                        name: Self.formulaDidUpdateNotification,
+                        object: item as AnyObject
+                    )
+                }
+            }
+            handleFormulaeUpdated()
+        }
+    }
+
+    private func handleFormulaeUpdated() {
+        if inspectorHost == nil && customInspectorHost == nil {
+            inspectorHost = BPSelectedFormulaHost()
+            configureInspectorHostCallbacks()
+        }
+        if timedDispatch == nil {
+            timedDispatch = BPTimedDispatch()
+        }
+        guard let formulae, !formulae.isEmpty else {
+            activeInspectorHost?.clearSelection()
+            return
+        }
+        if formulae.count > 1 {
+            activeInspectorHost?.showMultipleSelection()
+            return
+        }
+        guard let firstObj = formulae.first, let formula = bpAsFormula(firstObj) else {
+            activeInspectorHost?.clearSelection()
+            return
+        }
+
+        let name = formula.name ?? ""
+        let cask = formula.cask
+        let pinned = !cask && (bpSharedHomebrewManager()?.isFormulaPinned(firstObj as AnyObject) ?? false)
+        let generation = activeInspectorHost?.beginSelection(
+            withName: name,
+            cask: cask,
+            installed: formula.isInstalled(),
+            pinned: pinned,
+            installPath: formula.installPath,
+            latestVersion: formula.latestVersion,
+            dependencies: formula.dependencies,
+            conflicts: formula.conflicts,
+            shortDescription: formula.shortDescription
+        ) ?? 0
+
+        delegate?.selectedFormulaViewDidUpdateFormulaInfo(forFormula: firstObj)
+
+        let provider = self.dependentsProvider
+        nonisolated(unsafe) let unsafeFormula = formula
+        timedDispatch?.scheduleDispatch(
+            afterTimeInterval: 0.3,
+            in: DispatchQueue.global(qos: .background)
+        ) { [weak self] in
+            unsafeFormula.needsInformation = true
+            if cask { return }
+            let raw = provider != nil
+                ? provider?(name, true)
+                : bpSharedHomebrewInterface()?.dependants(forFormulaName: name, onlyInstalled: true)
+            let dependents = bpFormulaClass()?.names(fromListOutput: raw) ?? []
+            DispatchQueue.main.async {
+                self?.activeInspectorHost?.receiveDependents(
+                    dependents,
+                    name: name,
+                    cask: cask,
+                    generation: generation
+                )
+            }
+        }
+    }
+
+    @objc(updateFormulaInformation:)
+    public func updateFormulaInformation(_ notification: Notification) {
+        let updatedObj = notification.object
+        nonisolated(unsafe) let unsafeUpdated = updatedObj
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let formulae = self.formulae, formulae.count == 1,
+                  let firstObj = formulae.first, let formula = bpAsFormula(firstObj) else {
+                return
+            }
+            if let updated = bpAsFormula(unsafeUpdated),
+               (updated.cask != formula.cask || updated.name != formula.name) {
+                return
+            }
+            let pinned = !formula.cask && (bpSharedHomebrewManager()?.isFormulaPinned(firstObj as AnyObject) ?? false)
+            self.activeInspectorHost?.updateSelection(
+                withName: formula.name ?? "",
+                cask: formula.cask,
+                installed: formula.isInstalled(),
+                pinned: pinned,
+                installPath: formula.installPath,
+                latestVersion: formula.latestVersion,
+                dependencies: formula.dependencies,
+                conflicts: formula.conflicts,
+                shortDescription: formula.shortDescription
+            )
+            self.delegate?.selectedFormulaViewDidUpdateFormulaInfo(forFormula: firstObj)
+        }
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+}
+
+@MainActor
+@objc(BPFormulaOptionsWindowController)
+public final class BPFormulaOptionsWindowController: NSWindowController, NSTableViewDelegate {
+    private static let optionCommandKey = "formulaOptionCommand"
+    private static let optionAppliedKey = "isFormulaOptionCommandApplied"
+    private static let optionDescriptionKey = "formulaOptionDescription"
+
+    @objc public weak var userHelpLabel: NSTextField?
+    @objc public weak var formulaNameLabel: NSTextField?
+    @objc public weak var optionDetailsTextField: NSTextField?
+    @objc public weak var formulaOptionsTableView: NSTableView?
+    @objc public var formulasArrayController: NSArrayController?
+
+    @objc public var availableOptions: NSMutableArray = NSMutableArray()
+    @objc public var formula: AnyObject?
+    @objc public var optionsHost: BPFormulaOptionsHost?
+    @objc public var installWithOptionsBlock: (([Any]) -> Void)?
+
+    override public func loadWindow() {
+        self.window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 320),
+            styleMask: [.titled],
+            backing: .buffered,
+            defer: false
+        )
+        awakeFromNib()
+    }
+
+    override public func awakeFromNib() {
+        MainActor.assumeIsolated {
+            var names: [String] = []
+            var explanations: [String] = []
+            for case let dict as NSDictionary in availableOptions {
+                names.append((dict[Self.optionCommandKey] as? String) ?? "")
+                explanations.append((dict[Self.optionDescriptionKey] as? String) ?? "")
+            }
+
+            let host = BPFormulaOptionsHost()
+            let formulaName = bpAsFormula(formula)?.name ?? ""
+            host.configure(formulaName: formulaName, optionNames: names, optionExplanations: explanations)
+            host.onOptionToggled = { [weak self] optionName, applied in
+                guard let self else { return }
+                for case let entry as NSMutableDictionary in self.availableOptions {
+                    if (entry[Self.optionCommandKey] as? String) == optionName {
+                        entry[Self.optionAppliedKey] = NSNumber(value: applied)
+                    }
+                }
+            }
+            host.onCancel = { [weak self] in
+                self?.cancel(nil)
+            }
+            host.onInstall = { [weak self] in
+                self?.install(nil)
+            }
+            self.optionsHost = host
+
+            if let contentView = window?.contentView {
+                for subview in contentView.subviews {
+                    subview.removeFromSuperview()
+                }
+                let hostView = host.viewController.view
+                hostView.translatesAutoresizingMaskIntoConstraints = false
+                contentView.addSubview(hostView)
+                NSLayoutConstraint.activate([
+                    hostView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+                    hostView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+                    hostView.topAnchor.constraint(equalTo: contentView.topAnchor),
+                    hostView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+                ])
+            }
+        }
+    }
+
+    @objc(runFormula:withCompletionBlock:)
+    public static func runFormula(
+        _ formula: Any?,
+        withCompletionBlock completionBlock: (([Any]) -> Void)?
+    ) -> BPFormulaOptionsWindowController {
+        let controller = BPFormulaOptionsWindowController(windowNibName: "BPFormulaOptionsWindow")
+        controller.formula = formula as AnyObject?
+        controller.installWithOptionsBlock = completionBlock
+        let available = NSMutableArray()
+        if let options = bpAsFormula(formula)?.options {
+            for case let option as BPFormulaOption in options {
+                if let optionCommand = option.name {
+                    let optionDescription = option.explanation ?? ""
+                    let dict = NSMutableDictionary(dictionary: [
+                        optionCommandKey: optionCommand,
+                        optionAppliedKey: NSNumber(value: false),
+                        optionDescriptionKey: optionDescription
+                    ])
+                    available.add(dict)
+                }
+            }
+        }
+        controller.availableOptions = available
+
+        if let formulaWindow = controller.window {
+            bpSharedAppDelegate()?.isRunningBackgroundTask = true
+            NSApplication.shared.mainWindow?.beginSheet(formulaWindow) { returnCode in
+                if returnCode == .stop {
+                    let selected = controller.allSelectedOptions()
+                    controller.installWithOptionsBlock?(selected)
+                } else {
+                    bpSharedAppDelegate()?.isRunningBackgroundTask = false
+                }
+            }
+        }
+        return controller
+    }
+
+    @objc public func allSelectedOptions() -> [Any] {
+        if let host = optionsHost {
+            return host.selectedOptionNames
+        }
+        var selected: [String] = []
+        for case let entry as NSDictionary in availableOptions {
+            if (entry[Self.optionAppliedKey] as? NSNumber)?.boolValue == true,
+               let cmd = entry[Self.optionCommandKey] as? String {
+                selected.append(cmd)
+            }
+        }
+        return selected
+    }
+
+    @objc(cancel:)
+    public func cancel(_ sender: Any?) {
+        guard let window = self.window else { return }
+        if let mainWindow = NSApplication.shared.mainWindow {
+            mainWindow.endSheet(window, returnCode: .abort)
+        } else {
+            window.sheetParent?.endSheet(window, returnCode: .abort)
+        }
+    }
+
+    @objc(install:)
+    public func install(_ sender: Any?) {
+        let alert = NSAlert()
+        alert.messageText = NSLocalizedString("Generic_Attention", comment: "")
+        alert.addButton(withTitle: NSLocalizedString("Generic_Yes", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString("Generic_Cancel", comment: ""))
+        let formulaName = bpAsFormula(formula)?.name ?? ""
+        alert.informativeText = String(
+            format: NSLocalizedString("Formula_Options_Confirmation", comment: ""),
+            formulaName
+        )
+        alert.window.title = NSLocalizedString("Cakebrew", comment: "")
+
+        let returnValue = alert.runModal()
+        let modalResponse: NSApplication.ModalResponse = (returnValue == .alertFirstButtonReturn) ? .stop : .abort
+        guard let window = self.window else { return }
+        if let mainWindow = NSApplication.shared.mainWindow {
+            mainWindow.endSheet(window, returnCode: modalResponse)
+        } else {
+            window.sheetParent?.endSheet(window, returnCode: modalResponse)
+        }
+    }
+}
+
+@MainActor
+@objc(BPPreferencesWindowController)
+public final class BPPreferencesWindowController: NSWindowController {
+    @objc public var backgroundCheckCheckbox: NSButton?
+    @objc public var intervalPopUp: NSPopUpButton?
+    @objc public var greedyCheckbox: NSButton?
+    @objc public var helperStatusLabel: NSTextField?
+    @objc public var helperActionButton: NSButton?
+    @objc public var preferencesHost: BPPreferencesHost?
+
+    public convenience init() {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 480, height: 320),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: true
+        )
+        window.title = NSLocalizedString("Preferences_Title", comment: "")
+        window.isReleasedWhenClosed = false
+        self.init(window: window)
+        buildContentView()
+    }
+
+    private func buildContentView() {
+        guard let content = window?.contentView else { return }
+
+        let bgCheckbox = NSButton(
+            checkboxWithTitle: NSLocalizedString("Preferences_Background_Check", comment: ""),
+            target: self,
+            action: #selector(toggleBackgroundCheck(_:))
+        )
+        bgCheckbox.state = BPPreferences.backgroundCheckEnabled ? .on : .off
+        self.backgroundCheckCheckbox = bgCheckbox
+
+        let popUp = NSPopUpButton(frame: .zero, pullsDown: false)
+        let intervals: [(String, Double)] = [
+            (NSLocalizedString("Preferences_Interval_Hourly", comment: ""), 3600.0),
+            (NSLocalizedString("Preferences_Interval_Six_Hours", comment: ""), 21600.0),
+            (NSLocalizedString("Preferences_Interval_Daily", comment: ""), 86400.0)
+        ]
+        for (title, seconds) in intervals {
+            popUp.addItem(withTitle: title)
+            popUp.lastItem?.representedObject = NSNumber(value: seconds)
+        }
+        self.intervalPopUp = popUp
+        selectIntervalItemMatchingPreference()
+        popUp.target = self
+        popUp.action = #selector(intervalChanged(_:))
+
+        let greedy = NSButton(
+            checkboxWithTitle: NSLocalizedString("Preferences_Greedy_Casks", comment: ""),
+            target: self,
+            action: #selector(toggleGreedy(_:))
+        )
+        greedy.state = BPPreferences.greedyCaskUpgrades ? .on : .off
+        self.greedyCheckbox = greedy
+
+        self.helperStatusLabel = NSTextField(wrappingLabelWithString: "")
+        let actionBtn = NSButton(title: "", target: self, action: #selector(helperAction(_:)))
+        actionBtn.bezelStyle = .rounded
+        self.helperActionButton = actionBtn
+
+        let host = BPPreferencesHost()
+        host.onBackgroundCheckChanged = { [weak self] enabled in
+            guard let self else { return }
+            self.backgroundCheckCheckbox?.state = enabled ? .on : .off
+            BPPreferences.backgroundCheckEnabled = enabled
+            self.updateIntervalEnabled()
+            self.syncSwiftUIHost()
+        }
+        host.onIntervalChanged = { [weak self] interval in
+            guard let self else { return }
+            BPPreferences.backgroundCheckInterval = interval
+            self.selectIntervalItemMatchingPreference()
+            self.syncSwiftUIHost()
+        }
+        host.onGreedyChanged = { [weak self] greedy in
+            guard let self else { return }
+            self.greedyCheckbox?.state = greedy ? .on : .off
+            BPPreferences.greedyCaskUpgrades = greedy
+            self.syncSwiftUIHost()
+        }
+        host.onAutomaticAppUpdateCheckChanged = { [weak self] enabled in
+            guard let self else { return }
+            BPPreferences.automaticAppUpdateCheckEnabled = enabled
+            self.syncSwiftUIHost()
+        }
+        host.onShowMenuBarExtraChanged = { [weak self] enabled in
+            guard let self else { return }
+            BPPreferences.showMenuBarExtra = enabled
+            bpSharedAppDelegate()?.updateMenuBarExtra()
+            self.syncSwiftUIHost()
+        }
+        host.onCheckForAppUpdates = {
+            bpSharedAppDelegate()?.checkForAppUpdates(nil)
+        }
+        host.onHelperAction = { [weak self] in
+            self?.helperAction(nil)
+        }
+        self.preferencesHost = host
+
+        let hostView = host.viewController.view
+        hostView.translatesAutoresizingMaskIntoConstraints = false
+        content.addSubview(hostView)
+        NSLayoutConstraint.activate([
+            hostView.topAnchor.constraint(equalTo: content.topAnchor),
+            hostView.leadingAnchor.constraint(equalTo: content.leadingAnchor),
+            hostView.trailingAnchor.constraint(equalTo: content.trailingAnchor),
+            hostView.bottomAnchor.constraint(equalTo: content.bottomAnchor)
+        ])
+
+        updateIntervalEnabled()
+        refreshHelperStatus()
+    }
+
+    @objc public func syncSwiftUIHost() {
+        guard let host = preferencesHost else { return }
+        let actionTitle = (helperActionButton?.isHidden == true) ? nil : helperActionButton?.title
+        host.showMenuBarExtra = BPPreferences.showMenuBarExtra
+        host.sync(
+            backgroundCheckEnabled: BPPreferences.backgroundCheckEnabled,
+            interval: BPPreferences.backgroundCheckInterval,
+            greedy: BPPreferences.greedyCaskUpgrades,
+            automaticAppUpdates: BPPreferences.automaticAppUpdateCheckEnabled,
+            helperStatus: helperStatusLabel?.stringValue ?? "",
+            helperActionTitle: actionTitle
+        )
+    }
+
+    private func selectIntervalItemMatchingPreference() {
+        guard let popUp = intervalPopUp else { return }
+        let current = BPPreferences.backgroundCheckInterval
+        for item in popUp.itemArray {
+            if (item.representedObject as? NSNumber)?.doubleValue == current {
+                popUp.select(item)
+                return
+            }
+        }
+        if popUp.numberOfItems > 1 {
+            popUp.selectItem(at: 1)
+        }
+    }
+
+    private func updateIntervalEnabled() {
+        intervalPopUp?.isEnabled = (backgroundCheckCheckbox?.state == .on)
+    }
+
+    @objc public func refreshHelperStatus() {
+        let state = bpSharedHelperRegistration()?.currentState() ?? 0
+        helperStatusLabel?.stringValue = bpHelperRegistrationClass()?.localizedDescription(forState: state) ?? ""
+        let offersLoginItems = bpHelperRegistrationClass()?.stateOffersLoginItemsShortcut(state) ?? false
+        let offersInstall = (state == 0) // kBPHelperStateNotRegistered
+        helperActionButton?.isHidden = !(offersLoginItems || offersInstall)
+        helperActionButton?.title = offersLoginItems
+            ? NSLocalizedString("Helper_Action_Open_Login_Items", comment: "")
+            : NSLocalizedString("Helper_Action_Install", comment: "")
+        syncSwiftUIHost()
+    }
+
+    @objc(helperAction:)
+    public func helperAction(_ sender: Any?) {
+        let state = bpSharedHelperRegistration()?.currentState() ?? 0
+        if bpHelperRegistrationClass()?.stateOffersLoginItemsShortcut(state) == true {
+            bpHelperRegistrationClass()?.openLoginItemsSettings()
+        } else {
+            var error: NSError?
+            _ = bpSharedHelperRegistration()?.registerReturningError(&error)
+        }
+        refreshHelperStatus()
+    }
+
+    @objc(toggleBackgroundCheck:)
+    public func toggleBackgroundCheck(_ sender: Any?) {
+        BPPreferences.backgroundCheckEnabled = (backgroundCheckCheckbox?.state == .on)
+        updateIntervalEnabled()
+        syncSwiftUIHost()
+    }
+
+    @objc(intervalChanged:)
+    public func intervalChanged(_ sender: Any?) {
+        if let interval = intervalPopUp?.selectedItem?.representedObject as? NSNumber {
+            BPPreferences.backgroundCheckInterval = interval.doubleValue
+        }
+        syncSwiftUIHost()
+    }
+
+    override public func showWindow(_ sender: Any?) {
+        super.showWindow(sender)
+        refreshHelperStatus()
+    }
+
+    @objc(toggleGreedy:)
+    public func toggleGreedy(_ sender: Any?) {
+        BPPreferences.greedyCaskUpgrades = (greedyCheckbox?.state == .on)
+        syncSwiftUIHost()
+    }
+}
+
+@MainActor
+@objc(BPAutoremoveWindowController)
+public final class BPAutoremoveWindowController: NSWindowController {
+    @objc public var interface: AnyObject?
+    @objc public var manager: AnyObject?
+    @objc public var preview: BPAutoremovePreview?
+    @objc public var operation: BPAutoremoveOperation?
+    @objc public var previewProgress: Progress?
+    @objc public var statusLabel: NSTextField?
+    @objc public var outputView: BPAutoScrollTextView?
+    @objc public var removeButton: NSButton?
+    @objc public var cancelButton: NSButton?
+    @objc public var autoremoveHost: BPAutoremoveHost?
+    @objc public var busy: Bool = false
+
+    @objc(presentForWindow:interface:manager:)
+    public static func present(
+        for parent: NSWindow?,
+        interface: Any?,
+        manager: Any?
+    ) -> BPAutoremoveWindowController {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 680, height: 480),
+            styleMask: [.titled],
+            backing: .buffered,
+            defer: false
+        )
+        let controller = BPAutoremoveWindowController(window: window)
+        controller.interface = interface as AnyObject?
+        controller.manager = manager as AnyObject?
+        controller.buildContent()
+        bpSharedAppDelegate()?.isRunningBackgroundTask = true
+        parent?.beginSheet(window) { _ in
+            bpSharedAppDelegate()?.isRunningBackgroundTask = false
+        }
+        controller.loadPreview()
+        return controller
+    }
+
+    private func buildContent() {
+        window?.title = NSLocalizedString("Remove Unused Dependencies", comment: "")
+        statusLabel = NSTextField(wrappingLabelWithString: NSLocalizedString("Checking unused dependencies…", comment: ""))
+        let outView = BPAutoScrollTextView(frame: NSRect(x: 0, y: 0, width: 620, height: 280))
+        outView.isEditable = false
+        outView.isSelectable = true
+        outView.isRichText = false
+        outView.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+        outView.textColor = .textColor
+        outView.backgroundColor = .textBackgroundColor
+        outView.textContainerInset = NSSize(width: 8, height: 8)
+        outView.autoresizingMask = [.width]
+        outView.isVerticallyResizable = true
+        outView.textContainer?.widthTracksTextView = true
+        outView.setAccessibilityIdentifier("autoremove.output")
+        outView.setAccessibilityLabel(NSLocalizedString("Unused dependency preview and command output", comment: ""))
+        self.outputView = outView
+
+        let remBtn = NSButton(
+            title: NSLocalizedString("Remove Reviewed Dependencies", comment: ""),
+            target: self,
+            action: #selector(removeReviewed(_:))
+        )
+        remBtn.isEnabled = false
+        self.removeButton = remBtn
+
+        let canBtn = NSButton(
+            title: NSLocalizedString("Cancel", comment: ""),
+            target: self,
+            action: #selector(cancelOrClose(_:))
+        )
+        canBtn.isEnabled = true
+        self.cancelButton = canBtn
+
+        let host = BPAutoremoveHost(outputTextView: outView)
+        host.onRemove = { [weak self] in
+            self?.removeReviewed(nil)
+        }
+        host.onCancelOrClose = { [weak self] in
+            self?.cancelOrClose(nil)
+        }
+        self.autoremoveHost = host
+
+        if let contentView = window?.contentView {
+            let hostView = host.viewController.view
+            hostView.translatesAutoresizingMaskIntoConstraints = false
+            contentView.addSubview(hostView)
+            NSLayoutConstraint.activate([
+                hostView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+                hostView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+                hostView.topAnchor.constraint(equalTo: contentView.topAnchor),
+                hostView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+            ])
+        }
+        syncAutoremoveHostState()
+    }
+
+    @objc public func syncAutoremoveHostState() {
+        autoremoveHost?.candidateCount = (preview?.valid == true) ? (preview?.names.count ?? 0) : 0
+        autoremoveHost?.update(
+            statusText: statusLabel?.stringValue ?? "",
+            removeEnabled: removeButton?.isEnabled ?? false,
+            cancelTitle: cancelButton?.title ?? "",
+            cancelEnabled: cancelButton?.isEnabled ?? true,
+            busy: busy
+        )
+        autoremoveHost?.syncLogFromTextView()
+    }
+
+    private func loadPreview() {
+        busy = true
+        syncAutoremoveHostState()
+        let progress = Progress(totalUnitCount: 1)
+        self.previewProgress = progress
+        nonisolated(unsafe) let iface = self.interface
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let preview = bpAsHomebrewInterface(iface)?.previewAutoremove(withProgress: progress)
+                ?? BPAutoremovePreview.preview(withOutput: nil, succeeded: false)
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.busy = false
+                self.preview = preview
+                self.outputView?.string = preview.rawOutput
+                self.cancelButton?.isEnabled = true
+                if progress.isCancelled {
+                    self.statusLabel?.stringValue = NSLocalizedString("Cancelled before removal. Nothing was removed.", comment: "")
+                } else if !preview.valid {
+                    self.statusLabel?.stringValue = NSLocalizedString("The unused dependency preview could not be verified. Nothing can be removed.", comment: "")
+                } else if preview.names.isEmpty {
+                    self.statusLabel?.stringValue = NSLocalizedString("No unused dependencies to remove.", comment: "")
+                } else {
+                    self.statusLabel?.stringValue = String.localizedStringWithFormat(
+                        NSLocalizedString("Review %lu unused dependencies before removal.", comment: ""),
+                        UInt(preview.names.count)
+                    )
+                    self.removeButton?.isEnabled = true
+                }
+                self.cancelButton?.title = NSLocalizedString("Close", comment: "")
+                self.syncAutoremoveHostState()
+            }
+        }
+    }
+
+    @objc(removeReviewed:)
+    public func removeReviewed(_ sender: Any?) {
+        guard !busy,
+              removeButton?.isEnabled == true,
+              let preview,
+              preview.valid,
+              !preview.names.isEmpty else {
+            return
+        }
+        busy = true
+        removeButton?.isEnabled = false
+        cancelButton?.title = NSLocalizedString("Cancel", comment: "")
+        statusLabel?.stringValue = NSLocalizedString("Rechecking and removing reviewed dependencies…", comment: "")
+        syncAutoremoveHostState()
+
+        let op = BPAutoremoveOperation(preview: preview, interface: interface)
+        self.operation = op
+        let outView = self.outputView
+        outView?.appendOutput("\n")
+        op.start(withOutput: { [weak self] chunk in
+            outView?.appendOutput(chunk)
+            DispatchQueue.main.async {
+                self?.autoremoveHost?.syncLogFromTextView()
+            }
+        }, completion: { [weak self] _, _, attempted, message in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.outputView?.flushPendingOutput()
+                self.cancelButton?.isEnabled = false
+                self.syncAutoremoveHostState()
+                let finished: @Sendable (Bool) -> Void = { [weak self] refreshed in
+                    DispatchQueue.main.async {
+                        guard let self else { return }
+                        if refreshed {
+                            self.statusLabel?.stringValue = message
+                        } else {
+                            let suffix = NSLocalizedString(
+                                "Some formula or service lists could not be refreshed. Previous values were retained; refresh again before another operation.",
+                                comment: ""
+                            )
+                            self.statusLabel?.stringValue = "\(message)\n\(suffix)"
+                        }
+                        self.busy = false
+                        self.cancelButton?.title = NSLocalizedString("Close", comment: "")
+                        self.cancelButton?.isEnabled = true
+                        self.syncAutoremoveHostState()
+                    }
+                }
+                if attempted, let mgr = bpAsHomebrewManager(self.manager) {
+                    mgr.refreshFormulaStateAfterRemoval(withCompletion: finished)
+                } else {
+                    finished(true)
+                }
+            }
+        })
+    }
+
+    @objc(cancelOrClose:)
+    public func cancelOrClose(_ sender: Any?) {
+        if busy {
+            cancelButton?.isEnabled = false
+            statusLabel?.stringValue = NSLocalizedString("Cancelling; waiting for Homebrew to stop…", comment: "")
+            syncAutoremoveHostState()
+            if let operation {
+                operation.cancel()
+            } else {
+                previewProgress?.cancel()
+            }
+        } else if let window = self.window {
+            window.sheetParent?.endSheet(window)
+        }
+    }
+}
+
+@MainActor
+@objc(BPBundleWindowController)
+public final class BPBundleWindowController: NSWindowController {
+    @objc public var viewOperationContainer: NSView?
+    @objc public var viewExportProgress: NSView?
+    @objc public var viewImportProgress: NSView?
+    @objc public var textViewImport: BPAutoScrollTextView?
+    @objc public var progressLabelImport: NSTextField?
+    @objc public var statusViewExport: NSImageView?
+    @objc public var statusLabelExport: NSTextField?
+    @objc public var progressLabelExport: NSTextField?
+    @objc public var progressIndicator: NSProgressIndicator?
+    @objc public var buttonClose: NSButton?
+
+    @objc public var importOperation: BPBrewfileImportOperation?
+    @objc public var exportOperation: BPBrewfileExportOperation?
+    @objc public var bundleHost: BPBundleOperationHost?
+
+    @objc(reviewHostForPlan:fileName:error:)
+    public static func reviewHost(
+        for plan: BPBrewfilePlan?,
+        fileName: String?,
+        error: NSError?
+    ) -> BPBrewfileReviewHost {
+        let text = NSTextView(frame: NSRect(x: 0, y: 0, width: 550, height: 210))
+        text.isEditable = false
+        text.isSelectable = true
+        text.isRichText = false
+        text.font = NSFont.systemFont(ofSize: 13)
+        text.textColor = .textColor
+        text.backgroundColor = .textBackgroundColor
+        text.textContainerInset = NSSize(width: 10, height: 10)
+        text.autoresizingMask = [.width]
+        text.isVerticallyResizable = true
+        text.textContainer?.widthTracksTextView = true
+        text.setAccessibilityIdentifier("brewfile.review.entries")
+        text.string = error?.localizedDescription ?? (plan?.reviewText ?? "")
+        if bpSharedHomebrewInterface()?.brewTransport != 0 {
+            text.string = NSLocalizedString(
+                "Reviewed import requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported.",
+                comment: ""
+            )
+        }
+
+        var installedCount = 0
+        var missingCount = 0
+        var notCheckedCount = 0
+        var formulaCount = 0
+        var caskCount = 0
+        var tapCount = 0
+        var otherCount = 0
+
+        for entry in plan?.entries ?? [] {
+            if entry.status == "Installed" {
+                installedCount += 1
+            } else if entry.status == "Missing" {
+                missingCount += 1
+            } else {
+                notCheckedCount += 1
+            }
+
+            if entry.kind == "brew" {
+                formulaCount += 1
+            } else if entry.kind == "cask" {
+                caskCount += 1
+            } else if entry.kind == "tap" {
+                tapCount += 1
+            } else {
+                otherCount += 1
+            }
+        }
+
+        let canInstall = (plan?.canInstall == true) && (bpSharedHomebrewInterface()?.brewTransport == 0)
+        let resolvedName = (fileName?.isEmpty == false) ? fileName! : "Brewfile"
+        let host = BPBrewfileReviewHost(
+            entriesTextView: text,
+            fileName: resolvedName,
+            installedCount: installedCount,
+            missingCount: missingCount,
+            notCheckedCount: notCheckedCount,
+            formulaCount: formulaCount,
+            caskCount: caskCount,
+            tapCount: tapCount,
+            otherCount: otherCount,
+            canInstall: canInstall,
+            summaryText: plan?.reviewText ?? ""
+        )
+        host.viewController.view.frame = NSRect(x: 0, y: 0, width: 570, height: 280)
+        return host
+    }
+
+    @objc(reviewFile:inventories:parentWindow:completion:)
+    public static func reviewFile(
+        _ url: URL?,
+        inventories: [String: [String]]?,
+        parentWindow window: NSWindow?,
+        completion: (@Sendable (BPBrewfilePlan?) -> Void)?
+    ) {
+        let inv = inventories ?? [:]
+        DispatchQueue.global(qos: .userInitiated).async {
+            var nsError: NSError?
+            let plan: BPBrewfilePlan?
+            do {
+                plan = try BPBrewfilePlan.plan(with: url, inventories: inv)
+            } catch let err as NSError {
+                nsError = err
+                plan = nil
+            }
+            let capturedError = nsError
+            DispatchQueue.main.async {
+                let alert = NSAlert()
+                alert.messageText = NSLocalizedString("Review Brewfile", comment: "")
+                let fileName = url?.lastPathComponent ?? ""
+                let disclaimer = NSLocalizedString(
+                    "Direct entries only, not a dependency or upgrade plan. Installed means present in the current inventory, not up to date. Homebrew may upgrade packages, install dependencies and required tools, and run package installation scripts. Only the reviewed literal entries will be submitted.",
+                    comment: ""
+                )
+                alert.informativeText = "\(fileName)\n\n\(disclaimer)"
+                let install = alert.addButton(withTitle: NSLocalizedString("Install Reviewed Entries", comment: ""))
+                install.setAccessibilityIdentifier("brewfile.review.install")
+                let canInstall = (plan?.canInstall == true) && (bpSharedHomebrewInterface()?.brewTransport == 0)
+                install.isEnabled = canInstall
+                let cancel = alert.addButton(withTitle: NSLocalizedString("Cancel", comment: ""))
+                cancel.setAccessibilityIdentifier("brewfile.review.cancel")
+                let reviewHost = Self.reviewHost(for: plan, fileName: fileName, error: capturedError)
+                objc_setAssociatedObject(alert, &bpBrewfileReviewHostAssocKey, reviewHost, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+                alert.accessoryView = reviewHost.viewController.view
+                if let window {
+                    alert.beginSheetModal(for: window) { result in
+                        completion?(result == .alertFirstButtonReturn && canInstall ? plan : nil)
+                    }
+                } else {
+                    completion?(nil)
+                }
+            }
+        }
+    }
+
+    @objc(runImportOperationWithPlan:)
+    public static func runImportOperation(with plan: BPBrewfilePlan?) -> BPBundleWindowController {
+        let controller = createWindow()
+        bpSharedAppDelegate()?.isRunningBackgroundTask = true
+        controller.startSheetOnMainWindow()
+        controller.startImportOperation(with: plan)
+        return controller
+    }
+
+    @objc(runExportOperationWithFile:)
+    public static func runExportOperation(withFile fileURL: URL?) -> BPBundleWindowController {
+        let controller = createWindow()
+        bpSharedAppDelegate()?.isRunningBackgroundTask = true
+        controller.startSheetOnMainWindow()
+        controller.startExportOperation(withFile: fileURL)
+        return controller
+    }
+
+    @objc public static func createWindow() -> BPBundleWindowController {
+        BPBundleWindowController(windowNibName: "BPBundleWindow")
+    }
+
+    override public func loadWindow() {
+        self.window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 413, height: 289),
+            styleMask: [.titled],
+            backing: .buffered,
+            defer: false
+        )
+    }
+
+    override public func windowDidLoad() {
+        super.windowDidLoad()
+        if textViewImport == nil {
+            textViewImport = BPAutoScrollTextView(frame: NSRect(x: 0, y: 0, width: 373, height: 197))
+        }
+        if buttonClose == nil {
+            buttonClose = NSButton(frame: NSRect(x: 0, y: 0, width: 80, height: 28))
+        }
+        if progressLabelImport == nil {
+            progressLabelImport = NSTextField(labelWithString: "")
+        }
+        guard let textViewImport else { return }
+        textViewImport.isEditable = false
+        textViewImport.isSelectable = true
+        textViewImport.isRichText = false
+        textViewImport.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+        textViewImport.setAccessibilityIdentifier("brewfile.import.output")
+
+        let host = BPBundleOperationHost(importTextView: textViewImport)
+        host.onAction = { [weak self] in
+            self?.didClickClose(nil)
+        }
+        self.bundleHost = host
+
+        if let contentView = window?.contentView {
+            for subview in contentView.subviews {
+                subview.removeFromSuperview()
+            }
+            let hostView = host.viewController.view
+            hostView.translatesAutoresizingMaskIntoConstraints = false
+            contentView.addSubview(hostView)
+            NSLayoutConstraint.activate([
+                hostView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+                hostView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+                hostView.topAnchor.constraint(equalTo: contentView.topAnchor),
+                hostView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+            ])
+        }
+    }
+
+    private func startSheetOnMainWindow() {
+        guard let sheetWindow = self.window else { return }
+        bpSharedAppDelegate()?.window?.beginSheet(sheetWindow) { _ in
+            bpSharedAppDelegate()?.isRunningBackgroundTask = false
+        }
+    }
+
+    private func startImportOperation(with plan: BPBrewfilePlan?) {
+        _ = self.window
+        textViewImport?.clearOutput()
+        window?.title = NSLocalizedString("Import Brewfile", comment: "")
+        window?.setContentSize(NSSize(width: 650, height: 380))
+        textViewImport?.setAccessibilityIdentifier("brewfile.import.output")
+        buttonClose?.title = NSLocalizedString("Cancel", comment: "")
+        buttonClose?.isEnabled = true
+        bundleHost?.configureImport(
+            statusText: nil,
+            actionTitle: NSLocalizedString("Cancel", comment: ""),
+            actionEnabled: true,
+            running: true
+        )
+        let iface = (NSClassFromString("BPHomebrewInterface") as AnyObject?)
+            .flatMap { unsafeBitCast($0, to: BPHomebrewInterfaceClassObjCBridge.self).sharedInterface() }
+        let op = BPBrewfileImportOperation(plan: plan, interface: iface)
+        self.importOperation = op
+        let tv = self.textViewImport
+        op.start(withOutput: { [weak self] output in
+            tv?.appendOutput(output)
+            DispatchQueue.main.async {
+                self?.bundleHost?.syncLogFromTextView()
+            }
+        }, completion: { [weak self] success, cancelled, error in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                let status = cancelled
+                    ? NSLocalizedString("Import cancelled. Some changes may already have been made.", comment: "")
+                    : (success
+                        ? NSLocalizedString("Import finished.", comment: "")
+                        : NSLocalizedString("Import failed. Review the output for details.", comment: ""))
+                self.progressLabelImport?.stringValue = status
+                if let error {
+                    self.textViewImport?.appendOutput(error.localizedDescription)
+                }
+                self.textViewImport?.flushPendingOutput()
+                self.buttonClose?.title = NSLocalizedString("Close", comment: "")
+                self.buttonClose?.isEnabled = true
+                self.bundleHost?.configureImport(
+                    statusText: status,
+                    actionTitle: NSLocalizedString("Close", comment: ""),
+                    actionEnabled: true,
+                    running: false
+                )
+                self.bundleHost?.syncLogFromTextView()
+            }
+        })
+    }
+
+    private func startExportOperation(withFile fileURL: URL?) {
+        _ = self.window
+        buttonClose?.isEnabled = false
+        bundleHost?.configureExport(
+            statusText: nil,
+            detailText: nil,
+            actionTitle: nil,
+            actionEnabled: false,
+            running: true,
+            finished: false,
+            succeeded: false
+        )
+        let iface = (NSClassFromString("BPHomebrewInterface") as AnyObject?)
+            .flatMap { unsafeBitCast($0, to: BPHomebrewInterfaceClassObjCBridge.self).sharedInterface() }
+        let op = BPBrewfileExportOperation(url: fileURL, interface: iface)
+        self.exportOperation = op
+        op.start { [weak self] error in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                let succeeded = (error == nil)
+                let statusText = error != nil ? NSLocalizedString("Brewfile_Export_Failed", comment: "") : nil
+                let detailText = error?.localizedDescription
+                self.buttonClose?.isEnabled = true
+                self.bundleHost?.configureExport(
+                    statusText: statusText,
+                    detailText: detailText,
+                    actionTitle: nil,
+                    actionEnabled: true,
+                    running: false,
+                    finished: true,
+                    succeeded: succeeded
+                )
+            }
+        }
+    }
+
+    @objc(didClickClose:)
+    public func didClickClose(_ sender: Any?) {
+        if exportOperation?.running == true { return }
+        if importOperation?.running == true {
+            importOperation?.cancel()
+            buttonClose?.isEnabled = false
+            let cancelling = NSLocalizedString("Cancelling… Waiting for Homebrew to exit.", comment: "")
+            progressLabelImport?.stringValue = cancelling
+            bundleHost?.configureImport(
+                statusText: cancelling,
+                actionTitle: NSLocalizedString("Cancel", comment: ""),
+                actionEnabled: false,
+                running: true
+            )
+            return
+        }
+        if let window = self.window {
+            window.sheetParent?.endSheet(window)
+        }
+    }
+}
+
