@@ -16,7 +16,7 @@ the background — without remembering a command for each of them.
 
 **Formulae**
 * Browse installed, outdated, leaves, pinned and the full catalog
-* Install, uninstall and upgrade, individually or everything at once
+* Install, uninstall and upgrade, individually or everything at once, with live-filtered formula build options
 * Pin a formula to hold it at its installed version, with a badge in the list
 * Read a formula's description, version, dependencies, conflicts and dependents
 
@@ -28,13 +28,13 @@ the background — without remembering a command for each of them.
 **Tools**
 * Updates — unified view of outdated formulae and casks with live filtering,
   selective upgrades, and exact-snapshot batch upgrades that respect pinned exclusions
-* Services — start, stop and restart the background services brew manages, and
-  inspect service plists, PIDs and logs
+* Services — start, stop and restart the background services brew manages, with
+  live status filter pills, inline search, and one-click service plist & log path copy
 * Doctor — run `brew doctor` with live diagnostic summary badges, line filtering, and one-click output copy
 * Update — run `brew update` with live log filtering and output copy
 * Cleanup — preview and reclaim disk space (`brew cleanup`)
 * Remove Unused Dependencies — preview and remove unused dependency formulae (`brew autoremove`) with candidate count badges and log filtering
-* Import and export a Brewfile with reviewed entry verification and live import log filtering
+* Import and export a Brewfile with interactive entry status filters, search, summary copy, and live import log filtering
 
 **Around the edges**
 * Built with Swift 6 and SwiftUI for macOS Tahoe

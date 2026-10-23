@@ -48,6 +48,7 @@ static NSString * const kServiceColumnUser   = @"User";
 @property (strong) NSButton *revealButton;
 @property (strong) NSButton *logsButton;
 @property (strong) NSButton *outputCopyButton;
+@property (copy) NSString *selectedServiceName;
 @property (strong, nonatomic) BPServicesHost *servicesHost;
 
 @end
@@ -113,6 +114,7 @@ static NSString * const kServiceColumnUser   = @"User";
 	self.servicesHost.onRevealFile = ^{ [weakSelf revealServiceFile:nil]; };
 	self.servicesHost.onOpenLogs = ^{ [weakSelf openServiceLogs:nil]; };
 	self.servicesHost.onCopyOutput = ^{ [weakSelf copyServiceOutput:nil]; };
+	self.servicesHost.onFilterChanged = ^{ [weakSelf applyServiceFilters]; };
 
 	self.view = self.servicesHost.viewController.view;
 	[self updateButtonStates];
@@ -130,9 +132,60 @@ static NSString * const kServiceColumnUser   = @"User";
 
 #pragma mark - Data
 
+- (NSArray<BPService *> *)displayedServices
+{
+	NSInteger statusFilter = self.servicesHost.statusFilterRawValue;
+	NSString *query = [self.servicesHost.filterQuery ?: @"" stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+	if (statusFilter == 0 && query.length == 0) {
+		return self.services;
+	}
+
+	NSMutableArray<BPService *> *filtered = [NSMutableArray arrayWithCapacity:self.services.count];
+	for (BPService *service in self.services) {
+		if (statusFilter == 1 && !(service.status == kBPServiceStatusStarted || service.status == kBPServiceStatusScheduled)) {
+			continue;
+		}
+		if (statusFilter == 2 && !(service.status == kBPServiceStatusNone || service.status == kBPServiceStatusStopped)) {
+			continue;
+		}
+		if (statusFilter == 3 && service.status != kBPServiceStatusError) {
+			continue;
+		}
+		if (query.length > 0) {
+			BOOL matchesName = service.name && [service.name localizedCaseInsensitiveContainsString:query];
+			BOOL matchesUser = service.user && [service.user localizedCaseInsensitiveContainsString:query];
+			NSString *localizedStatus = [BPService localizedNameForStatus:service.status];
+			BOOL matchesStatus = localizedStatus && [localizedStatus localizedCaseInsensitiveContainsString:query];
+			if (!matchesName && !matchesUser && !matchesStatus) {
+				continue;
+			}
+		}
+		[filtered addObject:service];
+	}
+	return [filtered copy];
+}
+
+- (void)applyServiceFilters
+{
+	NSString *selectedName = self.selectedServiceName ?: [self selectedService].name;
+	self.applyingServices = YES;
+	[self.tableView reloadData];
+	NSArray<BPService *> *displayed = [self displayedServices];
+	NSUInteger index = selectedName.length > 0 ? [displayed indexOfObjectPassingTest:^BOOL(BPService *service, NSUInteger idx, BOOL *stop) {
+		return [service.name isEqualToString:selectedName];
+	}] : NSNotFound;
+	if (index != NSNotFound) [self.tableView selectRowIndexes:[NSIndexSet indexSetWithIndex:index] byExtendingSelection:NO];
+	else [self.tableView deselectAll:nil];
+	self.applyingServices = NO;
+	self.selectedServiceName = [self selectedService].name;
+	[self updateButtonStates];
+	[self refreshEmptyState];
+	[self requestSelectedServiceDetails];
+}
+
 - (void)refreshServices
 {
-	NSString *selectedName = [self selectedService].name;
+	NSString *selectedName = [self selectedService].name ?: self.selectedServiceName;
 	[self invalidateServiceDetails];
 	NSUInteger generation = self.listGeneration;
 	[self fetchServicesWithCompletion:^(NSArray<BPService *> *services) {
@@ -140,12 +193,14 @@ static NSString * const kServiceColumnUser   = @"User";
 		self.applyingServices = YES;
 		self.services = services;
 		[self.tableView reloadData];
-		NSUInteger index = [services indexOfObjectPassingTest:^BOOL(BPService *service, NSUInteger idx, BOOL *stop) {
+		NSArray<BPService *> *displayed = [self displayedServices];
+		NSUInteger index = selectedName.length > 0 ? [displayed indexOfObjectPassingTest:^BOOL(BPService *service, NSUInteger idx, BOOL *stop) {
 			return [service.name isEqualToString:selectedName];
-		}];
+		}] : NSNotFound;
 		if (index != NSNotFound) [self.tableView selectRowIndexes:[NSIndexSet indexSetWithIndex:index] byExtendingSelection:NO];
 		else [self.tableView deselectAll:nil];
 		self.applyingServices = NO;
+		self.selectedServiceName = [self selectedService].name;
 		[self updateButtonStates];
 		[self refreshEmptyState];
 		// reloadData may preserve the same row without a selection notification.
@@ -165,8 +220,9 @@ static NSString * const kServiceColumnUser   = @"User";
 
 - (BPService *)selectedService
 {
+	NSArray<BPService *> *displayed = [self displayedServices];
 	NSInteger row = self.tableView.selectedRow;
-	return row >= 0 && (NSUInteger)row < self.services.count ? self.services[(NSUInteger)row] : nil;
+	return row >= 0 && (NSUInteger)row < displayed.count ? displayed[(NSUInteger)row] : nil;
 }
 
 - (void)invalidateServiceDetails
@@ -312,8 +368,9 @@ static NSString * const kServiceColumnUser   = @"User";
 
 - (void)runOperation:(BOOL (^)(BPHomebrewInterface *interface, NSString *name, void (^output)(NSString *)))operation
 {
+	NSArray<BPService *> *displayed = [self displayedServices];
 	NSInteger row = self.tableView.selectedRow;
-	if (self.operationInFlight || row < 0 || (NSUInteger)row >= self.services.count)
+	if (self.operationInFlight || row < 0 || (NSUInteger)row >= displayed.count)
 	{
 		return;
 	}
@@ -327,7 +384,7 @@ static NSString * const kServiceColumnUser   = @"User";
 		return;
 	}
 
-	NSString *name = self.services[(NSUInteger)row].name;
+	NSString *name = displayed[(NSUInteger)row].name;
 	self.operationInFlight = YES;
 	[self invalidateServiceDetails];
 	[self updateButtonStates];
@@ -373,18 +430,19 @@ static NSString * const kServiceColumnUser   = @"User";
 /// Services with none installed showed headers over blank space too.
 - (void)refreshEmptyState
 {
+	NSArray<BPService *> *displayed = [self displayedServices];
+	BOOL isFiltering = (self.servicesHost.statusFilterRawValue != 0 || self.servicesHost.filterQuery.length > 0);
 	BPEmptyState *state = nil;
-	if ([BPEmptyState shouldShowForRowCount:(NSInteger)self.services.count loading:NO])
+	if ([BPEmptyState shouldShowForRowCount:(NSInteger)displayed.count loading:NO])
 	{
-		state = [BPEmptyState stateForSidebarRow:FormulaeSideBarItemServices searching:NO];
+		state = [BPEmptyState stateForSidebarRow:FormulaeSideBarItemServices searching:(isFiltering && self.services.count > 0)];
 	}
 	[BPEmptyStateView presentState:state overView:self.tableView.enclosingScrollView];
 }
 
 - (void)updateButtonStates
 {
-	NSInteger row = self.tableView.selectedRow;
-	BPService *service = (row >= 0 && (NSUInteger)row < self.services.count) ? self.services[(NSUInteger)row] : nil;
+	BPService *service = [self selectedService];
 
 	BOOL enabled = (service != nil && !self.operationInFlight);
 	BOOL running = (service.status == kBPServiceStatusStarted || service.status == kBPServiceStatusScheduled);
@@ -397,6 +455,22 @@ static NSString * const kServiceColumnUser   = @"User";
 
 - (void)syncServicesHostState
 {
+	NSInteger runningCount = 0;
+	NSInteger stoppedCount = 0;
+	NSInteger errorCount = 0;
+	for (BPService *service in self.services) {
+		if (service.status == kBPServiceStatusStarted || service.status == kBPServiceStatusScheduled) {
+			runningCount++;
+		} else if (service.status == kBPServiceStatusError) {
+			errorCount++;
+		} else {
+			stoppedCount++;
+		}
+	}
+	[self.servicesHost syncCountsWithRunning:runningCount stopped:stoppedCount error:errorCount];
+	NSString *serviceFilePath = self.details.loadedFile.length > 0 ? self.details.loadedFile : self.details.serviceFile;
+	NSString *logFilePath = self.details.logPath.length > 0 ? self.details.logPath : self.details.errorLogPath;
+	[self.servicesHost syncPathsWithServiceFile:serviceFilePath logFile:logFilePath];
 	[self.servicesHost updateWithStartEnabled:self.startButton.enabled
 								  stopEnabled:self.stopButton.enabled
 							   restartEnabled:self.restartButton.enabled
@@ -409,16 +483,17 @@ static NSString * const kServiceColumnUser   = @"User";
 
 - (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView
 {
-	return (NSInteger)self.services.count;
+	return (NSInteger)[self displayedServices].count;
 }
 
 - (id)tableView:(NSTableView *)tableView objectValueForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row
 {
-	if (row < 0 || (NSUInteger)row >= self.services.count)
+	NSArray<BPService *> *displayed = [self displayedServices];
+	if (row < 0 || (NSUInteger)row >= displayed.count)
 	{
 		return @"";
 	}
-	BPService *service = self.services[(NSUInteger)row];
+	BPService *service = displayed[(NSUInteger)row];
 
 	if ([tableColumn.identifier isEqualToString:kServiceColumnName])
 	{
@@ -439,6 +514,7 @@ static NSString * const kServiceColumnUser   = @"User";
 
 - (void)tableViewSelectionDidChange:(NSNotification *)notification
 {
+	self.selectedServiceName = [self selectedService].name;
 	[self updateButtonStates];
 	if (!self.applyingServices) [self requestSelectedServiceDetails];
 }

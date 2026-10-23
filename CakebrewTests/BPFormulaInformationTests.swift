@@ -899,4 +899,85 @@ final class BPFormulaInformationTests: XCTestCase {
         XCTAssertEqual(autoremoveHost.copyOutputToPasteboard(), "libnghttp2")
     }
 
+    @MainActor
+    func testServicesStateBrewfileReviewFilterAndFormulaOptionsSearch() {
+        // 1. BPServicesHost & BPServicesState
+        let servicesHost = BPServicesHost(tableScrollView: NSView(), detailsScrollView: NSView())
+        servicesHost.syncCounts(running: 2, stopped: 3, error: 1)
+        XCTAssertEqual(servicesHost.runningCount, 2)
+        XCTAssertEqual(servicesHost.stoppedCount, 3)
+        XCTAssertEqual(servicesHost.errorCount, 1)
+        XCTAssertEqual(servicesHost.totalCount, 6)
+
+        servicesHost.syncPaths(serviceFile: "/opt/homebrew/opt/postgresql@16/homebrew.mxcl.postgresql@16.plist",
+                               logFile: "/opt/homebrew/var/log/postgresql@16.log")
+        XCTAssertEqual(servicesHost.serviceFilePath, "/opt/homebrew/opt/postgresql@16/homebrew.mxcl.postgresql@16.plist")
+        XCTAssertEqual(servicesHost.logFilePath, "/opt/homebrew/var/log/postgresql@16.log")
+        XCTAssertEqual(servicesHost.copyServiceFilePathToPasteboard(),
+                       "/opt/homebrew/opt/postgresql@16/homebrew.mxcl.postgresql@16.plist")
+        XCTAssertEqual(servicesHost.copyLogPathToPasteboard(),
+                       "/opt/homebrew/var/log/postgresql@16.log")
+
+        servicesHost.onFilterChanged = {
+            // @Sendable callback invoked on filter or query change
+        }
+        servicesHost.statusFilterRawValue = BPServiceStatusFilter.running.rawValue
+        servicesHost.filterQuery = "postgres"
+        XCTAssertEqual(servicesHost.statusFilterRawValue, BPServiceStatusFilter.running.rawValue)
+        XCTAssertEqual(servicesHost.filterQuery, "postgres")
+
+        // 2. BPBrewfileReviewHost & BPBrewfileReviewState
+        let entriesView = NSTextView()
+        entriesView.string = """
+        Taps (1)
+          • homebrew/core — Installed
+        Formulae (2)
+          • wget — Installed
+          • ripgrep — Missing
+        Casks (1)
+          • firefox — Missing
+        """
+        let reviewHost = BPBrewfileReviewHost(
+            entriesTextView: entriesView,
+            fileName: "Brewfile",
+            installedCount: 2,
+            missingCount: 2,
+            notCheckedCount: 0,
+            formulaCount: 2,
+            caskCount: 1,
+            tapCount: 1,
+            otherCount: 0,
+            canInstall: true,
+            summaryText: entriesView.string
+        )
+        XCTAssertEqual(reviewHost.matchingEntryCount, 4)
+
+        reviewHost.statusFilterRawValue = BPBrewfileEntryFilter.missing.rawValue
+        XCTAssertEqual(reviewHost.matchingEntryCount, 2)
+        reviewHost.filterQuery = "firefox"
+        XCTAssertEqual(reviewHost.matchingEntryCount, 1)
+        XCTAssertEqual(reviewHost.copySummaryToPasteboard(), "  • firefox — Missing")
+
+        // 3. BPFormulaOptionsHost & BPFormulaOptionsSheetState
+        let optionsHost = BPFormulaOptionsHost()
+        optionsHost.configure(
+            formulaName: "ffmpeg",
+            optionNames: ["--with-x265", "--with-fdk-aac", "--HEAD"],
+            optionExplanations: ["Enable x265", "Enable Fraunhofer FDK AAC", "Build from git HEAD"]
+        )
+        XCTAssertEqual(optionsHost.filteredOptionCount, 3)
+        XCTAssertEqual(optionsHost.appliedOptionCount, 0)
+
+        optionsHost.setApplied(true, forOptionNamed: "--with-x265")
+        optionsHost.setApplied(true, forOptionNamed: "--HEAD")
+        XCTAssertEqual(optionsHost.appliedOptionCount, 2)
+
+        optionsHost.filterQuery = "aac"
+        XCTAssertEqual(optionsHost.filteredOptionCount, 1)
+
+        optionsHost.clearAllAppliedOptions()
+        XCTAssertEqual(optionsHost.appliedOptionCount, 0)
+        XCTAssertEqual(optionsHost.selectedOptionNames, [])
+    }
+
 }

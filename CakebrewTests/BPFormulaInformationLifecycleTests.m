@@ -1496,4 +1496,109 @@
     XCTAssertEqual(updateHost.totalLineCount, 0);
 }
 
+- (void)testEndToEndServicesFilteringPathCopyBrewfileReviewFilterAndFormulaOptionsSearch
+{
+    // 1. BPServicesViewController + BPServicesHost status filter, query filter, and path copying
+    BPServicesViewController *servicesVC = [[BPServicesViewController alloc] initWithNibName:nil bundle:nil];
+    __unused NSView *servicesView = servicesVC.view;
+    BPServicesHost *servicesHost = [servicesVC valueForKey:@"servicesHost"];
+    NSTableView *tableView = [servicesVC valueForKey:@"tableView"];
+    XCTAssertNotNil(servicesHost);
+    XCTAssertNotNil(tableView);
+
+    [servicesVC refreshServices];
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.20]];
+    XCTAssertEqual(tableView.numberOfRows, 2);
+    XCTAssertEqual(servicesHost.totalCount, 2);
+    XCTAssertEqual(servicesHost.runningCount, 1);
+    XCTAssertEqual(servicesHost.stoppedCount, 1);
+    XCTAssertEqual(servicesHost.errorCount, 0);
+
+    // Select running service (mockpostgres) and verify service path syncing + copy
+    [tableView selectRowIndexes:[NSIndexSet indexSetWithIndex:0] byExtendingSelection:NO];
+    [[NSNotificationCenter defaultCenter] postNotificationName:NSTableViewSelectionDidChangeNotification object:tableView];
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.20]];
+    XCTAssertEqualObjects(servicesHost.serviceFilePath, @"/cakebrew-mock-missing/service.plist");
+    XCTAssertEqualObjects(servicesHost.logFilePath, @"/cakebrew-mock-missing/service.log");
+    XCTAssertEqualObjects([servicesHost copyServiceFilePathToPasteboard], @"/cakebrew-mock-missing/service.plist");
+    XCTAssertEqualObjects([servicesHost copyLogPathToPasteboard], @"/cakebrew-mock-missing/service.log");
+
+    // Filter by Running (statusFilterRawValue = 1)
+    servicesHost.statusFilterRawValue = 1;
+    XCTAssertEqual(tableView.numberOfRows, 1);
+    XCTAssertEqualObjects([tableView.dataSource tableView:tableView objectValueForTableColumn:tableView.tableColumns.firstObject row:0], @"mockpostgres");
+
+    // Filter by Stopped (statusFilterRawValue = 2)
+    servicesHost.statusFilterRawValue = 2;
+    XCTAssertEqual(tableView.numberOfRows, 1);
+    XCTAssertEqualObjects([tableView.dataSource tableView:tableView objectValueForTableColumn:tableView.tableColumns.firstObject row:0], @"mockredis");
+
+    // Reset status filter and filter by query
+    servicesHost.statusFilterRawValue = 0;
+    servicesHost.filterQuery = @"redis";
+    XCTAssertEqual(tableView.numberOfRows, 1);
+    servicesHost.filterQuery = @"";
+    XCTAssertEqual(tableView.numberOfRows, 2);
+
+    // 2. BPBrewfileReviewHost status filter + search + copy
+    NSURL *tempDir = [[NSURL fileURLWithPath:NSTemporaryDirectory()] URLByAppendingPathComponent:NSUUID.UUID.UUIDString];
+    XCTAssertTrue([[NSFileManager defaultManager] createDirectoryAtURL:tempDir withIntermediateDirectories:YES attributes:nil error:NULL]);
+    NSURL *brewfileURL = [tempDir URLByAppendingPathComponent:@"Brewfile"];
+    NSString *brewfileContents = @"brew \"mockwget\"\ncask \"mockchrome\"\ntap \"homebrew/core\"\n";
+    XCTAssertTrue([brewfileContents writeToURL:brewfileURL atomically:YES encoding:NSUTF8StringEncoding error:NULL]);
+
+    NSError *planError = nil;
+    BPBrewfilePlan *plan = [BPBrewfilePlan planWithURL:brewfileURL
+                                           inventories:@{
+                                               @"brew": @[@"mockwget"],
+                                               @"cask": @[],
+                                               @"tap": @[@"homebrew/core"]
+                                           }
+                                                 error:&planError];
+    XCTAssertNil(planError);
+    NSTextView *reviewEntriesView = nil;
+    BPBrewfileReviewHost *reviewHost = [BPBundleWindowController reviewHostForPlan:plan
+                                                                          fileName:@"Brewfile"
+                                                                             error:nil
+                                                                   entriesTextView:&reviewEntriesView];
+    XCTAssertEqual(reviewHost.matchingEntryCount, 3);
+    reviewHost.statusFilterRawValue = 2; // Missing only
+    XCTAssertEqual(reviewHost.matchingEntryCount, 1);
+    NSString *copiedMissing = [reviewHost copySummaryToPasteboard];
+    XCTAssertTrue([copiedMissing containsString:@"mockchrome"]);
+    reviewHost.statusFilterRawValue = 1; // Installed only
+    XCTAssertEqual(reviewHost.matchingEntryCount, 2);
+    reviewHost.statusFilterRawValue = 0;
+    reviewHost.filterQuery = @"wget";
+    XCTAssertEqual(reviewHost.matchingEntryCount, 1);
+    [[NSFileManager defaultManager] removeItemAtURL:tempDir error:NULL];
+
+    // 3. BPFormulaOptionsWindowController + BPFormulaOptionsHost search & clearAllAppliedOptions
+    BPFormula *formula = [BPFormula formulaWithName:@"mockwget"];
+    [formula setNeedsInformation:YES];
+    NSArray *options = [formula options];
+    BPFormulaOptionsWindowController *optionsWC = [[BPFormulaOptionsWindowController alloc] initWithWindowNibName:@"BPFormulaOptionsWindow"];
+    optionsWC.formula = formula;
+    NSMutableArray *availableOptions = [NSMutableArray array];
+    for (BPFormulaOption *option in options) {
+        [availableOptions addObject:[@{
+            @"formulaOptionCommand": option.name,
+            @"isFormulaOptionCommandApplied": @NO,
+            @"formulaOptionDescription": option.explanation ?: @""
+        } mutableCopy]];
+    }
+    optionsWC.availableOptions = availableOptions;
+    __unused NSWindow *optionsWin = optionsWC.window;
+    XCTAssertEqual(optionsWC.optionsHost.filteredOptionCount, 2);
+    optionsWC.optionsHost.filterQuery = @"debug";
+    XCTAssertEqual(optionsWC.optionsHost.filteredOptionCount, 1);
+    optionsWC.optionsHost.filterQuery = @"";
+    [optionsWC.optionsHost setApplied:YES forOptionNamed:@"--with-debug"];
+    [optionsWC.optionsHost setApplied:YES forOptionNamed:@"--HEAD"];
+    XCTAssertEqual(optionsWC.optionsHost.appliedOptionCount, 2);
+    [optionsWC.optionsHost clearAllAppliedOptions];
+    XCTAssertEqual(optionsWC.optionsHost.appliedOptionCount, 0);
+    XCTAssertEqual(optionsWC.allSelectedOptions.count, 0u);
+}
+
 @end
