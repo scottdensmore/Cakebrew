@@ -30,11 +30,11 @@ the background — without remembering a command for each of them.
   selective upgrades, and exact-snapshot batch upgrades that respect pinned exclusions
 * Services — start, stop and restart the background services brew manages, and
   inspect service plists, PIDs and logs
-* Doctor — run `brew doctor` and read its report
-* Update — run `brew update`
+* Doctor — run `brew doctor` with live diagnostic summary badges, line filtering, and one-click output copy
+* Update — run `brew update` with live log filtering and output copy
 * Cleanup — preview and reclaim disk space (`brew cleanup`)
-* Remove Unused Dependencies — preview and remove unused dependency formulae (`brew autoremove`)
-* Import and export a Brewfile with reviewed entry verification
+* Remove Unused Dependencies — preview and remove unused dependency formulae (`brew autoremove`) with candidate count badges and log filtering
+* Import and export a Brewfile with reviewed entry verification and live import log filtering
 
 **Around the edges**
 * Built with Swift 6 and SwiftUI for macOS Tahoe

@@ -101,17 +101,23 @@
 	[self.updateTextView clearOutput];
 	self.isPerformingUpdate = YES;
 	self.consoleHost.isRunning = YES;
+	[self.consoleHost syncLogFromTextView];
 	[self.progressIndicator startAnimation:sender];
 
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
 		[[BPHomebrewInterface sharedInterface] updateWithReturnBlock:^(NSString *output) {
 			[self.updateTextView appendOutput:output];
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[self.consoleHost syncLogFromTextView];
+			});
 		}];
 
 		dispatch_async(dispatch_get_main_queue(), ^{
+			[self.updateTextView flushPendingOutput];
 			[self.progressIndicator stopAnimation:sender];
 			self.isPerformingUpdate = NO;
 			self.consoleHost.isRunning = NO;
+			[self.consoleHost syncLogFromTextView];
 			[appDelegate setRunningBackgroundTask:NO];
 			
 			NSString *title = NSLocalizedString(@"Homebrew_Task_Finished", nil);
@@ -122,7 +128,9 @@
 }
 
 - (IBAction)clearLogUpdate:(id)sender {
+	[self.updateTextView clearOutput];
 	self.updateTextView.string = @"";
+	[self.consoleHost syncLogFromTextView];
 }
 
 @end

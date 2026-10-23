@@ -251,6 +251,9 @@
 
 		void (^displayTerminalOutput)(NSString *outputValue) = ^(NSString *output) {
 			[weakSelf.recordTextView appendOutput:output];
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[weakSelf.installationHost syncLogFromTextView];
+			});
 		};
 		
 		BPHomebrewInterface *homebrewInterface = [BPHomebrewInterface sharedInterface];
@@ -334,6 +337,7 @@
 	dispatch_async(dispatch_get_main_queue(), ^(){
         self.upgradeWorkerFinished = YES;
 		self.isRunningTask = NO;
+		[self.recordTextView flushPendingOutput];
 		[self.progressIndicator stopAnimation:nil];
 		[self.okButton setEnabled:YES];
 		[self.cancelButton setEnabled:NO];
@@ -381,6 +385,8 @@
 
 	[self.recordTextView appendOutput:[NSString stringWithFormat:@"\n%@\n",
 									   NSLocalizedString(self.upgradeProgress ? @"Updates_Cancelling" : @"Installation_Window_Cancelled", nil)]];
+	[self.recordTextView flushPendingOutput];
+	[self.installationHost syncLogFromTextView];
 
 	[self.upgradeProgress cancel];
 	BPHomebrewInterface *interface = [BPHomebrewInterface sharedInterface];
@@ -394,7 +400,9 @@
 - (IBAction)okAction:(id)sender
 {
     if (self.upgradeProgress && !self.upgradeWorkerFinished) return;
+	[self.recordTextView clearOutput];
 	self.recordTextView.string = @"";
+	[self.installationHost syncLogFromTextView];
 	
 	NSWindow *mainWindow = self.window.sheetParent;
 	

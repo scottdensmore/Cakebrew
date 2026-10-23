@@ -2649,11 +2649,111 @@ private struct BPDisabledSwiftUIView: View {
 // MARK: - SwiftUI Console Tool Host (Doctor & Update)
 
 @MainActor
+private struct BPLogFilterBarView: View {
+    @Binding var filterQuery: String
+    let matchingLineCount: Int
+    let totalLineCount: Int
+    let filterFieldIdentifier: String
+    let lineCountIdentifier: String
+    let copyButtonIdentifier: String
+    let copyEnabled: Bool
+    let onCopyOutput: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            HStack(spacing: 5) {
+                Image(systemName: "line.3.horizontal.decrease.circle")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                TextField(NSLocalizedString("Toolbar_Search", comment: ""), text: $filterQuery)
+                    .textFieldStyle(.plain)
+                    .font(.caption)
+                    .accessibilityIdentifier(filterFieldIdentifier)
+                if !filterQuery.isEmpty {
+                    Button {
+                        filterQuery = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .frame(maxWidth: 210)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(Color.primary.opacity(0.05))
+            )
+
+            if totalLineCount > 0 {
+                let countText = filterQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    ? "\(totalLineCount)"
+                    : "\(matchingLineCount)/\(totalLineCount)"
+                Text(countText)
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 2)
+                    .background(
+                        Capsule(style: .continuous)
+                            .fill(Color.secondary.opacity(0.12))
+                    )
+                    .accessibilityValue(countText)
+                    .accessibilityIdentifier(lineCountIdentifier)
+            }
+
+            Spacer()
+
+            Button {
+                onCopyOutput()
+            } label: {
+                Label(NSLocalizedString("Services_Copy_Output", comment: ""), systemImage: "doc.on.doc")
+            }
+            .controlSize(.small)
+            .disabled(!copyEnabled)
+            .accessibilityIdentifier(copyButtonIdentifier)
+        }
+    }
+}
+
+@MainActor
+private struct BPFilteredLogOverlayView: View {
+    let filteredText: String
+    let accessibilityID: String
+
+    var body: some View {
+        ScrollView {
+            Text(filteredText.isEmpty ? NSLocalizedString("Empty_Search_Title", comment: "") : filteredText)
+                .font(.system(size: 12, weight: .regular, design: .monospaced))
+                .foregroundStyle(filteredText.isEmpty ? .secondary : .primary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .textSelection(.enabled)
+                .padding(10)
+                .accessibilityValue(filteredText)
+                .accessibilityIdentifier(accessibilityID)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(Color(nsColor: .textBackgroundColor))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.12), lineWidth: 1)
+        )
+    }
+}
+
+@MainActor
 private final class BPConsoleToolPresentation: ObservableObject {
     @Published var state: BPConsoleToolState
     let textView: NSTextView
     var onRun: (() -> Void)?
     var onClear: (() -> Void)?
+    var onCopyOutput: (() -> Void)?
 
     init(textView: NSTextView, state: BPConsoleToolState) {
         self.textView = textView
@@ -2669,7 +2769,44 @@ public final class BPConsoleToolHost: NSObject {
 
     @objc public var isRunning: Bool {
         get { presentation.state.isRunning }
-        set { presentation.state.isRunning = newValue }
+        set {
+            presentation.state.isRunning = newValue
+            presentation.state.logText = presentation.textView.string
+        }
+    }
+
+    @objc public var logText: String {
+        get { presentation.state.logText }
+        set { presentation.state.logText = newValue }
+    }
+
+    @objc public var filterQuery: String {
+        get { presentation.state.filterQuery }
+        set { presentation.state.filterQuery = newValue }
+    }
+
+    @objc public var warningCount: Int {
+        presentation.state.warningCount
+    }
+
+    @objc public var errorCount: Int {
+        presentation.state.errorCount
+    }
+
+    @objc public var diagnosticSeverityRawValue: Int {
+        presentation.state.diagnosticSeverity.rawValue
+    }
+
+    @objc public var diagnosticSummaryText: String {
+        presentation.state.diagnosticSummaryText
+    }
+
+    @objc public var matchingLineCount: Int {
+        presentation.state.matchingLineCount
+    }
+
+    @objc public var totalLineCount: Int {
+        presentation.state.totalLineCount
     }
 
     @objc public var onRun: (() -> Void)? {
@@ -2680,6 +2817,11 @@ public final class BPConsoleToolHost: NSObject {
     @objc public var onClear: (() -> Void)? {
         get { presentation.onClear }
         set { presentation.onClear = newValue }
+    }
+
+    @objc public var onCopyOutput: (() -> Void)? {
+        get { presentation.onCopyOutput }
+        set { presentation.onCopyOutput = newValue }
     }
 
     @objc(initWithTextView:title:subtitle:runButtonTitle:clearButtonTitle:)
@@ -2693,7 +2835,8 @@ public final class BPConsoleToolHost: NSObject {
             subtitle: subtitle,
             runButtonTitle: runButtonTitle,
             clearButtonTitle: clearButtonTitle,
-            isRunning: false
+            isRunning: false,
+            logText: textView.string
         )
         let presentation = BPConsoleToolPresentation(textView: textView, state: state)
         self.presentation = presentation
@@ -2702,20 +2845,105 @@ public final class BPConsoleToolHost: NSObject {
         self.viewController = host
         super.init()
     }
+
+    @objc(syncLogFromTextView)
+    public func syncLogFromTextView() {
+        presentation.state.logText = presentation.textView.string
+    }
+
+    @objc
+    @discardableResult
+    public func copyOutputToPasteboard() -> String {
+        if presentation.state.logText.isEmpty && !presentation.textView.string.isEmpty {
+            presentation.state.logText = presentation.textView.string
+        }
+        let text = presentation.state.filteredOutputText
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        presentation.onCopyOutput?()
+        return text
+    }
 }
 
 @MainActor
 private struct BPConsoleToolView: View {
     @ObservedObject var presentation: BPConsoleToolPresentation
 
+    private var filterBinding: Binding<String> {
+        Binding(
+            get: { presentation.state.filterQuery },
+            set: { presentation.state.filterQuery = $0 }
+        )
+    }
+
+    private var diagnosticColor: Color {
+        switch presentation.state.diagnosticSeverity {
+        case .idle:
+            return .secondary
+        case .running:
+            return .accentColor
+        case .healthy:
+            return .green
+        case .warnings:
+            return .orange
+        case .errors:
+            return .red
+        }
+    }
+
+    private var diagnosticSymbol: String {
+        switch presentation.state.diagnosticSeverity {
+        case .idle:
+            return "terminal"
+        case .running:
+            return "clock.arrow.circlepath"
+        case .healthy:
+            return "checkmark.seal.fill"
+        case .warnings:
+            return "exclamationmark.triangle.fill"
+        case .errors:
+            return "xmark.octagon.fill"
+        }
+    }
+
+    private func copyCurrentOutput() {
+        if presentation.state.logText.isEmpty && !presentation.textView.string.isEmpty {
+            presentation.state.logText = presentation.textView.string
+        }
+        let text = presentation.state.filteredOutputText
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        presentation.onCopyOutput?()
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .center, spacing: 10) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(presentation.state.title)
-                        .font(.system(size: 16, weight: .semibold))
-                        .accessibilityAddTraits(.isHeader)
-                        .accessibilityValue(presentation.state.title)
+                    HStack(spacing: 8) {
+                        Text(presentation.state.title)
+                            .font(.system(size: 16, weight: .semibold))
+                            .accessibilityAddTraits(.isHeader)
+                            .accessibilityValue(presentation.state.title)
+
+                        if presentation.state.diagnosticSeverity != .idle {
+                            HStack(spacing: 4) {
+                                Image(systemName: diagnosticSymbol)
+                                    .font(.caption2)
+                                Text(presentation.state.diagnosticSummaryText)
+                                    .font(.system(.caption2, design: .rounded).weight(.semibold))
+                            }
+                            .foregroundStyle(diagnosticColor)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(
+                                Capsule(style: .continuous)
+                                    .fill(diagnosticColor.opacity(0.14))
+                            )
+                            .accessibilityValue(presentation.state.diagnosticSummaryText)
+                            .accessibilityIdentifier("console.diagnostic.badge")
+                        }
+                    }
                     if let subtitle = presentation.state.subtitle, !subtitle.isEmpty {
                         Text(subtitle)
                             .font(.caption)
@@ -2748,10 +2976,31 @@ private struct BPConsoleToolView: View {
             .padding(.horizontal, 14)
             .padding(.top, 12)
 
-            BPTextViewContainerRepresentable(textView: presentation.textView)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(.horizontal, 12)
-                .padding(.bottom, 12)
+            BPLogFilterBarView(
+                filterQuery: filterBinding,
+                matchingLineCount: presentation.state.matchingLineCount,
+                totalLineCount: presentation.state.totalLineCount,
+                filterFieldIdentifier: "console.filterField",
+                lineCountIdentifier: "console.lineCount",
+                copyButtonIdentifier: "console.copyOutput",
+                copyEnabled: !presentation.state.logText.isEmpty || !presentation.textView.string.isEmpty,
+                onCopyOutput: copyCurrentOutput
+            )
+            .padding(.horizontal, 14)
+
+            ZStack {
+                BPTextViewContainerRepresentable(textView: presentation.textView)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                if !presentation.state.trimmedFilterQuery.isEmpty {
+                    BPFilteredLogOverlayView(
+                        filteredText: presentation.state.filteredOutputText,
+                        accessibilityID: "console.filteredOutput"
+                    )
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.bottom, 12)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -2928,6 +3177,7 @@ private final class BPAutoremovePresentation: ObservableObject {
     let outputTextView: NSTextView
     var onRemove: (() -> Void)?
     var onCancelOrClose: (() -> Void)?
+    var onCopyOutput: (() -> Void)?
 
     init(outputTextView: NSTextView) {
         self.outputTextView = outputTextView
@@ -2940,6 +3190,29 @@ public final class BPAutoremoveHost: NSObject {
     private let presentation: BPAutoremovePresentation
     @objc public let viewController: NSViewController
 
+    @objc public var candidateCount: Int {
+        get { presentation.state.candidateCount }
+        set { presentation.state.candidateCount = newValue }
+    }
+
+    @objc public var logText: String {
+        get { presentation.state.logText }
+        set { presentation.state.logText = newValue }
+    }
+
+    @objc public var filterQuery: String {
+        get { presentation.state.filterQuery }
+        set { presentation.state.filterQuery = newValue }
+    }
+
+    @objc public var matchingLineCount: Int {
+        presentation.state.matchingLineCount
+    }
+
+    @objc public var totalLineCount: Int {
+        presentation.state.totalLineCount
+    }
+
     @objc public var onRemove: (() -> Void)? {
         get { presentation.onRemove }
         set { presentation.onRemove = newValue }
@@ -2950,9 +3223,15 @@ public final class BPAutoremoveHost: NSObject {
         set { presentation.onCancelOrClose = newValue }
     }
 
+    @objc public var onCopyOutput: (() -> Void)? {
+        get { presentation.onCopyOutput }
+        set { presentation.onCopyOutput = newValue }
+    }
+
     @objc(initWithOutputTextView:)
     public init(outputTextView: NSTextView) {
         let presentation = BPAutoremovePresentation(outputTextView: outputTextView)
+        presentation.state.logText = outputTextView.string
         self.presentation = presentation
         let host = NSHostingController(rootView: BPAutoremoveView(presentation: presentation))
         host.sizingOptions = []
@@ -2971,6 +3250,25 @@ public final class BPAutoremoveHost: NSObject {
         presentation.state.cancelButtonTitle = cancelTitle
         presentation.state.cancelEnabled = cancelEnabled
         presentation.state.isBusy = busy
+        presentation.state.logText = presentation.outputTextView.string
+    }
+
+    @objc(syncLogFromTextView)
+    public func syncLogFromTextView() {
+        presentation.state.logText = presentation.outputTextView.string
+    }
+
+    @objc
+    @discardableResult
+    public func copyOutputToPasteboard() -> String {
+        if presentation.state.logText.isEmpty && !presentation.outputTextView.string.isEmpty {
+            presentation.state.logText = presentation.outputTextView.string
+        }
+        let text = presentation.state.filteredOutputText
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        presentation.onCopyOutput?()
+        return text
     }
 }
 
@@ -2978,13 +3276,48 @@ public final class BPAutoremoveHost: NSObject {
 private struct BPAutoremoveView: View {
     @ObservedObject var presentation: BPAutoremovePresentation
 
+    private var filterBinding: Binding<String> {
+        Binding(
+            get: { presentation.state.filterQuery },
+            set: { presentation.state.filterQuery = $0 }
+        )
+    }
+
+    private func copyCurrentOutput() {
+        if presentation.state.logText.isEmpty && !presentation.outputTextView.string.isEmpty {
+            presentation.state.logText = presentation.outputTextView.string
+        }
+        let text = presentation.state.filteredOutputText
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        presentation.onCopyOutput?()
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text(presentation.state.statusText)
-                .font(.system(size: 14, weight: .bold))
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityValue(presentation.state.statusText)
-                .accessibilityIdentifier("autoremove.status")
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .center, spacing: 8) {
+                Text(presentation.state.statusText)
+                    .font(.system(size: 14, weight: .bold))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityValue(presentation.state.statusText)
+                    .accessibilityIdentifier("autoremove.status")
+
+                if presentation.state.candidateCount > 0 {
+                    Text("\(presentation.state.candidateCount)")
+                        .font(.system(.caption2, design: .monospaced).weight(.semibold))
+                        .foregroundStyle(.orange)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(
+                            Capsule(style: .continuous)
+                                .fill(Color.orange.opacity(0.14))
+                        )
+                        .accessibilityValue("\(presentation.state.candidateCount)")
+                        .accessibilityIdentifier("autoremove.candidateBadge")
+                }
+
+                Spacer()
+            }
 
             Text(presentation.state.warningText)
                 .font(.callout)
@@ -2992,8 +3325,28 @@ private struct BPAutoremoveView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityValue(presentation.state.warningText)
 
-            BPTextViewContainerRepresentable(textView: presentation.outputTextView)
-                .frame(maxWidth: .infinity, minHeight: 180, maxHeight: .infinity)
+            BPLogFilterBarView(
+                filterQuery: filterBinding,
+                matchingLineCount: presentation.state.matchingLineCount,
+                totalLineCount: presentation.state.totalLineCount,
+                filterFieldIdentifier: "autoremove.filterField",
+                lineCountIdentifier: "autoremove.lineCount",
+                copyButtonIdentifier: "autoremove.copyOutput",
+                copyEnabled: !presentation.state.logText.isEmpty || !presentation.outputTextView.string.isEmpty,
+                onCopyOutput: copyCurrentOutput
+            )
+
+            ZStack {
+                BPTextViewContainerRepresentable(textView: presentation.outputTextView)
+                    .frame(maxWidth: .infinity, minHeight: 160, maxHeight: .infinity)
+
+                if !presentation.state.trimmedFilterQuery.isEmpty {
+                    BPFilteredLogOverlayView(
+                        filteredText: presentation.state.filteredOutputText,
+                        accessibilityID: "autoremove.filteredOutput"
+                    )
+                }
+            }
 
             HStack(spacing: 12) {
                 Button(presentation.state.cancelButtonTitle) {
@@ -3040,6 +3393,7 @@ private final class BPBundleOperationPresentation: ObservableObject {
     )
     let importTextView: NSTextView
     var onAction: (() -> Void)?
+    var onCopyOutput: (() -> Void)?
 
     init(importTextView: NSTextView) {
         self.importTextView = importTextView
@@ -3052,14 +3406,38 @@ public final class BPBundleOperationHost: NSObject {
     private let presentation: BPBundleOperationPresentation
     @objc public let viewController: NSViewController
 
+    @objc public var logText: String {
+        get { presentation.state.logText }
+        set { presentation.state.logText = newValue }
+    }
+
+    @objc public var filterQuery: String {
+        get { presentation.state.filterQuery }
+        set { presentation.state.filterQuery = newValue }
+    }
+
+    @objc public var matchingLineCount: Int {
+        presentation.state.matchingLineCount
+    }
+
+    @objc public var totalLineCount: Int {
+        presentation.state.totalLineCount
+    }
+
     @objc public var onAction: (() -> Void)? {
         get { presentation.onAction }
         set { presentation.onAction = newValue }
     }
 
+    @objc public var onCopyOutput: (() -> Void)? {
+        get { presentation.onCopyOutput }
+        set { presentation.onCopyOutput = newValue }
+    }
+
     @objc(initWithImportTextView:)
     public init(importTextView: NSTextView) {
         let presentation = BPBundleOperationPresentation(importTextView: importTextView)
+        presentation.state.logText = importTextView.string
         self.presentation = presentation
         let host = NSHostingController(rootView: BPBundleOperationView(presentation: presentation))
         host.sizingOptions = []
@@ -3085,7 +3463,9 @@ public final class BPBundleOperationHost: NSObject {
             actionEnabled: actionEnabled,
             isRunning: running,
             hasFinished: !running,
-            succeeded: !running
+            succeeded: !running,
+            logText: presentation.importTextView.string,
+            filterQuery: presentation.state.filterQuery
         )
     }
 
@@ -3116,14 +3496,51 @@ public final class BPBundleOperationHost: NSObject {
             actionEnabled: actionEnabled,
             isRunning: running,
             hasFinished: finished,
-            succeeded: succeeded
+            succeeded: succeeded,
+            logText: presentation.state.logText,
+            filterQuery: presentation.state.filterQuery
         )
+    }
+
+    @objc(syncLogFromTextView)
+    public func syncLogFromTextView() {
+        presentation.state.logText = presentation.importTextView.string
+    }
+
+    @objc
+    @discardableResult
+    public func copyOutputToPasteboard() -> String {
+        if presentation.state.logText.isEmpty && !presentation.importTextView.string.isEmpty {
+            presentation.state.logText = presentation.importTextView.string
+        }
+        let text = presentation.state.filteredOutputText
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        presentation.onCopyOutput?()
+        return text
     }
 }
 
 @MainActor
 private struct BPBundleOperationView: View {
     @ObservedObject var presentation: BPBundleOperationPresentation
+
+    private var filterBinding: Binding<String> {
+        Binding(
+            get: { presentation.state.filterQuery },
+            set: { presentation.state.filterQuery = $0 }
+        )
+    }
+
+    private func copyCurrentOutput() {
+        if presentation.state.logText.isEmpty && !presentation.importTextView.string.isEmpty {
+            presentation.state.logText = presentation.importTextView.string
+        }
+        let text = presentation.state.filteredOutputText
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        presentation.onCopyOutput?()
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -3144,8 +3561,28 @@ private struct BPBundleOperationView: View {
                         .accessibilityValue(presentation.state.statusText)
                         .accessibilityIdentifier("brewfile.import.status")
 
-                    BPTextViewContainerRepresentable(textView: presentation.importTextView)
-                        .frame(maxWidth: .infinity, minHeight: 160, maxHeight: .infinity)
+                    BPLogFilterBarView(
+                        filterQuery: filterBinding,
+                        matchingLineCount: presentation.state.matchingLineCount,
+                        totalLineCount: presentation.state.totalLineCount,
+                        filterFieldIdentifier: "brewfile.import.filterField",
+                        lineCountIdentifier: "brewfile.import.lineCount",
+                        copyButtonIdentifier: "brewfile.import.copyOutput",
+                        copyEnabled: !presentation.state.logText.isEmpty || !presentation.importTextView.string.isEmpty,
+                        onCopyOutput: copyCurrentOutput
+                    )
+
+                    ZStack {
+                        BPTextViewContainerRepresentable(textView: presentation.importTextView)
+                            .frame(maxWidth: .infinity, minHeight: 150, maxHeight: .infinity)
+
+                        if !presentation.state.trimmedFilterQuery.isEmpty {
+                            BPFilteredLogOverlayView(
+                                filteredText: presentation.state.filteredOutputText,
+                                accessibilityID: "brewfile.import.filteredOutput"
+                            )
+                        }
+                    }
                 }
             } else {
                 VStack(alignment: .leading, spacing: 8) {
@@ -3406,6 +3843,7 @@ private final class BPInstallationPresentation: ObservableObject {
     let recordTextView: NSTextView
     var onCancel: (() -> Void)?
     var onOK: (() -> Void)?
+    var onCopyOutput: (() -> Void)?
 
     init(recordTextView: NSTextView) {
         self.recordTextView = recordTextView
@@ -3418,6 +3856,24 @@ public final class BPInstallationHost: NSObject {
     private let presentation: BPInstallationPresentation
     @objc public let viewController: NSViewController
 
+    @objc public var logText: String {
+        get { presentation.state.logText }
+        set { presentation.state.logText = newValue }
+    }
+
+    @objc public var filterQuery: String {
+        get { presentation.state.filterQuery }
+        set { presentation.state.filterQuery = newValue }
+    }
+
+    @objc public var matchingLineCount: Int {
+        presentation.state.matchingLineCount
+    }
+
+    @objc public var totalLineCount: Int {
+        presentation.state.totalLineCount
+    }
+
     @objc public var onCancel: (() -> Void)? {
         get { presentation.onCancel }
         set { presentation.onCancel = newValue }
@@ -3428,9 +3884,15 @@ public final class BPInstallationHost: NSObject {
         set { presentation.onOK = newValue }
     }
 
+    @objc public var onCopyOutput: (() -> Void)? {
+        get { presentation.onCopyOutput }
+        set { presentation.onCopyOutput = newValue }
+    }
+
     @objc(initWithRecordTextView:)
     public init(recordTextView: NSTextView) {
         let presentation = BPInstallationPresentation(recordTextView: recordTextView)
+        presentation.state.logText = recordTextView.string
         self.presentation = presentation
         let host = NSHostingController(rootView: BPInstallationView(presentation: presentation))
         host.sizingOptions = []
@@ -3451,8 +3913,28 @@ public final class BPInstallationHost: NSObject {
             cancelTitle: NSLocalizedString("Cancel", comment: ""),
             isRunning: running,
             okEnabled: okEnabled,
-            cancelEnabled: cancelEnabled
+            cancelEnabled: cancelEnabled,
+            logText: presentation.recordTextView.string,
+            filterQuery: presentation.state.filterQuery
         )
+    }
+
+    @objc(syncLogFromTextView)
+    public func syncLogFromTextView() {
+        presentation.state.logText = presentation.recordTextView.string
+    }
+
+    @objc
+    @discardableResult
+    public func copyOutputToPasteboard() -> String {
+        if presentation.state.logText.isEmpty && !presentation.recordTextView.string.isEmpty {
+            presentation.state.logText = presentation.recordTextView.string
+        }
+        let text = presentation.state.filteredOutputText
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        presentation.onCopyOutput?()
+        return text
     }
 }
 
@@ -3460,8 +3942,25 @@ public final class BPInstallationHost: NSObject {
 private struct BPInstallationView: View {
     @ObservedObject var presentation: BPInstallationPresentation
 
+    private var filterBinding: Binding<String> {
+        Binding(
+            get: { presentation.state.filterQuery },
+            set: { presentation.state.filterQuery = $0 }
+        )
+    }
+
+    private func copyCurrentOutput() {
+        if presentation.state.logText.isEmpty && !presentation.recordTextView.string.isEmpty {
+            presentation.state.logText = presentation.recordTextView.string
+        }
+        let text = presentation.state.filteredOutputText
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        presentation.onCopyOutput?()
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(presentation.state.windowTitle)
                     .font(.system(size: 15))
@@ -3477,10 +3976,32 @@ private struct BPInstallationView: View {
                         .accessibilityValue(presentation.state.formulaNamesText)
                         .accessibilityIdentifier("installation.target")
                 }
+
+                Spacer()
             }
 
-            BPTextViewContainerRepresentable(textView: presentation.recordTextView)
-                .frame(maxWidth: .infinity, minHeight: 164, maxHeight: .infinity)
+            BPLogFilterBarView(
+                filterQuery: filterBinding,
+                matchingLineCount: presentation.state.matchingLineCount,
+                totalLineCount: presentation.state.totalLineCount,
+                filterFieldIdentifier: "installation.filterField",
+                lineCountIdentifier: "installation.lineCount",
+                copyButtonIdentifier: "installation.copyOutput",
+                copyEnabled: !presentation.state.logText.isEmpty || !presentation.recordTextView.string.isEmpty,
+                onCopyOutput: copyCurrentOutput
+            )
+
+            ZStack {
+                BPTextViewContainerRepresentable(textView: presentation.recordTextView)
+                    .frame(maxWidth: .infinity, minHeight: 154, maxHeight: .infinity)
+
+                if !presentation.state.trimmedFilterQuery.isEmpty {
+                    BPFilteredLogOverlayView(
+                        filteredText: presentation.state.filteredOutputText,
+                        accessibilityID: "installation.filteredOutput"
+                    )
+                }
+            }
 
             HStack(spacing: 10) {
                 if presentation.state.isRunning {

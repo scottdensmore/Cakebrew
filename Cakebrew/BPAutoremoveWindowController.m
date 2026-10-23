@@ -69,11 +69,13 @@
 }
 - (void)syncAutoremoveHostState
 {
+	self.autoremoveHost.candidateCount = self.preview.valid ? (NSInteger)self.preview.names.count : 0;
 	[self.autoremoveHost updateWithStatusText:self.statusLabel.stringValue ?: @""
 								removeEnabled:self.removeButton.enabled
 								  cancelTitle:self.cancelButton.title ?: @""
 								cancelEnabled:self.cancelButton.enabled
 										 busy:self.busy];
+	[self.autoremoveHost syncLogFromTextView];
 }
 - (void)loadPreview
 {
@@ -110,7 +112,12 @@
 	[self syncAutoremoveHostState];
 	self.operation = [[BPAutoremoveOperation alloc] initWithPreview:self.preview interface:self.interface];
 	[self.outputView appendOutput:@"\n"];
-	[self.operation startWithOutput:^(NSString *chunk) { [self.outputView appendOutput:chunk]; }
+	[self.operation startWithOutput:^(NSString *chunk) {
+		[self.outputView appendOutput:chunk];
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[self.autoremoveHost syncLogFromTextView];
+		});
+	}
 	completion:^(BOOL success, BOOL cancelled, BOOL attempted, NSString *message) {
 		[self.outputView flushPendingOutput];
 		self.cancelButton.enabled = NO;

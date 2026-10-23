@@ -101,18 +101,24 @@
 	[self.doctorTextView clearOutput];
 	self.isPerformingDoctor = YES;
 	self.consoleHost.isRunning = YES;
+	[self.consoleHost syncLogFromTextView];
 	[self.progressIndicator startAnimation:sender];
 
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
 		[[BPHomebrewInterface sharedInterface] runDoctorWithReturnBlock:^(NSString *output) {
 			[self.doctorTextView appendOutput:output];
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[self.consoleHost syncLogFromTextView];
+			});
 		}];
 		
 		dispatch_async(dispatch_get_main_queue(), ^{
 			NSLog(@"Finished doctor");
+			[self.doctorTextView flushPendingOutput];
 			[self.progressIndicator stopAnimation:sender];
 			self.isPerformingDoctor = NO;
 			self.consoleHost.isRunning = NO;
+			[self.consoleHost syncLogFromTextView];
 			[appDelegate setRunningBackgroundTask:NO];
 			
 			NSString *title = NSLocalizedString(@"Homebrew_Task_Finished", nil);
@@ -123,7 +129,9 @@
 }
 
 - (IBAction)clearLogDoctor:(id)sender {
+	[self.doctorTextView clearOutput];
 	self.doctorTextView.string = @"";
+	[self.consoleHost syncLogFromTextView];
 }
 
 @end
