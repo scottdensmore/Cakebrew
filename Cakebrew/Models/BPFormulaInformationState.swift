@@ -1742,7 +1742,7 @@ public struct BPCleanupPreviewState: Equatable, Sendable {
 // MARK: - Swift 6 Core Models & Utilities
 
 @objc(BPAutoremovePreview)
-public final class BPAutoremovePreview: NSObject {
+public final class BPAutoremovePreview: NSObject, @unchecked Sendable {
     @objc public private(set) var valid: Bool = false
     @objc public private(set) var names: [String] = []
     @objc public private(set) var rawOutput: String = ""
@@ -1851,7 +1851,7 @@ public final class BPTimedDispatch: NSObject, @unchecked Sendable {
     }
 
     @objc private func dispatchBlockTimerDidFire(_ sender: Timer) {
-        let localBlock = scheduledBlock
+        nonisolated(unsafe) let localBlock = scheduledBlock
         scheduledBlock = nil
         let queue = dispatchQueue
         queue.async {
@@ -1912,6 +1912,7 @@ public final class BPSearchCoordinator: NSObject, @unchecked Sendable {
         searching = true
     }
 
+    @discardableResult
     @objc(endSearchReturningSidebarRow)
     public func endSearchReturningSidebarRow() -> Int {
         precondition(Thread.isMainThread, "Search coordination must run on the main thread")
@@ -2090,7 +2091,7 @@ public final class BPBrewfileEntry: NSObject {
 }
 
 @objc(BPBrewfilePlan)
-public final class BPBrewfilePlan: NSObject {
+public final class BPBrewfilePlan: NSObject, @unchecked Sendable {
     @objc public private(set) var entries: [BPBrewfileEntry] = []
     @objc public private(set) var diagnostics: [String] = []
     @objc public private(set) var canonicalContents: String?
@@ -2674,3 +2675,1121 @@ public final class BPServiceDetails: NSObject {
         return number.doubleValue == Double(number.int64Value) ? number : nil
     }
 }
+
+// MARK: - Objective-C Runtime Bridges for Remaining Legacy Classes
+
+@objc public protocol BPFormulaObjCBridge: NSObjectProtocol {
+    var name: String? { get }
+    var version: String? { get }
+    var latestVersion: String? { get }
+    var shortLatestVersion: String? { get }
+    var information: String? { get }
+    var installPath: String? { get }
+    var dependencies: String? { get }
+    var conflicts: String? { get }
+    var shortDescription: String? { get }
+    var website: URL? { get }
+    var options: [Any]? { get }
+    var needsInformation: Bool { get set }
+    var cask: Bool { get set }
+    @objc(installedName) func installedName() -> String?
+    @objc(isInstalled) func isInstalled() -> Bool
+    @objc(isOutdated) func isOutdated() -> Bool
+}
+
+@objc public protocol BPFormulaClassObjCBridge: NSObjectProtocol {
+    @objc(formulaWithName:version:andLatestVersion:)
+    func formula(withName name: String, version: String?, andLatestVersion latestVersion: String?) -> AnyObject?
+    @objc(formulaWithName:andVersion:)
+    func formula(withName name: String, andVersion version: String?) -> AnyObject?
+    @objc(formulaWithName:)
+    func formula(withName name: String) -> AnyObject?
+    @objc(namesFromListOutput:)
+    func names(fromListOutput output: String?) -> [String]?
+}
+
+@objc public protocol BPHomebrewInterfaceObjCBridge: NSObjectProtocol {
+    var brewTransport: Int { get set }
+    @objc(runBrewExportToolWithPath:)
+    func runBrewExportTool(withPath path: String) -> NSError?
+    @objc(runBrewImportToolWithPath:progress:withReturnsBlock:)
+    func runBrewImportTool(withPath path: String, progress: Progress, withReturnsBlock block: @escaping @Sendable (String) -> Void) -> Bool
+    @objc(previewAutoremoveWithProgress:)
+    func previewAutoremove(withProgress progress: Progress) -> BPAutoremovePreview?
+    @objc(removeUnusedFormulae:progress:output:)
+    func removeUnusedFormulae(_ names: [String], progress: Progress, output: @escaping @Sendable (String) -> Void) -> Bool
+    @objc(runDoctorWithReturnBlock:)
+    func runDoctor(withReturnBlock block: @escaping @Sendable (String) -> Void) -> Bool
+    @objc(updateWithReturnBlock:)
+    func update(withReturnBlock block: @escaping @Sendable (String) -> Void) -> Bool
+    @objc(dependantsForFormulaName:onlyInstalled:)
+    func dependants(forFormulaName name: String, onlyInstalled: Bool) -> String?
+}
+
+@objc public protocol BPHomebrewInterfaceClassObjCBridge: NSObjectProtocol {
+    @objc(sharedInterface)
+    func sharedInterface() -> AnyObject?
+}
+
+@objc public protocol BPHomebrewManagerObjCBridge: NSObjectProtocol {
+    var installedFormulae: [Any]? { get }
+    var outdatedFormulae: [Any]? { get }
+    var allFormulae: [Any]? { get }
+    var leavesFormulae: [Any]? { get }
+    var searchFormulae: [Any]? { get }
+    var repositoriesFormulae: [Any]? { get }
+    var pinnedFormulae: [Any]? { get }
+    var installedCasks: [Any]? { get }
+    var outdatedCasks: [Any]? { get }
+    var allCasks: [Any]? { get }
+    @objc(statusForFormula:)
+    func status(forFormula formula: AnyObject) -> Int
+    @objc(isFormulaPinned:)
+    func isFormulaPinned(_ formula: AnyObject) -> Bool
+    @objc(refreshFormulaStateAfterRemovalWithCompletion:)
+    func refreshFormulaStateAfterRemoval(withCompletion completion: @escaping @Sendable (Bool) -> Void)
+}
+
+@objc public protocol BPHomebrewManagerClassObjCBridge: NSObjectProtocol {
+    @objc(sharedManager)
+    func sharedManager() -> AnyObject?
+}
+
+@inline(__always)
+public func bpAsFormula(_ object: Any?) -> BPFormulaObjCBridge? {
+    guard let obj = object as AnyObject?,
+          let formulaClass = NSClassFromString("BPFormula"),
+          obj.isKind(of: formulaClass) else {
+        return nil
+    }
+    return unsafeBitCast(obj, to: BPFormulaObjCBridge.self)
+}
+
+@inline(__always)
+public func bpFormulaClass() -> BPFormulaClassObjCBridge? {
+    guard let formulaClass = NSClassFromString("BPFormula") else { return nil }
+    return unsafeBitCast(formulaClass as AnyObject, to: BPFormulaClassObjCBridge.self)
+}
+
+@inline(__always)
+public func bpAsHomebrewInterface(_ object: Any?) -> BPHomebrewInterfaceObjCBridge? {
+    guard let obj = object as AnyObject? else { return nil }
+    return unsafeBitCast(obj, to: BPHomebrewInterfaceObjCBridge.self)
+}
+
+@inline(__always)
+public func bpSharedHomebrewInterface() -> BPHomebrewInterfaceObjCBridge? {
+    guard let cls = NSClassFromString("BPHomebrewInterface") else { return nil }
+    let classBridge = unsafeBitCast(cls as AnyObject, to: BPHomebrewInterfaceClassObjCBridge.self)
+    return bpAsHomebrewInterface(classBridge.sharedInterface())
+}
+
+@inline(__always)
+public func bpAsHomebrewManager(_ object: Any?) -> BPHomebrewManagerObjCBridge? {
+    guard let obj = object as AnyObject? else { return nil }
+    return unsafeBitCast(obj, to: BPHomebrewManagerObjCBridge.self)
+}
+
+@inline(__always)
+public func bpSharedHomebrewManager() -> BPHomebrewManagerObjCBridge? {
+    guard let cls = NSClassFromString("BPHomebrewManager") else { return nil }
+    let classBridge = unsafeBitCast(cls as AnyObject, to: BPHomebrewManagerClassObjCBridge.self)
+    return bpAsHomebrewManager(classBridge.sharedManager())
+}
+
+// MARK: - Migrated Operations, Snapshot, Upgrade Plan & Table Action Policy (Swift 6)
+
+@objc(BPBrewfileExportOperation)
+public final class BPBrewfileExportOperation: NSObject, @unchecked Sendable {
+    @objc public private(set) var running: Bool = false
+    @objc public func isRunning() -> Bool { running }
+
+    private let url: URL?
+    private let interfaceObject: AnyObject?
+    private var started: Bool = false
+
+    @objc(exportURLForSaveResponse:URL:)
+    public static func exportURL(forSaveResponse response: Int, url: URL?) -> URL? {
+        guard response == 1, let url, url.isFileURL else { return nil }
+        return url
+    }
+
+    @objc(initWithURL:interface:)
+    public init(url: URL?, interface: Any?) {
+        self.url = url
+        self.interfaceObject = interface as AnyObject?
+        super.init()
+    }
+
+    @objc(startWithCompletion:)
+    public func start(withCompletion completion: (@Sendable (NSError?) -> Void)?) {
+        precondition(Thread.isMainThread, "Export starts on the main thread")
+        guard !started else { return }
+        started = true
+        running = true
+        let path = url?.path ?? ""
+        nonisolated(unsafe) let iface = interfaceObject
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let error = bpAsHomebrewInterface(iface)?.runBrewExportTool(withPath: path)
+            DispatchQueue.main.async {
+                self?.running = false
+                completion?(error)
+            }
+        }
+    }
+}
+
+@objc(BPBrewfileImportOperation)
+public final class BPBrewfileImportOperation: NSObject, @unchecked Sendable {
+    @objc public private(set) var running: Bool = false
+    @objc public func isRunning() -> Bool { running }
+
+    private let plan: BPBrewfilePlan?
+    private let interfaceObject: AnyObject?
+    private let progress: Progress
+    private let stateLock = NSLock()
+    private var started: Bool = false
+
+    @objc(initWithPlan:interface:)
+    public init(plan: BPBrewfilePlan?, interface: Any?) {
+        self.plan = plan
+        self.interfaceObject = interface as AnyObject?
+        self.progress = Progress(totalUnitCount: 1)
+        super.init()
+    }
+
+    @objc(startWithOutput:completion:)
+    public func start(
+        withOutput output: (@Sendable (String) -> Void)?,
+        completion: (@Sendable (Bool, Bool, NSError?) -> Void)?
+    ) {
+        stateLock.lock()
+        if started {
+            stateLock.unlock()
+            return
+        }
+        started = true
+        running = true
+        stateLock.unlock()
+
+        let plan = self.plan
+        nonisolated(unsafe) let iface = self.interfaceObject
+        let progress = self.progress
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            var error: NSError?
+            var snapshot: URL?
+            var success = false
+
+            if let bridge = bpAsHomebrewInterface(iface) {
+                if bridge.brewTransport != 0 {
+                    error = NSError(
+                        domain: "Cakebrew.Brewfile",
+                        code: 1,
+                        userInfo: [
+                            NSLocalizedDescriptionKey: NSLocalizedString(
+                                "Reviewed import requires the standard, non-sandboxed Cakebrew app. Helper transport is not supported.",
+                                comment: ""
+                            )
+                        ]
+                    )
+                } else if !progress.isCancelled && (plan?.canInstall == true) {
+                    do {
+                        snapshot = try plan?.createSnapshot()
+                    } catch let err as NSError {
+                        error = err
+                    }
+                    if let snapshot, !progress.isCancelled {
+                        success = bridge.runBrewImportTool(withPath: snapshot.path, progress: progress) { chunk in
+                            if let output {
+                                DispatchQueue.main.async {
+                                    output(chunk)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            BPBrewfilePlan.removeSnapshot(snapshot)
+            DispatchQueue.main.async {
+                self?.running = false
+                let cancelled = progress.isCancelled
+                completion?(success && !cancelled, cancelled, error)
+            }
+        }
+    }
+
+    @objc public func cancel() {
+        stateLock.lock()
+        let shouldCancel = !started || running
+        stateLock.unlock()
+        if shouldCancel {
+            progress.cancel()
+        }
+    }
+}
+
+@objc(BPAutoremoveOperation)
+public final class BPAutoremoveOperation: NSObject, @unchecked Sendable {
+    @objc public private(set) var running: Bool = false
+    @objc public func isRunning() -> Bool { running }
+
+    private let preview: BPAutoremovePreview?
+    private let interfaceObject: AnyObject?
+    private let progress: Progress
+    private let stateLock = NSLock()
+    private var started: Bool = false
+    private var workerFinished: Bool = false
+
+    @objc(initWithPreview:interface:)
+    public init(preview: BPAutoremovePreview?, interface: Any?) {
+        self.preview = preview
+        self.interfaceObject = interface as AnyObject?
+        self.progress = Progress(totalUnitCount: 1)
+        super.init()
+    }
+
+    @objc(startWithOutput:completion:)
+    public func start(
+        withOutput output: (@Sendable (String) -> Void)?,
+        completion: (@Sendable (Bool, Bool, Bool, String) -> Void)?
+    ) {
+        stateLock.lock()
+        if started {
+            stateLock.unlock()
+            return
+        }
+        started = true
+        running = true
+        stateLock.unlock()
+
+        let preview = self.preview
+        nonisolated(unsafe) let iface = self.interfaceObject
+        let progress = self.progress
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            var success = false
+            var attempted = false
+            var message = NSLocalizedString(
+                "The unused dependency list changed or could not be verified. Nothing was removed. Close this window and review a new preview.",
+                comment: ""
+            )
+
+            if let bridge = bpAsHomebrewInterface(iface),
+               let preview,
+               bridge.brewTransport == 0,
+               preview.valid,
+               !preview.names.isEmpty,
+               !progress.isCancelled {
+                let fresh = bridge.previewAutoremove(withProgress: progress)
+                if let output, let raw = fresh?.rawOutput, !raw.isEmpty {
+                    DispatchQueue.main.async {
+                        output(raw)
+                    }
+                }
+                if let fresh,
+                   fresh.valid,
+                   Set(fresh.names) == Set(preview.names),
+                   !progress.isCancelled {
+                    attempted = true
+                    success = bridge.removeUnusedFormulae(preview.names, progress: progress) { chunk in
+                        if let output {
+                            DispatchQueue.main.async {
+                                output(chunk)
+                            }
+                        }
+                    }
+                    message = success
+                        ? NSLocalizedString("Reviewed unused dependencies were removed.", comment: "")
+                        : NSLocalizedString("Removal failed. Packages may have been partially removed. The formula and service lists will be refreshed.", comment: "")
+                }
+            }
+
+            var cancelled = false
+            if let self {
+                self.stateLock.lock()
+                self.workerFinished = true
+                cancelled = progress.isCancelled
+                self.stateLock.unlock()
+            } else {
+                cancelled = progress.isCancelled
+            }
+
+            if cancelled {
+                message = attempted
+                    ? NSLocalizedString("Removal cancelled. Packages may have been partially removed. The formula and service lists will be refreshed.", comment: "")
+                    : NSLocalizedString("Cancelled before removal. Nothing was removed.", comment: "")
+            }
+
+            DispatchQueue.main.async {
+                self?.running = false
+                completion?(success && !cancelled, cancelled, attempted, message)
+            }
+        }
+    }
+
+    @objc public func cancel() {
+        stateLock.lock()
+        if !workerFinished {
+            progress.cancel()
+        }
+        stateLock.unlock()
+    }
+}
+
+@objc(BPUpdateItem)
+public final class BPUpdateItem: NSObject, Sendable {
+    @objc public let name: String
+    @objc public let version: String
+    @objc public let latestVersion: String
+    @objc public let cask: Bool
+
+    @objc public init(name: String, version: String, latestVersion: String, cask: Bool) {
+        self.name = name
+        self.version = version
+        self.latestVersion = latestVersion
+        self.cask = cask
+        super.init()
+    }
+
+    @objc(itemsFromFormulae:cask:)
+    public static func items(fromFormulae formulae: [Any], cask: Bool) -> [BPUpdateItem] {
+        var items: [BPUpdateItem] = []
+        items.reserveCapacity(formulae.count)
+        for element in formulae {
+            guard let formula = bpAsFormula(element) else { continue }
+            items.append(BPUpdateItem(
+                name: formula.name ?? "",
+                version: formula.version ?? "",
+                latestVersion: formula.latestVersion ?? "",
+                cask: cask
+            ))
+        }
+        return items
+    }
+}
+
+@objc(BPUpdatesSnapshot)
+public final class BPUpdatesSnapshot: NSObject, Sendable {
+    @objc public let generation: UInt
+    @objc public let formulae: [BPUpdateItem]
+    @objc public let casks: [BPUpdateItem]
+    @objc public let pinnedFormulaNames: [String]
+    @objc public let pinnedCaskNames: [String]
+    @objc public let eligibleFormulae: [String]
+    @objc public let eligibleCasks: [String]
+    @objc public let excludedFormulae: [String]
+    @objc public let excludedCasks: [String]
+
+    @objc(initWithGeneration:formulaItems:caskItems:pinnedFormulaNames:pinnedCaskNames:)
+    public init?(
+        generation: UInt,
+        formulaItems: [BPUpdateItem]?,
+        caskItems: [BPUpdateItem]?,
+        pinnedFormulaNames: [String]?,
+        pinnedCaskNames: [String]?
+    ) {
+        guard let formulaItems, let caskItems, let pinnedFormulaNames, let pinnedCaskNames else {
+            return nil
+        }
+        var eligFormulae: [String] = []
+        var eligCasks: [String] = []
+        var exclFormulae: [String] = []
+        var exclCasks: [String] = []
+
+        for isCask in [false, true] {
+            let pins = isCask ? pinnedCaskNames : pinnedFormulaNames
+            let tokens = Set(pins.map { ($0 as NSString).lastPathComponent })
+            var seen = Set<String>()
+            for item in (isCask ? caskItems : formulaItems) {
+                let name = item.name
+                if name.isEmpty || name != name.trimmingCharacters(in: .whitespacesAndNewlines) {
+                    return nil
+                }
+                if seen.contains(name) { continue }
+                seen.insert(name)
+                let pinned = tokens.contains((name as NSString).lastPathComponent)
+                if isCask {
+                    if pinned { exclCasks.append(name) } else { eligCasks.append(name) }
+                } else {
+                    if pinned { exclFormulae.append(name) } else { eligFormulae.append(name) }
+                }
+            }
+        }
+
+        self.generation = generation
+        self.formulae = formulaItems
+        self.casks = caskItems
+        self.pinnedFormulaNames = pinnedFormulaNames
+        self.pinnedCaskNames = pinnedCaskNames
+        self.eligibleFormulae = eligFormulae
+        self.eligibleCasks = eligCasks
+        self.excludedFormulae = exclFormulae
+        self.excludedCasks = exclCasks
+        super.init()
+    }
+
+    @objc(initWithGeneration:formulae:casks:pinnedFormulae:pinnedCasks:)
+    public convenience init?(
+        generation: UInt,
+        formulae: [Any]?,
+        casks: [Any]?,
+        pinnedFormulae: [Any]?,
+        pinnedCasks: [Any]?
+    ) {
+        let fItems = formulae.map { BPUpdateItem.items(fromFormulae: $0, cask: false) }
+        let cItems = casks.map { BPUpdateItem.items(fromFormulae: $0, cask: true) }
+        let fPins = pinnedFormulae?.compactMap { bpAsFormula($0)?.name }
+        let cPins = pinnedCasks?.compactMap { bpAsFormula($0)?.name }
+        self.init(
+            generation: generation,
+            formulaItems: fItems,
+            caskItems: cItems,
+            pinnedFormulaNames: fPins,
+            pinnedCaskNames: cPins
+        )
+    }
+
+    @objc public var hasEligibleUpdates: Bool {
+        eligibleFormulae.count + eligibleCasks.count > 0
+    }
+
+    @objc public func eligibleSelection() -> [Any] {
+        guard let formulaCls = bpFormulaClass() else { return [] }
+        var selection: [Any] = []
+        var seen = Set<String>()
+        let eligFormulaSet = Set(eligibleFormulae)
+        let eligCaskSet = Set(eligibleCasks)
+        for item in formulae + casks {
+            let identity = "\(item.cask ? 1 : 0):\(item.name)"
+            if seen.contains(identity) { continue }
+            seen.insert(identity)
+            if item.cask {
+                if !eligCaskSet.contains(item.name) { continue }
+            } else {
+                if !eligFormulaSet.contains(item.name) { continue }
+            }
+            if let obj = formulaCls.formula(withName: item.name, version: item.version, andLatestVersion: item.latestVersion),
+               let formula = bpAsFormula(obj) {
+                formula.cask = item.cask
+                selection.append(obj)
+            }
+        }
+        return selection
+    }
+}
+
+@objc(BPUpgradeBatchStatus)
+public enum BPUpgradeBatchStatus: UInt {
+    @objc(BPUpgradeBatchUnattempted) case unattempted = 0
+    @objc(BPUpgradeBatchSucceeded) case succeeded = 1
+    @objc(BPUpgradeBatchFailed) case failed = 2
+    @objc(BPUpgradeBatchCancelled) case cancelled = 3
+}
+
+@objc(BPUpgradeBatchResult)
+public final class BPUpgradeBatchResult: NSObject, @unchecked Sendable {
+    @objc public internal(set) var arguments: [String] = []
+    @objc public internal(set) var status: BPUpgradeBatchStatus = .unattempted
+}
+
+@objc(BPUpgradeResult)
+public final class BPUpgradeResult: NSObject, @unchecked Sendable {
+    @objc public internal(set) var batches: [BPUpgradeBatchResult] = []
+    @objc public internal(set) var cancelled: Bool = false
+
+    @objc public var succeeded: Bool {
+        guard !batches.isEmpty && !cancelled else { return false }
+        for batch in batches where batch.status != .succeeded {
+            return false
+        }
+        return true
+    }
+
+    @objc public var attempted: Bool {
+        for batch in batches where batch.status != .unattempted {
+            return true
+        }
+        return false
+    }
+}
+
+@objc(BPUpgradePlan)
+public final class BPUpgradePlan: NSObject, Sendable {
+    private let batches: [[String]]
+
+    @objc(initWithSelection:)
+    public init(selection: [Any]) {
+        var formulae = ["upgrade", "--formula"]
+        var casks = ["upgrade", "--cask"]
+        var valid = true
+
+        for element in selection {
+            guard let formula = bpAsFormula(element),
+                  let rawName = formula.name else {
+                valid = false
+                break
+            }
+            let name = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
+            if name.isEmpty {
+                valid = false
+                break
+            }
+            if formula.cask {
+                casks.append(name)
+            } else {
+                formulae.append(name)
+            }
+        }
+
+        if valid {
+            var planned: [[String]] = []
+            if formulae.count > 2 { planned.append(formulae) }
+            if casks.count > 2 { planned.append(casks) }
+            self.batches = planned
+        } else {
+            self.batches = []
+        }
+        super.init()
+    }
+
+    @discardableResult
+    @objc(executeWithProgress:runner:)
+    public func execute(withProgress progress: Progress, runner: ([String]) -> Bool) -> Bool {
+        executeReporting(withProgress: progress, runner: runner).succeeded
+    }
+
+    @objc(executeReportingWithProgress:runner:)
+    public func executeReporting(withProgress progress: Progress, runner: ([String]) -> Bool) -> BPUpgradeResult {
+        var results: [BPUpgradeBatchResult] = []
+        var stopped = progress.isCancelled
+        for arguments in batches {
+            let batch = BPUpgradeBatchResult()
+            batch.arguments = arguments
+            batch.status = .unattempted
+            if !stopped && !progress.isCancelled {
+                let succeeded = runner(arguments)
+                batch.status = progress.isCancelled ? .cancelled : (succeeded ? .succeeded : .failed)
+                stopped = (batch.status != .succeeded)
+            }
+            results.append(batch)
+        }
+        let result = BPUpgradeResult()
+        result.batches = results
+        result.cancelled = progress.isCancelled
+        return result
+    }
+}
+
+@objc(FormulaeSideBarItem)
+public enum FormulaeSideBarItem: UInt {
+    @objc(FormulaeSideBarItemFormulaeCategory) case formulaeCategory = 0
+    @objc(FormulaeSideBarItemInstalled) case installed = 1
+    @objc(FormulaeSideBarItemOutdated) case outdated = 2
+    @objc(FormulaeSideBarItemAll) case all = 3
+    @objc(FormulaeSideBarItemLeaves) case leaves = 4
+    @objc(FormulaeSideBarItemPinned) case pinned = 5
+    @objc(FormulaeSideBarItemRepositories) case repositories = 6
+    @objc(FormulaeSideBarItemCasksCategory) case casksCategory = 7
+    @objc(FormulaeSideBarItemInstalledCasks) case installedCasks = 8
+    @objc(FormulaeSideBarItemOutdatedCasks) case outdatedCasks = 9
+    @objc(FormulaeSideBarItemAllCasks) case allCasks = 10
+    @objc(FormulaeSideBarItemToolsCategory) case toolsCategory = 11
+    @objc(FormulaeSideBarItemDoctor) case doctor = 12
+    @objc(FormulaeSideBarItemUpdate) case update = 13
+    @objc(FormulaeSideBarItemServices) case services = 14
+    @objc(FormulaeSideBarItemUnifiedUpdates) case unifiedUpdates = 15
+}
+
+@objc(BPFormulaInfoType)
+public enum BPFormulaInfoType: Int {
+    @objc(kBPFormulaInfoTypeGeneral) case general = 0
+    @objc(kBPFormulaInfoTypeInstalledDependents) case installedDependents = 1
+    @objc(kBPFormulaInfoTypeAllDependents) case allDependents = 2
+}
+
+@objc(BPFormulaeTableAction)
+public enum BPFormulaeTableAction: Int {
+    @objc(BPFormulaeTableActionNone) case none = 0
+    @objc(BPFormulaeTableActionInstall) case install = 1
+    @objc(BPFormulaeTableActionUpgrade) case upgrade = 2
+    @objc(BPFormulaeTableActionInfo) case info = 3
+    @objc(BPFormulaeTableActionUninstall) case uninstall = 4
+}
+
+@objc(BPFormulaeTableActions)
+public final class BPFormulaeTableActions: NSObject {
+    // BPListMode raw constants
+    private static let modeAll = 0
+    private static let modeInstalled = 1
+    private static let modeLeaves = 2
+    private static let modeOutdated = 3
+    private static let modeSearch = 4
+    private static let modeRepositories = 5
+    private static let modePinned = 6
+    private static let modeInstalledCasks = 7
+    private static let modeOutdatedCasks = 8
+    private static let modeAllCasks = 9
+
+    // BPFormulaStatus raw constants
+    private static let statusNotInstalled = 0
+    private static let statusInstalled = 1
+    private static let statusOutdated = 2
+
+    // BPFormulaeTableRequest raw constants
+    private static let requestPrimary = 0
+    private static let requestUninstall = 1
+
+    @objc(actionForRequest:mode:formulae:statuses:)
+    public static func action(
+        forRequest request: Int,
+        mode: Int,
+        formulae: [Any]?,
+        statuses: [Any]?
+    ) -> BPFormulaeTableAction {
+        guard let formulae, let statuses,
+              !formulae.isEmpty,
+              formulae.count == statuses.count,
+              mode >= modeAll,
+              mode <= modeAllCasks,
+              mode != modeRepositories else {
+            return .none
+        }
+
+        let outdatedList = (mode == modeOutdated || mode == modeOutdatedCasks)
+        let installedList = (mode == modeInstalled || mode == modeInstalledCasks || mode == modeLeaves || mode == modePinned)
+        let caskList = (mode == modeAllCasks || mode == modeInstalledCasks || mode == modeOutdatedCasks)
+
+        var parsedStatuses: [Int] = []
+        parsedStatuses.reserveCapacity(formulae.count)
+
+        for index in 0..<formulae.count {
+            guard let formula = bpAsFormula(formulae[index]),
+                  let name = formula.name, !name.isEmpty,
+                  let number = statuses[index] as? NSNumber else {
+                return .none
+            }
+            let status = number.intValue
+            if status < statusNotInstalled || status > statusOutdated
+                || (mode != modeSearch && formula.cask != caskList)
+                || (outdatedList && status != statusOutdated)
+                || (installedList && status == statusNotInstalled) {
+                return .none
+            }
+            parsedStatuses.append(status)
+        }
+
+        if request == requestUninstall {
+            return (formulae.count == 1 && parsedStatuses[0] != statusNotInstalled) ? .uninstall : .none
+        }
+        if request != requestPrimary {
+            return .none
+        }
+        if outdatedList {
+            return .upgrade
+        }
+        if formulae.count != 1 {
+            return .none
+        }
+        if mode == modeInstalled || mode == modeInstalledCasks {
+            return .info
+        }
+        if (mode == modeAll || mode == modeAllCasks) && parsedStatuses[0] == statusNotInstalled {
+            return .install
+        }
+        return .none
+    }
+
+    @objc(toolbarModeForSidebarRow:selectedCount:selectedFormulaStatus:)
+    public static func toolbarMode(
+        forSidebarRow sidebarRow: Int,
+        selectedCount: UInt,
+        selectedFormulaStatus status: Int
+    ) -> BPToolbarMode {
+        if sidebarRow == Int(FormulaeSideBarItem.repositories.rawValue) {
+            return selectedCount > 0 ? .untap : .tap
+        }
+        if sidebarRow == Int(FormulaeSideBarItem.unifiedUpdates.rawValue) {
+            if selectedCount == 0 {
+                return .default
+            }
+            return selectedCount > 1 ? .updateMany : .updateSingle
+        }
+        if sidebarRow == Int(FormulaeSideBarItem.installedCasks.rawValue)
+            || sidebarRow == Int(FormulaeSideBarItem.outdatedCasks.rawValue)
+            || sidebarRow == Int(FormulaeSideBarItem.allCasks.rawValue) {
+            if selectedCount == 0 {
+                return .default
+            }
+            if sidebarRow == Int(FormulaeSideBarItem.outdatedCasks.rawValue) {
+                return selectedCount > 1 ? .updateMany : .updateSingle
+            }
+            if sidebarRow == Int(FormulaeSideBarItem.allCasks.rawValue) {
+                return status == statusNotInstalled ? .install : .uninstall
+            }
+            return .uninstall
+        }
+        if selectedCount == 0 || sidebarRow < 0 || sidebarRow > Int(FormulaeSideBarItem.toolsCategory.rawValue) {
+            return .default
+        }
+        if selectedCount > 1 {
+            return .updateMany
+        }
+        switch status {
+        case statusInstalled:
+            return .uninstall
+        case statusOutdated:
+            return sidebarRow == Int(FormulaeSideBarItem.outdated.rawValue) ? .updateSingle : .uninstall
+        case statusNotInstalled:
+            return .install
+        default:
+            return .default
+        }
+    }
+
+    @objc(shouldShowFormulaInfoForSidebarRow:)
+    public static func shouldShowFormulaInfo(forSidebarRow sidebarRow: Int) -> Bool {
+        sidebarRow != Int(FormulaeSideBarItem.repositories.rawValue)
+    }
+
+    @objc(footerLocalizationKeyForSidebarRow:searching:)
+    public static func footerLocalizationKey(forSidebarRow sidebarRow: Int, searching: Bool) -> String? {
+        if searching {
+            return "Sidebar_Info_SearchResults"
+        }
+        return sidebarInfoKey(forRow: sidebarRow)
+    }
+
+    @objc(sidebarInfoKeyForRow:)
+    public static func sidebarInfoKey(forRow row: Int) -> String? {
+        guard row >= 0, let item = FormulaeSideBarItem(rawValue: UInt(row)) else { return nil }
+        switch item {
+        case .installed:      return "Sidebar_Info_Installed"
+        case .outdated:       return "Sidebar_Info_Outdated"
+        case .all:            return "Sidebar_Info_All"
+        case .leaves:         return "Sidebar_Info_Leaves"
+        case .pinned:         return "Sidebar_Info_Pinned"
+        case .repositories:   return "Sidebar_Info_Repos"
+        case .installedCasks: return "Sidebar_Info_Casks"
+        case .outdatedCasks:  return "Sidebar_Info_OutdatedCasks"
+        case .allCasks:       return "Sidebar_Info_AllCasks"
+        case .doctor:         return "Sidebar_Info_Doctor"
+        case .update:         return "Sidebar_Info_Update"
+        case .services:       return "Sidebar_Info_Services"
+        case .unifiedUpdates: return "Sidebar_Info_Unified_Updates"
+        case .formulaeCategory, .casksCategory, .toolsCategory:
+            return nil
+        }
+    }
+
+    @objc(shouldRefreshVisibleListForPublishedMode:activeMode:isLoading:)
+    public static func shouldRefreshVisibleList(
+        forPublishedMode publishedMode: Int,
+        activeMode: Int,
+        isLoading: Bool
+    ) -> Bool {
+        !isLoading && activeMode == publishedMode
+    }
+
+    @objc(shouldSyncInstalledHostMetadataForPublishedMode:activeMode:isLoading:isUsingInstalledHost:)
+    public static func shouldSyncInstalledHostMetadata(
+        forPublishedMode publishedMode: Int,
+        activeMode: Int,
+        isLoading: Bool,
+        isUsingInstalledHost: Bool
+    ) -> Bool {
+        !isLoading
+            && isUsingInstalledHost
+            && activeMode != publishedMode
+            && (publishedMode == modePinned
+                || publishedMode == modeOutdated
+                || publishedMode == modeOutdatedCasks)
+    }
+
+    @objc(shouldSyncUnifiedUpdatesForPublishedMode:isLoading:isUsingUnifiedUpdatesHost:)
+    public static func shouldSyncUnifiedUpdates(
+        forPublishedMode publishedMode: Int,
+        isLoading: Bool,
+        isUsingUnifiedUpdatesHost: Bool
+    ) -> Bool {
+        !isLoading
+            && isUsingUnifiedUpdatesHost
+            && (publishedMode == modeOutdated
+                || publishedMode == modeOutdatedCasks
+                || publishedMode == modePinned)
+    }
+}
+
+@_silgen_name("objc_sync_enter")
+private func bpObjCSyncEnter(_ obj: AnyObject) -> Int32
+
+@_silgen_name("objc_sync_exit")
+private func bpObjCSyncExit(_ obj: AnyObject) -> Int32
+
+private func bpSynchronized<T>(_ obj: AnyObject?, _ body: () throws -> T) rethrows -> T {
+    if let obj {
+        _ = bpObjCSyncEnter(obj)
+    }
+    defer {
+        if let obj {
+            _ = bpObjCSyncExit(obj)
+        }
+    }
+    return try body()
+}
+
+private final class BPUTF8StreamRelay: @unchecked Sendable {
+    private let lock = NSLock()
+    private let accumulated = NSMutableData()
+    private let undecoded = NSMutableData()
+    private let sink: @Sendable (String) -> Void
+
+    init(sink: @escaping @Sendable (String) -> Void) {
+        self.sink = sink
+    }
+
+    func append(_ data: Data) {
+        guard !data.isEmpty else { return }
+        lock.lock()
+        defer { lock.unlock() }
+        accumulated.append(data)
+        undecoded.append(data)
+        guard let chunk = String(data: undecoded as Data, encoding: .utf8) else {
+            return
+        }
+        undecoded.length = 0
+        if !chunk.isEmpty {
+            sink(chunk)
+        }
+    }
+
+    var accumulatedOutput: String {
+        lock.lock()
+        defer { lock.unlock() }
+        return String(data: accumulated as Data, encoding: .utf8) ?? ""
+    }
+}
+
+private enum BPProcessTreeSwift {
+    static func descendants(ofProcess pid: pid_t) -> [NSNumber] {
+        let pgrep = Process()
+        pgrep.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
+        pgrep.arguments = ["-P", "\(pid)"]
+        let pipe = Pipe()
+        pgrep.standardOutput = pipe
+        pgrep.standardError = Pipe()
+
+        do {
+            try pgrep.run()
+        } catch {
+            return []
+        }
+
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        pgrep.waitUntilExit()
+
+        let output = String(data: data, encoding: .utf8) ?? ""
+        var pids: [NSNumber] = []
+        for line in output.components(separatedBy: .newlines) {
+            if let child = pid_t(line.trimmingCharacters(in: .whitespaces)), child > 0 {
+                pids.append(contentsOf: descendants(ofProcess: child))
+                pids.append(NSNumber(value: child))
+            }
+        }
+        return pids
+    }
+
+    static func terminateProcesses(_ pids: [NSNumber]) {
+        for pid in pids {
+            Darwin.kill(pid.int32Value, SIGTERM)
+        }
+    }
+}
+
+@objc(BPTaskCompleted)
+public protocol BPTaskCompleted: NSObjectProtocol {
+    @objc(task:didFinishWithOutput:error:)
+    func task(_ task: BPTask, didFinishWithOutput output: String, error: String)
+}
+
+@objc(BPTask)
+public final class BPTask: NSObject, @unchecked Sendable {
+    public static let didBeginBackgroundActivityNotification = Notification.Name("DidBeginBackgroundActivityNotification")
+    public static let didEndBackgroundActivityNotification = Notification.Name("DidEndBackgroundActivityNotification")
+
+    @objc public var task: Process?
+    @objc public private(set) var output: String = ""
+    @objc public private(set) var error: String = ""
+    @objc public private(set) var wasCancelled: Bool = false
+    @objc public var cancellationProgress: Progress?
+    @objc public var updateBlock: (@Sendable (String) -> Void)?
+    @objc public weak var delegate: (any BPTaskCompleted)?
+
+    private var activity: NSObjectProtocol?
+    private var outputPipe: Pipe?
+    private var errorPipe: Pipe?
+    private var outputFileHandle: FileHandle?
+    private var errorFileHandle: FileHandle?
+    private var outputRelay: BPUTF8StreamRelay?
+    private var errorRelay: BPUTF8StreamRelay?
+    private let deliveryQueue = DispatchQueue(label: "com.brunophilipe.Cakebrew.BPTask.Delivery")
+
+    @objc(initWithPath:arguments:)
+    public init(path: String?, arguments: [Any]) {
+        super.init()
+        if let path, !path.isEmpty {
+            let proc = Process()
+            proc.executableURL = URL(fileURLWithPath: path)
+            proc.arguments = arguments.compactMap { $0 as? String }
+            self.task = proc
+        }
+    }
+
+    private func makeRelayForwardingToUpdateBlock() -> BPUTF8StreamRelay {
+        let queue = self.deliveryQueue
+        return BPUTF8StreamRelay { [weak self] chunk in
+            let strongSelf = self
+            queue.async {
+                guard let strongSelf else { return }
+                if let update = strongSelf.updateBlock, !chunk.isEmpty {
+                    update(chunk)
+                }
+            }
+        }
+    }
+
+    private func configurePipes() {
+        let outPipe = Pipe()
+        let errPipe = Pipe()
+        self.outputPipe = outPipe
+        self.errorPipe = errPipe
+        task?.standardOutput = outPipe
+        task?.standardError = errPipe
+        task?.standardInput = FileHandle.nullDevice
+
+        let outHandle = outPipe.fileHandleForReading
+        let errHandle = errPipe.fileHandleForReading
+        self.outputFileHandle = outHandle
+        self.errorFileHandle = errHandle
+
+        let outRelay = makeRelayForwardingToUpdateBlock()
+        let errRelay = makeRelayForwardingToUpdateBlock()
+        self.outputRelay = outRelay
+        self.errorRelay = errRelay
+
+        outHandle.readabilityHandler = { handle in
+            outRelay.append(handle.availableData)
+        }
+        errHandle.readabilityHandler = { handle in
+            errRelay.append(handle.availableData)
+        }
+    }
+
+    private func finishReading() {
+        outputFileHandle?.readabilityHandler = nil
+        errorFileHandle?.readabilityHandler = nil
+
+        if let remainingOut = outputFileHandle?.readDataToEndOfFile() {
+            outputRelay?.append(remainingOut)
+        }
+        if let remainingErr = errorFileHandle?.readDataToEndOfFile() {
+            errorRelay?.append(remainingErr)
+        }
+
+        self.output = outputRelay?.accumulatedOutput ?? ""
+        self.error = errorRelay?.accumulatedOutput ?? ""
+    }
+
+    private func deliverPendingChunks() {
+        deliveryQueue.sync {}
+    }
+
+    @discardableResult
+    @objc public func execute() -> Int32 {
+        guard let proc = self.task else {
+            cleanup()
+            return -1
+        }
+        configurePipes()
+        beginActivity()
+        do {
+            var cancelledBeforeLaunch = false
+            try bpSynchronized(self) {
+                try bpSynchronized(self.cancellationProgress) {
+                    cancelledBeforeLaunch = self.wasCancelled || (self.cancellationProgress?.isCancelled == true)
+                    if cancelledBeforeLaunch {
+                        self.wasCancelled = true
+                    } else {
+                        try proc.run()
+                    }
+                }
+            }
+            if cancelledBeforeLaunch {
+                cleanup()
+                taskDidFinish()
+                return -1
+            }
+            proc.waitUntilExit()
+            finishReading()
+            deliverPendingChunks()
+            let status = proc.terminationStatus
+            taskDidFinish()
+            return status
+        } catch {
+            cleanup()
+            return -1
+        }
+    }
+
+    private func taskDidFinish() {
+        endActivity()
+        delegate?.task(self, didFinishWithOutput: self.output, error: self.error)
+    }
+
+    private func beginActivity() {
+        activity = ProcessInfo.processInfo.beginActivity(
+            options: .userInitiated,
+            reason: NSLocalizedString("Homebrew_AppNap_Task_Reason", comment: "")
+        )
+        NotificationCenter.default.post(name: Self.didBeginBackgroundActivityNotification, object: self)
+    }
+
+    private func endActivity() {
+        if let act = activity {
+            ProcessInfo.processInfo.endActivity(act)
+            activity = nil
+            NotificationCenter.default.post(name: Self.didEndBackgroundActivityNotification, object: self)
+        }
+    }
+
+    @objc public func cancel() {
+        let runningProc: Process? = bpSynchronized(self) {
+            self.wasCancelled = true
+            guard let proc = self.task, proc.isRunning else {
+                return nil
+            }
+            return proc
+        }
+        guard let runningProc else { return }
+        let descendants = BPProcessTreeSwift.descendants(ofProcess: runningProc.processIdentifier)
+        runningProc.terminate()
+        BPProcessTreeSwift.terminateProcesses(descendants)
+    }
+
+    @objc public func cleanup() {
+        outputFileHandle?.readabilityHandler = nil
+        errorFileHandle?.readabilityHandler = nil
+        if let proc = self.task, proc.isRunning {
+            proc.terminate()
+        }
+        endActivity()
+    }
+
+    deinit {
+        updateBlock = nil
+        cleanup()
+    }
+}
+
+

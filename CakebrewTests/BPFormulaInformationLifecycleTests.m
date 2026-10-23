@@ -55,18 +55,9 @@
 - (void)cleanupAfterTask;
 @end
 
-@interface BPFormulaOptionsWindowController (BPTestingAccess)
-@property (nonatomic, strong) NSMutableArray *availableOptions;
-@property (strong) BPFormula *formula;
-@property (strong, nonatomic) BPFormulaOptionsHost *optionsHost;
-- (NSArray *)allSelectedOptions;
-@end
-
 // Model loads and AppKit animations are replaced at the boundary. The production
 // controller still registers and receives real NSNotificationCenter events.
-@interface BPInformationTestPopover : NSObject
-@property (strong) NSViewController *contentViewController;
-@property NSPopoverBehavior behavior;
+@interface BPInformationTestPopover : NSPopover
 @end
 @implementation BPInformationTestPopover
 @end
