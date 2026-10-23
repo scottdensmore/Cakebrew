@@ -33,13 +33,17 @@
 
 - (void)setUpViews
 {
+	NSWindow *window = [self window];
+	window.toolbarStyle = NSWindowToolbarStyleUnified;
+	window.titlebarSeparatorStyle = NSTitlebarSeparatorStyleAutomatic;
+
 	_splitViewController = [[NSSplitViewController alloc] initWithNibName:nil bundle:nil];
 
 	[_splitViewController addSplitViewItem:[self makeSidebarSplitViewItem]];
 	[_splitViewController addSplitViewItem:[self makeContentSplitViewItem]];
 
 	NSView *splitControllerView = [[self splitViewController] view];
-	NSView *windowContentView = [[self window] contentView];
+	NSView *windowContentView = [window contentView];
 
 	NSAssert(splitControllerView, @"View should not be nil");
 	NSAssert(windowContentView, @"View should not be nil");
@@ -73,7 +77,10 @@
 	NSViewController *sidebarViewController = [[NSViewController alloc] initWithNibName:nil bundle:nil];
 	[sidebarViewController setView:[self sidebarView]];
 
-	return [NSSplitViewItem sidebarWithViewController:sidebarViewController];
+	NSSplitViewItem *item = [NSSplitViewItem sidebarWithViewController:sidebarViewController];
+	item.minimumThickness = 190.0;
+	item.maximumThickness = 280.0;
+	return item;
 }
 
 - (NSSplitViewItem *)makeContentSplitViewItem
