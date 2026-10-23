@@ -11,22 +11,6 @@
 #import "BPHomebrewManager.h"
 #import <UserNotifications/UserNotifications.h>
 
-@interface BPBackgroundUpdater (NotificationDeliveryTests)
-- (instancetype)initWithNotificationCenter:(id)notificationCenter;
-- (void)deliverOutdatedNotificationWithFormulaeCount:(NSUInteger)formulaeCount caskCount:(NSUInteger)caskCount;
-@end
-
-// Keep real observation and delivery decisions, replacing only periodic polling
-// and the native Dock presentation so these tests touch neither brew nor AppKit.
-@interface BPObservingBackgroundUpdater : BPBackgroundUpdater
-@property (copy) NSString *badgeLabel;
-@end
-
-@implementation BPObservingBackgroundUpdater
-- (void)scheduleTimer {}
-- (void)applyDockBadgeLabel:(NSString *)label { self.badgeLabel = label; }
-@end
-
 @interface BPNotificationCenterDeliverySpy : NSObject
 @property (strong) UNNotificationRequest *request;
 @property NSUInteger deliveryCount;

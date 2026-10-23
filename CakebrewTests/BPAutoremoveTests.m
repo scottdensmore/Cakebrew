@@ -7,96 +7,11 @@
 #import "BPService.h"
 #import <objc/runtime.h>
 
-@interface BPHomebrewManager (CB150Testing)
-- (instancetype)initUniqueInstance;
-@end
-@interface CB150RefreshInterface : BPHomebrewInterface
-@property (strong) NSMutableArray *modes;
-@property NSUInteger serviceCalls;
-@property BOOL fail;
-@property (copy) void (^discoveryEntered)(void);
-@property (strong) dispatch_semaphore_t finishDiscovery;
-@end
-@implementation CB150RefreshInterface
-- (BPHomebrewDiscoveryResult)discoverHomebrew
-{
-	if (self.discoveryEntered) self.discoveryEntered();
-	if (self.finishDiscovery) dispatch_semaphore_wait(self.finishDiscovery, dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC));
-	return BPHomebrewDiscoveryMissing;
-}
-- (NSArray *)listMode:(BPListMode)mode { [self.modes addObject:@(mode)]; return self.fail ? nil : @[]; }
-- (NSArray *)listServices { self.serviceCalls++; return self.fail ? nil : @[]; }
-- (NSArray *)listModeForRemovalRefresh:(BPListMode)mode { return [self listMode:mode]; }
-- (NSArray *)listServicesForRemovalRefresh { return [self listServices]; }
-@end
 @interface CB150Observer : NSObject
 @property (copy) void (^observed)(void);
 @end
 @implementation CB150Observer
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context { self.observed(); }
-@end
-@interface CB150Manager : BPHomebrewManager
-@property (strong) BPHomebrewInterface *fixtureInterface;
-@end
-@implementation CB150Manager
-- (BPHomebrewInterface *)homebrewInterface { return self.fixtureInterface; }
-@end
-
-@interface BPHomebrewInterface (CB150Testing)
-- (instancetype)initUniqueInstance;
-- (NSArray<BPFormula *> *)listModeForRemovalRefresh:(BPListMode)mode;
-- (NSArray<BPService *> *)listServicesForRemovalRefresh;
-- (NSArray *)formatAutoremoveArguments:(NSArray *)arguments;
-- (int)executeAutoremoveArguments:(NSArray *)arguments progress:(NSProgress *)progress output:(void (^)(NSString *))output;
-@end
-@interface CB150Interface : BPHomebrewInterface
-@property (strong) BPAutoremovePreview *preview;
-@property NSUInteger previewCalls;
-@property NSUInteger removalCalls;
-@property (copy) NSArray *removed;
-@property BOOL removalSuccess;
-@end
-@implementation CB150Interface
-- (BPAutoremovePreview *)previewAutoremoveWithProgress:(NSProgress *)progress { self.previewCalls++; return self.preview; }
-- (BOOL)removeUnusedFormulae:(NSArray *)names progress:(NSProgress *)progress output:(void (^)(NSString *))output
-{
-	XCTAssertFalse(NSThread.isMainThread); self.removalCalls++; self.removed = names;
-	if (output) output(@"fixture stream");
-	return self.removalSuccess;
-}
-@end
-@interface CB150CommandInterface : BPHomebrewInterface
-@property (copy) NSArray *arguments;
-@property (copy) NSString *fixture;
-@property int status;
-@end
-@implementation CB150CommandInterface
-- (int)executeAutoremoveArguments:(NSArray *)arguments progress:(NSProgress *)progress output:(void (^)(NSString *))output
-{ self.arguments = arguments; if (output) output(self.fixture ?: @""); return self.status; }
-@end
-@interface CB150TaskInterface : BPHomebrewInterface
-@property (copy) NSString *script;
-@property (copy) void (^formatting)(void);
-@end
-@implementation CB150TaskInterface
-- (NSArray *)formatAutoremoveArguments:(NSArray *)arguments
-{ if (self.formatting) self.formatting(); return @[@"-c", self.script]; }
-@end
-
-// Exercise BPTask and the real status-preserving read boundary, not a nil-returning manager fake.
-@interface CB150RefreshShellInterface : BPHomebrewInterface
-@property (copy) NSDictionary<NSString *, NSString *> *outputs;
-@property (copy) NSDictionary<NSString *, NSNumber *> *statuses;
-@property (strong) NSMutableArray<NSString *> *commands;
-@end
-@implementation CB150RefreshShellInterface
-- (NSArray *)formatArguments:(NSArray *)arguments sendOutputId:(BOOL)marker
-{
-	NSString *key = [arguments componentsJoinedByString:@" "];
-	[self.commands addObject:key];
-	return @[@"-c", @"printf 'login banner\\n+++++Cakebrew+++++\\n'; printf '%s' \"$1\"; exit \"$2\"",
-		@"fixture", self.outputs[key] ?: @"", [self.statuses[key] ?: @0 stringValue]];
-}
 @end
 
 

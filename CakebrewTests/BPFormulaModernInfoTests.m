@@ -52,16 +52,6 @@
 
 @end
 
-@interface BPModernFormula : BPFormula
-@end
-
-@implementation BPModernFormula
-- (id<BPFormulaDataProvider>)dataProvider
-{
-	return [[BPModernInfoDataProvider alloc] init];
-}
-@end
-
 @interface BPFormulaModernInfoTests : XCTestCase
 @end
 

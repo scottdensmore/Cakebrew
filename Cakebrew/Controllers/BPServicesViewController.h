@@ -17,18 +17,4 @@
 //
 
 #import <Cocoa/Cocoa.h>
-
-/**
- *  The Services tool view: lists `brew services` with their status and
- *  offers start / stop / restart. The view is built programmatically
- *  (no xib) and refreshes its own list after operations.
- */
-@interface BPServicesViewController : NSViewController
-
-/** Reloads the service list from brew on a background queue. */
-- (void)refreshServices;
-
-/// Invalidates outstanding details/list replies when leaving the tool.
-- (void)invalidateServiceDetails;
-
-@end
+#import "BPFormulaInformation-Swift.h"

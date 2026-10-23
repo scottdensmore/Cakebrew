@@ -27,60 +27,9 @@
 #import "BPDockMenu.h"
 #import "BPAppDelegate.h"
 
-typedef NS_ENUM(NSUInteger, BPWindowOperation) {
-	kBPWindowOperationInstall,
-	kBPWindowOperationUninstall,
-	kBPWindowOperationUpgrade,
-	kBPWindowOperationTap,
-	kBPWindowOperationUntap,
-	kBPWindowOperationCleanup
-};
+#ifdef BP_BRIDGING_HEADER_IMPORT
+@class BPHomebrewViewController;
+#else
+#import "BPFormulaInformation-Swift.h"
+#endif
 
-@class BPUpdateDoctorController;
-@class BPCommandPaletteHost;
-@class BPStatusBarHost;
-
-@interface BPHomebrewViewController : NSViewController <BPDockMenuTarget, BPBrewfileImporting, BPNotificationNavigation>
-
-
-@property (weak) IBOutlet BPSideBarController      *sidebarController;
-@property (weak) IBOutlet BPFormulaeTableView      *formulaeTableView;
-@property (weak) IBOutlet NSScrollView             *scrollView_formulae;
-@property (weak) IBOutlet NSTabView                *tabView;
-@property (weak) IBOutlet NSTextField              *label_information;
-@property (weak) IBOutlet NSMenu                   *menu_formula;
-@property (strong, nonatomic, readonly) BPCommandPaletteHost *commandPaletteHost;
-@property (strong, nonatomic, readonly) BPStatusBarHost      *statusBarHost;
-
-// Cocoa bindings
-@property BOOL enableUpgradeFormulasMenu;
-@property BOOL enableUpgradeAllMenu;
-@property (copy) BPFormula *currentFormula;
-// Whether the currently selected formula is pinned. Drives the enabled state of
-// the Pin/Unpin menu items via bindings; derived from currentFormula, so it
-// re-fires KVO whenever the selection changes.
-@property (readonly) BOOL currentFormulaPinned;
-
-- (BOOL)isHomebrewInstalled;
-
-- (IBAction)showFormulaInfo:(id)sender;
-- (IBAction)installFormulaWithOptions:(id)sender;
-- (IBAction)upgradeSelectedFormulae:(id)sender;
-- (IBAction)upgradeAllOutdatedFormulae:(id)sender;
-- (IBAction)updateHomebrew:(id)sender;
-/// Jumps to the Outdated Formulae list. Named rather than tag-driven because
-/// the Dock menu fires it, and a Dock item carries its own tag.
-- (IBAction)showOutdatedFormulae:(id)sender;
-- (IBAction)showOutdatedCasks:(id)sender;
-- (IBAction)showUnifiedUpdates:(id)sender;
-- (IBAction)openSelectedFormulaWebsite:(id)sender;
-- (IBAction)beginFormulaSearch:(id)sender;
-- (IBAction)runHomebrewCleanup:(id)sender;
-- (IBAction)runHomebrewExport:(id)sender;
-- (IBAction)runHomebrewImport:(id)sender;
-- (IBAction)pinSelectedFormula:(id)sender;
-- (IBAction)unpinSelectedFormula:(id)sender;
-- (IBAction)showCommandPalette:(id)sender;
-- (IBAction)dismissCommandPalette:(id)sender;
-
-@end

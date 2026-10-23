@@ -10,7 +10,6 @@
 		CB1730000000000000000030 /* BPFormulaInformationLifecycleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CB1730000000000000000031; };
 		CB1730000000000000000032 /* BPFormulaPopoverViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC3D1B3F999A00163767; };
 		CB1730000000000000000033 /* BPSelectedFormulaViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC471B3F999A00163767; };
-		CB1730000000000000000040 /* BPHomebrewViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC3F1B3F999A00163767 /* BPHomebrewViewController.m */; };
 		CB1730000000000000000041 /* BPDoctorViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC391B3F999A00163767 /* BPDoctorViewController.m */; };
 		CB1730000000000000000042 /* BPUpdateViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC4B1B3F999A00163767 /* BPUpdateViewController.m */; };
 		CB1730000000000000000043 /* BPFormulaOptionsWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC3B1B3F999A00163767 /* BPFormulaOptionsWindowController.m */; };
@@ -68,7 +67,6 @@
 		150AEC4C1B3F999A00163767 /* BPDoctorViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC391B3F999A00163767 /* BPDoctorViewController.m */; };
 		150AEC4D1B3F999A00163767 /* BPFormulaOptionsWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC3B1B3F999A00163767 /* BPFormulaOptionsWindowController.m */; };
 		150AEC4E1B3F999A00163767 /* BPFormulaPopoverViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC3D1B3F999A00163767 /* BPFormulaPopoverViewController.m */; };
-		150AEC4F1B3F999A00163767 /* BPHomebrewViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC3F1B3F999A00163767 /* BPHomebrewViewController.m */; };
 		150AEC511B3F999A00163767 /* BPInstallationWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC431B3F999A00163767 /* BPInstallationWindowController.m */; };
 		150AEC531B3F999A00163767 /* BPSelectedFormulaViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC471B3F999A00163767 /* BPSelectedFormulaViewController.m */; };
 		150AEC541B3F999A00163767 /* BPSideBarController.m in Sources */ = {isa = PBXBuildFile; fileRef = 150AEC491B3F999A00163767 /* BPSideBarController.m */; };
@@ -77,7 +75,6 @@
 		1536BFF718EBA92400B67C5C /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1536BFF618EBA92400B67C5C /* Images.xcassets */; };
 		89A1C0A02608300000CAFE02 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 89A1C0A02608300000CAFE01 /* AppIcon.icon */; };
 		1540FA3518ECF66B00334A5C /* download.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1540FA3418ECF66B00334A5C /* download.icns */; };
-		1570BA3618EE0A66001C3C5C /* BPHomebrewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1570BA3518EE0A66001C3C5C /* BPHomebrewManager.m */; };
 		1570BA5618EE50BD001C3C5C /* BPFormula.m in Sources */ = {isa = PBXBuildFile; fileRef = 1570BA5518EE50BD001C3C5C /* BPFormula.m */; };
 		15715F611C78050B00AE0E66 /* BPBundleWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 15715F5F1C78050B00AE0E66 /* BPBundleWindow.xib */; };
 		15715F641C78053300AE0E66 /* BPBundleWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 15715F631C78053300AE0E66 /* BPBundleWindowController.m */; };
@@ -125,7 +122,6 @@
 		1FE4FE65148E4CDD008EDE8B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4FE64148E4CDD008EDE8B /* main.m */; };
 		1FE4FE6C148E4CDD008EDE8B /* BPAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4FE6B148E4CDD008EDE8B /* BPAppDelegate.m */; };
 		1FE4FE6F148E4CDD008EDE8B /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FE4FE6D148E4CDD008EDE8B /* MainMenu.xib */; };
-		1FE4FE77148E4D43008EDE8B /* BPHomebrewInterface.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4FE76148E4D43008EDE8B /* BPHomebrewInterface.m */; };
 		234DE928FBCE6DDE7B82183D /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 46BD61BF82D5E8C0C487BD7D /* PrivacyInfo.xcprivacy */; };
 		2D8AA669642BBFBEF248B016 /* BPPreferences.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D77DDA97C5A016EBA1AA607 /* BPPreferences.m */; };
 		4403EFA806C14981AAB4D830 /* BPService.m in Sources */ = {isa = PBXBuildFile; fileRef = AA67F6479F85E50C83706E3E /* BPService.m */; };
@@ -191,8 +187,6 @@
 		D212A5891B853132003000ED /* BPFormula.m in Sources */ = {isa = PBXBuildFile; fileRef = 1570BA5518EE50BD001C3C5C /* BPFormula.m */; };
 		D228335A1BA71B9900E44C82 /* BPTask.m in Sources */ = {isa = PBXBuildFile; fileRef = D23620E01B8B3094006D293D /* BPTask.m */; };
 		D23620E11B8B3094006D293D /* BPTask.m in Sources */ = {isa = PBXBuildFile; fileRef = D23620E01B8B3094006D293D /* BPTask.m */; };
-		D2682D011B8532B0003DE3D8 /* BPHomebrewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1570BA3518EE0A66001C3C5C /* BPHomebrewManager.m */; };
-		D2682D021B8532B6003DE3D8 /* BPHomebrewInterface.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4FE76148E4D43008EDE8B /* BPHomebrewInterface.m */; };
 		D2682D031B8535BD003DE3D8 /* BPAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FE4FE6B148E4CDD008EDE8B /* BPAppDelegate.m */; };
 		D2682D041B853664003DE3D8 /* DCOAboutWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 15D2CFA918F202B300B6D9F1 /* DCOAboutWindowController.m */; };
 		D2A3A82D1B8C9F5200D05469 /* BPStyle.m in Sources */ = {isa = PBXBuildFile; fileRef = D2A3A82A1B8C9F5200D05469 /* BPStyle.m */; };
@@ -227,8 +221,6 @@
 		F686E7E93EA64727C5BD476A /* BPServiceTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 65FAFC2DA348DF99A7B6D768 /* BPServiceTests.m */; };
 		F98476A9F699040AA891FFC0 /* BPHelperOutputRelay.m in Sources */ = {isa = PBXBuildFile; fileRef = 2C5C049629179C0BA8601D4B /* BPHelperOutputRelay.m */; };
 		E3D4044AEF034F4ACEB0667F /* BPProcessTree.m in Sources */ = {isa = PBXBuildFile; fileRef = 87165C9D1BFDBFE992FFE092 /* BPProcessTree.m */; };
-		FC6F1F065021F6E3D4AAB378 /* BPMockHomebrewInterface.m in Sources */ = {isa = PBXBuildFile; fileRef = B15AF968007B8829A04A4ECC /* BPMockHomebrewInterface.m */; };
-		00D4E0159FF9B3D0D368E0AD /* BPMockHomebrewInterface.m in Sources */ = {isa = PBXBuildFile; fileRef = B15AF968007B8829A04A4ECC /* BPMockHomebrewInterface.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -331,7 +323,6 @@ B6830022477FCFE425D036B9 /* BPBrewError.h */ = {isa = PBXFileReference; includeI
 		150AEC3C1B3F999A00163767 /* BPFormulaPopoverViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPFormulaPopoverViewController.h; path = Controllers/BPFormulaPopoverViewController.h; sourceTree = "<group>"; };
 		150AEC3D1B3F999A00163767 /* BPFormulaPopoverViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPFormulaPopoverViewController.m; path = Controllers/BPFormulaPopoverViewController.m; sourceTree = "<group>"; };
 		150AEC3E1B3F999A00163767 /* BPHomebrewViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPHomebrewViewController.h; path = Controllers/BPHomebrewViewController.h; sourceTree = "<group>"; };
-		150AEC3F1B3F999A00163767 /* BPHomebrewViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPHomebrewViewController.m; path = Controllers/BPHomebrewViewController.m; sourceTree = "<group>"; };
 		150AEC421B3F999A00163767 /* BPInstallationWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPInstallationWindowController.h; path = Controllers/BPInstallationWindowController.h; sourceTree = "<group>"; };
 		150AEC431B3F999A00163767 /* BPInstallationWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPInstallationWindowController.m; path = Controllers/BPInstallationWindowController.m; sourceTree = "<group>"; };
 		150AEC461B3F999A00163767 /* BPSelectedFormulaViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPSelectedFormulaViewController.h; path = Controllers/BPSelectedFormulaViewController.h; sourceTree = "<group>"; };
@@ -346,7 +337,6 @@ B6830022477FCFE425D036B9 /* BPBrewError.h */ = {isa = PBXFileReference; includeI
 		89A1C0A02608300000CAFE01 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		1540FA3418ECF66B00334A5C /* download.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = download.icns; sourceTree = "<group>"; };
 		1570BA3418EE0A66001C3C5C /* BPHomebrewManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BPHomebrewManager.h; sourceTree = "<group>"; };
-		1570BA3518EE0A66001C3C5C /* BPHomebrewManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPHomebrewManager.m; sourceTree = "<group>"; };
 		1570BA5418EE50BD001C3C5C /* BPFormula.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BPFormula.h; path = Models/BPFormula.h; sourceTree = "<group>"; };
 		1570BA5518EE50BD001C3C5C /* BPFormula.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BPFormula.m; path = Models/BPFormula.m; sourceTree = "<group>"; };
 		1570E11C25F195BE0043560B /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/BPBundleWindow.strings; sourceTree = "<group>"; };
@@ -460,7 +450,6 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 		1FE4FE6A148E4CDD008EDE8B /* BPAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BPAppDelegate.h; sourceTree = "<group>"; };
 		1FE4FE6B148E4CDD008EDE8B /* BPAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BPAppDelegate.m; sourceTree = "<group>"; };
 		1FE4FE75148E4D43008EDE8B /* BPHomebrewInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BPHomebrewInterface.h; sourceTree = "<group>"; };
-		1FE4FE76148E4D43008EDE8B /* BPHomebrewInterface.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BPHomebrewInterface.m; sourceTree = "<group>"; };
 		2C5C049629179C0BA8601D4B /* BPHelperOutputRelay.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPHelperOutputRelay.m; sourceTree = "<group>"; };
 87165C9D1BFDBFE992FFE092 /* BPProcessTree.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPProcessTree.m; sourceTree = "<group>"; };
 		3325CFB971454761839C850E /* BPMockHomebrewInterface.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPMockHomebrewInterface.h; sourceTree = "<group>"; };
@@ -514,7 +503,6 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 		D017792DA9BA47F4A319FEBD /* BPCleanupPreview.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = BPCleanupPreview.m; path = Models/BPCleanupPreview.m; sourceTree = "<group>"; };
 		B040E2F0936D991B4511CE23 /* BPHelperOutputRelay.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPHelperOutputRelay.h; sourceTree = "<group>"; };
 0ED88915D7AF8D09BE78E143 /* BPProcessTree.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPProcessTree.h; sourceTree = "<group>"; };
-		B15AF968007B8829A04A4ECC /* BPMockHomebrewInterface.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPMockHomebrewInterface.m; sourceTree = "<group>"; };
 		B1F0C40DBB035A181E3860BE /* BPHelperCommandTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BPHelperCommandTests.m; sourceTree = "<group>"; };
 		C54D3AB48EC548D5D013F394 /* main.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		C9C1BB036D8B8B3CF51D285B /* BPHelperClient.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BPHelperClient.h; sourceTree = "<group>"; };
@@ -689,7 +677,6 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				150AEC3D1B3F999A00163767 /* BPFormulaPopoverViewController.m */,
 				CB173000000000000000000B /* BPFormulaInformationHost.swift */,
 				150AEC3E1B3F999A00163767 /* BPHomebrewViewController.h */,
-				150AEC3F1B3F999A00163767 /* BPHomebrewViewController.m */,
 				15D28A221AE332F4005C8A3E /* BPInstallationWindow.xib */,
 				150AEC421B3F999A00163767 /* BPInstallationWindowController.h */,
 				150AEC431B3F999A00163767 /* BPInstallationWindowController.m */,
@@ -717,10 +704,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				D23620DF1B8B3094006D293D /* BPTask.h */,
 				D23620E01B8B3094006D293D /* BPTask.m */,
 				1FE4FE75148E4D43008EDE8B /* BPHomebrewInterface.h */,
-				1FE4FE76148E4D43008EDE8B /* BPHomebrewInterface.m */,
 				1570BA3418EE0A66001C3C5C /* BPHomebrewManager.h */,
-				1570BA3518EE0A66001C3C5C /* BPHomebrewManager.m */,
-				B15AF968007B8829A04A4ECC /* BPMockHomebrewInterface.m */,
 				3325CFB971454761839C850E /* BPMockHomebrewInterface.h */,
 			);
 			name = Homebrew;
@@ -1233,9 +1217,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				1FE4FE65148E4CDD008EDE8B /* main.m in Sources */,
 				150AEC4E1B3F999A00163767 /* BPFormulaPopoverViewController.m in Sources */,
 				D2C1B1021B821A2A00FFC2CA /* BPToolbar.m in Sources */,
-				1570BA3618EE0A66001C3C5C /* BPHomebrewManager.m in Sources */,
 				1FE4FE6C148E4CDD008EDE8B /* BPAppDelegate.m in Sources */,
-				1FE4FE77148E4D43008EDE8B /* BPHomebrewInterface.m in Sources */,
 				D2B3A3AA19B9CBEC00DE23B5 /* BPFormulaeTableView.m in Sources */,
 				D23620E11B8B3094006D293D /* BPTask.m in Sources */,
 				15C34CBF19512DE100B92E36 /* BPAutoScrollTextView.m in Sources */,
@@ -1243,7 +1225,6 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				732C9ACF538674E726D8C265 /* BPEmptyStateView.m in Sources */,
 				A229FC61630E4BB5A0944950 /* BPLoadingStatus.m in Sources */,
 				EED7701B84E04E36839579E4 /* BPDockMenu.m in Sources */,
-				150AEC4F1B3F999A00163767 /* BPHomebrewViewController.m in Sources */,
 				D2B3A3B019B9D7FC00DE23B5 /* BPFormulaeDataSource.m in Sources */,
 				15D2CFAB18F202B300B6D9F1 /* DCOAboutWindowController.m in Sources */,
 				D2A3A82D1B8C9F5200D05469 /* BPStyle.m in Sources */,
@@ -1253,7 +1234,6 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				D2BBAB4B1B85EA7C00F21332 /* BPFormulaOption.m in Sources */,
 				150AEC4C1B3F999A00163767 /* BPDoctorViewController.m in Sources */,
 				150AEC551B3F999A00163767 /* BPUpdateViewController.m in Sources */,
-				FC6F1F065021F6E3D4AAB378 /* BPMockHomebrewInterface.m in Sources */,
 				0E5E1AFEFC2EB5ACFC76A355 /* BPService.m in Sources */,
 				CB1520000000000000000003 /* BPServiceDetails.m in Sources */,
 				CB1440000000000000000003 /* BPFormulaeTableAction.m in Sources */,
@@ -1293,8 +1273,6 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D2682D021B8532B6003DE3D8 /* BPHomebrewInterface.m in Sources */,
-				D2682D011B8532B0003DE3D8 /* BPHomebrewManager.m in Sources */,
 				D228335A1BA71B9900E44C82 /* BPTask.m in Sources */,
 				D212A5891B853132003000ED /* BPFormula.m in Sources */,
 				D2682D031B8535BD003DE3D8 /* BPAppDelegate.m in Sources */,
@@ -1379,7 +1357,6 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				1E5235A5561B3C95F6DCB8F5 /* BPLocalizationParityTests.m in Sources */,
 				4BE6F343BE3E20F49D1511AD /* BPEmptyStateTests.m in Sources */,
 				E3924FFC7583BF03BC886FB3 /* BPAccessibilityTests.m in Sources */,
-				00D4E0159FF9B3D0D368E0AD /* BPMockHomebrewInterface.m in Sources */,
 				8DEE82E248857750CD9BDC4D /* BPSideBarController.m in Sources */,
 				59246886F867B7F80EBA72A9 /* BPMainWindowController.m in Sources */,
 				A3C29FE74D8478CD5ABE3908 /* BPToolbar.m in Sources */,
@@ -1390,7 +1367,6 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				14A490C109F54C69A7728156 /* BPDockMenu.m in Sources */,
 				1ED78A300C6AD6B948573401 /* BPHelperRegistration.m in Sources */,
 				D5A4E97BA98E72BCC344B615 /* BPHelperRegistrationTests.m in Sources */,
-				CB1730000000000000000040 /* BPHomebrewViewController.m in Sources */,
 				CB1730000000000000000041 /* BPDoctorViewController.m in Sources */,
 				CB1730000000000000000042 /* BPUpdateViewController.m in Sources */,
 				CB1730000000000000000043 /* BPFormulaOptionsWindowController.m in Sources */,
@@ -1716,6 +1692,7 @@ D60506EE17E0C6ADEE14FCA9 /* BPEmptyState.m */ = {isa = PBXFileReference; fileEnc
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 			};
 			name = Debug;
 		};

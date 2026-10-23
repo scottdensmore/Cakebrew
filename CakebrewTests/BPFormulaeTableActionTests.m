@@ -18,27 +18,6 @@
 { self.count++; self.request = request; }
 @end
 
-@interface BPTableActionWindowStub : NSObject
-@property (weak) NSResponder *firstResponder;
-@end
-@implementation BPTableActionWindowStub
-@end
-
-@interface BPActionTestTable : BPFormulaeTableView
-@property (strong) BPTableActionWindowStub *testWindow;
-@property NSInteger testSelectedRow;
-@property NSInteger spaceCount;
-@property NSInteger testClickedRow;
-@end
-@implementation BPActionTestTable
-- (NSWindow *)window { return (NSWindow *)self.testWindow; }
-- (NSInteger)selectedRow { return self.testSelectedRow; }
-- (NSInteger)clickedRow { return self.testClickedRow; }
-- (NSInteger)numberOfRows { return 2; }
-- (NSIndexSet *)selectedRowIndexes { return self.testSelectedRow < 0 ? [NSIndexSet indexSet] : [NSIndexSet indexSetWithIndex:(NSUInteger)self.testSelectedRow]; }
-- (void)spaceBarPressed { self.spaceCount++; }
-@end
-
 @interface BPFormulaeTableActionTests : XCTestCase
 @property (strong) BPActionTestTable *table;
 @property (strong) BPTableActionRecorder *recorder;
