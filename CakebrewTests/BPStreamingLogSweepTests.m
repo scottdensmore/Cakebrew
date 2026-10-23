@@ -36,7 +36,7 @@
 
 	for (NSString *relative in walker)
 	{
-		if (![relative.pathExtension isEqualToString:@"m"])
+		if (![relative.pathExtension isEqualToString:@"m"] && ![relative.pathExtension isEqualToString:@"swift"])
 		{
 			continue;
 		}

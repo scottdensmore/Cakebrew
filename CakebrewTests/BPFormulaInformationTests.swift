@@ -980,4 +980,57 @@ final class BPFormulaInformationTests: XCTestCase {
         XCTAssertEqual(optionsHost.selectedOptionNames, [])
     }
 
+    @MainActor
+    func testSwift6CoreModelsViewsAndControllers() {
+        let preview = BPAutoremovePreview.preview(
+            withOutput: "==> Would autoremove 2 unneeded formulae:\nlibpng\njpeg\n",
+            succeeded: true
+        )
+        XCTAssertTrue(preview.valid)
+        XCTAssertEqual(preview.names, ["libpng", "jpeg"])
+
+        let cleanup = BPCleanupPreview.preview(
+            fromOutput: "Would remove: /opt/homebrew/Cellar/wget/1.0 (1.0MB)\n==> This operation would free approximately 2.0MB of disk space.\n"
+        )
+        XCTAssertFalse(cleanup.empty)
+        XCTAssertEqual(cleanup.itemCount, 1)
+        XCTAssertEqual(cleanup.reclaimableBytes, 2 * 1024 * 1024)
+
+        let err = BPBrewError.error(forExitStatus: 1, output: "Error: formula not found\n")
+        XCTAssertNotNil(err)
+        XCTAssertEqual(err?.code, 2)
+
+        XCTAssertTrue(BPBrewfile.isBrewfileURL(URL(fileURLWithPath: "/tmp/work.Brewfile")))
+        let plan = BPBrewfilePlan.plan(withString: "brew 'git'\ncask 'firefox'\n", inventories: ["brew": ["git"], "cask": []])
+        XCTAssertTrue(plan.canInstall)
+        XCTAssertEqual(plan.entries.count, 2)
+
+        let services = BPService.services(fromJSONString: "[{\"name\":\"redis\",\"status\":\"started\",\"pid\":42,\"user\":\"admin\"}]")
+        XCTAssertEqual(services.count, 1)
+        XCTAssertEqual(services.first?.status, .started)
+
+        let details = BPServiceDetails.details(
+            forName: "redis",
+            output: "[{\"name\":\"redis\",\"status\":\"started\",\"pid\":42,\"file\":\"/opt/redis.plist\"}]",
+            succeeded: true
+        )
+        XCTAssertTrue(details.available)
+        XCTAssertEqual(details.serviceFile, "/opt/redis.plist")
+
+        XCTAssertNotNil(BPStyle.defaultFixedWidthFont())
+        XCTAssertNotNil(BPStyle.toolbarImageForInstall())
+
+        let dockMenu = BPDockMenu.dockMenu(withTarget: nil, enabled: true)
+        XCTAssertEqual(dockMenu.items.count, 3)
+
+        let toolbar = BPToolbar(identifier: NSToolbar.Identifier("Swift6Test"))
+        XCTAssertFalse(toolbar.allowsUserCustomization)
+        toolbar.configure(for: .install)
+        XCTAssertEqual(toolbar.currentMode, .install)
+
+        let aboutWC = DCOAboutWindowController()
+        XCTAssertNotNil(aboutWC.window)
+        XCTAssertNotNil(aboutWC.aboutHost)
+    }
+
 }

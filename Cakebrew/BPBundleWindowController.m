@@ -167,14 +167,10 @@ static const void *kBPBrewfileReviewHostAssocKey = &kBPBrewfileReviewHostAssocKe
 
 - (void)loadWindow
 {
-	if ([NSBundle.mainBundle pathForResource:@"BPBundleWindow" ofType:@"nib"]) {
-		[super loadWindow];
-	} else {
-		self.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 413, 289)
-												  styleMask:NSWindowStyleMaskTitled
-													backing:NSBackingStoreBuffered
-													  defer:NO];
-	}
+	self.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 413, 289)
+											  styleMask:NSWindowStyleMaskTitled
+												backing:NSBackingStoreBuffered
+												  defer:NO];
 }
 
 - (void)windowDidLoad

@@ -5547,3 +5547,1011 @@ private struct BPCleanupPreviewCardView: View {
         )
     }
 }
+
+// MARK: - Swift 6 AppKit & Presentation Views / Window Controllers
+
+@objc(BPStyle)
+public final class BPStyle: NSObject {
+    @objc public static func defaultFixedWidthFont() -> NSFont {
+        return NSFont.monospacedSystemFont(ofSize: 12.0, weight: .regular)
+    }
+
+    @objc public static func toolbarSize() -> NSToolbar.SizeMode {
+        return .default
+    }
+
+    @objc public static func toolbarImageForInstall() -> NSImage? {
+        return appropriateIconForToolbar(name: "download", symbol: "plus.circle.fill")
+    }
+
+    @objc public static func toolbarImageForUninstall() -> NSImage? {
+        return appropriateIconForToolbar(name: "delete", symbol: "xmark.circle.fill")
+    }
+
+    @objc public static func toolbarImageForTap() -> NSImage? {
+        return appropriateIconForToolbar(name: "download", symbol: "plus.circle.fill")
+    }
+
+    @objc public static func toolbarImageForUntap() -> NSImage? {
+        return appropriateIconForToolbar(name: "delete", symbol: "xmark.circle.fill")
+    }
+
+    @objc public static func toolbarImageForUpdate() -> NSImage? {
+        return appropriateIconForToolbar(name: "reload", symbol: "arrow.triangle.2.circlepath.circle.fill")
+    }
+
+    @objc public static func toolbarImageForMoreInformation() -> NSImage? {
+        return appropriateIconForToolbar(name: "label", symbol: "info.circle.fill")
+    }
+
+    @objc public static func toolbarImageForUpgrade() -> NSImage? {
+        return appropriateIconForToolbar(name: "globe", symbol: "globe")
+    }
+
+    @objc public static func toolbarImageForCancel() -> NSImage? {
+        return appropriateIconForToolbar(name: "cancel", symbol: "stop.circle")
+    }
+
+    private static func appropriateIconForToolbar(name: String, symbol: String) -> NSImage? {
+        guard let image = NSImage(systemSymbolName: symbol, accessibilityDescription: name) else {
+            return nil
+        }
+        let config = NSImage.SymbolConfiguration(scale: .medium)
+        let configured = image.withSymbolConfiguration(config) ?? image
+        configured.isTemplate = true
+        return configured
+    }
+
+    @objc public static func popoverTitleColor() -> NSColor {
+        return .textColor
+    }
+
+    @objc public static func popoverTextViewColor() -> NSColor {
+        return .textColor
+    }
+}
+
+@objc(BPDockMenuItem)
+public enum BPDockMenuItem: Int {
+    case checkForUpdates = 1
+    case upgradeAllOutdated = 2
+    case showOutdated = 3
+}
+
+@objc(BPDockMenu)
+public final class BPDockMenu: NSObject {
+    @objc public static func menuItemAction() -> Selector {
+        return NSSelectorFromString("performDockMenuAction:")
+    }
+
+    @objc(dockMenuWithTarget:enabled:)
+    public static func dockMenu(withTarget target: AnyObject?, enabled: Bool) -> NSMenu {
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+        let items: [BPDockMenuItem] = [.checkForUpdates, .upgradeAllOutdated, .showOutdated]
+        for item in items {
+            let menuItem = NSMenuItem(
+                title: title(for: item),
+                action: menuItemAction(),
+                keyEquivalent: ""
+            )
+            menuItem.tag = item.rawValue
+            menuItem.target = target
+            menuItem.isEnabled = enabled
+            menu.addItem(menuItem)
+        }
+        return menu
+    }
+
+    @objc(localizationKeyForItem:)
+    public static func localizationKey(for item: BPDockMenuItem) -> String? {
+        switch item {
+        case .checkForUpdates:    return "Dock_Check_For_Updates"
+        case .upgradeAllOutdated: return "Dock_Upgrade_All_Outdated"
+        case .showOutdated:       return "Dock_Show_Outdated"
+        @unknown default:         return nil
+        }
+    }
+
+    private static func title(for item: BPDockMenuItem) -> String {
+        guard let key = localizationKey(for: item) else { return "" }
+        return NSLocalizedString(key, comment: "")
+    }
+
+    @objc(controllerActionForItem:)
+    public static func controllerAction(for item: BPDockMenuItem) -> Selector? {
+        switch item {
+        case .checkForUpdates:    return NSSelectorFromString("updateHomebrew:")
+        case .upgradeAllOutdated: return NSSelectorFromString("upgradeAllOutdatedFormulae:")
+        case .showOutdated:       return NSSelectorFromString("showUnifiedUpdates:")
+        @unknown default:         return nil
+        }
+    }
+}
+
+@objc(BPBackgroundView)
+public final class BPBackgroundView: NSView {
+    @objc public var backgroundColor: NSColor?
+
+    public override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        setUp()
+    }
+
+    public required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setUp()
+    }
+
+    private func setUp() {
+        if backgroundColor == nil {
+            backgroundColor = .controlColor
+            wantsLayer = true
+        }
+    }
+
+    public override func draw(_ dirtyRect: NSRect) {
+        backgroundColor?.setFill()
+        dirtyRect.fill()
+    }
+}
+
+@MainActor
+@objc(BPLoadingView)
+public final class BPLoadingView: NSView {
+    @objc public var view: NSView?
+    @objc public weak var progressIndicator: NSProgressIndicator?
+    @objc public var loadingHost: BPLoadingHost?
+
+    public override func awakeFromNib() {
+        super.awakeFromNib()
+        progressIndicator?.startAnimation(self)
+    }
+
+    public override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        commonInit()
+    }
+
+    public required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        commonInit()
+    }
+
+    private func commonInit() {
+        let host = BPLoadingHost()
+        self.loadingHost = host
+        let hostView = host.viewController.view
+        hostView.frame = bounds
+        hostView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(hostView)
+        self.view = hostView
+        NSLayoutConstraint.activate([
+            hostView.topAnchor.constraint(equalTo: topAnchor),
+            hostView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            hostView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            hostView.trailingAnchor.constraint(equalTo: trailingAnchor)
+        ])
+    }
+}
+
+@MainActor
+@objc(BPEmptyStateView)
+public final class BPEmptyStateView: NSView {
+    private static let emptyStateViewTag = 0x43424553
+    @objc public var host: BPEmptyStateHost?
+
+    @objc(presentState:overView:)
+    public static func presentState(_ state: BPEmptyState?, over container: NSView?) {
+        guard let container else { return }
+        for subview in container.subviews where subview.tag == emptyStateViewTag {
+            subview.removeFromSuperview()
+        }
+        guard let state else { return }
+
+        let title = NSLocalizedString(state.titleKey, comment: "")
+        let message = NSLocalizedString(state.messageKey, comment: "")
+
+        let view = BPEmptyStateView(frame: container.bounds)
+        view.translatesAutoresizingMaskIntoConstraints = false
+        let emptyHost = BPEmptyStateHost(
+            symbolName: state.symbolName.isEmpty ? "tray" : state.symbolName,
+            title: title,
+            message: message
+        )
+        view.host = emptyHost
+
+        let hostView = emptyHost.viewController.view
+        hostView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(hostView)
+        container.addSubview(view)
+
+        view.setAccessibilityElement(true)
+        view.setAccessibilityRole(.staticText)
+        view.setAccessibilityLabel("\(title). \(message)")
+
+        NSLayoutConstraint.activate([
+            view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            view.topAnchor.constraint(equalTo: container.topAnchor),
+            view.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            hostView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            hostView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            hostView.topAnchor.constraint(equalTo: view.topAnchor),
+            hostView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+    }
+
+    public override var tag: Int {
+        return Self.emptyStateViewTag
+    }
+
+    public override var isOpaque: Bool {
+        return false
+    }
+}
+
+private final class BPAutoScrollBuffer: @unchecked Sendable {
+    let lock = NSLock()
+    let pending = NSMutableString()
+    var flushScheduled = false
+}
+
+@MainActor
+@objc(BPAutoScrollTextView)
+public final class BPAutoScrollTextView: NSTextView {
+    nonisolated private static let maxScrollback = 2 * 1024 * 1024
+    nonisolated private static let trimTargetLength = Int(1.5 * 1024.0 * 1024.0)
+    private let buffer = BPAutoScrollBuffer()
+
+    @objc nonisolated public static var maximumScrollbackLength: UInt {
+        return UInt(maxScrollback)
+    }
+
+    public override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+    }
+
+    public override init(frame frameRect: NSRect, textContainer container: NSTextContainer?) {
+        super.init(frame: frameRect, textContainer: container)
+    }
+
+    public required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+
+    public override var string: String {
+        get { super.string }
+        set {
+            super.string = newValue
+            scrollToEndOfDocument(self)
+        }
+    }
+
+    @objc(appendOutput:)
+    nonisolated public func appendOutput(_ chunk: String?) {
+        guard let chunk, !chunk.isEmpty else { return }
+        var needsFlush = false
+        buffer.lock.lock()
+        buffer.pending.append(chunk)
+        if !buffer.flushScheduled {
+            buffer.flushScheduled = true
+            needsFlush = true
+        }
+        buffer.lock.unlock()
+
+        guard needsFlush else { return }
+
+        if Thread.isMainThread {
+            MainActor.assumeIsolated {
+                self.flushPendingOutput()
+            }
+        } else {
+            DispatchQueue.main.async {
+                self.flushPendingOutput()
+            }
+        }
+    }
+
+    @objc public func clearOutput() {
+        buffer.lock.lock()
+        buffer.pending.setString("")
+        buffer.lock.unlock()
+        self.string = ""
+    }
+
+    @objc public func flushPendingOutput() {
+        buffer.lock.lock()
+        let chunk = buffer.pending.copy() as? String ?? ""
+        buffer.pending.setString("")
+        buffer.flushScheduled = false
+        buffer.lock.unlock()
+
+        guard !chunk.isEmpty, let storage = self.textStorage else { return }
+        let chunkNS = chunk as NSString
+        storage.beginEditing()
+        let appendedRange = NSRange(location: storage.length, length: chunkNS.length)
+        storage.replaceCharacters(in: NSRange(location: storage.length, length: 0), with: chunk)
+        storage.addAttribute(.foregroundColor, value: NSColor.textColor, range: appendedRange)
+        trimScrollback(in: storage)
+        storage.endEditing()
+
+        scrollRangeToVisible(NSRange(location: storage.length, length: 0))
+    }
+
+    private func trimScrollback(in storage: NSTextStorage) {
+        guard storage.length > Self.maxScrollback else { return }
+        var excess = storage.length - Self.trimTargetLength
+        let nsString = storage.string as NSString
+        let searchLength = min(4096, storage.length - excess)
+        let newline = nsString.range(of: "\n", options: [], range: NSRange(location: excess, length: searchLength))
+        if newline.location != NSNotFound {
+            excess = NSMaxRange(newline)
+        }
+        storage.replaceCharacters(in: NSRange(location: 0, length: excess), with: "")
+    }
+}
+
+@MainActor
+@objc(DCOAboutWindowController)
+public final class DCOAboutWindowController: NSWindowController {
+    @objc public var infoView: NSView?
+    @objc public var visitWebsiteButton: NSButton?
+    @objc public var acknowledgementsButton: NSButton?
+    @objc public private(set) var creditsTextView: NSTextView?
+    @objc public private(set) var aboutHost: BPAboutWindowHost?
+    @objc public var appAcknowledgements: NSAttributedString?
+
+    @objc public var appName: String?
+    @objc public var appVersion: String?
+    @objc public var appCopyright: String?
+    @objc public var appCredits: NSAttributedString?
+    @objc public var appWebsiteURL: URL?
+
+    @objc public var acknowledgementsPath: String? {
+        didSet {
+            loadAppAcknowledgements()
+            if acknowledgementsPath == nil {
+                acknowledgementsButton?.removeFromSuperview()
+            }
+            if let aboutHost {
+                aboutHost.configure(
+                    appName: appName ?? "Cakebrew",
+                    appVersion: appVersion ?? "",
+                    appCopyright: appCopyright ?? "",
+                    hasAcknowledgements: ((acknowledgementsPath?.isEmpty == false) || (appAcknowledgements?.length ?? 0) > 0)
+                )
+            }
+        }
+    }
+
+    @objc public static func nibName() -> String {
+        return "DCOAboutWindow"
+    }
+
+    public init() {
+        super.init(window: nil)
+    }
+
+    public override init(window: NSWindow?) {
+        super.init(window: window)
+    }
+
+    public required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+
+    public override var windowNibName: NSNib.Name? {
+        return NSNib.Name(Self.nibName())
+    }
+
+    public override func loadWindow() {
+        self.window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 500, height: 360),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+    }
+
+    public override func windowDidLoad() {
+        super.windowDidLoad()
+
+        let bundleDict = Bundle.main.infoDictionary ?? [:]
+        let resourceBundle = Bundle(for: Self.self)
+
+        if appName == nil {
+            appName = (bundleDict["CFBundleName"] as? String) ?? "Cakebrew"
+        }
+
+        if appVersion == nil {
+            let version = (bundleDict["CFBundleVersion"] as? String) ?? "1"
+            let shortVersion = (bundleDict["CFBundleShortVersionString"] as? String) ?? "1.0"
+            appVersion = String(format: NSLocalizedString("Version %@ (Build %@)", comment: ""), shortVersion, version)
+        }
+
+        if appCopyright == nil {
+            appCopyright = (bundleDict["NSHumanReadableCopyright"] as? String) ?? ""
+        }
+
+        if let button = visitWebsiteButton, !button.title.isEmpty, button.title.contains("%@"), let appName {
+            button.title = String(format: button.title, appName)
+        }
+
+        if acknowledgementsPath == nil {
+            acknowledgementsPath = Bundle.main.path(forResource: "Acknowledgements", ofType: "rtf")
+                ?? resourceBundle.path(forResource: "Acknowledgements", ofType: "rtf")
+        } else {
+            loadAppAcknowledgements()
+        }
+
+        if appCredits == nil {
+            loadAppCredits()
+        }
+
+        let textView = creditsTextView ?? NSTextView(frame: NSRect(x: 0, y: 0, width: 440, height: 180))
+        self.creditsTextView = textView
+        textView.isEditable = false
+        textView.isSelectable = true
+        textView.textContainerInset = NSSize(width: 8, height: 8)
+        textView.setAccessibilityIdentifier("about.textView")
+        applyDisplayedAttributedText(appCredits)
+
+        let host = BPAboutWindowHost(creditsTextView: textView)
+        host.configure(
+            appName: appName ?? "Cakebrew",
+            appVersion: appVersion ?? "",
+            appCopyright: appCopyright ?? "",
+            hasAcknowledgements: ((acknowledgementsPath?.isEmpty == false) || (appAcknowledgements?.length ?? 0) > 0)
+        )
+        host.onVisitWebsite = { [weak self] in
+            self?.visitWebsite(nil)
+        }
+        host.onSelectTab = { [weak self] tabIndex in
+            guard let self else { return }
+            let targetText: NSAttributedString?
+            if tabIndex == 1, let ack = self.appAcknowledgements, ack.length > 0 {
+                targetText = ack
+            } else {
+                targetText = self.appCredits
+            }
+            self.applyDisplayedAttributedText(targetText)
+        }
+        self.aboutHost = host
+
+        if let contentView = window?.contentView {
+            for subview in contentView.subviews {
+                subview.removeFromSuperview()
+            }
+            let hostView = host.viewController.view
+            hostView.translatesAutoresizingMaskIntoConstraints = false
+            contentView.addSubview(hostView)
+            NSLayoutConstraint.activate([
+                hostView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+                hostView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+                hostView.topAnchor.constraint(equalTo: contentView.topAnchor),
+                hostView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+            ])
+        }
+    }
+
+    private func applyDisplayedAttributedText(_ attributedText: NSAttributedString?) {
+        guard let storage = creditsTextView?.textStorage else { return }
+        if let attributedText {
+            storage.setAttributedString(attributedText)
+        } else {
+            creditsTextView?.string = ""
+        }
+    }
+
+    private func normalizedAttributedString(fromRTFURL url: URL?) -> NSAttributedString? {
+        guard let url,
+              let attributed = try? NSAttributedString(url: url, options: [:], documentAttributes: nil) else {
+            return nil
+        }
+        let mutableText = NSMutableAttributedString(attributedString: attributed)
+        attributed.enumerateAttribute(.foregroundColor, in: NSRange(location: 0, length: attributed.length), options: []) { value, range, _ in
+            if value == nil && range.length > 0 {
+                mutableText.addAttribute(.foregroundColor, value: NSColor.textColor, range: range)
+            }
+        }
+        return mutableText
+    }
+
+    private func loadAppCredits() {
+        let creditsURL = Bundle.main.url(forResource: "Credits", withExtension: "rtf")
+            ?? Bundle(for: Self.self).url(forResource: "Credits", withExtension: "rtf")
+        if let credits = normalizedAttributedString(fromRTFURL: creditsURL) {
+            appCredits = credits
+        }
+    }
+
+    private func loadAppAcknowledgements() {
+        let ackURL: URL?
+        if let path = acknowledgementsPath, !path.isEmpty {
+            ackURL = URL(fileURLWithPath: path)
+        } else {
+            ackURL = Bundle.main.url(forResource: "Acknowledgements", withExtension: "rtf")
+                ?? Bundle(for: Self.self).url(forResource: "Acknowledgements", withExtension: "rtf")
+        }
+        if let ack = normalizedAttributedString(fromRTFURL: ackURL) {
+            appAcknowledgements = ack
+        }
+    }
+
+    @objc(visitWebsite:)
+    public func visitWebsite(_ sender: Any?) {
+        if let appWebsiteURL {
+            NSWorkspace.shared.open(appWebsiteURL)
+        }
+    }
+
+    @objc(showAcknowledgements:)
+    public func showAcknowledgements(_ sender: Any?) {
+        if let aboutHost, let ack = appAcknowledgements, ack.length > 0 {
+            aboutHost.selectTab(at: 1)
+            return
+        }
+        if let path = acknowledgementsPath {
+            NSWorkspace.shared.open(URL(fileURLWithPath: path))
+        }
+    }
+}
+
+extension NSLayoutConstraint {
+    @objc(activate:)
+    public static func bp_activate(_ constraints: [NSLayoutConstraint]) {
+        NSLayoutConstraint.activate(constraints)
+    }
+}
+
+@MainActor
+@objc(BPMainWindowController)
+public final class BPMainWindowController: NSWindowController {
+    @objc public weak var sidebarView: NSScrollView?
+    @objc public weak var windowContentView: NSView?
+    @objc public private(set) var splitViewController: NSSplitViewController?
+
+    @objc(toggleSidebar:)
+    public func toggleSidebar(_ sender: Any?) {
+        splitViewController?.toggleSidebar(sender)
+    }
+
+    @objc public func setUpViews() {
+        guard let window = self.window else { return }
+        window.toolbarStyle = .unified
+        window.titlebarSeparatorStyle = .automatic
+
+        let splitVC = NSSplitViewController(nibName: nil, bundle: nil)
+        splitVC.addSplitViewItem(makeSidebarSplitViewItem())
+        splitVC.addSplitViewItem(makeContentSplitViewItem())
+        self.splitViewController = splitVC
+
+        let splitControllerView = splitVC.view
+        guard let contentView = window.contentView else { return }
+
+        splitControllerView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(splitControllerView)
+
+        NSLayoutConstraint.activate([
+            splitControllerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            splitControllerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            splitControllerView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            splitControllerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+        ])
+    }
+
+    @objc(setContentViewHidden:)
+    public func setContentViewHidden(_ hide: Bool) {
+        windowContentView?.isHidden = hide
+    }
+
+    private func makeSidebarSplitViewItem() -> NSSplitViewItem {
+        let vc = NSViewController(nibName: nil, bundle: nil)
+        if let sidebarView {
+            vc.view = sidebarView
+        }
+        let item = NSSplitViewItem(sidebarWithViewController: vc)
+        item.minimumThickness = 190.0
+        item.maximumThickness = 280.0
+        return item
+    }
+
+    private func makeContentSplitViewItem() -> NSSplitViewItem {
+        let vc = NSViewController(nibName: nil, bundle: nil)
+        if let windowContentView {
+            vc.view = windowContentView
+        }
+        return NSSplitViewItem(viewController: vc)
+    }
+}
+
+@MainActor
+@objc(BPDisabledView)
+public final class BPDisabledView: NSView {
+    @objc public var view: NSView?
+    @objc public weak var titleField: NSTextField?
+    @objc public weak var messageField: NSTextField?
+    @objc public weak var retryButton: NSButton?
+    @objc public weak var installButton: NSButton?
+    @objc public var disabledHost: BPDisabledHost?
+    @objc public var retryEnabled: Bool = true
+    @objc public var retryHandler: (() -> Void)?
+
+    public override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        commonInit()
+    }
+
+    public required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        commonInit()
+    }
+
+    private func commonInit() {
+        retryEnabled = true
+        let host = BPDisabledHost()
+        host.onRetry = { [weak self] in
+            self?.retry(nil)
+        }
+        host.onOpenInstructions = { [weak self] in
+            self?.openInstallationInstructions(nil)
+        }
+        self.disabledHost = host
+
+        let hostView = host.viewController.view
+        hostView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(hostView)
+        self.view = hostView
+
+        NSLayoutConstraint.activate([
+            hostView.topAnchor.constraint(equalTo: topAnchor),
+            hostView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            hostView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            hostView.trailingAnchor.constraint(equalTo: trailingAnchor)
+        ])
+    }
+
+    @objc(showDiscoveryResult:checking:)
+    public func showDiscoveryResult(_ result: Int, checking: Bool) {
+        self.retryEnabled = !checking
+        self.retryButton?.isEnabled = !checking
+        let title: String
+        let message: String
+        if checking {
+            title = NSLocalizedString("Checking for Homebrew…", comment: "")
+            message = NSLocalizedString("Cakebrew is checking your login shell for Homebrew. This may take a moment.", comment: "")
+        } else {
+            switch result {
+            case 2: // BPHomebrewDiscoveryMissing
+                title = NSLocalizedString("Homebrew wasn’t found", comment: "")
+                message = NSLocalizedString("Cakebrew couldn’t find Homebrew in your login shell’s PATH. Open brew.sh for installation instructions, or fix your shell configuration, then choose Try Again.", comment: "")
+            case 3: // BPHomebrewDiscoveryInvalidShell
+                title = NSLocalizedString("Your login shell is unavailable", comment: "")
+                message = NSLocalizedString("Cakebrew needs an executable login shell listed in /etc/shells. Check your shell configuration, then choose Try Again. Homebrew installation instructions are available at brew.sh.", comment: "")
+            default:
+                title = NSLocalizedString("Homebrew couldn’t be checked", comment: "")
+                message = NSLocalizedString("Your login shell didn’t return a usable Homebrew executable. Check its startup configuration and PATH, then choose Try Again. Installation instructions are available at brew.sh.", comment: "")
+            }
+        }
+        titleField?.stringValue = title
+        messageField?.stringValue = message
+        disabledHost?.update(title: title, message: message, retryEnabled: !checking, checking: checking)
+    }
+
+    @objc(retry:)
+    public func retry(_ sender: Any?) {
+        if retryEnabled {
+            retryHandler?()
+        }
+    }
+
+    @objc(openInstallationInstructions:)
+    public func openInstallationInstructions(_ sender: Any?) {
+        if let url = URL(string: "https://brew.sh") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+}
+
+@objc(BPToolbarMode)
+public enum BPToolbarMode: UInt {
+    case initial = 0
+    case `default` = 1
+    case install = 2
+    case uninstall = 3
+    case updateSingle = 4
+    case updateMany = 5
+    case tap = 6
+    case untap = 7
+}
+
+@MainActor
+@objc(BPToolbar)
+public final class BPToolbar: NSToolbar, NSToolbarDelegate, NSSearchFieldDelegate {
+    private static let toolbarIdentifier = NSToolbar.Identifier("toolbarIdentifier")
+    private static let itemHomebrewUpdateIdentifier = NSToolbarItem.Identifier("toolbarItemHomebrewUpdate")
+    private static let itemInformationIdentifier = NSToolbarItem.Identifier("toolbarItemInformation")
+    private static let itemSearchIdentifier = NSToolbarItem.Identifier("toolbarItemSearch")
+    private static let itemMultiActionIdentifier = NSToolbarItem.Identifier("toolbarItemMultiAction")
+    private static let itemCancelReloadIdentifier = NSToolbarItem.Identifier("toolbarItemCancelReload")
+
+    @objc public weak var controller: AnyObject?
+    @objc public var currentMode: BPToolbarMode = .initial
+    @objc private(set) public var searchField: NSSearchField?
+
+    private var _showsCancelReload: Bool = false
+    @objc public var showsCancelReload: Bool {
+        get { _showsCancelReload }
+        set {
+            guard _showsCancelReload != newValue else { return }
+            _showsCancelReload = newValue
+            if newValue {
+                insertItem(withItemIdentifier: Self.itemCancelReloadIdentifier, at: Int(Self.cancelReloadItemIndex()))
+            } else if let idx = items.firstIndex(where: { $0.itemIdentifier == Self.itemCancelReloadIdentifier }) {
+                removeItem(at: idx)
+            }
+            validateVisibleItems()
+        }
+    }
+
+    private lazy var homebrewUpdateItem: NSToolbarItem = {
+        makeToolbarItem(
+            identifier: Self.itemHomebrewUpdateIdentifier,
+            image: BPStyle.toolbarImageForUpgrade(),
+            label: NSLocalizedString("Toolbar_Homebrew_Update", comment: ""),
+            action: NSSelectorFromString("updateHomebrew:")
+        )
+    }()
+
+    private lazy var cancelReloadItem: NSToolbarItem = {
+        makeToolbarItem(
+            identifier: Self.itemCancelReloadIdentifier,
+            image: BPStyle.toolbarImageForCancel(),
+            label: NSLocalizedString("Toolbar_Cancel_Reload", comment: ""),
+            action: NSSelectorFromString("cancelReload:")
+        )
+    }()
+
+    private lazy var informationItem: NSToolbarItem = {
+        makeToolbarItem(
+            identifier: Self.itemInformationIdentifier,
+            image: BPStyle.toolbarImageForMoreInformation(),
+            label: NSLocalizedString("Toolbar_More_Information", comment: ""),
+            action: NSSelectorFromString("showFormulaInfo:")
+        )
+    }()
+
+    private lazy var multiActionItem: NSToolbarItem = {
+        makeToolbarItem(
+            identifier: Self.itemMultiActionIdentifier,
+            image: nil,
+            label: nil,
+            action: nil
+        )
+    }()
+
+    private lazy var searchToolbarItem: NSSearchToolbarItem = {
+        let item = NSSearchToolbarItem(itemIdentifier: Self.itemSearchIdentifier)
+        let label = NSLocalizedString("Toolbar_Search", comment: "")
+        item.label = label
+        item.paletteLabel = label
+        item.autovalidates = false
+
+        let field = NSSearchField(frame: .zero)
+        field.delegate = self
+        field.isContinuous = true
+        field.recentsAutosaveName = "RecentSearches"
+        self.searchField = field
+
+        item.searchField = field
+        item.action = #selector(submitSearch(_:))
+        return item
+    }()
+
+    private lazy var customItemsMap: [NSToolbarItem.Identifier: NSToolbarItem] = {
+        [
+            Self.itemHomebrewUpdateIdentifier: homebrewUpdateItem,
+            Self.itemInformationIdentifier: informationItem,
+            Self.itemSearchIdentifier: searchToolbarItem,
+            Self.itemMultiActionIdentifier: multiActionItem,
+            Self.itemCancelReloadIdentifier: cancelReloadItem
+        ]
+    }()
+
+    @objc(initWithIdentifier:)
+    public override init(identifier: NSToolbar.Identifier) {
+        super.init(identifier: Self.toolbarIdentifier)
+        self.sizeMode = BPStyle.toolbarSize()
+        self.currentMode = .initial
+        configure(for: .default)
+        lockItems()
+    }
+
+    @objc(configureForMode:)
+    public func configure(for mode: BPToolbarMode) {
+        guard currentMode != mode else { return }
+        currentMode = mode
+
+        if mode == .tap || mode == .untap || mode == .updateMany || mode == .default {
+            reconfigureItem(informationItem, image: nil, label: nil, action: nil)
+        } else {
+            reconfigureItem(
+                informationItem,
+                image: BPStyle.toolbarImageForMoreInformation(),
+                label: NSLocalizedString("Toolbar_More_Information", comment: ""),
+                action: NSSelectorFromString("showFormulaInfo:")
+            )
+        }
+
+        switch mode {
+        case .default:
+            reconfigureItem(multiActionItem, image: nil, label: nil, action: nil)
+        case .install:
+            reconfigureItem(
+                multiActionItem,
+                image: BPStyle.toolbarImageForInstall(),
+                label: NSLocalizedString("Toolbar_Install_Formula", comment: ""),
+                action: NSSelectorFromString("installFormula:")
+            )
+        case .uninstall:
+            reconfigureItem(
+                multiActionItem,
+                image: BPStyle.toolbarImageForUninstall(),
+                label: NSLocalizedString("Toolbar_Uninstall_Formula", comment: ""),
+                action: NSSelectorFromString("uninstallFormula:")
+            )
+        case .tap:
+            reconfigureItem(
+                multiActionItem,
+                image: BPStyle.toolbarImageForTap(),
+                label: NSLocalizedString("Toolbar_Tap_Repo", comment: ""),
+                action: NSSelectorFromString("tapRepository:")
+            )
+        case .untap:
+            reconfigureItem(
+                multiActionItem,
+                image: BPStyle.toolbarImageForUntap(),
+                label: NSLocalizedString("Toolbar_Untap_Repo", comment: ""),
+                action: NSSelectorFromString("untapRepository:")
+            )
+        case .updateSingle:
+            reconfigureItem(
+                multiActionItem,
+                image: BPStyle.toolbarImageForUpdate(),
+                label: NSLocalizedString("Toolbar_Update_Formula", comment: ""),
+                action: NSSelectorFromString("upgradeSelectedFormulae:")
+            )
+        case .updateMany:
+            reconfigureItem(
+                multiActionItem,
+                image: BPStyle.toolbarImageForUpdate(),
+                label: NSLocalizedString("Toolbar_Update_Selected", comment: ""),
+                action: NSSelectorFromString("upgradeSelectedFormulae:")
+            )
+        case .initial:
+            break
+        @unknown default:
+            break
+        }
+        validateVisibleItems()
+    }
+
+    private func updateToolbarItems(withTarget target: AnyObject?) {
+        for (key, item) in customItemsMap {
+            if key == Self.itemSearchIdentifier, let searchItem = item as? NSSearchToolbarItem {
+                self.searchField = searchItem.searchField
+                self.searchField?.delegate = self
+                searchItem.target = (target != nil) ? self : nil
+                searchItem.isEnabled = (target != nil)
+                searchItem.searchField.isEnabled = (target != nil)
+                continue
+            }
+            if key == Self.itemCancelReloadIdentifier {
+                item.target = controller
+                item.isEnabled = (controller != nil)
+                continue
+            }
+            item.target = target
+            item.isEnabled = (target != nil && item.action != nil)
+        }
+    }
+
+    @objc public func lockItems() {
+        updateToolbarItems(withTarget: nil)
+        validateVisibleItems()
+    }
+
+    @objc public func unlockItems() {
+        updateToolbarItems(withTarget: controller)
+        validateVisibleItems()
+    }
+
+    public func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+        return customItemsMap[itemIdentifier]
+    }
+
+    @objc public static func cancelReloadItemIdentifier() -> String {
+        return itemCancelReloadIdentifier.rawValue
+    }
+
+    @objc public static func cancelReloadItemIndex() -> UInt {
+        return 5
+    }
+
+    @objc(defaultItemIdentifiersShowingCancel:)
+    public static func defaultItemIdentifiers(showingCancel: Bool) -> [String] {
+        var identifiers: [String] = [
+            NSToolbarItem.Identifier.toggleSidebar.rawValue,
+            NSToolbarItem.Identifier.flexibleSpace.rawValue,
+            itemHomebrewUpdateIdentifier.rawValue,
+            NSToolbarItem.Identifier.sidebarTrackingSeparator.rawValue,
+            NSToolbarItem.Identifier.flexibleSpace.rawValue,
+            itemMultiActionIdentifier.rawValue,
+            itemInformationIdentifier.rawValue,
+            itemSearchIdentifier.rawValue
+        ]
+        if showingCancel {
+            identifiers.insert(itemCancelReloadIdentifier.rawValue, at: Int(cancelReloadItemIndex()))
+        }
+        return identifiers
+    }
+
+    public func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        return Self.defaultItemIdentifiers(showingCancel: showsCancelReload).map { NSToolbarItem.Identifier($0) }
+    }
+
+    public func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        return [
+            .space,
+            .flexibleSpace,
+            .sidebarTrackingSeparator,
+            .toggleSidebar,
+            Self.itemHomebrewUpdateIdentifier,
+            Self.itemInformationIdentifier,
+            Self.itemSearchIdentifier,
+            Self.itemMultiActionIdentifier,
+            Self.itemCancelReloadIdentifier
+        ]
+    }
+
+    private func makeToolbarItem(identifier: NSToolbarItem.Identifier, image: NSImage?, label: String?, action: Selector?) -> NSToolbarItem {
+        let item = NSToolbarItem(itemIdentifier: identifier)
+        item.image = image
+        item.isBordered = true
+        item.target = controller
+        item.label = label ?? ""
+        item.paletteLabel = label ?? ""
+        item.action = action
+        item.autovalidates = true
+        item.toolTip = label
+        return item
+    }
+
+    private func reconfigureItem(_ item: NSToolbarItem, image: NSImage?, label: String?, action: Selector?) {
+        precondition(Thread.isMainThread)
+        item.image = image
+        item.isBordered = (image != nil)
+        item.isEnabled = (action != nil)
+        item.target = controller
+        item.action = action
+        item.label = label ?? ""
+        item.toolTip = label
+    }
+
+    @objc public func makeSearchFieldFirstResponder() {
+        let searchView = searchToolbarItem.searchField
+        searchView.window?.makeFirstResponder(searchView)
+    }
+
+    @objc(submitSearch:)
+    public func submitSearch(_ field: NSSearchField) {
+        _ = controller?.perform(NSSelectorFromString("performSearchWithString:"), with: field.stringValue)
+    }
+
+    public func controlTextDidChange(_ obj: Notification) {
+        if let field = obj.object as? NSSearchField {
+            submitSearch(field)
+        }
+    }
+}

@@ -79,15 +79,14 @@
 
 - (void)loadWindow
 {
-	if ([NSBundle.mainBundle pathForResource:@"BPInstallationWindow" ofType:@"nib"]) {
-		[super loadWindow];
-	} else {
-		self.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 480, 320)
-												  styleMask:NSWindowStyleMaskTitled
-													backing:NSBackingStoreBuffered
-													  defer:NO];
-		[self setupUI];
+	self.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 480, 320)
+											  styleMask:NSWindowStyleMaskTitled
+												backing:NSBackingStoreBuffered
+												  defer:NO];
+	if (!self.progressIndicator) {
+		self.progressIndicator = [[NSProgressIndicator alloc] initWithFrame:NSZeroRect];
 	}
+	[self setupUI];
 }
 
 - (void)awakeFromNib
