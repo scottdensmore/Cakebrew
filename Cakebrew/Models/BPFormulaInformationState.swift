@@ -1738,3 +1738,939 @@ public struct BPCleanupPreviewState: Equatable, Sendable {
         self.samplePaths = samplePaths
     }
 }
+
+// MARK: - Swift 6 Core Models & Utilities
+
+@objc(BPAutoremovePreview)
+public final class BPAutoremovePreview: NSObject {
+    @objc public private(set) var valid: Bool = false
+    @objc public private(set) var names: [String] = []
+    @objc public private(set) var rawOutput: String = ""
+
+    @objc(previewWithOutput:succeeded:)
+    public static func preview(withOutput output: String?, succeeded: Bool) -> BPAutoremovePreview {
+        let preview = BPAutoremovePreview()
+        preview.rawOutput = output ?? ""
+        preview.names = []
+        guard succeeded, let output else { return preview }
+        let text = output.replacingOccurrences(of: "\r\n", with: "\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if text.isEmpty {
+            preview.valid = true
+            return preview
+        }
+        let lines = text.components(separatedBy: "\n")
+        guard let header = try? NSRegularExpression(pattern: "^==> Would autoremove ([1-9][0-9]*) unneeded formula(e)?:$", options: []) else {
+            return preview
+        }
+        let firstLine = lines[0] as NSString
+        guard let match = header.firstMatch(in: lines[0], options: [], range: NSRange(location: 0, length: firstLine.length)) else {
+            return preview
+        }
+        let countString = firstLine.substring(with: match.range(at: 1))
+        guard let count = Int(countString), count > 0 else { return preview }
+        let pluralAbsent = (match.range(at: 2).location == NSNotFound)
+        if count != lines.count - 1 || (count == 1) != pluralAbsent {
+            return preview
+        }
+        guard let namePattern = try? NSRegularExpression(pattern: "^(?:[a-zA-Z0-9][a-zA-Z0-9_.+-]*/[a-zA-Z0-9][a-zA-Z0-9_.+-]*/)?[a-zA-Z0-9][a-zA-Z0-9_.+@-]*$", options: []) else {
+            return preview
+        }
+        var orderedNames: [String] = []
+        var seen = Set<String>()
+        for name in lines[1...count] {
+            let nsName = name as NSString
+            if namePattern.firstMatch(in: name, options: [], range: NSRange(location: 0, length: nsName.length)) == nil || seen.contains(name) {
+                return preview
+            }
+            seen.insert(name)
+            orderedNames.append(name)
+        }
+        preview.names = orderedNames
+        preview.valid = true
+        return preview
+    }
+}
+
+@objc(BPFormulaOption)
+public final class BPFormulaOption: NSObject, NSSecureCoding, NSCopying {
+    private static let nameKey = "formulaOptionName"
+    private static let explanationKey = "formulaOptionExplanation"
+
+    @objc public var explanation: String?
+    @objc public var name: String?
+
+    @objc public static var supportsSecureCoding: Bool { true }
+
+    public override init() {
+        super.init()
+    }
+
+    public required init?(coder aDecoder: NSCoder) {
+        super.init()
+        self.name = aDecoder.decodeObject(of: NSString.self, forKey: Self.nameKey) as String?
+        self.explanation = aDecoder.decodeObject(of: NSString.self, forKey: Self.explanationKey) as String?
+    }
+
+    public func encode(with aCoder: NSCoder) {
+        aCoder.encode(name as NSString?, forKey: Self.nameKey)
+        aCoder.encode(explanation as NSString?, forKey: Self.explanationKey)
+    }
+
+    public func copy(with zone: NSZone? = nil) -> Any {
+        let option = BPFormulaOption()
+        option.name = self.name
+        option.explanation = self.explanation
+        return option
+    }
+}
+
+@objc(BPTimedDispatch)
+public final class BPTimedDispatch: NSObject, @unchecked Sendable {
+    private var scheduledBlock: (() -> Void)?
+    private var dispatchTimer: Timer?
+    private var dispatchQueue: DispatchQueue = .main
+
+    @objc(scheduleDispatchAfterTimeInterval:ofBlock:)
+    public func scheduleDispatch(afterTimeInterval interval: TimeInterval, of block: @escaping () -> Void) {
+        scheduleDispatch(afterTimeInterval: interval, in: .main, of: block)
+    }
+
+    @objc(scheduleDispatchAfterTimeInterval:inQueue:ofBlock:)
+    public func scheduleDispatch(afterTimeInterval interval: TimeInterval, in queue: DispatchQueue, of block: @escaping () -> Void) {
+        scheduledBlock = block
+        dispatchQueue = queue
+        dispatchTimer?.invalidate()
+        dispatchTimer = Timer.scheduledTimer(
+            timeInterval: interval,
+            target: self,
+            selector: #selector(dispatchBlockTimerDidFire(_:)),
+            userInfo: nil,
+            repeats: false
+        )
+    }
+
+    @objc private func dispatchBlockTimerDidFire(_ sender: Timer) {
+        let localBlock = scheduledBlock
+        scheduledBlock = nil
+        let queue = dispatchQueue
+        queue.async {
+            localBlock?()
+        }
+    }
+}
+
+@objc(BPSearchCoordinator)
+public final class BPSearchCoordinator: NSObject, @unchecked Sendable {
+    private let schedule: (TimeInterval, @escaping () -> Void) -> Void
+    private let performSearch: (String) -> Void
+    private let cancelSearch: () -> Void
+
+    @objc(isSearching) public private(set) var searching: Bool = false
+    @objc public private(set) var originalSidebarRow: Int = 0
+    @objc public private(set) var generation: UInt = 0
+
+    @objc(initWithPerformSearch:cancelSearch:)
+    public convenience init(performSearch: @escaping (String) -> Void, cancelSearch: @escaping () -> Void) {
+        let timedDispatch = BPTimedDispatch()
+        self.init(
+            schedule: { delay, work in
+                timedDispatch.scheduleDispatch(afterTimeInterval: delay, in: .main, of: work)
+            },
+            performSearch: performSearch,
+            cancelSearch: cancelSearch
+        )
+    }
+
+    @objc(initWithSchedule:performSearch:cancelSearch:)
+    public init(schedule: @escaping (TimeInterval, @escaping () -> Void) -> Void,
+                performSearch: @escaping (String) -> Void,
+                cancelSearch: @escaping () -> Void) {
+        self.schedule = schedule
+        self.performSearch = performSearch
+        self.cancelSearch = cancelSearch
+        super.init()
+    }
+
+    @objc(scheduleQuery:)
+    public func scheduleQuery(_ query: String) {
+        precondition(Thread.isMainThread, "Search coordination must run on the main thread")
+        precondition(!query.isEmpty)
+        let currentGeneration = self.generation
+        schedule(0.15) { [weak self] in
+            guard let self, currentGeneration == self.generation else { return }
+            self.performSearch(query)
+        }
+    }
+
+    @objc(didReceiveResultsForSidebarRow:)
+    public func didReceiveResults(forSidebarRow row: Int) {
+        precondition(Thread.isMainThread, "Search coordination must run on the main thread")
+        if !searching {
+            originalSidebarRow = row
+        }
+        searching = true
+    }
+
+    @objc(endSearchReturningSidebarRow)
+    public func endSearchReturningSidebarRow() -> Int {
+        precondition(Thread.isMainThread, "Search coordination must run on the main thread")
+        generation &+= 1
+        searching = false
+        cancelSearch()
+        return originalSidebarRow
+    }
+
+    @objc(cancelForNavigation)
+    public func cancelForNavigation() {
+        precondition(Thread.isMainThread, "Search coordination must run on the main thread")
+        generation &+= 1
+        searching = false
+        cancelSearch()
+    }
+}
+
+@objc(BPBrewError)
+public final class BPBrewError: NSObject {
+    public static let errorDomain = "com.brunophilipe.Cakebrew.ErrorDomain"
+    public static let exitStatusKey = "BPBrewErrorExitStatus"
+    private static let maximumReportedLines = 12
+    private static let maximumReportedLength = 1500
+
+    private static func tail(of output: String) -> String {
+        var lines: [String] = []
+        (output as NSString).enumerateLines { line, _ in
+            if !line.trimmingCharacters(in: .whitespaces).isEmpty {
+                lines.append(line)
+            }
+        }
+        if lines.count > maximumReportedLines {
+            lines.removeFirst(lines.count - maximumReportedLines)
+        }
+        let joined = lines.joined(separator: "\n") as NSString
+        if joined.length > maximumReportedLength {
+            return joined.substring(from: joined.length - maximumReportedLength)
+        }
+        return joined as String
+    }
+
+    @objc(errorForExitStatus:output:)
+    public static func error(forExitStatus status: Int32, output: String?) -> NSError? {
+        if status == 0 {
+            return nil
+        }
+        let code = (status < 0) ? 1 : 2 // BPBrewErrorLaunchFailed = 1, BPBrewErrorNonZeroExit = 2
+        let tailText = tail(of: output ?? "")
+        let description: String
+        if !tailText.isEmpty {
+            description = tailText
+        } else {
+            description = String(format: NSLocalizedString("Error_Brew_Failed_No_Output", comment: ""), status)
+        }
+        return NSError(
+            domain: errorDomain,
+            code: code,
+            userInfo: [
+                NSLocalizedDescriptionKey: description,
+                exitStatusKey: NSNumber(value: status)
+            ]
+        )
+    }
+}
+
+@objc(BPCleanupPreview)
+public final class BPCleanupPreview: NSObject {
+    private static let wouldRemovePrefix = "Would remove: "
+
+    @objc public private(set) var itemCount: UInt = 0
+    @objc public private(set) var reclaimableBytes: UInt64 = 0
+    @objc public private(set) var paths: [String] = []
+
+    @objc(isEmpty)
+    public var empty: Bool {
+        itemCount == 0 && reclaimableBytes == 0
+    }
+
+    @objc(previewFromOutput:)
+    public static func preview(fromOutput output: String?) -> BPCleanupPreview {
+        let preview = BPCleanupPreview()
+        preview.paths = paths(fromOutput: output)
+        preview.itemCount = UInt(preview.paths.count)
+        preview.reclaimableBytes = reclaimableBytes(fromOutput: output)
+        return preview
+    }
+
+    private static func paths(fromOutput output: String?) -> [String] {
+        guard let output, !output.isEmpty else { return [] }
+        var result: [String] = []
+        let prefixLength = (wouldRemovePrefix as NSString).length
+        (output as NSString).enumerateLines { line, _ in
+            guard line.hasPrefix(wouldRemovePrefix) else { return }
+            let rawPath = (line as NSString).substring(from: prefixLength)
+                .trimmingCharacters(in: .whitespaces)
+            let stripped = pathByStrippingSizeSuffix(rawPath)
+            if !stripped.isEmpty {
+                result.append(stripped)
+            }
+        }
+        return result
+    }
+
+    private static func pathByStrippingSizeSuffix(_ path: String) -> String {
+        guard path.hasSuffix(")") else { return path }
+        let nsPath = path as NSString
+        let open = nsPath.range(of: " (", options: .backwards)
+        guard open.location != NSNotFound else { return path }
+        return nsPath.substring(to: open.location)
+    }
+
+    private static func reclaimableBytes(fromOutput output: String?) -> UInt64 {
+        guard let output, !output.isEmpty else { return 0 }
+        guard let expression = try? NSRegularExpression(
+            pattern: "would free approximately ([0-9]+(?:\\.[0-9]+)?)\\s*(TB|GB|MB|KB|B)\\b",
+            options: [.caseInsensitive]
+        ) else {
+            return 0
+        }
+        let nsOutput = output as NSString
+        guard let match = expression.firstMatch(in: output, options: [], range: NSRange(location: 0, length: nsOutput.length)) else {
+            return 0
+        }
+        let number = nsOutput.substring(with: match.range(at: 1))
+        let unit = nsOutput.substring(with: match.range(at: 2)).uppercased()
+        let value = NSDecimalNumber(string: number, locale: Locale(identifier: "en_US_POSIX"))
+        if value == NSDecimalNumber.notANumber {
+            return 0
+        }
+        let multiplier: UInt64
+        switch unit {
+        case "KB": multiplier = 1024
+        case "MB": multiplier = 1024 * 1024
+        case "GB": multiplier = 1024 * 1024 * 1024
+        case "TB": multiplier = 1024 * 1024 * 1024 * 1024
+        default:   multiplier = 1
+        }
+        return UInt64(value.doubleValue * Double(multiplier))
+    }
+}
+
+@objc(BPBrewfile)
+public final class BPBrewfile: NSObject {
+    private static let brewfileName = "Brewfile"
+
+    @objc(isBrewfileURL:)
+    public static func isBrewfileURL(_ url: URL?) -> Bool {
+        guard let url, url.isFileURL else { return false }
+        let name = url.lastPathComponent
+        guard !name.isEmpty else { return false }
+        if name.caseInsensitiveCompare(brewfileName) == .orderedSame {
+            return true
+        }
+        let suffix = "." + brewfileName
+        let nsName = name as NSString
+        let nsSuffix = suffix as NSString
+        guard nsName.length > nsSuffix.length else { return false }
+        let tail = nsName.substring(from: nsName.length - nsSuffix.length)
+        return tail.caseInsensitiveCompare(suffix) == .orderedSame
+    }
+
+    @objc(brewfileURLsFrom:)
+    public static func brewfileURLs(from urls: [URL]?) -> [URL] {
+        guard let urls, !urls.isEmpty else { return [] }
+        return urls.filter { isBrewfileURL($0) }
+    }
+}
+
+@objc(BPBrewfileEntry)
+public final class BPBrewfileEntry: NSObject {
+    @objc public internal(set) var kind: String = ""
+    @objc public internal(set) var name: String = ""
+    @objc public internal(set) var status: String = ""
+    @objc public var appStoreID: String?
+}
+
+@objc(BPBrewfilePlan)
+public final class BPBrewfilePlan: NSObject {
+    @objc public private(set) var entries: [BPBrewfileEntry] = []
+    @objc public private(set) var diagnostics: [String] = []
+    @objc public private(set) var canonicalContents: String?
+
+    @objc public var canInstall: Bool {
+        guard let canonicalContents, !canonicalContents.isEmpty else { return false }
+        return diagnostics.isEmpty
+    }
+
+    @objc public var reviewText: String {
+        var installed: UInt = 0
+        var missing: UInt = 0
+        var unchecked: UInt = 0
+        for entry in entries {
+            if entry.status == "Installed" {
+                installed += 1
+            } else if entry.status == "Missing" {
+                missing += 1
+            } else {
+                unchecked += 1
+            }
+        }
+        var text = String(
+            format: NSLocalizedString("%lu installed • %lu missing • %lu not checked", comment: ""),
+            installed, missing, unchecked
+        ) + "\n\n"
+
+        let kinds = ["brew", "cask", "tap", "mas", "vscode"]
+        let titles = [
+            NSLocalizedString("Formulae", comment: ""),
+            NSLocalizedString("Casks", comment: ""),
+            NSLocalizedString("Taps", comment: ""),
+            NSLocalizedString("Mac App Store", comment: ""),
+            NSLocalizedString("VS Code", comment: "")
+        ]
+        for (index, kind) in kinds.enumerated() {
+            var lines: [String] = []
+            for entry in entries where entry.kind == kind {
+                let status: String
+                if entry.status == "Installed" {
+                    status = NSLocalizedString("Installed", comment: "")
+                } else if entry.status == "Missing" {
+                    status = NSLocalizedString("Missing", comment: "")
+                } else {
+                    status = NSLocalizedString("Not checked", comment: "")
+                }
+                let displayName: String
+                if let appStoreID = entry.appStoreID {
+                    displayName = "\(entry.name) (id: \(appStoreID))"
+                } else {
+                    displayName = entry.name
+                }
+                lines.append("\(displayName) — \(status)")
+            }
+            if !lines.isEmpty {
+                text += "\(titles[index])\n\(lines.joined(separator: "\n"))\n\n"
+            }
+        }
+        if !diagnostics.isEmpty {
+            text += diagnostics.joined(separator: "\n")
+        } else if entries.isEmpty {
+            text += NSLocalizedString("No supported package entries. Nothing will be installed.", comment: "")
+        }
+        return text
+    }
+
+    private static func matches(_ string: String, pattern: String) -> Bool {
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return false }
+        let nsString = string as NSString
+        return regex.numberOfMatches(in: string, options: [], range: NSRange(location: 0, length: nsString.length)) == 1
+    }
+
+    @objc(planWithURL:inventories:error:)
+    public static func plan(with url: URL?, inventories: [String: [String]]?) throws -> BPBrewfilePlan {
+        let limit = 1024 * 1024
+        var descriptor: Int32 = -1
+        if let url, url.isFileURL {
+            descriptor = url.withUnsafeFileSystemRepresentation { path in
+                guard let path else { return -1 }
+                return Darwin.open(path, O_RDONLY | O_NONBLOCK)
+            }
+        }
+        var info = stat()
+        let data = NSMutableData()
+        var valid = descriptor >= 0 && fstat(descriptor, &info) == 0 && (info.st_mode & S_IFMT) == S_IFREG && info.st_size <= limit
+        if valid {
+            var buffer = [UInt8](repeating: 0, count: 8192)
+            var count: Int = -1
+            while data.length <= limit {
+                count = buffer.withUnsafeMutableBytes { rawBuffer in
+                    guard let baseAddress = rawBuffer.baseAddress else { return -1 }
+                    return Darwin.read(descriptor, baseAddress, rawBuffer.count)
+                }
+                if count > 0 {
+                    data.append(buffer, length: count)
+                } else {
+                    break
+                }
+            }
+            valid = (count == 0 && data.length <= limit)
+        }
+        if descriptor >= 0 {
+            Darwin.close(descriptor)
+        }
+        guard valid, let contents = String(data: data as Data, encoding: .utf8) else {
+            throw NSError(
+                domain: "Cakebrew.Brewfile",
+                code: 2,
+                userInfo: [
+                    NSLocalizedDescriptionKey: NSLocalizedString("Choose a readable UTF-8 Brewfile smaller than 1 MiB. Nothing was installed.", comment: "")
+                ]
+            )
+        }
+        return plan(withString: contents, inventories: inventories)
+    }
+
+    @objc(planWithString:inventories:)
+    public static func plan(withString contents: String, inventories: [String: [String]]?) -> BPBrewfilePlan {
+        let plan = BPBrewfilePlan()
+        var parsedEntries: [BPBrewfileEntry] = []
+        var parsedDiagnostics: [String] = []
+        var canonical = ""
+        let literal = try? NSRegularExpression(
+            pattern: "\\A[ \\t]*(brew|cask|tap|mas|vscode)[ \\t]+(['\"])([^'\"\\\\\\r\\n]+)\\2(?:[ \\t]*,[ \\t]*id:[ \\t]*([1-9][0-9]*))?[ \\t]*(?:#[^\\r\\n]*)?\\z",
+            options: []
+        )
+        let lines = contents.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: "\n")
+        for (index, line) in lines.enumerated() {
+            if matches(line, pattern: "\\A[ \\t]*(?:#[^\\r\\n]*)?\\z") {
+                continue
+            }
+            let nsLine = line as NSString
+            let match = literal?.firstMatch(in: line, options: [], range: NSRange(location: 0, length: nsLine.length))
+            let kind = match.map { nsLine.substring(with: $0.range(at: 1)) }
+            let name = match.map { nsLine.substring(with: $0.range(at: 3)) }
+            let identifier: String?
+            if let match, match.range(at: 4).location != NSNotFound {
+                identifier = nsLine.substring(with: match.range(at: 4))
+            } else {
+                identifier = nil
+            }
+            var valid = (match != nil)
+            if kind == "mas" {
+                if let identifier, let name {
+                    valid = valid && identifier.count <= 18 && matches(name, pattern: "\\A[A-Za-z0-9][A-Za-z0-9 ._()+&:!-]*\\z")
+                } else {
+                    valid = false
+                }
+            } else if let kind, let name {
+                valid = valid && (identifier == nil)
+                let component = "[a-zA-Z0-9][a-zA-Z0-9_+@.-]*"
+                let pattern: String
+                if kind == "tap" {
+                    pattern = "\\A\(component)/\(component)\\z"
+                } else if kind == "vscode" {
+                    pattern = "\\A[a-zA-Z0-9][a-zA-Z0-9-]*\\.[a-zA-Z0-9][a-zA-Z0-9-]*\\z"
+                } else {
+                    pattern = "\\A\(component)(?:/\(component)/\(component))?\\z"
+                }
+                valid = valid && matches(name, pattern: pattern)
+            } else {
+                valid = false
+            }
+
+            guard valid, let kind, let name else {
+                parsedDiagnostics.append(
+                    String.localizedStringWithFormat(
+                        NSLocalizedString("Line %lu: unsupported syntax or invalid package name. Nothing will be installed.", comment: ""),
+                        UInt(index + 1)
+                    )
+                )
+                continue
+            }
+
+            let entry = BPBrewfileEntry()
+            entry.kind = kind
+            entry.name = name
+            entry.appStoreID = identifier
+            let inventory = inventories?[kind]
+            let qualified = (kind != "tap" && name.contains("/"))
+            if inventory == nil || kind == "mas" || kind == "vscode" || qualified {
+                entry.status = "Not checked"
+            } else if inventory?.contains(name) == true {
+                entry.status = "Installed"
+            } else {
+                entry.status = "Missing"
+            }
+            parsedEntries.append(entry)
+            let idSuffix = identifier.map { ", id: \($0)" } ?? ""
+            canonical += "\(kind) '\(name)'\(idSuffix)\n"
+        }
+
+        plan.entries = parsedEntries
+        plan.diagnostics = parsedDiagnostics
+        if !parsedEntries.isEmpty && parsedDiagnostics.isEmpty {
+            plan.canonicalContents = canonical
+        }
+        return plan
+    }
+
+    @objc(createSnapshotWithError:)
+    public func createSnapshot() throws -> URL {
+        guard canInstall, let canonicalContents else {
+            throw NSError(domain: NSCocoaErrorDomain, code: NSFileWriteUnknownError, userInfo: nil)
+        }
+        let template = (NSTemporaryDirectory() as NSString).appendingPathComponent("cakebrew-reviewed-XXXXXX")
+        var buffer = template.utf8CString
+        let directoryPath: String? = buffer.withUnsafeMutableBufferPointer { ptr in
+            guard let baseAddress = ptr.baseAddress, mkdtemp(baseAddress) != nil else { return nil }
+            return String(cString: baseAddress)
+        }
+        guard let directoryPath else {
+            throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno), userInfo: nil)
+        }
+        let directoryURL = URL(fileURLWithPath: directoryPath, isDirectory: true)
+        let url = directoryURL.appendingPathComponent("Brewfile")
+        let data = canonicalContents.data(using: .utf8)
+        guard FileManager.default.createFile(atPath: url.path, contents: data, attributes: [.posixPermissions: 0o400]) else {
+            Self.removeSnapshot(url)
+            throw NSError(domain: NSCocoaErrorDomain, code: NSFileWriteUnknownError, userInfo: nil)
+        }
+        return url
+    }
+
+    @objc(removeSnapshot:)
+    public static func removeSnapshot(_ snapshot: URL?) {
+        guard let snapshot,
+              snapshot.lastPathComponent == "Brewfile",
+              snapshot.deletingLastPathComponent().lastPathComponent.hasPrefix("cakebrew-reviewed-") else {
+            return
+        }
+        try? FileManager.default.removeItem(at: snapshot.deletingLastPathComponent())
+    }
+}
+
+@objc(BPPreferences)
+public final class BPPreferences: NSObject {
+    public static let backgroundCheckEnabledKey = "BPBackgroundCheckEnabled"
+    public static let backgroundCheckIntervalKey = "BPBackgroundCheckInterval"
+    public static let greedyCaskUpgradesKey = "BPGreedyCaskUpgrades"
+    public static let lastSelectedSidebarRowKey = "BPLastSelectedSidebarRow"
+    public static let sortColumnIdentifierKey = "BPSortColumnIdentifier"
+    public static let sortAscendingKey = "BPSortAscending"
+    public static let zapCasksOnUninstallKey = "BPZapCasksOnUninstall"
+    public static let automaticAppUpdateCheckEnabledKey = "BPAutomaticAppUpdateCheckEnabled"
+    public static let showMenuBarExtraKey = "BPShowMenuBarExtra"
+
+    @objc public static func registerDefaults() {
+        UserDefaults.standard.register(defaults: [
+            backgroundCheckEnabledKey: true,
+            backgroundCheckIntervalKey: 21600.0,
+            greedyCaskUpgradesKey: false,
+            lastSelectedSidebarRowKey: 1,
+            sortAscendingKey: true,
+            zapCasksOnUninstallKey: false,
+            automaticAppUpdateCheckEnabledKey: true,
+            showMenuBarExtraKey: false
+        ])
+    }
+
+    @objc public static var backgroundCheckEnabled: Bool {
+        get { UserDefaults.standard.bool(forKey: backgroundCheckEnabledKey) }
+        set { UserDefaults.standard.set(newValue, forKey: backgroundCheckEnabledKey) }
+    }
+
+    @objc public static var backgroundCheckInterval: TimeInterval {
+        get { UserDefaults.standard.double(forKey: backgroundCheckIntervalKey) }
+        set { UserDefaults.standard.set(newValue, forKey: backgroundCheckIntervalKey) }
+    }
+
+    @objc public static var lastSelectedSidebarRow: Int {
+        get { UserDefaults.standard.integer(forKey: lastSelectedSidebarRowKey) }
+        set { UserDefaults.standard.set(newValue, forKey: lastSelectedSidebarRowKey) }
+    }
+
+    @objc public static var sortColumnIdentifier: String? {
+        get { UserDefaults.standard.string(forKey: sortColumnIdentifierKey) }
+        set {
+            guard let newValue, !newValue.isEmpty else {
+                UserDefaults.standard.removeObject(forKey: sortColumnIdentifierKey)
+                return
+            }
+            UserDefaults.standard.set(newValue, forKey: sortColumnIdentifierKey)
+        }
+    }
+
+    @objc public static var sortAscending: Bool {
+        get { UserDefaults.standard.bool(forKey: sortAscendingKey) }
+        set { UserDefaults.standard.set(newValue, forKey: sortAscendingKey) }
+    }
+
+    @objc public static var zapCasksOnUninstall: Bool {
+        get { UserDefaults.standard.bool(forKey: zapCasksOnUninstallKey) }
+        set { UserDefaults.standard.set(newValue, forKey: zapCasksOnUninstallKey) }
+    }
+
+    @objc public static var greedyCaskUpgrades: Bool {
+        get { UserDefaults.standard.bool(forKey: greedyCaskUpgradesKey) }
+        set { UserDefaults.standard.set(newValue, forKey: greedyCaskUpgradesKey) }
+    }
+
+    @objc public static var automaticAppUpdateCheckEnabled: Bool {
+        get { UserDefaults.standard.bool(forKey: automaticAppUpdateCheckEnabledKey) }
+        set { UserDefaults.standard.set(newValue, forKey: automaticAppUpdateCheckEnabledKey) }
+    }
+
+    @objc public static var showMenuBarExtra: Bool {
+        get { UserDefaults.standard.bool(forKey: showMenuBarExtraKey) }
+        set { UserDefaults.standard.set(newValue, forKey: showMenuBarExtraKey) }
+    }
+}
+
+@objc(BPLoadingStatus)
+public final class BPLoadingStatus: NSObject {
+    @objc(localizationKeyForListMode:)
+    public static func localizationKey(forListMode mode: Int) -> String? {
+        switch mode {
+        case 1: return "Loading_Status_Installed"
+        case 3: return "Loading_Status_Outdated"
+        case 2: return "Loading_Status_Leaves"
+        case 6: return "Loading_Status_Pinned"
+        case 5: return "Loading_Status_Repositories"
+        case 7: return "Loading_Status_InstalledCasks"
+        case 8: return "Loading_Status_OutdatedCasks"
+        case 0: return "Loading_Status_AllFormulae"
+        case 9: return "Loading_Status_AllCasks"
+        default: return nil
+        }
+    }
+
+    @objc(statusForListMode:)
+    public static func status(forListMode mode: Int) -> String {
+        let key = localizationKey(forListMode: mode) ?? "Loading_Status_Default"
+        return NSLocalizedString(key, comment: "")
+    }
+
+    @objc(isSlowListMode:)
+    public static func isSlowListMode(_ mode: Int) -> Bool {
+        return mode == 0 || mode == 9
+    }
+}
+
+@objc(BPEmptyState)
+public final class BPEmptyState: NSObject {
+    @objc public let symbolName: String
+    @objc public let titleKey: String
+    @objc public let messageKey: String
+
+    public init(symbolName: String, titleKey: String, messageKey: String) {
+        self.symbolName = symbolName
+        self.titleKey = titleKey
+        self.messageKey = messageKey
+        super.init()
+    }
+
+    @objc(stateForSidebarRow:searching:)
+    public static func state(forSidebarRow row: Int, searching: Bool) -> BPEmptyState {
+        if searching {
+            return BPEmptyState(
+                symbolName: "magnifyingglass",
+                titleKey: "Empty_Search_Title",
+                messageKey: "Empty_Search_Message"
+            )
+        }
+        switch row {
+        case 2, 15:
+            return BPEmptyState(
+                symbolName: "checkmark.circle",
+                titleKey: "Empty_Outdated_Title",
+                messageKey: "Empty_Outdated_Message"
+            )
+        case 9:
+            return BPEmptyState(
+                symbolName: "checkmark.circle",
+                titleKey: "Empty_OutdatedCasks_Title",
+                messageKey: "Empty_OutdatedCasks_Message"
+            )
+        case 5:
+            return BPEmptyState(
+                symbolName: "pin",
+                titleKey: "Empty_Pinned_Title",
+                messageKey: "Empty_Pinned_Message"
+            )
+        case 14:
+            return BPEmptyState(
+                symbolName: "gearshape.2",
+                titleKey: "Empty_Services_Title",
+                messageKey: "Empty_Services_Message"
+            )
+        case 8:
+            return BPEmptyState(
+                symbolName: "macwindow",
+                titleKey: "Empty_Casks_Title",
+                messageKey: "Empty_Casks_Message"
+            )
+        case 4:
+            return BPEmptyState(
+                symbolName: "leaf",
+                titleKey: "Empty_Leaves_Title",
+                messageKey: "Empty_Leaves_Message"
+            )
+        default:
+            return BPEmptyState(
+                symbolName: "tray",
+                titleKey: "Empty_Generic_Title",
+                messageKey: "Empty_Generic_Message"
+            )
+        }
+    }
+
+    @objc(shouldShowForRowCount:loading:)
+    public static func shouldShow(forRowCount rowCount: Int, loading: Bool) -> Bool {
+        return rowCount == 0 && !loading
+    }
+}
+
+@objc(BPServiceStatus)
+public enum BPServiceStatus: Int {
+    case none = 0
+    case started = 1
+    case stopped = 2
+    case error = 3
+    case scheduled = 4
+    case unknown = 5
+}
+
+@objc(BPService)
+public final class BPService: NSObject {
+    @objc public var name: String?
+    @objc public var user: String?
+    @objc public var pid: NSNumber?
+    @objc public var status: BPServiceStatus = .none
+    @objc public var statusString: String?
+
+    @objc(localizationKeyForStatus:)
+    public static func localizationKey(for status: BPServiceStatus) -> String {
+        switch status {
+        case .none:      return "Services_Status_None"
+        case .started:   return "Services_Status_Started"
+        case .stopped:   return "Services_Status_Stopped"
+        case .error:     return "Services_Status_Error"
+        case .scheduled: return "Services_Status_Scheduled"
+        case .unknown:   return "Services_Status_Unknown"
+        @unknown default: return "Services_Status_Unknown"
+        }
+    }
+
+    @objc(localizedNameForStatus:)
+    public static func localizedName(for status: BPServiceStatus) -> String {
+        return NSLocalizedString(localizationKey(for: status), comment: "")
+    }
+
+    @objc(statusFromString:)
+    public static func status(from status: String?) -> BPServiceStatus {
+        switch status {
+        case "none":      return .none
+        case "started":   return .started
+        case "stopped":   return .stopped
+        case "error":     return .error
+        case "scheduled": return .scheduled
+        default:          return .unknown
+        }
+    }
+
+    @objc(validatedServicesFromJSONString:)
+    public static func validatedServices(fromJSONString output: String?) -> [BPService]? {
+        guard let data = output?.data(using: .utf8),
+              let parsed = try? JSONSerialization.jsonObject(with: data, options: []),
+              let entries = parsed as? [Any] else {
+            return nil
+        }
+        var services: [BPService] = []
+        for entry in entries {
+            guard let dict = entry as? [String: Any] else { return nil }
+            for key in ["user", "status", "pid"] {
+                if let value = dict[key], !(value is NSNull) {
+                    if key == "pid" {
+                        guard value is NSNumber else { return nil }
+                    } else {
+                        guard value is NSString else { return nil }
+                    }
+                }
+            }
+            guard let service = service(withDictionary: dict) else { return nil }
+            services.append(service)
+        }
+        return services
+    }
+
+    @objc(servicesFromJSONString:)
+    public static func services(fromJSONString output: String?) -> [BPService] {
+        guard let data = output?.data(using: .utf8),
+              let parsed = try? JSONSerialization.jsonObject(with: data, options: []),
+              let entries = parsed as? [Any] else {
+            return []
+        }
+        var services: [BPService] = []
+        for entry in entries {
+            guard let dict = entry as? [String: Any] else { continue }
+            if let service = service(withDictionary: dict) {
+                services.append(service)
+            }
+        }
+        return services
+    }
+
+    private static func service(withDictionary dict: [String: Any]) -> BPService? {
+        guard let name = dict["name"] as? String, !name.isEmpty else { return nil }
+        let service = BPService()
+        service.name = name
+        service.user = dict["user"] as? String
+        service.statusString = dict["status"] as? String
+        service.status = status(from: service.statusString)
+        if let pid = dict["pid"] as? NSNumber {
+            service.pid = pid
+        }
+        return service
+    }
+}
+
+@objc(BPServiceDetails)
+public final class BPServiceDetails: NSObject {
+    @objc public private(set) var available: Bool = false
+    @objc public private(set) var service: BPService?
+    @objc public private(set) var rawOutput: String = ""
+    @objc public private(set) var serviceFile: String?
+    @objc public private(set) var loadedFile: String?
+    @objc public private(set) var logPath: String?
+    @objc public private(set) var errorLogPath: String?
+    @objc public private(set) var exitCode: NSNumber?
+
+    @objc(readableFileURLForPath:)
+    public static func readableFileURL(forPath path: String?) -> URL? {
+        guard let path, !path.isEmpty else { return nil }
+        let nsPath = path as NSString
+        if nsPath.rangeOfCharacter(from: .controlCharacters).location != NSNotFound {
+            return nil
+        }
+        if path.hasPrefix("//") || (!path.hasPrefix("/") && !path.hasPrefix("~/")) {
+            return nil
+        }
+        let resolved = ((nsPath.expandingTildeInPath as NSString).standardizingPath as NSString).resolvingSymlinksInPath
+        let files = FileManager.default
+        guard let attributes = try? files.attributesOfItem(atPath: resolved),
+              (attributes[.type] as? FileAttributeType) == .typeRegular,
+              files.isReadableFile(atPath: resolved) else {
+            return nil
+        }
+        return URL(fileURLWithPath: resolved)
+    }
+
+    @objc(detailsForName:output:succeeded:)
+    public static func details(forName name: String?, output: String?, succeeded: Bool) -> BPServiceDetails {
+        let result = BPServiceDetails()
+        result.rawOutput = output ?? ""
+        guard succeeded, let name, !name.isEmpty,
+              let data = result.rawOutput.data(using: .utf8),
+              let records = (try? JSONSerialization.jsonObject(with: data, options: [])) as? [Any],
+              records.count == 1,
+              let record = records.first as? [String: Any],
+              (record["name"] as? String) == name else {
+            return result
+        }
+        result.service = BPService.services(fromJSONString: output).first
+        result.serviceFile = record["file"] as? String
+        result.loadedFile = record["loaded_file"] as? String
+        result.logPath = record["log_path"] as? String
+        result.errorLogPath = record["error_log_path"] as? String
+        result.exitCode = integerOrNil(record["exit_code"])
+        let pid = integerOrNil(record["pid"])
+        result.service?.pid = (pid?.int64Value ?? 0) > 0 ? pid : nil
+        result.available = (result.service != nil)
+        return result
+    }
+
+    private static func integerOrNil(_ value: Any?) -> NSNumber? {
+        guard let number = value as? NSNumber,
+              CFGetTypeID(number as CFTypeRef) != CFBooleanGetTypeID() else {
+            return nil
+        }
+        return number.doubleValue == Double(number.int64Value) ? number : nil
+    }
+}
