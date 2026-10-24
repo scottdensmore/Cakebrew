@@ -1,7 +1,7 @@
 import CryptoKit
 import XCTest
 
-final class BPFormulaInformationTests: XCTestCase {
+final class BPFormulaInformationTests: XCTestCase, @unchecked Sendable {
     func testNewSelectionRejectsEarlierResponse() {
         var state = BPFormulaInformationState()
         let old = state.begin(name: "wget", cask: false)

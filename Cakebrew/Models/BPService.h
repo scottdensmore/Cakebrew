@@ -1,9 +1,0 @@
-#import <Foundation/Foundation.h>
-#import "BPFormulaInformation-Swift.h"
-
-#define kBPServiceStatusNone BPServiceStatusNone
-#define kBPServiceStatusStarted BPServiceStatusStarted
-#define kBPServiceStatusStopped BPServiceStatusStopped
-#define kBPServiceStatusError BPServiceStatusError
-#define kBPServiceStatusScheduled BPServiceStatusScheduled
-#define kBPServiceStatusUnknown BPServiceStatusUnknown
