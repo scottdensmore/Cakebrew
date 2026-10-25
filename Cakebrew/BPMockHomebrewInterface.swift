@@ -6,6 +6,13 @@ import Foundation
 @objc(BPMockHomebrewInterface)
 open class BPMockHomebrewInterface: BPHomebrewInterface, @unchecked Sendable {
     // All stored properties have zero-byte defaults so class_createInstance(Cls, 0) works safely.
+    @objc public var mockLatestFormulaUnpinned = false
+    @objc public var mockHistoricalFormulaUnpinned = false
+    @objc public var mockHistoricalFormulaUnlinked = false
+    @objc public var mockHistoricalCaskInstalled = false
+    @objc public var mockCaskPinned = false
+    @objc public var mockPinnedCaskReturned = false
+    @objc public var mockPinnedCaskUnpinned = false
     @objc public var discoveryAttempts: UInt = 0
     @objc public var autoremovePreviews: UInt = 0
     private var _catalogConditionStorage: NSCondition?
@@ -139,7 +146,16 @@ open class BPMockHomebrewInterface: BPHomebrewInterface, @unchecked Sendable {
     }
 
     open override func listPinnedCasks() -> [BPFormula]? {
-        []
+        guard mockCaskPinned || (mockArgumentEnabled("-BPMockPinnedHistory") && !mockPinnedCaskReturned && !mockPinnedCaskUnpinned) else { return [] }
+        let cask = BPFormula.formula(withName: "mockchrome", andVersion: mockHistoricalCaskInstalled ? "0.9.0" : "1.0.0")
+        cask.cask = true
+        return [cask]
+    }
+
+    open override func setCaskPinned(_ name: String?, pinned: Bool) -> Bool {
+        mockCaskPinned = pinned
+        sendDelegateFormulaeUpdatedCall(forCommand: pinned ? "pin" : "unpin")
+        return true
     }
 
     open override func listMode(_ mode: BPListMode) -> [BPFormula]? {
@@ -188,6 +204,10 @@ open class BPMockHomebrewInterface: BPHomebrewInterface, @unchecked Sendable {
                 BPFormula.formula(withName: "homebrew/cask")
             ].compactMap { $0 }
         case .pinned:
+            if mockArgumentEnabled("-BPMockPinnedHistory") {
+                return mockHistoricalFormulaUnpinned ? [] : [BPFormula.formula(withName: "mockwget@0.9.0", andVersion: "0.9.0")]
+            }
+            if mockLatestFormulaUnpinned { return [] }
             if ProcessInfo.processInfo.arguments.contains("-BPMockMixedUpdates") {
                 return []
             }
@@ -262,6 +282,13 @@ open class BPMockHomebrewInterface: BPHomebrewInterface, @unchecked Sendable {
             + "A mock formula used for Cakebrew UI tests.\n"
             + "https://example.com\n"
             + "Not installed\n"
+            + "From: https://example.com/\(fName).rb\n"
+            + "License: MIT\n"
+            + "==> Dependencies\n"
+            + "Required (1): mockgit\n"
+            + "Recursive Runtime (1): all installed ✔\n"
+            + "==> Analytics\n"
+            + "install: 42 (30 days)\n"
             + "==> Options\n"
             + "--with-debug\n"
             + "\tBuild with debug symbols\n"
@@ -284,6 +311,101 @@ open class BPMockHomebrewInterface: BPHomebrewInterface, @unchecked Sendable {
             + "Installed (on request)\n"
             + "/usr/local/Caskroom/\(cName)/1.0.0 (10MB)\n"
             + "From: https://example.com/\(cName).rb\n"
+    }
+
+    private func pinnedMockRelease(cask: Bool) -> BPVersionRelease {
+        let name = cask ? "mockchrome" : "mockwget"
+        let source = BPVersionHistorySource(url: URL(string: "https://github.com/Homebrew/homebrew-\(cask ? "cask" : "core")/blob/HEAD/\(cask ? "Casks" : "Formula")/m/\(name).rb")!)!
+        return BPVersionRelease(version: "0.9.0", commit: String(repeating: "a", count: 40), date: "", message: "", source: source)
+    }
+
+    override func versionHistoryReceipt(name: String, cask: Bool) -> BPVersionRelease? {
+        guard mockArgumentEnabled("-BPMockPinnedHistory"), !mockArgumentEnabled("-BPMockPinnedMissingReceipt") else { return nil }
+        let release = pinnedMockRelease(cask: cask)
+        return name == release.target ? release : nil
+    }
+
+    open override func readVersionHistoryCommand(_ arguments: [String], progress: Progress? = nil) -> (succeeded: Bool, output: String) {
+        if arguments == ["tap"] { return (true, "homebrew/core\ncakebrew/versions\n") }
+        if arguments == ["formulae"] {
+            if mockArgumentEnabled("-BPMockPinnedNoOrigin") { return (true, "") }
+            return (true, mockArgumentEnabled("-BPMockPinnedAmbiguousOrigin")
+                ? "mockwget\nmockwget@1\n" : "mockwget\nmockgit\ncakebrew/versions/mockwget@0.9.0\n")
+        }
+        if arguments == ["casks"] {
+            return (true, mockArgumentEnabled("-BPMockPinnedAmbiguousOrigin")
+                ? "mockchrome\nexample/apps/mockchrome\n" : "mockchrome\n")
+        }
+        if arguments.contains("--installed") {
+            let cask = arguments.contains("--cask")
+            let historical = mockArgumentEnabled("-BPMockPinnedHistory")
+            let release = pinnedMockRelease(cask: cask)
+            let name = cask ? "mockchrome" : (historical ? "mockwget@0.9.0" : "mockgit")
+            let tap = historical ? release.destinationTap : (cask ? "homebrew/cask" : "homebrew/core")
+            var metadata: [String: Any] = ["tap": tap, "pinned": true, "homepage": "https://example.com/\(name.components(separatedBy: "@")[0])"]
+            if cask {
+                metadata["token"] = name
+                metadata["installed"] = "0.9.0"
+            } else {
+                metadata["name"] = name
+                metadata["installed"] = [["version": historical ? "0.9.0" : "1.0.0"]]
+                metadata["linked_keg"] = historical ? "0.9.0" : "1.0.0"
+            }
+            let data = try! JSONSerialization.data(withJSONObject: [cask ? "casks" : "formulae": [metadata]])
+            return (true, String(decoding: data, as: UTF8.self))
+        }
+        let name = arguments.last ?? ""
+        if arguments.first == "--repository" { return (true, "/tmp/mock-history-tap") }
+        if arguments.contains("--cask") {
+            let historical = name.hasPrefix("cakebrew/history-")
+            let fixtureOld = mockArgumentEnabled("-BPMockPinnedHistory") && !mockPinnedCaskReturned
+            let installed = mockHistoricalCaskInstalled || (mockArgumentEnabled("-BPMockPinnedHistory") && !mockPinnedCaskReturned) ? "0.9.0" : "1.0.0"
+            let metadata: [String: Any] = [
+                "version": historical ? "0.9.0" : "1.0.0", "installed": installed,
+                "token": "mockchrome", "tap": historical ? pinnedMockRelease(cask: true).destinationTap :
+                    (name.contains("/") ? name.split(separator: "/").dropLast().joined(separator: "/") : "homebrew/cask"),
+                "homepage": "https://example.com/mockchrome",
+                "pinned": mockCaskPinned || (fixtureOld && !mockPinnedCaskUnpinned),
+                "pinned_version": mockCaskPinned || (fixtureOld && !mockPinnedCaskUnpinned) ? installed as Any : NSNull(),
+                "sha256": String(repeating: "a", count: 64)
+            ]
+            let data = try! JSONSerialization.data(withJSONObject: ["casks": [metadata]])
+            return (true, String(decoding: data, as: UTF8.self))
+        }
+        let version = name.components(separatedBy: "@").last ?? "1.0.0"
+        let stable = name.contains("cakebrew/versions/") ? version : "1.0.0"
+        let historical = name.hasPrefix("cakebrew/versions/")
+        let pinned = historical ? !mockHistoricalFormulaUnpinned : !mockLatestFormulaUnpinned
+        let linked = historical && mockHistoricalFormulaUnlinked ? "" : stable
+        return (true, "{\"formulae\":[{\"name\":\"\(name.split(separator: "/").last ?? "")\",\"tap\":\"\(historical ? "cakebrew/versions" : "homebrew/core")\",\"homepage\":\"https://example.com/\((name.split(separator: "/").last.map(String.init) ?? "").components(separatedBy: "@")[0])\",\"versions\":{\"stable\":\"\(stable)\"},\"installed\":[{\"version\":\"\(stable)\"}],\"pinned\":\(pinned),\"linked_keg\":\"\(linked)\"}]}")
+    }
+
+    open override func runVersionHistoryCommand(_ arguments: [String], progress: Progress,
+                                                output: (@Sendable (String) -> Void)?) -> Bool {
+        output?("MOCK_VERSION_COMMAND \(arguments.joined(separator: " "))\n")
+        guard !progress.isCancelled,
+              !(["install", "reinstall"].contains(arguments.first ?? "") && mockArgumentEnabled("-BPMockVersionInstallFailure")) else { return false }
+        if mockArgumentEnabled("-BPMockReturnLatestFailure"), arguments.first == "link",
+           arguments.last?.hasPrefix("homebrew/") == true { return false }
+        if arguments.contains("--cask") {
+            if ["install", "reinstall"].contains(arguments.first ?? "") {
+                mockHistoricalCaskInstalled = arguments.last?.hasPrefix("cakebrew/history-") == true
+                if arguments.last?.hasPrefix("homebrew/") == true { mockPinnedCaskReturned = true }
+            }
+            if arguments.first == "pin" { mockCaskPinned = true }
+            if arguments.first == "unpin" { mockCaskPinned = false; mockPinnedCaskUnpinned = true }
+        } else {
+            let historical = arguments.last?.hasPrefix("cakebrew/versions/") == true
+            if arguments.first == "unpin" {
+                if historical { mockHistoricalFormulaUnpinned = true } else { mockLatestFormulaUnpinned = true }
+            }
+            if arguments.first == "pin" {
+                if historical { mockHistoricalFormulaUnpinned = false } else { mockLatestFormulaUnpinned = false }
+            }
+            if arguments.first == "unlink", historical { mockHistoricalFormulaUnlinked = true }
+            if arguments.first == "link", historical { mockHistoricalFormulaUnlinked = false }
+        }
+        return true
     }
 
     open override func pinFormula(_ formula: String?, withReturnBlock block: (@Sendable (String) -> Void)?) -> Bool {

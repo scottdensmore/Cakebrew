@@ -459,85 +459,22 @@ final class BPFormulaInformationLifecycleTests: XCTestCase, @unchecked Sendable 
         XCTAssertFalse(anchor.isEmpty)
     }
 
-    private func findTableView(in view: NSView) -> NSTableView? {
-        if let table = view as? NSTableView {
-            return table
-        }
-        for subview in view.subviews {
-            if let found = findTableView(in: subview) {
-                return found
-            }
-        }
-        return nil
+    func testSwiftUITableSelectionSurvivesRowReplacementWithoutAppKitIntrospection() {
+        let host = BPInstalledPackageListHost()
+        host.listMode = BPListMode.installed.rawValue
+        host.updateRows(names: ["ack", "wget"], versions: ["3.7", "1.24"],
+                        latestVersions: ["3.7", "1.24"], statusRanks: [1, 1],
+                        pinnedFlags: [true, false], cask: false)
+        XCTAssertTrue(host.selectPackage(named: "wget", cask: false))
+        XCTAssertEqual(host.selectedPackageName, "wget")
+        host.updateRows(names: ["wget", "ack"], versions: ["1.25", "3.7"],
+                        latestVersions: ["1.25", "3.7"], statusRanks: [1, 1],
+                        pinnedFlags: [false, true], cask: false)
+        XCTAssertEqual(host.selectedPackageName, "wget", "Selection follows package identity, not its former row")
+        host.deselectAll()
+        XCTAssertEqual(host.selectedCount, 0)
     }
 
-    func testInstalledPackageListHostAttachesBridgeToUnderlyingTableViewAndSyncsMenuAndRowGeometry() {
-        let listHost = BPInstalledPackageListHost()
-        let contextMenu = NSMenu()
-        listHost.contextMenu = contextMenu
-
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 600, height: 400),
-            styleMask: [.titled],
-            backing: .buffered,
-            defer: false
-        )
-        if let bounds = window.contentView?.bounds {
-            listHost.viewController.view.frame = bounds
-        }
-        window.contentView?.addSubview(listHost.viewController.view)
-
-        listHost.updateRows(
-            names: ["ack", "wget"],
-            versions: ["3.7", "1.24"],
-            latestVersions: ["3.7", "1.24"],
-            statusRanks: [1, 1],
-            pinnedFlags: [true, false],
-            cask: false
-        )
-
-        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.15))
-        window.contentView?.layoutSubtreeIfNeeded()
-        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.10))
-
-        guard let underlyingTable = findTableView(in: listHost.viewController.view) else {
-            XCTFail("SwiftUI Table must mount an underlying NSTableView")
-            return
-        }
-        XCTAssertEqual(underlyingTable.menu, contextMenu, "Bridge must wire the context menu to the underlying NSTableView")
-        XCTAssertNotNil(underlyingTable.target, "Bridge must wire doubleAction target")
-        XCTAssertNotNil(underlyingTable.doubleAction, "Bridge must wire doubleAction selector")
-        XCTAssertEqual(underlyingTable.numberOfRows, 2)
-
-        XCTAssertTrue(listHost.selectPackage(named: "wget", cask: false))
-        XCTAssertEqual(underlyingTable.selectedRow, 1)
-
-        let rowRect = listHost.rectOfSelectedRow(in: listHost.viewController.view)
-        XCTAssertFalse(rowRect.isEmpty)
-        XCTAssertGreaterThan(rowRect.size.width, 100.0)
-
-        let firstRowRect = underlyingTable.rect(ofRow: 0)
-        let firstRowPointInWindow = underlyingTable.convert(
-            NSPoint(x: firstRowRect.midX, y: firstRowRect.midY),
-            to: nil
-        )
-        let rightClick = NSEvent.mouseEvent(
-            with: .rightMouseDown,
-            location: firstRowPointInWindow,
-            modifierFlags: [],
-            timestamp: 0,
-            windowNumber: window.windowNumber,
-            context: nil,
-            eventNumber: 0,
-            clickCount: 1,
-            pressure: 1.0
-        )!
-        XCTAssertEqual(underlyingTable.menu(for: rightClick), contextMenu)
-        XCTAssertEqual(underlyingTable.clickedRow, 0)
-        listHost.selectClickedRowIfNeeded()
-        XCTAssertEqual(listHost.selectedRow, 0)
-        XCTAssertEqual(listHost.selectedPackageName, "ack")
-    }
 }
 
 // MARK: - End-to-End In-Process Feature Journey Suite
@@ -559,6 +496,8 @@ final class BPEndToEndFeatureJourneyTests: XCTestCase, @unchecked Sendable {
     override func setUp() {
         super.setUp()
         MainActor.assumeIsolated {
+        _ = NSApplication.shared
+        BPPreferences.registerDefaults()
         savedSortColumn = BPPreferences.sortColumnIdentifier
         savedSortAscending = BPPreferences.sortAscending
         savedSidebarRow = BPPreferences.lastSelectedSidebarRow
@@ -775,11 +714,11 @@ final class BPEndToEndFeatureJourneyTests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(listHost.selectPackage(named: "mockwget", cask: false))
         XCTAssertEqual(vc.currentFormula?.name, "mockwget")
 
-        // Exercise Formula Info Popover from BPHomebrewViewController
+        // Information commands reveal the inspector without creating a popover.
+        var inspectorRequests = 0
+        vc.onShowPackageInspector = { inspectorRequests += 1 }
         vc.showFormulaInfo(nil)
-        let popoverVC = vc.formulaPopoverViewController
-        XCTAssertNotNil(popoverVC)
-        XCTAssertEqual((popoverVC.formula as? BPFormula)?.name, "mockwget")
+        XCTAssertEqual(inspectorRequests, 1)
 
         // Clear search and verify restoration of previous sidebar row
         vc.performSearch(with: "")

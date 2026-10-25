@@ -35,17 +35,23 @@ open class BPHomebrewViewController: NSViewController,
 
     nonisolated(unsafe) private var _homebrewManager: BPHomebrewManager = BPHomebrewManager.sharedManager()
     private var didCommonInit: Bool = false
+    public var usesSwiftUIComposition = false
+    public var statusMessage = ""
+    public var onPresentationChanged: (() -> Void)?
+    public var onSearchTextChanged: ((String) -> Void)?
+    public var onShowPackageInspector: (() -> Void)?
+    public var selectedSidebarRow: Int { sidebarController?.sidebar?.selectedRow ?? sidebarController?.sidebarHost.selectedRowIndex ?? -1 }
 
-    @IBOutlet @objc open weak var sidebarController: BPSideBarController?
-    @IBOutlet @objc open weak var formulaeTableView: BPFormulaeTableView?
-    @IBOutlet @objc open weak var scrollView_formulae: NSScrollView?
-    @IBOutlet @objc open weak var tabView: NSTabView?
-    @IBOutlet @objc open weak var label_information: NSTextField?
-    @IBOutlet @objc open weak var menu_formula: NSMenu?
-    @IBOutlet @objc open weak var formulaeSplitView: NSSplitView?
-    @IBOutlet @objc open weak var selectedFormulaView: NSView?
-    @IBOutlet @objc open weak var backgroundActivityIndicator: NSProgressIndicator?
-    @IBOutlet @objc open weak var mainWindowController: BPMainWindowController?
+    @objc open weak var sidebarController: BPSideBarController?
+    @objc open weak var formulaeTableView: BPFormulaeTableView?
+    @objc open weak var scrollView_formulae: NSScrollView?
+    @objc open weak var tabView: NSTabView?
+    @objc open weak var label_information: NSTextField?
+    @objc open weak var menu_formula: NSMenu?
+    @objc open weak var formulaeSplitView: NSSplitView?
+    @objc open weak var selectedFormulaView: NSView?
+    @objc open weak var backgroundActivityIndicator: NSProgressIndicator?
+    @objc open weak var mainWindowController: BPMainWindowController?
 
     @objc open private(set) var commandPaletteHost: BPCommandPaletteHost?
     @objc open private(set) var statusBarHost: BPStatusBarHost?
@@ -242,12 +248,6 @@ open class BPHomebrewViewController: NSViewController,
     }
 
     open override func loadView() {
-        if let nibName = self.nibName,
-           !nibName.isEmpty,
-           Bundle(for: BPHomebrewViewController.self).path(forResource: nibName, ofType: "nib") != nil {
-            super.loadView()
-            return
-        }
         let rootView = NSView(frame: NSRect(x: 0, y: 0, width: 820, height: 520))
         let splitView = NSSplitView(frame: rootView.bounds)
         splitView.isVertical = false
@@ -285,6 +285,7 @@ open class BPHomebrewViewController: NSViewController,
 
     open override func viewDidLoad() {
         super.viewDidLoad()
+        guard !usesSwiftUIComposition else { return }
 
         mainWindowController?.setUpViews()
         mainWindowController?.setContentViewHidden(true)
@@ -363,7 +364,7 @@ open class BPHomebrewViewController: NSViewController,
         addToolbar()
         addLoadingView()
 
-        let delegate = NSApplication.shared.delegate as? BPAppDelegate
+        let delegate = BPAppDelegate.current
         self.appDelegate = delegate
         delegate?.dockActionTarget = self
         delegate?.brewfileImportTarget = self
@@ -439,6 +440,11 @@ open class BPHomebrewViewController: NSViewController,
 
     @objc(beginMockNotificationSearch:)
     open func beginMockNotificationSearch(_ sender: Any?) {
+        if usesSwiftUIComposition {
+            onSearchTextChanged?(Self.notificationSearchFixtureIdentifier)
+            performSearch(with: Self.notificationSearchFixtureIdentifier)
+            return
+        }
         toolbar?.searchField?.stringValue = Self.notificationSearchFixtureIdentifier
         performSearch(with: toolbar?.searchField?.stringValue ?? "")
     }
@@ -457,6 +463,12 @@ open class BPHomebrewViewController: NSViewController,
 
     @objc(clearMockSearchBeforeDebounce:)
     open func clearMockSearchBeforeDebounce(_ sender: Any?) {
+        if usesSwiftUIComposition {
+            performSearch(with: Self.notificationSearchFixtureIdentifier)
+            performSearch(with: "")
+            onSearchTextChanged?("")
+            return
+        }
         guard let field = toolbar?.searchField else { return }
         let change = Notification(name: NSControl.textDidChangeNotification, object: field)
         field.stringValue = Self.notificationSearchFixtureIdentifier
@@ -497,6 +509,7 @@ open class BPHomebrewViewController: NSViewController,
     }
 
     @objc open func addLoadingView() {
+        guard !usesSwiftUIComposition else { return }
         let lv = BPLoadingView(frame: .zero)
         lv.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(lv)
@@ -543,7 +556,7 @@ open class BPHomebrewViewController: NSViewController,
     }
 
     @objc open var isUsingUnifiedUpdatesHost: Bool {
-        !searching && sidebarController?.sidebar?.selectedRow == Int(FormulaeSideBarItem.unifiedUpdates.rawValue)
+        !searching && selectedSidebarRow == Int(FormulaeSideBarItem.unifiedUpdates.rawValue)
     }
 
     @objc open var isUsingInstalledPackageListHost: Bool {
@@ -594,8 +607,9 @@ open class BPHomebrewViewController: NSViewController,
     }
 
     @objc open func syncStatusBarHost() {
+        defer { onPresentationChanged?() }
         guard let statusBarHost else { return }
-        let message = label_information?.stringValue ?? ""
+        let message = label_information?.stringValue ?? statusMessage
         let installedCount = (_homebrewManager.installedFormulae?.count ?? 0) + (_homebrewManager.installedCasks?.count ?? 0)
         let outdatedCount = (_homebrewManager.outdatedFormulae?.count ?? 0) + (_homebrewManager.outdatedCasks?.count ?? 0)
         let pinnedCount = _homebrewManager.pinnedFormulae?.count ?? 0
@@ -766,6 +780,7 @@ open class BPHomebrewViewController: NSViewController,
     }
 
     @objc open func updateActiveListSurfaceVisibility() {
+        guard !usesSwiftUIComposition else { return }
         let container = scrollView_formulae?.superview
         let installedView = installedPackageListHost?.viewController.view
         let unifiedView = unifiedUpdatesHost?.viewController.view
@@ -788,14 +803,12 @@ open class BPHomebrewViewController: NSViewController,
     open func handleInstalledPackageListAction(_ request: BPFormulaeTableRequest) {
         guard let hostView = installedPackageListHost?.viewController.view else { return }
         guard isUsingInstalledPackageListHost,
-              hostView.window != nil,
-              !hostView.isHiddenOrHasHiddenAncestor,
+              (usesSwiftUIComposition || (hostView.window != nil && !hostView.isHiddenOrHasHiddenAncestor)),
               loadingView == nil,
               disabledView == nil,
               homebrewInstalled,
               appDelegate?.window?.attachedSheet == nil,
-              let selectedTab = tabView?.selectedTabViewItem,
-              tabView?.indexOfTabViewItem(selectedTab) == Int(BPContentTab.formulae.rawValue),
+              (usesSwiftUIComposition || tabView?.selectedTabViewItem.flatMap { tabView?.indexOfTabViewItem($0) } == Int(BPContentTab.formulae.rawValue)),
               appDelegate?.runningBackgroundTask != true else {
             return
         }
@@ -822,7 +835,8 @@ open class BPHomebrewViewController: NSViewController,
     }
 
     @objc open func updateInterfaceItems() {
-        let selectedSidebarRow = sidebarController?.sidebar?.selectedRow ?? -1
+        defer { onPresentationChanged?() }
+        let selectedSidebarRow = self.selectedSidebarRow
         let selected = selectedFormulae() ?? []
         let selectedCount: UInt
         if isUsingUnifiedUpdatesHost {
@@ -902,7 +916,7 @@ open class BPHomebrewViewController: NSViewController,
         var state: BPEmptyState?
         if BPEmptyState.shouldShow(forRowCount: rows, loading: loading) {
             state = BPEmptyState.state(
-                forSidebarRow: sidebarController?.sidebar?.selectedRow ?? -1,
+                forSidebarRow: selectedSidebarRow,
                 searching: searching
             )
         }
@@ -912,7 +926,7 @@ open class BPHomebrewViewController: NSViewController,
     // MARK: - Footer Information Label
 
     @objc open func updateInfoLabelWithSidebarSelection() {
-        let selectedSidebarRow = sidebarController?.sidebar?.selectedRow ?? -1
+        let selectedSidebarRow = self.selectedSidebarRow
         let key = BPFormulaeTableActions.footerLocalizationKey(
             forSidebarRow: selectedSidebarRow,
             searching: searching
@@ -923,7 +937,9 @@ open class BPHomebrewViewController: NSViewController,
 
     @objc(updateInfoLabelWithText:)
     open func updateInfoLabel(withText message: String?) {
+        defer { onPresentationChanged?() }
         let resolved = message ?? ""
+        statusMessage = resolved
         label_information?.stringValue = resolved
         let window = view.window ?? appDelegate?.window
         window?.subtitle = resolved
@@ -1042,7 +1058,7 @@ open class BPHomebrewViewController: NSViewController,
             self.toolbar?.unlockItems()
             self.formulaeDataSource?.refreshBackingArray()
 
-            let shouldReselectFirstRow = (self.sidebarController?.sidebar?.selectedRow ?? -1) < 0
+            let shouldReselectFirstRow = (self.selectedSidebarRow) < 0
 
             self.sidebarController?.refreshSidebarBadges()
             self.sidebarController?.sidebar?.reloadData()
@@ -1104,6 +1120,8 @@ open class BPHomebrewViewController: NSViewController,
     nonisolated open func homebrewManager(_ manager: BPHomebrewManager, shouldDisplayNoBrewMessage yesOrNo: Bool) {
         MainActor.assumeIsolated {
             self.homebrewInstalled = !yesOrNo
+            self.onPresentationChanged?()
+            if self.usesSwiftUIComposition { return }
             if yesOrNo {
                 self.loadingView?.removeFromSuperview()
                 self.loadingView = nil
@@ -1126,13 +1144,27 @@ open class BPHomebrewViewController: NSViewController,
     @objc(homebrewManagerDidBeginDiscovery:)
     nonisolated open func homebrewManagerDidBeginDiscovery(_ manager: BPHomebrewManager) {
         MainActor.assumeIsolated {
+            self.onPresentationChanged?()
             self.disabledView?.showDiscoveryResult(manager.discoveryResult.rawValue, checking: true)
         }
     }
 
     @objc(showFormulaInfoForCurrentlySelectedFormulaUsingInfoType:)
     open func showFormulaInfoForCurrentlySelectedFormula(usingInfoType type: BPFormulaInfoType) {
+        if type == .general {
+            guard selectedFormula() != nil else { return }
+            _formulaPopoverViewController?.formulaPopover?.close()
+            onShowPackageInspector?()
+            return
+        }
         let popover = formulaPopoverViewController.formulaPopover
+        if usesSwiftUIComposition, let window = appDelegate?.window, let anchor = window.contentView {
+            guard let formula = selectedFormula() else { return }
+            formulaPopoverViewController.infoType = type
+            formulaPopoverViewController.formula = formula
+            popover?.show(relativeTo: NSRect(x: anchor.bounds.maxX - 120, y: anchor.bounds.midY, width: 1, height: 1), of: anchor, preferredEdge: .minX)
+            return
+        }
         if popover?.isShown == true {
             popover?.close()
         }
@@ -1167,11 +1199,16 @@ open class BPHomebrewViewController: NSViewController,
     // MARK: - Search Mode
 
     @objc open func loadSearchResults() {
-        searchCoordinator.didReceiveResults(forSidebarRow: sidebarController?.sidebar?.selectedRow ?? 0)
+        searchCoordinator.didReceiveResults(forSidebarRow: selectedSidebarRow)
         configureTable(forListing: .search)
     }
 
     @objc open func endSearchAndCleanup() {
+        if usesSwiftUIComposition {
+            searchCoordinator.cancelForNavigation()
+            sourceListSelectionDidChange()
+            return
+        }
         toolbar?.searchField?.stringValue = ""
         let originalRow = searchCoordinator.endSearchReturningSidebarRow()
         let row = BPSideBarController.restorableRow(
@@ -1261,12 +1298,6 @@ open class BPHomebrewViewController: NSViewController,
         }
     }
 
-    @objc nonisolated open func selectedFormulaViewDidRequestShowMoreInformation() {
-        MainActor.assumeIsolated {
-            self.showFormulaInfo(nil)
-        }
-    }
-
     @objc nonisolated open func selectedFormulaViewDidRequestOpenWebsite() {
         MainActor.assumeIsolated {
             self.openSelectedFormulaWebsite(nil)
@@ -1278,7 +1309,7 @@ open class BPHomebrewViewController: NSViewController,
     @objc nonisolated open func sourceListSelectionDidChange() {
         MainActor.assumeIsolated {
             var tabIndex: BPContentTab = .formulae
-            let selectedSidebarRow = self.sidebarController?.sidebar?.selectedRow ?? -1
+            let selectedSidebarRow = self.selectedSidebarRow
 
             if self.searching {
                 self.endSearchAndCleanup()
@@ -1334,6 +1365,7 @@ open class BPHomebrewViewController: NSViewController,
 
             self.updateInfoLabelWithSidebarSelection()
             self.tabView?.selectTabViewItem(at: Int(tabIndex.rawValue))
+            self.onPresentationChanged?()
             if tabIndex != .services {
                 self.servicesViewController?.invalidateServiceDetails()
             }
@@ -1434,14 +1466,20 @@ open class BPHomebrewViewController: NSViewController,
 
     @IBAction @objc(pinSelectedFormula:)
     open func pinSelectedFormula(_ sender: Any?) {
-        guard let formula = selectedFormula(), !formula.cask else { return }
-        _ = BPHomebrewInterface.sharedInterface().pinFormula(formula.name, withReturnBlock: nil)
+        guard !hasBlockingBackgroundTask() else { return }
+        guard let formula = selectedFormula() else { return }
+        let interface = BPHomebrewInterface.sharedInterface()
+        if formula.cask { _ = interface.setCaskPinned(formula.name, pinned: true) }
+        else { _ = interface.pinFormula(formula.name, withReturnBlock: nil) }
     }
 
     @IBAction @objc(unpinSelectedFormula:)
     open func unpinSelectedFormula(_ sender: Any?) {
-        guard let formula = selectedFormula(), !formula.cask else { return }
-        _ = BPHomebrewInterface.sharedInterface().unpinFormula(formula.name, withReturnBlock: nil)
+        guard !hasBlockingBackgroundTask() else { return }
+        guard let formula = selectedFormula() else { return }
+        let interface = BPHomebrewInterface.sharedInterface()
+        if formula.cask { _ = interface.setCaskPinned(formula.name, pinned: false) }
+        else { _ = interface.unpinFormula(formula.name, withReturnBlock: nil) }
     }
 
     @IBAction @objc(upgradeSelectedFormulae:)
@@ -1538,6 +1576,7 @@ open class BPHomebrewViewController: NSViewController,
     @IBAction @objc(updateHomebrew:)
     nonisolated open func updateHomebrew(_ sender: Any?) {
         MainActor.assumeIsolated {
+            if self.usesSwiftUIComposition { self.showOutdatedSidebarRow(.update) }
             self.sidebarController?.sidebar?.selectRowIndexes(
                 IndexSet(integer: Int(FormulaeSideBarItem.update.rawValue)),
                 byExtendingSelection: false
@@ -1572,6 +1611,10 @@ open class BPHomebrewViewController: NSViewController,
         toolbar?.searchField?.stringValue = ""
         searchCoordinator.cancelForNavigation()
 
+        if usesSwiftUIComposition {
+            sidebarController?.sidebarHost.selectRow(atIndex: Int(row.rawValue))
+            return
+        }
         let alreadySelected = sidebarController?.sidebar?.selectedRow == Int(row.rawValue)
         sidebarController?.sidebar?.selectRowIndexes(
             IndexSet(integer: Int(row.rawValue)),

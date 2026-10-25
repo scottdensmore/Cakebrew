@@ -180,9 +180,6 @@ public final class BPFormulaPopoverViewController: NSViewController {
         }
     }
 
-    override public var nibName: NSNib.Name? {
-        "BPFormulaPopoverView"
-    }
 
     deinit {
         NotificationCenter.default.removeObserver(self)

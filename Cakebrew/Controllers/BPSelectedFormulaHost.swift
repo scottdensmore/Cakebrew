@@ -7,25 +7,22 @@ import UserNotifications
 @MainActor
 private final class BPSelectedFormulaPresentation: ObservableObject {
     @Published var state = BPSelectedFormulaState()
+    @Published var details = BPFormulaInspectorDetails(information: nil)
+    @Published var showsHomebrewOutput = false
     var onSelectRelatedPackage: ((String) -> Void)?
-    var onShowMoreInfo: (() -> Void)?
     var onOpenWebsite: (() -> Void)?
 }
 
 @MainActor
 @objc(BPSelectedFormulaHost)
 public final class BPSelectedFormulaHost: NSObject {
+    public var content: some View { BPSelectedFormulaInspectorView(presentation: presentation) }
     private let presentation = BPSelectedFormulaPresentation()
     @objc public let viewController: NSViewController
 
     @objc public var onSelectRelatedPackage: ((String) -> Void)? {
         get { presentation.onSelectRelatedPackage }
         set { presentation.onSelectRelatedPackage = newValue }
-    }
-
-    @objc public var onShowMoreInfo: (() -> Void)? {
-        get { presentation.onShowMoreInfo }
-        set { presentation.onShowMoreInfo = newValue }
     }
 
     @objc public var onOpenWebsite: (() -> Void)? {
@@ -43,10 +40,14 @@ public final class BPSelectedFormulaHost: NSObject {
 
     @objc public func clearSelection() {
         presentation.state.clear()
+        presentation.details = BPFormulaInspectorDetails(information: nil)
+        presentation.showsHomebrewOutput = false
     }
 
     @objc public func showMultipleSelection() {
         presentation.state.selectMultiple()
+        presentation.details = BPFormulaInspectorDetails(information: nil)
+        presentation.showsHomebrewOutput = false
     }
 
     @objc(beginSelectionWithName:cask:installed:pinned:installPath:latestVersion:dependencies:conflicts:shortDescription:)
@@ -69,6 +70,10 @@ public final class BPSelectedFormulaHost: NSObject {
             dependencies: dependencies,
             conflicts: conflicts,
             shortDescription: shortDescription)
+        if presentation.state.currentSnapshot?.identity != snapshot.identity {
+            presentation.details = BPFormulaInspectorDetails(information: nil)
+            presentation.showsHomebrewOutput = false
+        }
         return presentation.state.beginSingle(snapshot).generation
     }
 
@@ -101,6 +106,12 @@ public final class BPSelectedFormulaHost: NSObject {
             identity: BPFormulaInformationIdentity(name: name, cask: cask, mode: .general),
             generation: generation)
         presentation.state.receiveDependents(dependents, for: request)
+    }
+
+    public func receiveInformation(_ information: String?, name: String, cask: Bool) {
+        guard let snapshot = presentation.state.currentSnapshot,
+              snapshot.identity.name == name, snapshot.identity.cask == cask else { return }
+        presentation.details = BPFormulaInspectorDetails(information: information)
     }
 
     @objc public func copyInstallPathToPasteboard() -> String {
@@ -136,10 +147,6 @@ public final class BPSelectedFormulaHost: NSObject {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         presentation.onSelectRelatedPackage?(trimmed)
-    }
-
-    @objc public func triggerShowMoreInfo() {
-        presentation.onShowMoreInfo?()
     }
 
     @objc public func triggerOpenWebsite() {
@@ -270,13 +277,17 @@ private struct BPSelectedFormulaInspectorView: View {
 
     var body: some View {
         ScrollView(.vertical) {
-            VStack(alignment: .leading, spacing: 6) {
+            if case .none = presentation.state.selection {
+                ContentUnavailableView("Select a Package", systemImage: "shippingbox", description: Text("Choose a package to explore its version, dependencies, and installation details."))
+                    .frame(minHeight: 300)
+            } else {
+            VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 6) {
                     Image(systemName: headerSymbolName)
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.secondary)
-                    Text(BPSelectedFormulaLocalizedTitle("F2k-Nm-vhK.title", fallback: "Selected Formula Information"))
-                        .font(.system(size: 13, weight: .bold))
+                    Text(selectionTitle)
+                        .font(.title2.weight(.semibold))
                         .foregroundStyle(.secondary)
                         .accessibilityAddTraits(.isHeader)
                         .accessibilityIdentifier("formula.detail.header")
@@ -291,34 +302,24 @@ private struct BPSelectedFormulaInspectorView: View {
                                 }
                             } label: {
                                 Image(systemName: "folder")
-                                    .font(.system(size: 11))
+                                    .font(.body)
                             }
                             .buttonStyle(.borderless)
                             .help(NSLocalizedString("Services_Reveal_File", comment: ""))
                             .accessibilityIdentifier("formula.detail.revealPath")
+                            .accessibilityLabel(Text("Reveal installation in Finder"))
 
                             Button {
                                 NSPasteboard.general.clearContents()
                                 NSPasteboard.general.setString(path, forType: .string)
                             } label: {
                                 Image(systemName: "doc.on.doc")
-                                    .font(.system(size: 11))
+                                    .font(.body)
                             }
                             .buttonStyle(.borderless)
                             .help(NSLocalizedString("Services_Copy_Output", comment: ""))
                             .accessibilityIdentifier("formula.detail.copyPath")
-                        }
-
-                        if presentation.onShowMoreInfo != nil {
-                            Button {
-                                presentation.onShowMoreInfo?()
-                            } label: {
-                                Image(systemName: "info.circle")
-                                    .font(.system(size: 11))
-                            }
-                            .buttonStyle(.borderless)
-                            .help(NSLocalizedString("Toolbar_More_Information", comment: ""))
-                            .accessibilityIdentifier("formula.detail.moreInfo")
+                            .accessibilityLabel(Text("Copy installation path"))
                         }
 
                         if presentation.onOpenWebsite != nil {
@@ -326,16 +327,17 @@ private struct BPSelectedFormulaInspectorView: View {
                                 presentation.onOpenWebsite?()
                             } label: {
                                 Image(systemName: "safari")
-                                    .font(.system(size: 11))
+                                    .font(.body)
                             }
                             .buttonStyle(.borderless)
                             .help(NSLocalizedString("Toolbar_Formula_Website", comment: ""))
                             .accessibilityIdentifier("formula.detail.website")
+                            .accessibilityLabel(NSLocalizedString("Toolbar_Formula_Website", comment: ""))
                         }
                     }
                 }
 
-                Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 8, verticalSpacing: 5) {
+                Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 12, verticalSpacing: 16) {
                     inspectorRow(
                         title: BPSelectedFormulaLocalizedTitle("y6Q-3P-Z8p.title", fallback: "Description:"),
                         value: descriptionValue,
@@ -366,12 +368,53 @@ private struct BPSelectedFormulaInspectorView: View {
                         value: requiredByValue,
                         voiceOverLabel: NSLocalizedString("Detail_VoiceOver_RequiredBy", comment: ""),
                         identifier: "formula.detail.requiredBy")
+                    if let license = presentation.details.license {
+                        inspectorRow(title: NSLocalizedString("License:", comment: ""), value: license,
+                                     voiceOverLabel: NSLocalizedString("License", comment: ""),
+                                     identifier: "formula.detail.license")
+                    }
                     if presentation.state.showsPinnedRow {
                         inspectorRow(
                             title: BPSelectedFormulaLocalizedTitle("cbk-Pin-tc.title", fallback: "Pinned:"),
                             value: NSLocalizedString("Generic_Yes", comment: ""),
                             voiceOverLabel: NSLocalizedString("Sidebar_Item_Pinned", comment: ""),
                             identifier: "formula.detail.pinned")
+                    }
+                }
+
+                if case .single(let snapshot) = presentation.state.selection {
+                    BPVersionHistoryView(identity: snapshot.identity, sourceURL: presentation.details.source)
+                        .id(snapshot.identity)
+                }
+
+                if let source = presentation.details.source {
+                    Link(destination: source) {
+                        Label("Homebrew Source", systemImage: "chevron.left.forwardslash.chevron.right")
+                    }
+                    .accessibilityIdentifier("formula.detail.source")
+                }
+
+                if let information = presentation.details.information {
+                    DisclosureGroup(isExpanded: $presentation.showsHomebrewOutput) {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Button("Copy Output", systemImage: "doc.on.doc") {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(information, forType: .string)
+                            }
+                            .accessibilityIdentifier("formula.detail.copyOutput")
+                            Text(information)
+                                .font(.system(.caption, design: .monospaced))
+                                .textSelection(.enabled)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .accessibilityIdentifier("formula.detail.output")
+                                .accessibilityValue(information)
+                        }
+                        .padding(.top, 8)
+                    } label: {
+                        Text("Homebrew Output")
+                            .contentShape(Rectangle())
+                            .onTapGesture { presentation.showsHomebrewOutput.toggle() }
                     }
                 }
 
@@ -405,27 +448,32 @@ private struct BPSelectedFormulaInspectorView: View {
                     .padding(.top, 2)
                 }
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
+            .padding(20)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(Color.primary.opacity(0.03))
             )
-            .padding(.horizontal, 4)
-            .padding(.vertical, 2)
+            .padding(12)
             .frame(maxWidth: .infinity, alignment: .topLeading)
+            }
         }
+        .accessibilityIdentifier("formula.inspector")
+    }
+
+    private var selectionTitle: String {
+        if case .single(let snapshot) = presentation.state.selection { return snapshot.identity.name }
+        return NSLocalizedString("Multiple Packages", comment: "")
     }
 
     @ViewBuilder
     private func inspectorRow(title: String, value: String, voiceOverLabel: String, identifier: String) -> some View {
         GridRow {
             Text(title)
-                .font(.system(size: 11, weight: .bold))
+                .font(.caption.weight(.medium))
                 .foregroundStyle(.secondary)
                 .gridColumnAlignment(.trailing)
             Text(value)
-                .font(.system(size: 11))
+                .font(.body)
                 .foregroundStyle(.primary)
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)

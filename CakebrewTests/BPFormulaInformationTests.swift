@@ -138,7 +138,7 @@ final class BPFormulaInformationTests: XCTestCase, @unchecked Sendable {
 
         let caskRequest = state.beginSingle(caskSnapshot)
         XCTAssertNotEqual(formulaRequest.identity, caskRequest.identity)
-        XCTAssertFalse(state.showsPinnedRow, "Casks must never display the Pinned row even if passed isPinned=true")
+        XCTAssertTrue(state.showsPinnedRow, "Pinned casks display their Homebrew upgrade lock")
         XCTAssertFalse(state.receiveDependents(["git"], for: formulaRequest))
         XCTAssertFalse(state.receiveDependents(["git"], for: caskRequest), "Casks do not accept brew uses dependents")
         XCTAssertFalse(state.updateSingle(formulaSnapshot), "Stale formula update must not overwrite same-named cask")
@@ -165,7 +165,7 @@ final class BPFormulaInformationTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(state.currentSnapshot, enriched)
     }
 
-    func testInstalledPackageRowStripsCaskPinAndPreservesNamespaceIdentity() {
+    func testInstalledPackageRowPreservesCaskPinAndNamespaceIdentity() {
         let formulaRow = BPInstalledPackageRow(
             name: "shared",
             cask: false,
@@ -183,7 +183,7 @@ final class BPFormulaInformationTests: XCTestCase, @unchecked Sendable {
 
         XCTAssertNotEqual(formulaRow.id, caskRow.id)
         XCTAssertTrue(formulaRow.isPinned)
-        XCTAssertFalse(caskRow.isPinned, "Casks cannot be pinned")
+        XCTAssertTrue(caskRow.isPinned, "Casks support Homebrew pins")
     }
 
     func testInstalledPackageListStateSortsByNameVersionAndStatusStably() {

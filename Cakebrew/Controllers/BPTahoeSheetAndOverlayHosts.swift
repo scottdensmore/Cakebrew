@@ -4,88 +4,44 @@ import ObjectiveC
 import SwiftUI
 import UserNotifications
 
-// MARK: - Shared AppKit View Containers for Streaming Logs & Tables
-
+/// Selectable, bounded log output. Scrolling follows new output until the user
+/// scrolls back; VoiceOver sees text rather than a visual-only terminal surface.
 @MainActor
-private struct BPNSViewContainerRepresentable: NSViewRepresentable {
-    let view: NSView
-
-    func makeNSView(context: Context) -> NSView {
-        let container = NSView(frame: .zero)
-        if view.superview !== container {
-            view.removeFromSuperview()
-            view.translatesAutoresizingMaskIntoConstraints = false
-            container.addSubview(view)
-            NSLayoutConstraint.activate([
-                view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-                view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-                view.topAnchor.constraint(equalTo: container.topAnchor),
-                view.bottomAnchor.constraint(equalTo: container.bottomAnchor)
-            ])
+private struct BPLogOutputView: View {
+    let text: String
+    var accessibilityID = "log.output"
+    @State private var followOutput = true
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(text.isEmpty ? " " : text)
+                        .accessibilityIdentifier(accessibilityID)
+                        .accessibilityValue(text)
+                        .font(.system(.body, design: .monospaced))
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Color.clear.frame(height: 1).id("end")
+                }.padding(12)
+            }
+            .defaultScrollAnchor(.bottom)
+            .onScrollPhaseChange { _, phase in
+                if phase == .interacting { followOutput = false }
+            }
+            .onChange(of: text) { _, _ in
+                if followOutput { proxy.scrollTo("end", anchor: .bottom) }
+            }
+            .overlay(alignment: .bottomTrailing) {
+                if !followOutput {
+                    Button("Latest Output", systemImage: "arrow.down.to.line") {
+                        followOutput = true
+                        proxy.scrollTo("end", anchor: .bottom)
+                    }.padding(8)
+                }
+            }
         }
-        return container
-    }
-
-    func updateNSView(_ nsView: NSView, context: Context) {
-        if view.superview !== nsView {
-            view.removeFromSuperview()
-            view.translatesAutoresizingMaskIntoConstraints = false
-            nsView.addSubview(view)
-            NSLayoutConstraint.activate([
-                view.leadingAnchor.constraint(equalTo: nsView.leadingAnchor),
-                view.trailingAnchor.constraint(equalTo: nsView.trailingAnchor),
-                view.topAnchor.constraint(equalTo: nsView.topAnchor),
-                view.bottomAnchor.constraint(equalTo: nsView.bottomAnchor)
-            ])
-        }
-    }
-}
-
-@MainActor
-private struct BPTextViewContainerRepresentable: NSViewRepresentable {
-    let textView: NSTextView
-
-    func makeNSView(context: Context) -> NSView {
-        let container = NSView(frame: .zero)
-        embedTextView(in: container)
-        return container
-    }
-
-    func updateNSView(_ nsView: NSView, context: Context) {
-        embedTextView(in: nsView)
-    }
-
-    private func embedTextView(in container: NSView) {
-        let scrollView: NSScrollView
-        if let existingScroll = textView.enclosingScrollView {
-            scrollView = existingScroll
-        } else {
-            let created = NSScrollView(frame: .zero)
-            created.hasVerticalScroller = true
-            created.hasHorizontalScroller = false
-            created.autohidesScrollers = true
-            created.borderType = .bezelBorder
-            created.drawsBackground = true
-            textView.isEditable = false
-            textView.isSelectable = true
-            textView.isVerticallyResizable = true
-            textView.isHorizontallyResizable = false
-            textView.autoresizingMask = [.width]
-            textView.textContainer?.widthTracksTextView = true
-            created.documentView = textView
-            scrollView = created
-        }
-        if scrollView.superview !== container {
-            scrollView.removeFromSuperview()
-            scrollView.translatesAutoresizingMaskIntoConstraints = false
-            container.addSubview(scrollView)
-            NSLayoutConstraint.activate([
-                scrollView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-                scrollView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-                scrollView.topAnchor.constraint(equalTo: container.topAnchor),
-                scrollView.bottomAnchor.constraint(equalTo: container.bottomAnchor)
-            ])
-        }
+        .background(.background)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
 
@@ -391,6 +347,7 @@ private final class BPConsoleToolPresentation: ObservableObject {
 @MainActor
 @objc(BPConsoleToolHost)
 public final class BPConsoleToolHost: NSObject {
+    public var content: some View { BPConsoleToolView(presentation: presentation) }
     private let presentation: BPConsoleToolPresentation
     @objc public let viewController: NSViewController
 
@@ -616,7 +573,7 @@ private struct BPConsoleToolView: View {
             .padding(.horizontal, 14)
 
             ZStack {
-                BPTextViewContainerRepresentable(textView: presentation.textView)
+                BPLogOutputView(text: presentation.state.logText, accessibilityID: "console.output")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                 if !presentation.state.trimmedFilterQuery.isEmpty {
@@ -637,8 +594,10 @@ private struct BPConsoleToolView: View {
 
 @MainActor
 private final class BPServicesPresentation: ObservableObject {
-    let tableScrollView: NSView
-    let detailsScrollView: NSView
+    @Published var rows: [BPService] = []
+    @Published var selectedName: String?
+    @Published var detailsText = ""
+    var onSelectionChanged: ((String?) -> Void)?
     @Published var state = BPServicesState()
     @Published var startEnabled = false
     @Published var stopEnabled = false
@@ -656,14 +615,27 @@ private final class BPServicesPresentation: ObservableObject {
     var onFilterChanged: (() -> Void)?
 
     init(tableScrollView: NSView, detailsScrollView: NSView) {
-        self.tableScrollView = tableScrollView
-        self.detailsScrollView = detailsScrollView
+
     }
 }
 
 @MainActor
 @objc(BPServicesHost)
 public final class BPServicesHost: NSObject {
+    public func updateRows(_ rows: [BPService], selectedName: String?) {
+        presentation.rows = rows
+        presentation.selectedName = selectedName
+    }
+    public var onSelectionChanged: ((String?) -> Void)? {
+        get { presentation.onSelectionChanged }
+        set { presentation.onSelectionChanged = newValue }
+    }
+    public var detailsText: String {
+        get { presentation.detailsText }
+        set { presentation.detailsText = newValue }
+    }
+
+    public var content: some View { BPServicesView(presentation: presentation) }
     private let presentation: BPServicesPresentation
     @objc public let viewController: NSViewController
 
@@ -842,15 +814,16 @@ private struct BPServicesView: View {
                 Text("\(count)")
                     .font(.system(.caption2, design: .monospaced).weight(.semibold))
             }
-            .foregroundStyle(isSelected ? .white : color)
+            .foregroundStyle(.primary)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
             .background(
                 Capsule(style: .continuous)
-                    .fill(isSelected ? color : color.opacity(0.12))
+                    .fill(color.opacity(isSelected ? 0.24 : 0.10))
             )
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityIdentifier(accessibilityID)
     }
 
@@ -866,7 +839,7 @@ private struct BPServicesView: View {
 
                 filterPill(
                     filter: .all,
-                    title: NSLocalizedString("Services_Title", comment: ""),
+                    title: NSLocalizedString("Services_Filter_All", comment: ""),
                     count: presentation.state.totalCount,
                     color: .accentColor,
                     accessibilityID: "services.filter.all"
@@ -899,7 +872,7 @@ private struct BPServicesView: View {
                     Image(systemName: "magnifyingglass")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    TextField(NSLocalizedString("Toolbar_Search", comment: ""), text: queryBinding)
+                    TextField(NSLocalizedString("Services_Search", comment: ""), text: queryBinding)
                         .textFieldStyle(.plain)
                         .font(.caption)
                         .accessibilityIdentifier("services.searchField")
@@ -913,7 +886,34 @@ private struct BPServicesView: View {
                 )
             }
 
-            BPNSViewContainerRepresentable(view: presentation.tableScrollView)
+            Table(presentation.rows.map(BPServiceRow.init), selection: Binding(
+                get: { presentation.selectedName },
+                set: { presentation.selectedName = $0; presentation.onSelectionChanged?($0) }
+            )) {
+                TableColumn(NSLocalizedString("Services_Column_Name", comment: "")) { service in
+                    Text(service.name ?? "")
+                }
+                TableColumn(NSLocalizedString("Services_Column_Status", comment: "")) { service in
+                    Label(BPService.localizedName(for: service.status), systemImage: service.status == .started ? "play.circle" : "stop.circle")
+                }
+                TableColumn(NSLocalizedString("Services_Column_User", comment: "")) { service in
+                    Text(service.user ?? "").foregroundStyle(.secondary)
+                }
+            }
+                .tableStyle(.inset(alternatesRowBackgrounds: false))
+                .overlay {
+                    if presentation.rows.isEmpty {
+                        let state = BPEmptyState.state(forSidebarRow: 14, searching: !presentation.state.filterQuery.isEmpty || presentation.state.statusFilter != .all)
+                        ContentUnavailableView {
+                            Label(NSLocalizedString(state.titleKey, comment: ""), systemImage: state.symbolName)
+                                .accessibilityIdentifier("emptyState.title")
+                        } description: {
+                            Text(NSLocalizedString(state.messageKey, comment: ""))
+                                .accessibilityIdentifier("emptyState.message")
+                        }
+                        .allowsHitTesting(false)
+                    }
+                }
                 .frame(minHeight: 90, maxHeight: .infinity)
 
             HStack(spacing: 8) {
@@ -935,8 +935,17 @@ private struct BPServicesView: View {
                 Spacer()
             }
 
-            BPNSViewContainerRepresentable(view: presentation.detailsScrollView)
-                .frame(height: 115)
+            ScrollView {
+                Text(presentation.detailsText)
+                    .font(.body)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(12)
+                    .accessibilityIdentifier("services.details")
+                    .accessibilityValue(presentation.detailsText)
+            }
+            .frame(height: 115)
+            .background(.background, in: RoundedRectangle(cornerRadius: 8))
 
             HStack(spacing: 6) {
                 Button(NSLocalizedString("Services_Reveal_File", comment: "")) {
@@ -1166,7 +1175,7 @@ private struct BPAutoremoveView: View {
             )
 
             ZStack {
-                BPTextViewContainerRepresentable(textView: presentation.outputTextView)
+                BPLogOutputView(text: presentation.state.logText, accessibilityID: "autoremove.output")
                     .frame(maxWidth: .infinity, minHeight: 160, maxHeight: .infinity)
 
                 if !presentation.state.trimmedFilterQuery.isEmpty {
@@ -1402,7 +1411,7 @@ private struct BPBundleOperationView: View {
                     )
 
                     ZStack {
-                        BPTextViewContainerRepresentable(textView: presentation.importTextView)
+                        BPLogOutputView(text: presentation.state.logText, accessibilityID: "brewfile.import.output")
                             .frame(maxWidth: .infinity, minHeight: 150, maxHeight: .infinity)
 
                         if !presentation.state.trimmedFilterQuery.isEmpty {
@@ -1885,7 +1894,7 @@ private struct BPInstallationView: View {
             )
 
             ZStack {
-                BPTextViewContainerRepresentable(textView: presentation.recordTextView)
+                BPLogOutputView(text: presentation.state.logText, accessibilityID: "installation.output")
                     .frame(maxWidth: .infinity, minHeight: 154, maxHeight: .infinity)
 
                 if !presentation.state.trimmedFilterQuery.isEmpty {
@@ -2081,7 +2090,7 @@ private struct BPAboutWindowView: View {
                 .accessibilityIdentifier("about.tabPicker")
             }
 
-            BPTextViewContainerRepresentable(textView: presentation.creditsTextView)
+            BPLogOutputView(text: presentation.creditsTextView.string)
                 .frame(maxWidth: .infinity, minHeight: 150, maxHeight: .infinity)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
 
@@ -2301,7 +2310,7 @@ private struct BPBrewfileReviewView: View {
             }
 
             ZStack {
-                BPTextViewContainerRepresentable(textView: presentation.entriesTextView)
+                BPLogOutputView(text: presentation.state.summaryText, accessibilityID: "brewfile.review.entries")
                     .frame(maxWidth: .infinity, minHeight: 185, maxHeight: .infinity)
 
                 if presentation.state.isFiltering {
@@ -2331,15 +2340,16 @@ private struct BPBrewfileReviewView: View {
                 Text(label)
                     .font(.caption)
             }
-            .foregroundStyle(isSelected ? .white : color)
+            .foregroundStyle(.primary)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
             .background(
                 Capsule()
-                    .fill(isSelected ? color : color.opacity(0.12))
+                    .fill(color.opacity(isSelected ? 0.24 : 0.10))
             )
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityIdentifier(accessibilityID)
     }
 
@@ -2376,18 +2386,18 @@ private final class BPCommandPalettePresentation: ObservableObject {
         switch item.kind {
         case .navigation:
             guard item.sidebarRow >= 0 else { return false }
-            onNavigateToSidebarRow?(item.sidebarRow)
             onDismiss?()
+            onNavigateToSidebarRow?(item.sidebarRow)
             return true
         case .action:
             guard let actionID = item.actionIdentifier, !actionID.isEmpty else { return false }
-            onPerformAction?(actionID)
             onDismiss?()
+            onPerformAction?(actionID)
             return true
         case .package:
             guard let name = item.packageName, !name.isEmpty else { return false }
-            onSelectPackage?(name, item.isCask)
             onDismiss?()
+            onSelectPackage?(name, item.isCask)
             return true
         }
     }
@@ -2651,6 +2661,7 @@ private final class BPStatusBarPresentation: ObservableObject {
 @MainActor
 @objc(BPStatusBarHost)
 public final class BPStatusBarHost: NSObject {
+    public var content: some View { BPStatusBarView(presentation: presentation) }
     private let presentation = BPStatusBarPresentation()
     @objc public let viewController: NSViewController
 
@@ -2737,6 +2748,7 @@ private struct BPStatusBarView: View {
                         .scaleEffect(0.72)
                         .frame(width: 14, height: 14)
                         .accessibilityIdentifier("statusBar.activity")
+                        .accessibilityLabel(NSLocalizedString("VoiceOver_Operation_Progress", comment: ""))
                 } else {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 11, weight: .semibold))
@@ -2767,6 +2779,9 @@ private struct BPStatusBarView: View {
                             .fill(Color.primary.opacity(0.05))
                     )
                     .accessibilityIdentifier("statusBar.installedCount")
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(NSLocalizedString("Sidebar_Item_Installed", comment: ""))
+                    .accessibilityValue(Text(presentation.state.installedCount, format: .number))
                 }
 
                 if presentation.state.outdatedCount > 0 {
@@ -2789,6 +2804,8 @@ private struct BPStatusBarView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("statusBar.outdatedButton")
+                    .accessibilityLabel(NSLocalizedString("Sidebar_Item_Unified_Updates", comment: ""))
+                    .accessibilityValue(Text(presentation.state.outdatedCount, format: .number))
                 }
 
                 Button {
@@ -2811,6 +2828,7 @@ private struct BPStatusBarView: View {
                 .buttonStyle(.plain)
                 .help(BPLocalizedWithFallback("Command_Palette_Title", fallback: "Command Palette"))
                 .accessibilityIdentifier("statusBar.commandPaletteButton")
+                .accessibilityLabel(BPLocalizedWithFallback("Command_Palette_Title", fallback: "Command Palette"))
             }
             .padding(.horizontal, 12)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -2830,6 +2848,7 @@ private final class BPSidebarPresentation: ObservableObject {
 @MainActor
 @objc(BPSidebarHost)
 public final class BPSidebarHost: NSObject {
+    public var content: some View { BPSidebarView(presentation: presentation) }
     private let presentation = BPSidebarPresentation()
     @objc public let viewController: NSViewController
 
@@ -2909,76 +2928,35 @@ private struct BPSidebarView: View {
     @ObservedObject var presentation: BPSidebarPresentation
 
     var body: some View {
-        ScrollView(.vertical) {
-            VStack(alignment: .leading, spacing: 10) {
-                ForEach(presentation.state.sections) { section in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(section.title)
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 10)
-                            .padding(.bottom, 2)
-
-                        ForEach(section.rows) { row in
-                            let isSelected = presentation.state.selectedRowIndex == row.rowIndex
-                            Button {
-                                presentation.state.selectedRowIndex = row.rowIndex
-                                presentation.onSelectRow?(row.rowIndex)
-                            } label: {
-                                HStack(spacing: 8) {
-                                    Image(systemName: row.symbolName.isEmpty ? "folder" : row.symbolName)
-                                        .font(.system(size: 12.5, weight: .medium))
-                                        .foregroundStyle(isSelected ? Color.white : Color.accentColor)
-                                        .frame(width: 16)
-
-                                    Text(row.title)
-                                        .font(.system(size: 12.5, weight: isSelected ? .semibold : .regular))
-                                        .foregroundStyle(isSelected ? Color.white : Color.primary)
-                                        .lineLimit(1)
-                                        .accessibilityIdentifier(row.accessibilityIdentifier)
-                                        .accessibilityLabel(row.accessibilityLabel.isEmpty ? row.title : row.accessibilityLabel)
-
-                                    Spacer(minLength: 4)
-
-                                    if row.badgeCount >= 0 {
-                                        Text("\(row.badgeCount)")
-                                            .font(.system(size: 11, weight: .semibold).monospacedDigit())
-                                            .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
-                                            .padding(.horizontal, 7)
-                                            .padding(.vertical, 1.5)
-                                            .background(
-                                                Capsule(style: .continuous)
-                                                    .fill(isSelected ? Color.white.opacity(0.92) : Color.secondary.opacity(0.14))
-                                            )
-                                    }
-                                }
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                        .fill(isSelected ? Color.accentColor : Color.clear)
-                                )
-                            }
-                            .buttonStyle(.plain)
+        List(selection: Binding<Int?>(
+            get: { presentation.state.selectedRowIndex },
+            set: { value in
+                guard let value else { return }
+                presentation.state.selectedRowIndex = value
+                presentation.onSelectRow?(value)
+            }
+        )) {
+            ForEach(presentation.state.sections) { section in
+                Section(section.title) {
+                    ForEach(section.rows) { row in
+                        Label {
+                            Text(row.title)
+                        } icon: {
+                            Image(systemName: row.symbolName.isEmpty ? "folder" : row.symbolName)
                         }
+                        .badge(row.badgeCount < 0 ? 0 : row.badgeCount)
+                        .tag(row.rowIndex)
+                        .accessibilityIdentifier(row.accessibilityIdentifier)
+                        .accessibilityLabel(row.accessibilityLabel.isEmpty ? row.title : row.accessibilityLabel)
                     }
                 }
             }
-            .padding(8)
         }
+        .listStyle(.sidebar)
         .accessibilityLabel(NSLocalizedString("Sidebar_VoiceOver_Sidebar", comment: ""))
     }
 }
 
-private struct BPAppKitTextFieldWrapper: NSViewRepresentable {
-    let textField: NSTextField
-
-    func makeNSView(context: Context) -> NSTextField {
-        textField
-    }
-
-    func updateNSView(_ nsView: NSTextField, context: Context) {}
-}
 
 @MainActor
 private final class BPTapInputPresentation: ObservableObject {
@@ -3034,8 +3012,12 @@ private struct BPTapInputCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            BPAppKitTextFieldWrapper(textField: inputField)
-                .frame(height: 24)
+            TextField("user/repo", text: Binding(
+                get: { presentation.state.repositoryName },
+                set: { presentation.state.repositoryName = $0; inputField.stringValue = $0 }
+            ))
+                .textFieldStyle(.roundedBorder)
+                .accessibilityLabel(Text("Repository name"))
 
             HStack(spacing: 5) {
                 if presentation.state.trimmedName.isEmpty {
@@ -3179,3 +3161,16 @@ private struct BPCleanupPreviewCardView: View {
     }
 }
 
+
+private struct BPServiceRow: Identifiable {
+    let id: String
+    let name: String?
+    let user: String?
+    let status: BPServiceStatus
+    init(_ service: BPService) {
+        id = service.name ?? ""
+        name = service.name
+        user = service.user
+        status = service.status
+    }
+}

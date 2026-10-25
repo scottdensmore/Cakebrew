@@ -520,6 +520,14 @@ open class BPHomebrewInterface: NSObject, BPFormulaDataProvider, BPTaskCompleted
         return regex.numberOfMatches(in: trimmed, options: [], range: NSRange(location: 0, length: nsTrimmed.length)) == 1
     }
 
+    open func setCaskPinned(_ name: String?, pinned: Bool) -> Bool {
+        guard let name else { return false }
+        let command = pinned ? "pin" : "unpin"
+        let result = performBrewCommand(withArguments: [command, "--cask", name], dataReturnBlock: nil)
+        sendDelegateFormulaeUpdatedCall(forCommand: command)
+        return result
+    }
+
     @objc open func listPinnedCasks() -> [BPFormula]? {
         let call = BPHomebrewInterfaceListCallPinnedCasks()
         var output: NSString?
@@ -868,6 +876,24 @@ open class BPHomebrewInterface: NSObject, BPFormulaDataProvider, BPTaskCompleted
         let val = performBrewCommand(withArguments: ["untap", repository], dataReturnBlock: block)
         sendDelegateFormulaeUpdatedCall(forCommand: "untap")
         return val
+    }
+
+    func versionHistoryReceipt(name: String, cask: Bool) -> BPVersionRelease? {
+        BPVersionReceipt.find(name: name, cask: cask)
+    }
+
+    open func readVersionHistoryCommand(_ arguments: [String], progress: Progress? = nil) -> (succeeded: Bool, output: String) {
+        guard progress?.isCancelled != true else { return (false, "") }
+        nonisolated(unsafe) let output = NSMutableString()
+        let succeeded = performAsyncBrewCommand(withArguments: arguments, wrapsSynchronousRequest: true,
+            progress: progress, includesCompletionMessage: false) { chunk in output.append(chunk) }
+        return (succeeded, removeLoginShellOutput(fromString: output as String) ?? "")
+    }
+
+    open func runVersionHistoryCommand(_ arguments: [String], progress: Progress,
+                                       output: (@Sendable (String) -> Void)?) -> Bool {
+        performAsyncBrewCommand(withArguments: arguments, wrapsSynchronousRequest: false,
+                               progress: progress, includesCompletionMessage: false, dataReturnBlock: output)
     }
 
     @objc(pinFormula:withReturnBlock:)

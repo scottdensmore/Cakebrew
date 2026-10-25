@@ -68,9 +68,6 @@ public final class BPDoctorViewController: NSViewController {
         }
     }
 
-    override public var nibName: NSNib.Name? {
-        "BPDoctorView"
-    }
 
     @objc(runStopDoctor:)
     public func runStopDoctor(_ sender: Any?) {

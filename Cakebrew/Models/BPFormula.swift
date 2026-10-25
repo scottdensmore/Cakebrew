@@ -406,32 +406,17 @@ open class BPFormula: NSObject, NSSecureCoding, NSCopying, BPFormulaObjCBridge, 
         self.installPath = Self.installLocation(fromLines: lines, startingAtIndex: UInt(max(0, lineIndex)))
 
         let nsOutput = output as NSString
-        var rangeDeps = nsOutput.range(of: Self.identifierDependencies)
         let rangeOpts = nsOutput.range(of: Self.identifierOptions)
         var rangeCvts = nsOutput.range(of: Self.identifierCaveats)
 
-        if rangeDeps.location != NSNotFound {
-            let startLoc = rangeDeps.length + rangeDeps.location + 1
-            let depLen: Int
-            if rangeOpts.location != NSNotFound {
-                depLen = rangeOpts.location - startLoc
-            } else if rangeCvts.location != NSNotFound {
-                depLen = rangeCvts.location - startLoc
-            } else {
-                depLen = nsOutput.length - startLoc
-            }
-            guard startLoc >= 0, depLen >= 0, startLoc + depLen <= nsOutput.length else {
-                return
-            }
-            rangeDeps = NSRange(location: startLoc, length: depLen)
-            var deps: [String] = []
+        // Homebrew adds sections over time; dependencies end at any next header.
+        if let header = lines.firstIndex(where: { $0.trimmingCharacters(in: .whitespacesAndNewlines) == Self.identifierDependencies }) {
             let finishedTitle = NSLocalizedString("Homebrew_Task_Finished", comment: "")
-            nsOutput.enumerateSubstrings(in: rangeDeps, options: .byLines) { substring, _, _, _ in
-                if let substring, (substring as NSString).range(of: finishedTitle).location == NSNotFound {
-                    deps.append(substring)
-                }
-            }
-            self.dependencies = deps.joined(separator: "; ")
+            let dependencyLines = lines.dropFirst(header + 1)
+                .prefix { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("==>") && !$0.contains(finishedTitle) }
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            self.dependencies = dependencyLines.isEmpty ? nil : dependencyLines.joined(separator: "; ")
         } else {
             self.dependencies = nil
         }

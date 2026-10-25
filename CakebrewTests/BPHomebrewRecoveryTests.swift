@@ -65,15 +65,13 @@ final class BPHomebrewRecoveryTests: XCTestCase, BPHomebrewManagerDelegate, @unc
         )
     }
 
-    func testRecoveryViewWiresBothActionsAndWrapsItsMessage() throws {
+    func testRecoveryViewProvidesInstallationAndRetryActions() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-        let url = root.appendingPathComponent("Cakebrew/Views/Base.lproj/Disabled.xib")
-        let document = try XMLDocument(contentsOf: url, options: [])
-        for selector in ["retry:", "openInstallationInstructions:"] {
-            let query = "//button/connections/action[@selector='\(selector)' and @target='-2']"
-            XCTAssertEqual(try document.nodes(forXPath: query).count, 1)
-        }
-        XCTAssertEqual(try document.nodes(forXPath: "//textFieldCell[@id='sdR-dW-MDv' and @wraps='YES']").count, 1)
+        let source = try String(contentsOf: root.appendingPathComponent("Cakebrew/CakebrewApp.swift"), encoding: .utf8)
+        XCTAssertTrue(source.contains("ContentUnavailableView"))
+        XCTAssertTrue(source.contains("https://brew.sh"))
+        XCTAssertTrue(source.contains("Try Again"))
+        XCTAssertTrue(source.contains("retryHomebrewDiscovery()"))
     }
 
     func testDiscoveryExecutesTheTaskAndUsesItsStatusAndMarkedOutput() throws {

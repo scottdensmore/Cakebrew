@@ -89,6 +89,12 @@ open class BPServicesViewController: NSViewController, NSTableViewDataSource, NS
         host.onOpenLogs = { [weak self] in self?.openServiceLogs(nil) }
         host.onCopyOutput = { [weak self] in self?.copyServiceOutput(nil) }
         host.onFilterChanged = { [weak self] in self?.applyServiceFilters() }
+        host.onSelectionChanged = { [weak self] name in
+            guard let self else { return }
+            self.selectedServiceName = name
+            self.updateButtonStates()
+            self.requestSelectedServiceDetails()
+        }
         self.servicesHost = host
 
         self.view = host.viewController.view
@@ -194,6 +200,7 @@ open class BPServicesViewController: NSViewController, NSTableViewDataSource, NS
 
     @objc open func selectedService() -> BPService? {
         let displayed = displayedServices()
+        if let selectedServiceName { return displayed.first { $0.name == selectedServiceName } }
         guard let row = tableView?.selectedRow, row >= 0 && row < displayed.count else {
             return nil
         }
@@ -243,6 +250,7 @@ open class BPServicesViewController: NSViewController, NSTableViewDataSource, NS
     @objc(showDetailsMessage:)
     open func showDetailsMessage(_ message: String?) {
         detailsText?.string = message ?? ""
+        servicesHost?.detailsText = message ?? ""
         revealButton?.isEnabled = validatedServiceFileURL() != nil
         logsButton?.isEnabled = !validatedLogURLs().isEmpty
         outputCopyButton?.isEnabled = !(details?.rawOutput.isEmpty ?? true)
@@ -273,6 +281,7 @@ open class BPServicesViewController: NSViewController, NSTableViewDataSource, NS
             text = "\(NSLocalizedString("Services_Details_Failed", comment: ""))\n\(details.rawOutput)\n\n\(text)"
         }
         showDetailsMessage(text)
+        servicesHost?.detailsText = detailsText?.string ?? ""
         detailsText?.scrollRangeToVisible(NSRange(location: 0, length: 0))
     }
 
@@ -371,10 +380,7 @@ open class BPServicesViewController: NSViewController, NSTableViewDataSource, NS
     }
 
     private func runOperation(_ operation: @escaping @Sendable (BPHomebrewInterfaceObjCBridge, String, @escaping @Sendable (String) -> Void) -> Bool) {
-        let displayed = displayedServices()
-        guard let row = tableView?.selectedRow,
-              !operationInFlight,
-              row >= 0 && row < displayed.count else {
+        guard let selected = selectedService(), !operationInFlight else {
             return
         }
 
@@ -384,7 +390,7 @@ open class BPServicesViewController: NSViewController, NSTableViewDataSource, NS
             return
         }
 
-        let name = displayed[row].name ?? ""
+        let name = selected.name ?? ""
         operationInFlight = true
         invalidateServiceDetails()
         updateButtonStates()
@@ -452,6 +458,7 @@ open class BPServicesViewController: NSViewController, NSTableViewDataSource, NS
     }
 
     @objc open func syncServicesHostState() {
+        servicesHost?.updateRows(displayedServices(), selectedName: selectedServiceName)
         var runningCount = 0
         var stoppedCount = 0
         var errorCount = 0

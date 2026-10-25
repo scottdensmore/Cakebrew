@@ -29,6 +29,43 @@ final class BPFormulaModernInfoTests: XCTestCase, @unchecked Sendable {
         return formula
     }
 
+    func testDependenciesStopAtAnyFollowingSection() {
+        for section in ["Analytics", "Requirements", "Installed Versions", "New Homebrew Section", "Caveats", "Options"] {
+            let formula = BPFormula.formula(withName: "automake")
+            formula.information = """
+            ==> automake: stable 1.19
+            Makefile generator
+            https://example.com
+            Not installed
+            ==> Dependencies
+            Required (1): autoconf
+            Recursive Runtime (2): all installed ✔
+            ==> \(section)
+            install: 38,099 (30 days)
+            """
+            XCTAssertTrue(formula.getInformation())
+            XCTAssertEqual(formula.dependencies, "Required (1): autoconf; Recursive Runtime (2): all installed ✔", section)
+        }
+    }
+
+    func testDependencyLinksContainOnlyUniquePackageNames() {
+        let snapshot = BPSelectedFormulaSnapshot(name: "automake", cask: false, isInstalled: true,
+            isPinned: false, installPath: nil, latestVersion: nil,
+            dependencies: "Build: pkg-config ✔; Required (2): autoconf ✔, openssl@3 ✘; Recommended: autoconf ✔; Recursive Runtime (2): all installed ✔",
+            conflicts: nil, shortDescription: nil)
+        XCTAssertEqual(snapshot.dependencyNames, ["pkg-config", "autoconf", "openssl@3"])
+    }
+
+    func testInspectorMetadataUsesTheSameInformationResponse() {
+        let formula = parsedFormula(named: "wget")
+        let details = BPFormulaInspectorDetails(information: formula.information)
+        XCTAssertEqual(details.license, "GPL-3.0-or-later")
+        XCTAssertEqual(details.source?.absoluteString, "https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/w/wget.rb")
+        XCTAssertEqual(details.information, formula.information)
+        XCTAssertNil(BPFormulaInspectorDetails(information: "From: file:///tmp/untrusted.rb").source)
+        XCTAssertNil(BPFormulaInspectorDetails(information: nil).license)
+    }
+
     // MARK: - installed formula
 
     func testInstalledFormulaFieldsAreParsed() {

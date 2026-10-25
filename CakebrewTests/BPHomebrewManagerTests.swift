@@ -33,6 +33,7 @@ final class BPHomebrewManagerTests: XCTestCase, BPHomebrewManagerDelegate, @unch
         manager.allFormulae = []
         manager.searchFormulae = []
         manager.pinnedFormulae = []
+        manager.publishPinnedCasks([], generation: manager.currentReloadGeneration)
         manager.installedCasks = []
         manager.outdatedCasks = []
     }
@@ -43,6 +44,7 @@ final class BPHomebrewManagerTests: XCTestCase, BPHomebrewManagerDelegate, @unch
         manager.allFormulae = []
         manager.searchFormulae = []
         manager.pinnedFormulae = []
+        manager.publishPinnedCasks([], generation: manager.currentReloadGeneration)
         manager.installedCasks = []
         manager.outdatedCasks = []
         manager = nil
@@ -193,6 +195,16 @@ final class BPHomebrewManagerTests: XCTestCase, BPHomebrewManagerDelegate, @unch
             manager.isFormulaPinned(cask(withName: "shared")),
             "A pinned formula must never mark a same-named cask as pinned"
         )
+    }
+
+    func testCaskPinsStayDistinctFromFormulaPinsAndAppearInPinnedList() {
+        let pinned = cask(withName: "cakebrew/history-example/shared")
+        manager.publishPinnedCasks([pinned], generation: manager.currentReloadGeneration)
+        XCTAssertTrue(manager.isFormulaPinned(cask(withName: "shared")))
+        XCTAssertFalse(manager.isFormulaPinned(BPFormula.formula(withName: "shared")))
+        XCTAssertTrue(manager.pinnedFormulae?.contains { $0.cask && $0.installedName() == "shared" } == true)
+        manager.publishPinnedCasks([], generation: manager.currentReloadGeneration)
+        XCTAssertFalse(manager.isFormulaPinned(pinned))
     }
 
     // MARK: - search covers casks

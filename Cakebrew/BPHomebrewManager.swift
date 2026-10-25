@@ -70,6 +70,7 @@ open class BPHomebrewManager: NSObject, BPHomebrewInterfaceDelegate, @unchecked 
     private var _searchFormulaeStorage: NSArray?
     private var _repositoriesFormulaeStorage: NSArray?
     private var _pinnedFormulaeStorage: NSArray?
+    private var _pinnedCasksStorage: NSArray?
     private var _installedCasksStorage: NSArray?
     private var _outdatedCasksStorage: NSArray?
     private var _allCasksStorage: NSArray?
@@ -220,6 +221,8 @@ open class BPHomebrewManager: NSObject, BPHomebrewInterfaceDelegate, @unchecked 
 
     @objc(publishPinnedCasks:generation:)
     open func publishPinnedCasks(_ casks: [BPFormula]?, generation: UInt) {
+        guard Self.shouldPublishReloadGeneration(generation, current: currentReloadGeneration) else { return }
+        bpSynchronized(self) { _pinnedCasksStorage = casks as NSArray? }
         let names: [String]? = casks?.compactMap { ($0.name as NSString?)?.copy() as? String }
         publishUpdatesInput(names, key: "caskPins", generation: generation)
     }
@@ -854,7 +857,12 @@ open class BPHomebrewManager: NSObject, BPHomebrewInterfaceDelegate, @unchecked 
     }
 
     @objc dynamic public var pinnedFormulae: [BPFormula]? {
-        get { bpSynchronized(self) { _pinnedFormulaeStorage as? [BPFormula] } }
+        get {
+            bpSynchronized(self) {
+                guard _pinnedFormulaeStorage != nil || _pinnedCasksStorage != nil else { return nil }
+                return (_pinnedFormulaeStorage as? [BPFormula] ?? []) + (_pinnedCasksStorage as? [BPFormula] ?? [])
+            }
+        }
         set {
             let names = Self.installedNameSet(fromFormulae: newValue) as NSSet
             bpSynchronized(self) {
@@ -889,10 +897,13 @@ open class BPHomebrewManager: NSObject, BPHomebrewInterfaceDelegate, @unchecked 
     @objc(isFormulaPinned:)
     open func isFormulaPinned(_ formula: Any?) -> Bool {
         guard let formula = formula as? BPFormula,
-              !formula.cask,
               let installedName = formula.installedName(),
               !installedName.isEmpty else {
             return false
+        }
+        if formula.cask {
+            let casks = bpSynchronized(self) { _pinnedCasksStorage as? [BPFormula] ?? [] }
+            return Self.installedNameSet(fromFormulae: casks).contains(installedName)
         }
         let pinned = bpSynchronized(self) { _pinnedFormulaNamesSet }
         return pinned?.contains(installedName) == true

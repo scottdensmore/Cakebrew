@@ -49,7 +49,7 @@ import UserNotifications
 @MainActor
 @inline(__always)
 internal func bpSharedAppDelegate() -> BPAppDelegateObjCBridge? {
-    guard let delegate = NSApplication.shared.delegate else { return nil }
+    guard let delegate = BPAppDelegate.current ?? (NSApplication.shared.delegate as? BPAppDelegate) else { return nil }
     return unsafeBitCast(delegate as AnyObject, to: BPAppDelegateObjCBridge.self)
 }
 
