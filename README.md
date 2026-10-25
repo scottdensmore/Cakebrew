@@ -1,71 +1,90 @@
-# Cakebrew
+<p align="center">
+  <img src="docs/icon-design/cakebrew-default.png" width="128" height="128" alt="Cakebrew’s cake-shaped brew mug, topped with chocolate and a cherry">
+</p>
 
-A native macOS app for [Homebrew](https://brew.sh).
+<h1 align="center">Cakebrew</h1>
 
-[![CI](https://github.com/scottdensmore/Cakebrew/actions/workflows/ci.yml/badge.svg)](https://github.com/scottdensmore/Cakebrew/actions/workflows/ci.yml)
+<p align="center"><strong>A friendly Mac home for Homebrew.</strong></p>
 
-Cakebrew gives Homebrew a Mac interface: browse what is installed, see what is
-out of date, install and remove packages, and manage the services brew runs in
-the background — without remembering a command for each of them.
+Find your next favorite tool, keep your packages current, and see what’s installed
+on your Mac. Cakebrew brings [Homebrew](https://brew.sh) into a native SwiftUI
+interface, with searchable package lists, a detailed inspector, and familiar
+Mac controls.
+
+It works with the Homebrew installation you already have, so your packages stay
+part of your usual Homebrew setup.
 
 | Light | Dark |
-|---|---|
-| ![Cakebrew in light mode](docs/screenshots/main-window-light.png) | ![Cakebrew in dark mode](docs/screenshots/main-window-dark.png) |
+| --- | --- |
+| ![Cakebrew’s package list and inspector in light appearance](docs/screenshots/main-window-light.png) | ![Cakebrew’s package list and inspector in dark appearance](docs/screenshots/main-window-dark.png) |
 
-## What it does
+*Screenshots use demo packages from Cakebrew’s mock Homebrew interface.*
 
-**Formulae**
-* Browse installed, outdated, leaves, pinned and the full catalog
-* Install, uninstall and upgrade, individually or everything at once, with live-filtered formula build options
-* Pin a formula to hold it at its installed version, with a badge in the list
-* Read a formula's description, version, dependencies, conflicts and dependents
+## Meet your packages
 
-**Casks**
-* Browse installed, outdated and all available casks
-* Install, uninstall and upgrade, optionally running a cask's `zap` stanza to
-  remove its preferences and support files too
+- **Browse and discover.** Search formulae and casks, explore the catalog, or focus
+  on installed, outdated, pinned, and leaf formulae. Manage your taps from Repositories.
+- **Install and update.** Install, remove, and upgrade packages, with formula build
+  options when available. Review outdated formulae and casks together in Updates,
+  then upgrade selected packages or all eligible packages. Pinned packages are excluded.
+- **See the details.** Select a package to read its description, versions,
+  dependencies, dependents, license, and Homebrew output in the inspector. Follow
+  its homepage, copy an install path, or reveal it in Finder.
+- **Choose your version.** Browse release history, expand a version to inspect its
+  recipe and metadata, and install and pin an older formula or cask.
+- **Keep services in view.** Check the status of Homebrew services, start, stop, or
+  restart them, and copy their service and log paths.
+- **Take care of your setup.** Update Homebrew, run Doctor, preview cleanup, or
+  review unused dependencies before removing them. Follow live operation output.
+- **Bring your setup along.** Import or export a Brewfile to describe the packages
+  you want on another Mac.
 
-**Tools**
-* Updates — unified view of outdated formulae and casks with live filtering,
-  selective upgrades, and exact-snapshot batch upgrades that respect pinned exclusions
-* Services — start, stop and restart the background services brew manages, with
-  live status filter pills, inline search, and one-click service plist & log path copy
-* Doctor — run `brew doctor` with live diagnostic summary badges, line filtering, and one-click output copy
-* Update — run `brew update` with live log filtering and output copy
-* Cleanup — preview and reclaim disk space (`brew cleanup`)
-* Remove Unused Dependencies — preview and remove unused dependency formulae (`brew autoremove`) with candidate count badges and log filtering
-* Import and export a Brewfile with interactive entry status filters, search, summary copy, and live import log filtering
+### Older versions, with a way back
 
-**Around the edges**
-* Built with Swift 6 and SwiftUI for macOS Tahoe
-* Quick Command Palette (`⌘K`) to jump to any sidebar section, run Homebrew tools,
-  or select any installed formula or cask from the keyboard
-* Interactive Package Inspector with one-click install path copy, Reveal in Finder,
-  More Information popover, homepage launch, and clickable dependency/dependent chips
-* Live SwiftUI Tahoe status bar with activity indicator, package count pills, and
-  one-click outdated updates badge
-* Optional Menu Bar Extra in Settings for instant access to outdated package counts,
-  Update Homebrew, Upgrade All Outdated, and Command Palette
-* Optional background checking, with a Dock badge and a notification when
-  something new goes out of date
-* In-app update discovery (`Cakebrew ▸ Check for Updates…`) with SHA-256 and
-  Ed25519 feed verification
-* Search across formulae and casks
-* Six localizations: English, German, French, Italian, Portuguese and
-  Simplified Chinese
+Need a previous release? Open **Version History** in the package inspector and
+expand a release to see its details before choosing **Install & Pin This Version…**.
+Historical formulae can remain alongside the current version; installing an older
+cask replaces the app.
 
-## Requirements
+When you’re ready to move forward, select the package in **Pinned** and choose
+**Return to Latest Release…** from the button above the list or the row’s context
+menu. Cakebrew detects the original tap and package when it can. If there are
+several possible matches, choose one from the **Original Package** dropdown.
+Manual entry is available when no candidates can be found.
 
-macOS 15 or later. Homebrew must already be installed — Cakebrew drives the
-`brew` you have, it does not bundle its own.
+History is available for supported public GitHub taps. Older recipes and downloads
+may no longer work on your Mac, and a cask’s own updater can bypass its Homebrew
+pin. See the [version-history guide](docs/version-history.md) for supported
+versions, installation behavior, and recovery details.
 
-Works with both Homebrew prefixes (`/usr/local` on Intel, `/opt/homebrew` on
-Apple silicon).
+## Make yourself at home
 
-## Installing & Building
+Optional background checks surface package updates with a Dock badge and
+notifications. Turn them on in **Settings**, or enable a menu bar item for quick
+access to updates and Homebrew tools. Cakebrew follows light and dark appearance
+and is localized in English, German, French, Italian, Portuguese, and Simplified Chinese.
 
-Cakebrew is built from source with Xcode (until a tagged binary release is
-published on [Releases](https://github.com/scottdensmore/Cakebrew/releases)):
+| Shortcut | Action |
+| --- | --- |
+| `⌘F` | Search packages |
+| `⌘K` | Open the Command Palette |
+| `⌘R` | Refresh package information |
+| `⌘U` | Update Homebrew |
+| `⌘,` | Open Settings |
+
+The Command Palette can take you to a sidebar section, select an installed
+package, or open a Homebrew tool. **Cakebrew ▸ Check for Updates…** checks for
+updates to Cakebrew itself.
+
+## Get started
+
+You’ll need **macOS 15 or later** and [Homebrew](https://brew.sh) installed.
+Cakebrew supports the standard Homebrew locations on Apple silicon
+(`/opt/homebrew`) and Intel (`/usr/local`).
+
+To build the current source, use **Xcode 26 or later**, including its command-line
+tools. The app uses Swift 6 with complete concurrency checking and a layered
+Icon Composer app icon.
 
 ```sh
 git clone https://github.com/scottdensmore/Cakebrew.git
@@ -73,43 +92,88 @@ cd Cakebrew
 open Cakebrew.xcworkspace
 ```
 
-In Xcode, select the **Cakebrew** scheme and choose **Product ▸ Run** (`⌘R`), or
-build from the command line and copy `Cakebrew.app` to `/Applications`:
+Select the **Cakebrew** scheme, choose **My Mac**, and run with `⌘R`.
+Published builds, when available, are listed on
+[Releases](https://github.com/scottdensmore/Cakebrew/releases).
+
+For a local command-line build without a development team:
 
 ```sh
-# Build a Release or Debug app bundle without requiring a signing certificate
-xcodebuild build -workspace Cakebrew.xcworkspace -scheme Cakebrew \
-  -configuration Release -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO
+xcodebuild -project Cakebrew.xcodeproj -scheme Cakebrew \
+  -configuration Debug -destination 'platform=macOS' \
+  -derivedDataPath build ONLY_ACTIVE_ARCH=YES \
+  CODE_SIGN_IDENTITY=- CODE_SIGNING_ALLOWED=YES \
+  CODE_SIGNING_REQUIRED=NO DEVELOPMENT_TEAM="" build
 
-# Unit tests — fast and hermetic
-xcodebuild test -project Cakebrew.xcodeproj -scheme Cakebrew \
-  -destination 'platform=macOS' -only-testing:CakebrewTests CODE_SIGNING_ALLOWED=NO
-
-# UI tests — journeys against a mock brew, no real Homebrew involved
-xcodebuild test -scheme CakebrewUITests -destination 'platform=macOS' \
-  CODE_SIGN_IDENTITY="-" CODE_SIGN_STYLE=Manual CODE_SIGNING_REQUIRED=NO \
-  CODE_SIGNING_ALLOWED=YES DEVELOPMENT_TEAM="" PROVISIONING_PROFILE_SPECIFIER=""
+open build/Build/Products/Debug/Cakebrew.app
 ```
 
-Launching with `-BPMockBrew` swaps in a fixture-backed interface, so you can
-drive the whole UI without touching a real Homebrew installation. That build is
-Debug-only.
+Once Cakebrew opens, start with **Installed** to explore your setup, or press `⌘F`
+to find a package. Select a row to open its details in the inspector.
 
-## Contributing
+## For contributors
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for details on contributing to Cakebrew.
+Bug reports, translations, accessibility improvements, and thoughtful feature
+ideas are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md), or explore:
 
-## Security
+- [SwiftUI architecture and migration notes](docs/swiftui-migration.md)
+- [Version history and returning to the latest release](docs/version-history.md)
+- [The layered app icon and appearance previews](docs/icon-design/README.md)
 
-Cakebrew ships a privileged helper. Please report vulnerabilities privately
-rather than in a public issue — see [SECURITY.md](SECURITY.md).
+The interface uses SwiftUI scenes, navigation, tables, an inspector, Settings, and
+commands. There are no XIB, NIB, or storyboard resources. macOS integrations such
+as Finder, the clipboard, and notifications use the platform APIs.
 
-## Credits
+### Try the demo interface
 
-Cakebrew was created by [Bruno Philipe](https://github.com/brunophilipe), based
-on a project by [vincentsaluzzo](https://github.com/vincentsaluzzo/Homebrew-GUI)
-whose commits are still in the working tree. This repository is a fork
-maintained by [Scott Densmore](https://github.com/scottdensmore).
+Debug builds include a mock Homebrew interface for exploring the UI without
+changing your Homebrew installation:
 
-Distributed under the GNU General Public License version 3. See
-[LICENSE](LICENSE).
+```sh
+open -n build/Build/Products/Debug/Cakebrew.app --args -BPMockBrew
+```
+
+### Run the checks
+
+Run the unit suite with the dedicated **CakebrewTests** scheme:
+
+```sh
+xcodebuild -project Cakebrew.xcodeproj -scheme CakebrewTests \
+  -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test
+```
+
+UI tests use mock Homebrew data and require a logged-in macOS session with
+UI-testing permission. The test runner needs a signature; ad-hoc signing works
+for local runs:
+
+```sh
+xcodebuild -project Cakebrew.xcodeproj -scheme CakebrewUITests \
+  -destination 'platform=macOS' ONLY_ACTIVE_ARCH=YES \
+  CODE_SIGN_IDENTITY=- CODE_SIGNING_ALLOWED=YES \
+  CODE_SIGNING_REQUIRED=NO DEVELOPMENT_TEAM="" test
+```
+
+Live Homebrew compatibility checks are opt-in and skipped by default. They read
+real Homebrew output without installing or removing packages. The fixtures expect
+`wget` to be installed and `cowsay` to be absent:
+
+```sh
+CAKEBREW_BREW_COMPAT=1 TEST_RUNNER_CAKEBREW_BREW_COMPAT=1 \
+HOMEBREW_NO_AUTO_UPDATE=1 TEST_RUNNER_HOMEBREW_NO_AUTO_UPDATE=1 \
+xcodebuild -project Cakebrew.xcodeproj -scheme CakebrewTests \
+  -destination 'platform=macOS' \
+  -only-testing:CakebrewTests/BPBrewCompatibilityTests \
+  CODE_SIGNING_ALLOWED=NO test
+```
+
+Please report security vulnerabilities privately through
+[SECURITY.md](SECURITY.md).
+
+## Thanks and license
+
+Cakebrew was created by [Bruno Philipe](https://github.com/brunophilipe), based on
+[vincentsaluzzo’s Homebrew-GUI](https://github.com/vincentsaluzzo/Homebrew-GUI),
+whose commits remain in the repository history. This fork is maintained by
+[Scott Densmore](https://github.com/scottdensmore).
+
+Distributed under the **GNU General Public License version 3**. See [LICENSE](LICENSE).

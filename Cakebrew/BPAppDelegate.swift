@@ -58,20 +58,15 @@ private func bpExtractNotificationUserInfo(from response: Any?) -> [AnyHashable:
     return r4.userInfo?() as? [AnyHashable: Any]
 }
 
-private let bpSIGTERMHandler: @convention(c) (Int32) -> Void = { sig in
-    if sig == SIGTERM {
-        bpSharedHomebrewManager()?.cleanUp()
-    }
-    Darwin.signal(sig, SIG_DFL)
-}
-
 @objc(BPAppDelegate)
 public final class BPAppDelegate: NSObject, NSApplicationDelegate, BPNotificationPresenting, @unchecked Sendable {
+    private var terminationSignal: (any DispatchSourceSignal)?
+    nonisolated(unsafe) public static weak var current: BPAppDelegate?
     public static let homebrewWebsiteURLString = "https://www.cakebrew.com"
     public static let cakebrewDocumentationURLString = "https://github.com/scottdensmore/Cakebrew#readme"
     public static let cakebrewReleasesURLString = "https://github.com/scottdensmore/Cakebrew/releases"
 
-    @IBOutlet @objc public var window: NSWindow?
+    @objc public var window: NSWindow?
     @objc public weak var dockActionTarget: (any BPDockMenuTarget)?
 
     private weak var _brewfileImportTarget: (any BPBrewfileImporting)?
@@ -118,6 +113,8 @@ public final class BPAppDelegate: NSObject, NSApplicationDelegate, BPNotificatio
 
     @objc public private(set) var statusItem: NSStatusItem?
 
+    private var usesSwiftUIScenes = false
+    private var mainSceneOpener: (@MainActor () -> Void)?
     private var preferencesWindowController: BPPreferencesWindowController?
     private var backgroundUpdater: BPBackgroundUpdater?
     private var appUpdateHost: BPAppUpdateHost?
@@ -130,6 +127,7 @@ public final class BPAppDelegate: NSObject, NSApplicationDelegate, BPNotificatio
 
     public override init() {
         super.init()
+        Self.current = self
         if let proto = NSProtocolFromString("UNUserNotificationCenterDelegate") {
             class_addProtocol(BPAppDelegate.self, proto)
         }
@@ -147,13 +145,11 @@ public final class BPAppDelegate: NSObject, NSApplicationDelegate, BPNotificatio
     }
 
     public func applicationDidFinishLaunching(_ aNotification: Notification) {
+        usesSwiftUIScenes = true
         BPPreferences.registerDefaults()
         setupSignalHandler()
 
         MainActor.assumeIsolated {
-            if let appMenu = NSApp.mainMenu?.items.first?.submenu {
-                _ = BPAppDelegate.installCheckForUpdatesMenuItem(inApplicationMenu: appMenu, target: self)
-            }
             NotificationCenter.default.addObserver(
                 self,
                 selector: #selector(updatesSnapshotDidChangeForMenuBar(_:)),
@@ -171,7 +167,7 @@ public final class BPAppDelegate: NSObject, NSApplicationDelegate, BPNotificatio
         UNUserNotificationCenter.current().delegate = unsafeBitCast(self, to: UNUserNotificationCenterDelegate.self)
     }
 
-    public func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+    @nonobjc public func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if !flag {
             MainActor.assumeIsolated {
                 self.window?.makeKeyAndOrderFront(self)
@@ -181,7 +177,7 @@ public final class BPAppDelegate: NSObject, NSApplicationDelegate, BPNotificatio
         return true
     }
 
-    public func application(_ application: NSApplication, open urls: [URL]) {
+    @nonobjc public func application(_ application: NSApplication, open urls: [URL]) {
         guard let brewfile = BPBrewfile.brewfileURLs(from: urls).first else {
             MainActor.assumeIsolated {
                 self.displayBrewfileNotRecognized(forURLs: urls)
@@ -271,9 +267,36 @@ public final class BPAppDelegate: NSObject, NSApplicationDelegate, BPNotificatio
         }
     }
 
+    @MainActor
+    public static func isWorkspaceWindow(_ window: NSWindow, title: String) -> Bool {
+        window.styleMask.contains(.titled) && (window.title == "Cakebrew" || window.title == title)
+    }
+
+    @MainActor
+    public func registerMainSceneOpener(_ opener: @escaping @MainActor () -> Void,
+                                       windowTitle: @escaping @MainActor () -> String) {
+        guard mainSceneOpener == nil else { return }
+        mainSceneOpener = opener
+        // An app that registers document types can receive an open event before
+        // SwiftUI presents its navigation scene. Request that scene through the
+        // SwiftUI environment, after scene registration has completed.
+        DispatchQueue.main.async { [weak self] in
+            let title = windowTitle()
+            if !NSApp.windows.contains(where: { Self.isWorkspaceWindow($0, title: title) }) {
+                self?.mainSceneOpener?()
+            }
+        }
+    }
+
     public func showMainWindow() {
         MainActor.assumeIsolated {
-            self.window?.makeKeyAndOrderFront(self)
+            if let window = self.window, window.isVisible || window.isMiniaturized {
+                if window.isMiniaturized { window.deminiaturize(self) }
+                window.makeKeyAndOrderFront(self)
+            } else {
+                self.mainSceneOpener?()
+            }
+            NSApp.activate(ignoringOtherApps: true)
         }
     }
 
@@ -319,8 +342,8 @@ public final class BPAppDelegate: NSObject, NSApplicationDelegate, BPNotificatio
         return .terminateNow
     }
 
-    public func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        return true
+    @nonobjc public func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        return false
     }
 
     private func cleanupTaskAlerts() {
@@ -487,6 +510,11 @@ public final class BPAppDelegate: NSObject, NSApplicationDelegate, BPNotificatio
 
     @objc public func updateMenuBarExtra() {
         MainActor.assumeIsolated {
+            if self.usesSwiftUIScenes {
+                if let item = self.statusItem { NSStatusBar.system.removeStatusItem(item) }
+                self.statusItem = nil
+                return
+            }
             if !BPPreferences.showMenuBarExtra {
                 if let item = self.statusItem {
                     NSStatusBar.system.removeStatusItem(item)
@@ -621,7 +649,15 @@ public final class BPAppDelegate: NSObject, NSApplicationDelegate, BPNotificatio
     }
 
     @objc public func setupSignalHandler() {
-        Darwin.signal(SIGTERM, bpSIGTERMHandler)
+        guard terminationSignal == nil else { return }
+        // Swift/Objective-C cleanup can allocate and lock, so it cannot run in a POSIX handler.
+        Darwin.signal(SIGTERM, SIG_IGN)
+        let source = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
+        source.setEventHandler {
+            MainActor.assumeIsolated { NSApplication.shared.terminate(nil) }
+        }
+        terminationSignal = source
+        source.resume()
     }
 
     @objc(userNotificationCenter:didReceiveNotificationResponse:withCompletionHandler:)

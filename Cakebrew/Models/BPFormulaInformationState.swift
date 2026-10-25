@@ -93,7 +93,7 @@ public struct BPSelectedFormulaSnapshot: Equatable, Sendable {
                 shortDescription: String?) {
         self.identity = BPFormulaInformationIdentity(name: name, cask: cask, mode: .general)
         self.isInstalled = isInstalled
-        self.isPinned = isPinned && !cask
+        self.isPinned = isPinned
         self.installPath = installPath.flatMap { $0.isEmpty ? nil : $0 }
         self.latestVersion = latestVersion.flatMap { $0.isEmpty ? nil : $0 }
         self.dependencies = dependencies.flatMap { $0.isEmpty ? nil : $0 }
@@ -103,10 +103,18 @@ public struct BPSelectedFormulaSnapshot: Equatable, Sendable {
 
     public var dependencyNames: [String] {
         guard let dependencies else { return [] }
-        return dependencies
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
+        var seen = Set<String>()
+        return dependencies.split(separator: ";").flatMap { category -> [String] in
+            // Recursive Runtime is a summary ("all installed"), not a package list.
+            if category.trimmingCharacters(in: .whitespaces).hasPrefix("Recursive Runtime") { return [] }
+            let packages = category.split(separator: ":", maxSplits: 1).last ?? category
+            return packages.split(separator: ",").compactMap { entry in
+                let name = entry.trimmingCharacters(in: .whitespacesAndNewlines)
+                    .split(whereSeparator: { $0.isWhitespace }).first.map(String.init) ?? ""
+                guard !name.isEmpty, name != "==>", seen.insert(name).inserted else { return nil }
+                return name
+            }
+        }
     }
 
     public var conflictNames: [String] {
@@ -115,6 +123,27 @@ public struct BPSelectedFormulaSnapshot: Equatable, Sendable {
             .split(separator: ",")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
+    }
+}
+
+/// Additional inspector details come from the same response as the summary.
+public struct BPFormulaInspectorDetails: Equatable, Sendable {
+    public let information: String?
+    public let license: String?
+    public let source: URL?
+
+    public init(information: String?) {
+        self.information = information.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
+        let lines = information?.components(separatedBy: .newlines) ?? []
+        func value(_ prefix: String) -> String? {
+            guard let line = lines.first(where: { $0.hasPrefix(prefix) }) else { return nil }
+            let value = String(line.dropFirst(prefix.count)).trimmingCharacters(in: .whitespaces)
+            return value.isEmpty ? nil : value
+        }
+        license = value("License:")
+        source = value("From:").flatMap(URL.init(string:)).flatMap {
+            ["https", "http"].contains($0.scheme?.lowercased() ?? "") ? $0 : nil
+        }
     }
 }
 
@@ -141,7 +170,7 @@ public struct BPSelectedFormulaState: Sendable {
 
     public var showsPinnedRow: Bool {
         guard case .single(let snapshot) = selection else { return false }
-        return snapshot.isPinned && !snapshot.identity.cask
+        return snapshot.isPinned
     }
 
     public mutating func clear() {
@@ -281,7 +310,7 @@ public struct BPInstalledPackageRow: Identifiable, Equatable, Sendable {
         self.version = version ?? ""
         self.latestVersion = latestVersion ?? ""
         self.statusRank = statusRank
-        self.isPinned = isPinned && !cask
+        self.isPinned = isPinned
         self.lowercasedName = name.lowercased()
     }
 }

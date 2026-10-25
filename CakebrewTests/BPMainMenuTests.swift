@@ -26,73 +26,24 @@ private final class BPSearchToolbarController: NSObject {
 @MainActor
 final class BPMainMenuTests: XCTestCase, @unchecked Sendable {
 
-    private func mainMenuXib() -> String {
-        let repoRoot = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-        let path = repoRoot.appendingPathComponent("Cakebrew/Base.lproj/MainMenu.xib").path
-        let contents = (try? String(contentsOfFile: path, encoding: .utf8)) ?? ""
-        XCTAssertFalse(contents.isEmpty, "could not read MainMenu.xib at \(path)")
-        return contents
+    private func applicationSource() throws -> String {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        return try String(contentsOf: root.appendingPathComponent("Cakebrew/CakebrewApp.swift"), encoding: .utf8)
     }
 
-    private func countOfPattern(_ pattern: String, in text: String) -> Int {
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
-            return 0
-        }
-        return regex.numberOfMatches(in: text, options: [], range: NSRange(location: 0, length: (text as NSString).length))
+    func testSwiftUICommandsProvideSearchAndSidebarNavigation() throws {
+        let source = try applicationSource()
+        XCTAssertTrue(source.contains("SidebarCommands()"))
+        XCTAssertTrue(source.contains(".keyboardShortcut(\"f\")"))
+        XCTAssertTrue(source.contains(".keyboardShortcut(\"k\")"))
+        XCTAssertTrue(source.contains(".searchFocused($searchFocused)"))
     }
 
-    // MARK: - the duplicate Command-F
-
-    func testCommandFIsBoundExactlyOnce() {
-        let bindings = countOfPattern("keyEquivalent=\"f\"", in: mainMenuXib())
-        XCTAssertEqual(bindings, 1, "⌘F must be claimed by exactly one menu item")
-    }
-
-    func testTheSurvivingCommandFIsSearchForFormula() {
-        let match = countOfPattern("title=\"Search for Formula\" keyEquivalent=\"f\"", in: mainMenuXib())
-        XCTAssertEqual(match, 1, "⌘F should belong to Search for Formula")
-    }
-
-    // MARK: - dead template submenus
-
-    func testTemplateEditSubmenusAreGone() {
-        let xib = mainMenuXib()
-        for submenu in ["Find", "Spelling and Grammar", "Substitutions", "Transformations", "Speech"] {
-            let pattern = "<menu key=\"submenu\" title=\"\(submenu)\""
-            XCTAssertEqual(
-                countOfPattern(pattern, in: xib),
-                0,
-                "the \(submenu) submenu targets text actions no view here implements"
-            )
-        }
-    }
-
-    // MARK: - Settings, not Preferences
-
-    func testTheMenuItemMatchesTheWindowItOpens() {
-        let xib = mainMenuXib()
-        XCTAssertEqual(
-            countOfPattern("title=\"Preferences…\"", in: xib),
-            0,
-            "the window this opens is titled Settings, and macOS 13+ says Settings"
-        )
-        XCTAssertEqual(countOfPattern("title=\"Settings…\"", in: xib), 1)
-    }
-
-    // MARK: - Show/Hide Sidebar
-
-    func testAMenuItemTogglesTheSidebar() {
-        let xib = mainMenuXib()
-        XCTAssertEqual(
-            countOfPattern("selector=\"toggleSidebar:\"", in: xib),
-            1,
-            "View needs a Show/Hide Sidebar item"
-        )
-        XCTAssertEqual(
-            countOfPattern("title=\"Show Sidebar\" keyEquivalent=\"s\"", in: xib),
-            1,
-            "the sidebar item should carry the standard ⌃⌘S"
-        )
+    func testSettingsUsesANativeSwiftUIScene() throws {
+        let source = try applicationSource()
+        XCTAssertTrue(source.contains("Settings {"))
+        XCTAssertTrue(source.contains("BPSettingsView()"))
+        XCTAssertFalse(source.contains("Preferences…"))
     }
 
     func testTheWindowControllerHandlesToggleSidebar() {
@@ -200,18 +151,11 @@ final class BPMainMenuTests: XCTestCase, @unchecked Sendable {
 
     // MARK: - Help that actually helps
 
-    func testHelpDoesNotSendShowHelpWithNoHelpBook() {
-        XCTAssertEqual(countOfPattern("selector=\"showHelp:\"", in: mainMenuXib()), 0)
-    }
-
-    func testHelpOpensTheDocumentation() {
-        let xib = mainMenuXib()
-        XCTAssertEqual(countOfPattern("selector=\"openDocumentation:\"", in: xib), 1)
-        XCTAssertEqual(
-            countOfPattern("title=\"Cakebrew Documentation\"", in: xib),
-            1,
-            "the title should say what the item does, since it opens a web page"
-        )
+    func testHelpOpensTheDocumentation() throws {
+        let source = try applicationSource()
+        XCTAssertTrue(source.contains("Cakebrew Documentation"))
+        XCTAssertTrue(source.contains("delegate.openDocumentation(nil)"))
+        XCTAssertFalse(source.contains("showHelp"))
     }
 
     func testLocalizedUpgradeAllResourceDescribesBothNamespacesAndConfirmation() {

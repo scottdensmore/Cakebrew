@@ -278,7 +278,7 @@
 
 
 /* Added for the localized-strings pass; English until translated. */
-"Sidebar_Info_Pinned" = "Ces formules sont épinglées et ne seront pas mises à jour.";
+"Sidebar_Info_Pinned" = "Les mises à jour Homebrew sont suspendues pour ces paquets épinglés.";
 "Services_Status_None" = "Arrêté";
 "Services_Status_Started" = "En cours";
 "Services_Status_Stopped" = "Stoppé";
@@ -481,3 +481,110 @@
 "About_Acknowledgements" = "Remerciements";
 "About_Copy_Version" = "Copier les infos de version";
 "About_Visit_Website" = "Visiter le site web";
+
+"Services_Filter_All" = "Tous";
+
+"Services_Search" = "Rechercher des services";
+
+/* SwiftUI scenes and commands */
+"About Cakebrew" = "À propos de Cakebrew";
+"Check for Updates…" = "Rechercher des mises à jour…";
+"Import Brewfile…" = "Importer un Brewfile…";
+"Export Brewfile…" = "Exporter un Brewfile…";
+"Packages" = "Paquets";
+"Install Selected Package…" = "Installer le paquet sélectionné…";
+"Install with Options…" = "Installer avec des options…";
+"Upgrade Selected Packages…" = "Mettre à niveau les paquets sélectionnés…";
+"Uninstall Selected Packages…" = "Désinstaller les paquets sélectionnés…";
+"Unpin Package" = "Désépingler le paquet";
+"Pin Package" = "Épingler le paquet";
+"Upgrade All Outdated Packages…" = "Mettre à niveau tous les paquets obsolètes…";
+"Search Packages" = "Rechercher des paquets";
+"Command Palette…" = "Palette de commandes…";
+"Refresh Packages" = "Actualiser les paquets";
+"Update Homebrew" = "Mettre à jour Homebrew";
+"Run Doctor" = "Lancer le diagnostic";
+"Add Repository…" = "Ajouter un dépôt…";
+"Remove Repository…" = "Supprimer un dépôt…";
+"Clean Up…" = "Nettoyer…";
+"Remove Unused Dependencies…" = "Supprimer les dépendances inutilisées…";
+"Cakebrew Documentation" = "Documentation de Cakebrew";
+"Open Cakebrew" = "Ouvrir Cakebrew";
+"Show Package Updates" = "Afficher les mises à jour des paquets";
+"Search packages" = "Rechercher des paquets";
+"Install…" = "Installer…";
+"Upgrade…" = "Mettre à niveau…";
+"Uninstall…" = "Désinstaller…";
+"Package Inspector" = "Inspecteur de paquet";
+"Refresh" = "Actualiser";
+"Cancel Refresh" = "Annuler l’actualisation";
+"Loading Packages…" = "Chargement des paquets…";
+"Get Homebrew" = "Obtenir Homebrew";
+"Updates" = "Mises à jour";
+"Check for Cakebrew updates automatically" = "Rechercher automatiquement les mises à jour de Cakebrew";
+"Menu Bar" = "Barre des menus";
+"Open Login Items Settings" = "Ouvrir les réglages des éléments d’ouverture";
+"Install Helper…" = "Installer l’utilitaire…";
+"Show Cakebrew" = "Afficher Cakebrew";
+"Select a Package" = "Sélectionnez un paquet";
+"Choose a package to explore its version, dependencies, and installation details." = "Sélectionnez un paquet pour consulter sa version, ses dépendances et les détails de son installation.";
+"Multiple Packages" = "Plusieurs paquets";
+"Copy installation path" = "Copier le chemin d’installation";
+"Reveal installation in Finder" = "Afficher l’installation dans le Finder";
+"Latest Output" = "Dernière sortie";
+"Repository name" = "Nom du dépôt";
+"Show or hide package details" = "Afficher ou masquer les détails du paquet";
+"Refresh packages (⌘R)" = "Actualiser les paquets (⌘R)";
+
+/* Consolidated package inspector */
+"License:" = "Licence :";
+"License" = "Licence";
+"Homebrew Source" = "Source Homebrew";
+"Homebrew Output" = "Sortie Homebrew";
+"Copy Output" = "Copier la sortie";
+
+/* Package version history */
+"Version History" = "Historique des versions";
+"Load Versions" = "Charger les versions";
+"Load Older Versions" = "Charger les anciennes versions";
+"Loading versions…" = "Chargement des versions…";
+"Version %@" = "Version %@";
+"Version %@, %@" = "Version %@, %@";
+"Formula date" = "Date de la formule";
+"Revision" = "Révision";
+"Declared Dependencies" = "Dépendances déclarées";
+"Formula Source" = "Source de la formule";
+"Project Website" = "Site du projet";
+"View Formula at This Revision" = "Voir la formule à cette révision";
+"Install & Pin This Version…" = "Installer et épingler cette version…";
+"Install & Pin Version %@" = "Installer et épingler la version %@";
+"Make this the active version" = "Activer cette version";
+"Install & Pin" = "Installer et épingler";
+"Installing historical version…" = "Installation de l’ancienne version…";
+"Cancel Operation" = "Annuler l’opération";
+"Retry Details" = "Réessayer les détails";
+"Loading version information…" = "Chargement des informations de version…";
+"Package: %@" = "Paquet : %@";
+"Done" = "Terminé";
+"Releases from this package’s Homebrew formula history." = "Versions issues de l’historique de la formule Homebrew de ce paquet.";
+"Version history requires a package source in a GitHub Homebrew tap." = "L’historique nécessite une source de paquet dans un tap Homebrew sur GitHub.";
+"Historical cask installation is not available. You can review each release’s source here." = "L’installation d’anciens casks n’est pas disponible. Vous pouvez consulter ici la source de chaque version.";
+"No release entries were found in the available formula history." = "Aucune version n’a été trouvée dans l’historique disponible de la formule.";
+
+/* Historical cask details */
+"Cask date" = "Date du cask";
+"Cask Source" = "Source du cask";
+"View Cask at This Revision" = "Voir le cask à cette révision";
+"Releases from this package’s Homebrew history." = "Versions de l’historique Homebrew de ce paquet.";
+
+/* Return a historical package to the current upstream release */
+"Return to Latest Release…" = "Revenir à la dernière version…";
+"Return to Latest Release" = "Revenir à la dernière version";
+"Unpin & Switch to Latest" = "Désépingler et passer à la dernière version";
+"Returning to latest release…" = "Retour à la dernière version…";
+"Original Package" = "Paquet d’origine";
+
+"Checking pinned package…" = "Vérification du paquet épinglé…";
+
+"Choose the original package to return to. Cakebrew found these possible matches." = "Choisissez le paquet d’origine à rétablir. Cakebrew a trouvé ces correspondances possibles.";
+"Choose a Package…" = "Choisir un paquet…";

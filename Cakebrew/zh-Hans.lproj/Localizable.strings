@@ -272,7 +272,7 @@
 
 
 /* Added for the localized-strings pass; English until translated. */
-"Sidebar_Info_Pinned" = "这些 formulae 已固定，不会被升级。";
+"Sidebar_Info_Pinned" = "这些已锁定软件包的 Homebrew 升级已暂停。";
 "Services_Status_None" = "未运行";
 "Services_Status_Started" = "运行中";
 "Services_Status_Stopped" = "已停止";
@@ -477,3 +477,110 @@
 "About_Acknowledgements" = "致谢";
 "About_Copy_Version" = "拷贝版本信息";
 "About_Visit_Website" = "访问网站";
+
+"Services_Filter_All" = "全部";
+
+"Services_Search" = "搜索服务";
+
+/* SwiftUI scenes and commands */
+"About Cakebrew" = "关于 Cakebrew";
+"Check for Updates…" = "检查更新…";
+"Import Brewfile…" = "导入 Brewfile…";
+"Export Brewfile…" = "导出 Brewfile…";
+"Packages" = "软件包";
+"Install Selected Package…" = "安装所选软件包…";
+"Install with Options…" = "使用选项安装…";
+"Upgrade Selected Packages…" = "升级所选软件包…";
+"Uninstall Selected Packages…" = "卸载所选软件包…";
+"Unpin Package" = "取消固定软件包";
+"Pin Package" = "固定软件包";
+"Upgrade All Outdated Packages…" = "升级所有过时的软件包…";
+"Search Packages" = "搜索软件包";
+"Command Palette…" = "命令面板…";
+"Refresh Packages" = "刷新软件包";
+"Update Homebrew" = "更新 Homebrew";
+"Run Doctor" = "运行诊断";
+"Add Repository…" = "添加仓库…";
+"Remove Repository…" = "移除仓库…";
+"Clean Up…" = "清理…";
+"Remove Unused Dependencies…" = "移除未使用的依赖项…";
+"Cakebrew Documentation" = "Cakebrew 文档";
+"Open Cakebrew" = "打开 Cakebrew";
+"Show Package Updates" = "显示软件包更新";
+"Search packages" = "搜索软件包";
+"Install…" = "安装…";
+"Upgrade…" = "升级…";
+"Uninstall…" = "卸载…";
+"Package Inspector" = "软件包检查器";
+"Refresh" = "刷新";
+"Cancel Refresh" = "取消刷新";
+"Loading Packages…" = "正在载入软件包…";
+"Get Homebrew" = "获取 Homebrew";
+"Updates" = "更新";
+"Check for Cakebrew updates automatically" = "自动检查 Cakebrew 更新";
+"Menu Bar" = "菜单栏";
+"Open Login Items Settings" = "打开登录项设置";
+"Install Helper…" = "安装辅助程序…";
+"Show Cakebrew" = "显示 Cakebrew";
+"Select a Package" = "选择软件包";
+"Choose a package to explore its version, dependencies, and installation details." = "选择软件包以查看其版本、依赖项和安装详情。";
+"Multiple Packages" = "多个软件包";
+"Copy installation path" = "复制安装路径";
+"Reveal installation in Finder" = "在访达中显示安装位置";
+"Latest Output" = "最新输出";
+"Repository name" = "仓库名称";
+"Show or hide package details" = "显示或隐藏软件包详情";
+"Refresh packages (⌘R)" = "刷新软件包 (⌘R)";
+
+/* Consolidated package inspector */
+"License:" = "许可证：";
+"License" = "许可证";
+"Homebrew Source" = "Homebrew 源代码";
+"Homebrew Output" = "Homebrew 输出";
+"Copy Output" = "拷贝输出";
+
+/* Package version history */
+"Version History" = "版本历史";
+"Load Versions" = "加载版本";
+"Load Older Versions" = "加载更早的版本";
+"Loading versions…" = "正在加载版本…";
+"Version %@" = "版本 %@";
+"Version %@, %@" = "版本 %@，%@";
+"Formula date" = "配方日期";
+"Revision" = "修订版本";
+"Declared Dependencies" = "声明的依赖项";
+"Formula Source" = "配方源代码";
+"Project Website" = "项目网站";
+"View Formula at This Revision" = "查看此修订版本的配方";
+"Install & Pin This Version…" = "安装并固定此版本…";
+"Install & Pin Version %@" = "安装并固定版本 %@";
+"Make this the active version" = "将此版本设为使用中的版本";
+"Install & Pin" = "安装并固定";
+"Installing historical version…" = "正在安装历史版本…";
+"Cancel Operation" = "取消操作";
+"Retry Details" = "重新加载详细信息";
+"Loading version information…" = "正在加载版本信息…";
+"Package: %@" = "软件包：%@";
+"Done" = "完成";
+"Releases from this package’s Homebrew formula history." = "此软件包的 Homebrew 配方历史中的版本。";
+"Version history requires a package source in a GitHub Homebrew tap." = "版本历史需要软件包源代码位于 GitHub 上的 Homebrew tap 中。";
+"Historical cask installation is not available. You can review each release’s source here." = "无法安装历史版本的 cask。您可以在此查看各个版本的源代码。";
+"No release entries were found in the available formula history." = "在可用的配方历史中未找到版本记录。";
+
+/* Historical cask details */
+"Cask date" = "Cask 日期";
+"Cask Source" = "Cask 源代码";
+"View Cask at This Revision" = "查看此修订的 Cask";
+"Releases from this package’s Homebrew history." = "此软件包 Homebrew 历史中的版本。";
+
+/* Return a historical package to the current upstream release */
+"Return to Latest Release…" = "恢复最新版本…";
+"Return to Latest Release" = "恢复最新版本";
+"Unpin & Switch to Latest" = "取消锁定并切换到最新版";
+"Returning to latest release…" = "正在恢复最新版本…";
+"Original Package" = "原始软件包";
+
+"Checking pinned package…" = "正在检查锁定的软件包…";
+
+"Choose the original package to return to. Cakebrew found these possible matches." = "请选择要恢复的原始软件包。Cakebrew 找到了以下可能的匹配项。";
+"Choose a Package…" = "选择软件包…";

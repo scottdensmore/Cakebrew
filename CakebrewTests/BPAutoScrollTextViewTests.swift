@@ -8,6 +8,7 @@
 
 import AppKit
 import XCTest
+import os
 
 @MainActor
 final class BPAutoScrollTextViewTests: XCTestCase, @unchecked Sendable {
@@ -110,13 +111,13 @@ final class BPAutoScrollTextViewTests: XCTestCase, @unchecked Sendable {
     // MARK: - coalescing
 
     func testBufferedChunksAreAppliedInASingleEdit() {
-        var edits: UInt = 0
+        let edits = OSAllocatedUnfairLock(initialState: UInt(0))
         let observer = NotificationCenter.default.addObserver(
             forName: NSText.didChangeNotification,
             object: textView,
             queue: nil
         ) { _ in
-            edits += 1
+            edits.withLock { $0 += 1 }
         }
 
         for _ in 0..<50 {
@@ -126,7 +127,7 @@ final class BPAutoScrollTextViewTests: XCTestCase, @unchecked Sendable {
         NotificationCenter.default.removeObserver(observer)
 
         XCTAssertEqual(textView.string, String(repeating: "x", count: 50))
-        XCTAssertLessThanOrEqual(edits, 1, "each chunk caused its own edit instead of being coalesced")
+        XCTAssertLessThanOrEqual(edits.withLock { $0 }, 1, "each chunk caused its own edit instead of being coalesced")
     }
 
     func testFlushingWithNothingBufferedIsHarmless() {

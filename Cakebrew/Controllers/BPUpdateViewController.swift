@@ -68,9 +68,6 @@ public final class BPUpdateViewController: NSViewController {
         }
     }
 
-    override public var nibName: NSNib.Name? {
-        "BPUpdateView"
-    }
 
     @objc(runStopUpdate:)
     public func runStopUpdate(_ sender: Any?) {

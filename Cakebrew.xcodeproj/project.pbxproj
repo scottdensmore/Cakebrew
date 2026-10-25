@@ -17,17 +17,17 @@
 		1536BFF718EBA92400B67C5C /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1536BFF618EBA92400B67C5C /* Images.xcassets */; };
 		89A1C0A02608300000CAFE02 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 89A1C0A02608300000CAFE01 /* AppIcon.icon */; };
 		1540FA3518ECF66B00334A5C /* download.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1540FA3418ECF66B00334A5C /* download.icns */; };
-		15715F611C78050B00AE0E66 /* BPBundleWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 15715F5F1C78050B00AE0E66 /* BPBundleWindow.xib */; };
+		15715F611C78050B00AE0E66 /* BPBundleWindow.strings in Resources */ = {isa = PBXBuildFile; fileRef = 15715F5F1C78050B00AE0E66 /* BPBundleWindow.strings */; };
 		1584884A1F0708F000BD2CD9 /* brewinfo_nmap.txt in Resources */ = {isa = PBXBuildFile; fileRef = 158488491F0708F000BD2CD9 /* brewinfo_nmap.txt */; };
 		1594D13C1B8A6D1A00F764FA /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 15D2CFAC18F202D000B6D9F1 /* QuartzCore.framework */; };
 		15A00B411B8406FB00528486 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 15A00B401B8406FB00528486 /* Credits.rtf */; };
-		15D28A141AE332DB005C8A3E /* DCOAboutWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 15D28A161AE332DB005C8A3E /* DCOAboutWindow.xib */; };
-		15D28A171AE332E6005C8A3E /* BPDoctorView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 15D28A191AE332E6005C8A3E /* BPDoctorView.xib */; };
-		15D28A1A1AE332EA005C8A3E /* BPFormulaOptionsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 15D28A1C1AE332EA005C8A3E /* BPFormulaOptionsWindow.xib */; };
-		15D28A1D1AE332EF005C8A3E /* BPFormulaPopoverView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 15D28A1F1AE332EF005C8A3E /* BPFormulaPopoverView.xib */; };
-		15D28A201AE332F4005C8A3E /* BPInstallationWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 15D28A221AE332F4005C8A3E /* BPInstallationWindow.xib */; };
-		15D28A261AE332FD005C8A3E /* BPSelectedFormula.xib in Resources */ = {isa = PBXBuildFile; fileRef = 15D28A281AE332FD005C8A3E /* BPSelectedFormula.xib */; };
-		15D28A291AE33301005C8A3E /* BPUpdateView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 15D28A2B1AE33301005C8A3E /* BPUpdateView.xib */; };
+		15D28A141AE332DB005C8A3E /* DCOAboutWindow.strings in Resources */ = {isa = PBXBuildFile; fileRef = 15D28A161AE332DB005C8A3E /* DCOAboutWindow.strings */; };
+		15D28A171AE332E6005C8A3E /* BPDoctorView.strings in Resources */ = {isa = PBXBuildFile; fileRef = 15D28A191AE332E6005C8A3E /* BPDoctorView.strings */; };
+		15D28A1A1AE332EA005C8A3E /* BPFormulaOptionsWindow.strings in Resources */ = {isa = PBXBuildFile; fileRef = 15D28A1C1AE332EA005C8A3E /* BPFormulaOptionsWindow.strings */; };
+		15D28A1D1AE332EF005C8A3E /* BPFormulaPopoverView.strings in Resources */ = {isa = PBXBuildFile; fileRef = 15D28A1F1AE332EF005C8A3E /* BPFormulaPopoverView.strings */; };
+		15D28A201AE332F4005C8A3E /* BPInstallationWindow.strings in Resources */ = {isa = PBXBuildFile; fileRef = 15D28A221AE332F4005C8A3E /* BPInstallationWindow.strings */; };
+		15D28A261AE332FD005C8A3E /* BPSelectedFormula.strings in Resources */ = {isa = PBXBuildFile; fileRef = 15D28A281AE332FD005C8A3E /* BPSelectedFormula.strings */; };
+		15D28A291AE33301005C8A3E /* BPUpdateView.strings in Resources */ = {isa = PBXBuildFile; fileRef = 15D28A2B1AE33301005C8A3E /* BPUpdateView.strings */; };
 		15D28A2E1AE33453005C8A3E /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 15D28A301AE33453005C8A3E /* Localizable.strings */; };
 		15D2CFA218F1E71800B6D9F1 /* reload.icns in Resources */ = {isa = PBXBuildFile; fileRef = 15D2CFA118F1E71800B6D9F1 /* reload.icns */; };
 		15D2CFA418F1EAD200B6D9F1 /* globe.icns in Resources */ = {isa = PBXBuildFile; fileRef = 15D2CFA318F1EAD200B6D9F1 /* globe.icns */; };
@@ -40,7 +40,7 @@
 		15D5BEF518EBB430001DDED7 /* search.icns in Resources */ = {isa = PBXBuildFile; fileRef = 15D5BEF418EBB430001DDED7 /* search.icns */; };
 		1FE4FE59148E4CDD008EDE8B /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FE4FE58148E4CDD008EDE8B /* Cocoa.framework */; };
 		1FE4FE63148E4CDD008EDE8B /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1FE4FE61148E4CDD008EDE8B /* InfoPlist.strings */; };
-		1FE4FE6F148E4CDD008EDE8B /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FE4FE6D148E4CDD008EDE8B /* MainMenu.xib */; };
+		1FE4FE6F148E4CDD008EDE8B /* MainMenu.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1FE4FE6D148E4CDD008EDE8B /* MainMenu.strings */; };
 		234DE928FBCE6DDE7B82183D /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 46BD61BF82D5E8C0C487BD7D /* PrivacyInfo.xcprivacy */; };
 		55BE3020BDDC9FCA19C1ECBC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C155F549AE6671B51A3FCAD /* Cocoa.framework */; };
 		7FE49B0EE97F41AC5F5513B9 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C155F549AE6671B51A3FCAD /* Cocoa.framework */; };
@@ -57,8 +57,8 @@
 		D2BBAB6D1B87142F00F21332 /* brewInfo_percona-server.txt in Resources */ = {isa = PBXBuildFile; fileRef = D2BBAB671B87142F00F21332 /* brewInfo_percona-server.txt */; };
 		D2BBAB6F1B87290B00F21332 /* brewInfo_bison.txt in Resources */ = {isa = PBXBuildFile; fileRef = D2BBAB6E1B87290B00F21332 /* brewInfo_bison.txt */; };
 		D2BBAB711B87377D00F21332 /* brewInfo_sbtenv.txt in Resources */ = {isa = PBXBuildFile; fileRef = D2BBAB701B87377D00F21332 /* brewInfo_sbtenv.txt */; };
-		D2C3E02A1B8E15B2000D89BB /* Disabled.xib in Resources */ = {isa = PBXBuildFile; fileRef = D2C3E02C1B8E15B2000D89BB /* Disabled.xib */; };
-		D2C3E02D1B8E15D5000D89BB /* Loading.xib in Resources */ = {isa = PBXBuildFile; fileRef = D2C3E02F1B8E15D5000D89BB /* Loading.xib */; };
+		D2C3E02A1B8E15B2000D89BB /* Disabled.strings in Resources */ = {isa = PBXBuildFile; fileRef = D2C3E02C1B8E15B2000D89BB /* Disabled.strings */; };
+		D2C3E02D1B8E15D5000D89BB /* Loading.strings in Resources */ = {isa = PBXBuildFile; fileRef = D2C3E02F1B8E15D5000D89BB /* Loading.strings */; };
 		D2CC8CA71B90F04C00F763DF /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2CC8CA61B90F04C00F763DF /* Security.framework */; };
 		CB28111A8C15B0ABA51BE713 /* BPAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB613075FD47E8903CFF5C2E /* BPAppDelegate.swift */; };
 		CBD48A262A65CF4035B04B72 /* BPBackgroundUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB91DE0D74848EFEBDB8B7A8 /* BPBackgroundUpdater.swift */; };
@@ -123,7 +123,7 @@
 		CBE3F2FB4CCC8083714C6951 /* BPEmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9F03F4640F59844E68C563 /* BPEmptyStateView.swift */; };
 		CB5F7ACAF39CC1B74E65479C /* BPFormulaeTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9D32A96F7A4F0A8AD719D6 /* BPFormulaeTableView.swift */; };
 		CBC33D953F7FC63197E5DD36 /* BPLoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB551D613276D94B539FD713 /* BPLoadingView.swift */; };
-		CBF077A01D30DD2E25802A28 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC1BB58DFEE3EF566494112 /* main.swift */; };
+		CBF077A01D30DD2E25802A28 /* CakebrewApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC1BB58DFEE3EF566494112 /* CakebrewApp.swift */; };
 		CB76B45389BB434E14F4515E /* BPHelperProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6DCDC2FD4D9E1F8875EC06 /* BPHelperProtocol.swift */; };
 		CBB8EC3199704A83B512C8D3 /* BPHelperCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9D5E36B7E5F35F46FA7DA5 /* BPHelperCommand.swift */; };
 		CB668253841CCA118931CC60 /* BPHelperOutputRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB7A115D57C6F8CD8806EC1A /* BPHelperOutputRelay.swift */; };
@@ -254,8 +254,13 @@
 		CBFD53BBF14F1E21E041ACA8 /* BPUpgradeArgumentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC6168B9EA9962B7F1CAEA4 /* BPUpgradeArgumentsTests.swift */; };
 		CBBC25701C281DBDF3A8F37F /* BPUpgradePlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBCDF47EFD288B33ED6E4CB7 /* BPUpgradePlanTests.swift */; };
 		CBC1EC226E2243E7C70D923A /* BPVersionStampingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8B8C7D1E97B12EC5E4EB87 /* BPVersionStampingTests.swift */; };
-		CB19022A8C8B9B2C770ECCC8 /* BPXibAppearanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBCE5DD49C565B50DAD7CCCA /* BPXibAppearanceTests.swift */; };
+		CB19022A8C8B9B2C770ECCC8 /* BPSwiftUIArchitectureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBCE5DD49C565B50DAD7CCCA /* BPSwiftUIArchitectureTests.swift */; };
 		CBA12D8BD04D8A7FE19554EC /* CakebrewUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9848E00AD4E05EA7995F9B /* CakebrewUITests.swift */; };
+		276AE0A615164A649BE46380 /* BPVersionHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4CBC9D3A33D40B7BF9FA892 /* BPVersionHistory.swift */; };
+		631668F17E8D4DC9A190F9C5 /* BPVersionHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4CBC9D3A33D40B7BF9FA892 /* BPVersionHistory.swift */; };
+		CF9F37950BD1401894DB4687 /* BPVersionHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15345C4693ED485C947BE6C9 /* BPVersionHistoryView.swift */; };
+		DB5B9AB3018547199B96E84D /* BPVersionHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15345C4693ED485C947BE6C9 /* BPVersionHistoryView.swift */; };
+		53486C63E6A14E61B322ACEF /* BPVersionHistoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2443974E23744BBAB8A7AEEB /* BPVersionHistoryTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -336,7 +341,6 @@
 		1570E12B25F195C40043560B /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Loading.strings; sourceTree = "<group>"; };
 		1570E14225F1982C0043560B /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Localizable.strings; sourceTree = "<group>"; };
 		1570E14325F198410043560B /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		15715F601C78050B00AE0E66 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/BPBundleWindow.xib; sourceTree = "<group>"; };
 		15715F661C78D3C600AE0E66 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/BPBundleWindow.strings; sourceTree = "<group>"; };
 		15715F681C78D3C800AE0E66 /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/BPBundleWindow.strings; sourceTree = "<group>"; };
 		15715F6A1C78D3CC00AE0E66 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/BPBundleWindow.strings; sourceTree = "<group>"; };
@@ -355,14 +359,6 @@
 		15A00B491B84072700528486 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/BPInstallationWindow.strings; sourceTree = "<group>"; };
 		15A00B4B1B84072700528486 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/BPSelectedFormula.strings; sourceTree = "<group>"; };
 		15A00B4C1B84072700528486 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/BPUpdateView.strings; sourceTree = "<group>"; };
-		15D28A131AE332BC005C8A3E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
-		15D28A151AE332DB005C8A3E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/DCOAboutWindow.xib; sourceTree = "<group>"; };
-		15D28A181AE332E6005C8A3E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/BPDoctorView.xib; sourceTree = "<group>"; };
-		15D28A1B1AE332EA005C8A3E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/BPFormulaOptionsWindow.xib; sourceTree = "<group>"; };
-		15D28A1E1AE332EF005C8A3E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/BPFormulaPopoverView.xib; sourceTree = "<group>"; };
-		15D28A211AE332F4005C8A3E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/BPInstallationWindow.xib; sourceTree = "<group>"; };
-		15D28A271AE332FD005C8A3E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/BPSelectedFormula.xib; sourceTree = "<group>"; };
-		15D28A2A1AE33301005C8A3E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/BPUpdateView.xib; sourceTree = "<group>"; };
 		15D28A331AE3433F005C8A3E /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/Localizable.strings; sourceTree = "<group>"; };
 		15D28A341AE3433F005C8A3E /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		15D28A371AE3433F005C8A3E /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/DCOAboutWindow.strings; sourceTree = "<group>"; };
@@ -417,8 +413,6 @@
 		D2BBAB671B87142F00F21332 /* brewInfo_percona-server.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "brewInfo_percona-server.txt"; sourceTree = "<group>"; };
 		D2BBAB6E1B87290B00F21332 /* brewInfo_bison.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_bison.txt; sourceTree = "<group>"; };
 		D2BBAB701B87377D00F21332 /* brewInfo_sbtenv.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_sbtenv.txt; sourceTree = "<group>"; };
-		D2C3E02B1B8E15B2000D89BB /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/Disabled.xib; sourceTree = "<group>"; };
-		D2C3E02E1B8E15D5000D89BB /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/Loading.xib; sourceTree = "<group>"; };
 		D2C3E0311B8E15D7000D89BB /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/Loading.strings; sourceTree = "<group>"; };
 		D2C3E0331B8E15DC000D89BB /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Loading.strings; sourceTree = "<group>"; };
 		D2C3E0351B8E15E2000D89BB /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/Disabled.strings; sourceTree = "<group>"; };
@@ -509,7 +503,7 @@
 		CB9F03F4640F59844E68C563 /* BPEmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPEmptyStateView.swift; path = Cakebrew/Views/BPEmptyStateView.swift; sourceTree = SOURCE_ROOT; };
 		CB9D32A96F7A4F0A8AD719D6 /* BPFormulaeTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaeTableView.swift; path = Cakebrew/Views/BPFormulaeTableView.swift; sourceTree = SOURCE_ROOT; };
 		CB551D613276D94B539FD713 /* BPLoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPLoadingView.swift; path = Cakebrew/Views/BPLoadingView.swift; sourceTree = SOURCE_ROOT; };
-		CBC1BB58DFEE3EF566494112 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = main.swift; path = Cakebrew/main.swift; sourceTree = SOURCE_ROOT; };
+		CBC1BB58DFEE3EF566494112 /* CakebrewApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CakebrewApp.swift; path = Cakebrew/CakebrewApp.swift; sourceTree = SOURCE_ROOT; };
 		CBE95365D57CDA55583C47A6 /* BPAccessibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAccessibilityTests.swift; path = CakebrewTests/BPAccessibilityTests.swift; sourceTree = SOURCE_ROOT; };
 		CBC6AC240B7A8188EE0D9CAF /* BPAutoScrollTextViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAutoScrollTextViewTests.swift; path = CakebrewTests/BPAutoScrollTextViewTests.swift; sourceTree = SOURCE_ROOT; };
 		CB68094B1771A72F6B679A84 /* BPAutoremoveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAutoremoveTests.swift; path = CakebrewTests/BPAutoremoveTests.swift; sourceTree = SOURCE_ROOT; };
@@ -557,8 +551,11 @@
 		CBC6168B9EA9962B7F1CAEA4 /* BPUpgradeArgumentsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPUpgradeArgumentsTests.swift; path = CakebrewTests/BPUpgradeArgumentsTests.swift; sourceTree = SOURCE_ROOT; };
 		CBCDF47EFD288B33ED6E4CB7 /* BPUpgradePlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPUpgradePlanTests.swift; path = CakebrewTests/BPUpgradePlanTests.swift; sourceTree = SOURCE_ROOT; };
 		CB8B8C7D1E97B12EC5E4EB87 /* BPVersionStampingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPVersionStampingTests.swift; path = CakebrewTests/BPVersionStampingTests.swift; sourceTree = SOURCE_ROOT; };
-		CBCE5DD49C565B50DAD7CCCA /* BPXibAppearanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPXibAppearanceTests.swift; path = CakebrewTests/BPXibAppearanceTests.swift; sourceTree = SOURCE_ROOT; };
+		CBCE5DD49C565B50DAD7CCCA /* BPSwiftUIArchitectureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPSwiftUIArchitectureTests.swift; path = CakebrewTests/BPSwiftUIArchitectureTests.swift; sourceTree = SOURCE_ROOT; };
 		CB9848E00AD4E05EA7995F9B /* CakebrewUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CakebrewUITests.swift; path = CakebrewUITests/CakebrewUITests.swift; sourceTree = SOURCE_ROOT; };
+		A4CBC9D3A33D40B7BF9FA892 /* BPVersionHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPVersionHistory.swift; path = Cakebrew/Models/BPVersionHistory.swift; sourceTree = SOURCE_ROOT; };
+		15345C4693ED485C947BE6C9 /* BPVersionHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPVersionHistoryView.swift; path = Cakebrew/Controllers/BPVersionHistoryView.swift; sourceTree = SOURCE_ROOT; };
+		2443974E23744BBAB8A7AEEB /* BPVersionHistoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPVersionHistoryTests.swift; path = CakebrewTests/BPVersionHistoryTests.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -612,8 +609,8 @@
 		1540FA3618ED099F00334A5C /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				D2C3E02C1B8E15B2000D89BB /* Disabled.xib */,
-				D2C3E02F1B8E15D5000D89BB /* Loading.xib */,
+				D2C3E02C1B8E15B2000D89BB /* Disabled.strings */,
+				D2C3E02F1B8E15D5000D89BB /* Loading.strings */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -621,13 +618,13 @@
 		15A974AB1968A3C900621C35 /* Controllers */ = {
 			isa = PBXGroup;
 			children = (
-				15715F5F1C78050B00AE0E66 /* BPBundleWindow.xib */,
-				15D28A191AE332E6005C8A3E /* BPDoctorView.xib */,
-				15D28A1C1AE332EA005C8A3E /* BPFormulaOptionsWindow.xib */,
-				15D28A1F1AE332EF005C8A3E /* BPFormulaPopoverView.xib */,
-				15D28A221AE332F4005C8A3E /* BPInstallationWindow.xib */,
-				15D28A281AE332FD005C8A3E /* BPSelectedFormula.xib */,
-				15D28A2B1AE33301005C8A3E /* BPUpdateView.xib */,
+				15715F5F1C78050B00AE0E66 /* BPBundleWindow.strings */,
+				15D28A191AE332E6005C8A3E /* BPDoctorView.strings */,
+				15D28A1C1AE332EA005C8A3E /* BPFormulaOptionsWindow.strings */,
+				15D28A1F1AE332EF005C8A3E /* BPFormulaPopoverView.strings */,
+				15D28A221AE332F4005C8A3E /* BPInstallationWindow.strings */,
+				15D28A281AE332FD005C8A3E /* BPSelectedFormula.strings */,
+				15D28A2B1AE33301005C8A3E /* BPUpdateView.strings */,
 			);
 			name = Controllers;
 			sourceTree = "<group>";
@@ -649,7 +646,7 @@
 		15D2CFA618F202B300B6D9F1 /* DCOAboutWindow */ = {
 			isa = PBXGroup;
 			children = (
-				15D28A161AE332DB005C8A3E /* DCOAboutWindow.xib */,
+				15D28A161AE332DB005C8A3E /* DCOAboutWindow.strings */,
 			);
 			path = DCOAboutWindow;
 			sourceTree = "<group>";
@@ -739,6 +736,8 @@
 		1FE4FE5E148E4CDD008EDE8B /* Cakebrew */ = {
 			isa = PBXGroup;
 			children = (
+				15345C4693ED485C947BE6C9 /* BPVersionHistoryView.swift */,
+				A4CBC9D3A33D40B7BF9FA892 /* BPVersionHistory.swift */,
 				D2F732EE19190B75002B2512 /* Categories */,
 				15A974AB1968A3C900621C35 /* Controllers */,
 				15A974AC1968A3E800621C35 /* Homebrew */,
@@ -746,7 +745,7 @@
 				89A1C0A02608300000CAFE01 /* AppIcon.icon */,
 				1536BFF618EBA92400B67C5C /* Images.xcassets */,
 				15D5BEF618EBC56E001DDED7 /* Libraries */,
-				1FE4FE6D148E4CDD008EDE8B /* MainMenu.xib */,
+				1FE4FE6D148E4CDD008EDE8B /* MainMenu.strings */,
 				15D5BEFB18EBD006001DDED7 /* Models */,
 				1FE4FE5F148E4CDD008EDE8B /* Supporting Files */,
 				1540FA3618ED099F00334A5C /* Views */,
@@ -789,6 +788,7 @@
 		D261C9C11B852FA300409803 /* CakebrewTests */ = {
 			isa = PBXGroup;
 			children = (
+				2443974E23744BBAB8A7AEEB /* BPVersionHistoryTests.swift */,
 				D2BBAB701B87377D00F21332 /* brewInfo_sbtenv.txt */,
 				D2BBAB6E1B87290B00F21332 /* brewInfo_bison.txt */,
 				D2BBAB621B87142F00F21332 /* brewInfo_acme.txt */,
@@ -952,28 +952,28 @@
 			files = (
 				15D5BEF318EBB3FB001DDED7 /* plus.icns in Resources */,
 				15A00B411B8406FB00528486 /* Credits.rtf in Resources */,
-				15D28A171AE332E6005C8A3E /* BPDoctorView.xib in Resources */,
+				15D28A171AE332E6005C8A3E /* BPDoctorView.strings in Resources */,
 				1FE4FE63148E4CDD008EDE8B /* InfoPlist.strings in Resources */,
-				15D28A141AE332DB005C8A3E /* DCOAboutWindow.xib in Resources */,
-				1FE4FE6F148E4CDD008EDE8B /* MainMenu.xib in Resources */,
-				15D28A1D1AE332EF005C8A3E /* BPFormulaPopoverView.xib in Resources */,
-				15D28A1A1AE332EA005C8A3E /* BPFormulaOptionsWindow.xib in Resources */,
+				15D28A141AE332DB005C8A3E /* DCOAboutWindow.strings in Resources */,
+				1FE4FE6F148E4CDD008EDE8B /* MainMenu.strings in Resources */,
+				15D28A1D1AE332EF005C8A3E /* BPFormulaPopoverView.strings in Resources */,
+				15D28A1A1AE332EA005C8A3E /* BPFormulaOptionsWindow.strings in Resources */,
 				15D5BEF518EBB430001DDED7 /* search.icns in Resources */,
-				15D28A261AE332FD005C8A3E /* BPSelectedFormula.xib in Resources */,
+				15D28A261AE332FD005C8A3E /* BPSelectedFormula.strings in Resources */,
 				15D2CFA218F1E71800B6D9F1 /* reload.icns in Resources */,
 				15D28A2E1AE33453005C8A3E /* Localizable.strings in Resources */,
-				D2C3E02D1B8E15D5000D89BB /* Loading.xib in Resources */,
+				D2C3E02D1B8E15D5000D89BB /* Loading.strings in Resources */,
 				1540FA3518ECF66B00334A5C /* download.icns in Resources */,
 				15D5BEF118EBB3FB001DDED7 /* delete.icns in Resources */,
 				1536BFF718EBA92400B67C5C /* Images.xcassets in Resources */,
 				89A1C0A02608300000CAFE02 /* AppIcon.icon in Resources */,
 				15D2CFA418F1EAD200B6D9F1 /* globe.icns in Resources */,
 				15D2CFB818F206DF00B6D9F1 /* README.md in Resources */,
-				15D28A201AE332F4005C8A3E /* BPInstallationWindow.xib in Resources */,
-				15D28A291AE33301005C8A3E /* BPUpdateView.xib in Resources */,
-				D2C3E02A1B8E15B2000D89BB /* Disabled.xib in Resources */,
+				15D28A201AE332F4005C8A3E /* BPInstallationWindow.strings in Resources */,
+				15D28A291AE33301005C8A3E /* BPUpdateView.strings in Resources */,
+				D2C3E02A1B8E15B2000D89BB /* Disabled.strings in Resources */,
 				15D2CFBA18F20A8200B6D9F1 /* LICENSE in Resources */,
-				15715F611C78050B00AE0E66 /* BPBundleWindow.xib in Resources */,
+				15715F611C78050B00AE0E66 /* BPBundleWindow.strings in Resources */,
 				15D5BEF218EBB3FB001DDED7 /* label.icns in Resources */,
 				234DE928FBCE6DDE7B82183D /* PrivacyInfo.xcprivacy in Resources */,
 			);
@@ -1064,6 +1064,7 @@
 				CB3A72C740AF834E5C76BA43 /* BPPreferencesHost.swift in Sources */,
 				CB69A799DC2CBD04D3305FFC /* BPPreferencesWindowController.swift in Sources */,
 				CB53719A362CA5B3721C902F /* BPSelectedFormulaHost.swift in Sources */,
+				CF9F37950BD1401894DB4687 /* BPVersionHistoryView.swift in Sources */,
 				CB4BE60B3A98DA716192DF17 /* BPSelectedFormulaViewController.swift in Sources */,
 				CB7402FF4EADE89F6B4BB3A3 /* BPServicesViewController.swift in Sources */,
 				CB9B018690A5ABF34FB9E92B /* BPTahoeSheetAndOverlayHosts.swift in Sources */,
@@ -1081,6 +1082,7 @@
 				CBB89BD2C7B6357798B1E4AB /* BPCleanupPreview.swift in Sources */,
 				CBFD8ADE71F15812CE186F08 /* BPEmptyState.swift in Sources */,
 				CB9C1C2B16A2C7ADBFD75B03 /* BPFormula.swift in Sources */,
+				276AE0A615164A649BE46380 /* BPVersionHistory.swift in Sources */,
 				CB57672052B8CA511B7F9824 /* BPFormulaInformationState.swift in Sources */,
 				CB9DAB7C37591FD75EF64825 /* BPFormulaOption.swift in Sources */,
 				CB5F1DA5FB571630B7E5CB47 /* BPFormulaeTableAction.swift in Sources */,
@@ -1100,7 +1102,7 @@
 				CBE3F2FB4CCC8083714C6951 /* BPEmptyStateView.swift in Sources */,
 				CB5F7ACAF39CC1B74E65479C /* BPFormulaeTableView.swift in Sources */,
 				CBC33D953F7FC63197E5DD36 /* BPLoadingView.swift in Sources */,
-				CBF077A01D30DD2E25802A28 /* main.swift in Sources */,
+				CBF077A01D30DD2E25802A28 /* CakebrewApp.swift in Sources */,
 				CB76B45389BB434E14F4515E /* BPHelperProtocol.swift in Sources */,
 				CBB8EC3199704A83B512C8D3 /* BPHelperCommand.swift in Sources */,
 				CB668253841CCA118931CC60 /* BPHelperOutputRelay.swift in Sources */,
@@ -1150,6 +1152,7 @@
 				CBBED5CF434C968F87255D0C /* BPPreferencesHost.swift in Sources */,
 				CB48EBA8C913E05997BD4B0B /* BPPreferencesWindowController.swift in Sources */,
 				CB744620D2FB165BA986724B /* BPSelectedFormulaHost.swift in Sources */,
+				DB5B9AB3018547199B96E84D /* BPVersionHistoryView.swift in Sources */,
 				CBB3F337B6E23C0BF29421A6 /* BPSelectedFormulaViewController.swift in Sources */,
 				CBC83FEF990201BEBEC652D0 /* BPServicesViewController.swift in Sources */,
 				CB7C9A19FE0DC0CC9F612A64 /* BPTahoeSheetAndOverlayHosts.swift in Sources */,
@@ -1167,6 +1170,7 @@
 				CBD081FABAB8E9D55AA7512F /* BPCleanupPreview.swift in Sources */,
 				CBA43D466D9A4B35BFD283F4 /* BPEmptyState.swift in Sources */,
 				CB08295B8DEAC7FB9D3496A4 /* BPFormula.swift in Sources */,
+				631668F17E8D4DC9A190F9C5 /* BPVersionHistory.swift in Sources */,
 				CBAE5E3038E2A2CD2435345D /* BPFormulaInformationState.swift in Sources */,
 				CBDA4970B138EE75E192D844 /* BPFormulaOption.swift in Sources */,
 				CBA34C336C862EA99100BCC6 /* BPFormulaeTableAction.swift in Sources */,
@@ -1211,6 +1215,7 @@
 				CB4A1BD0BE7FE513EC0FEE33 /* BPFormulaInformationLifecycleTests.swift in Sources */,
 				CB62BD04988F7AC240E2B879 /* BPFormulaInformationTests.swift in Sources */,
 				CB4F6D50982C372C19873BD5 /* BPFormulaModernInfoTests.swift in Sources */,
+				53486C63E6A14E61B322ACEF /* BPVersionHistoryTests.swift in Sources */,
 				CB12F95DB449D8BD11C221C1 /* BPFormulaOptionTests.swift in Sources */,
 				CB24CC9705EBD6F17C21BC07 /* BPFormulaTests.swift in Sources */,
 				CBD8282F65CA8DA43F9A1DCB /* BPFormulaeDataSourceTests.swift in Sources */,
@@ -1240,7 +1245,7 @@
 				CBFD53BBF14F1E21E041ACA8 /* BPUpgradeArgumentsTests.swift in Sources */,
 				CBBC25701C281DBDF3A8F37F /* BPUpgradePlanTests.swift in Sources */,
 				CBC1EC226E2243E7C70D923A /* BPVersionStampingTests.swift in Sources */,
-				CB19022A8C8B9B2C770ECCC8 /* BPXibAppearanceTests.swift in Sources */,
+				CB19022A8C8B9B2C770ECCC8 /* BPSwiftUIArchitectureTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1275,10 +1280,9 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		15715F5F1C78050B00AE0E66 /* BPBundleWindow.xib */ = {
+		15715F5F1C78050B00AE0E66 /* BPBundleWindow.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				15715F601C78050B00AE0E66 /* Base */,
 				15715F661C78D3C600AE0E66 /* en */,
 				15715F681C78D3C800AE0E66 /* pt */,
 				15715F6A1C78D3CC00AE0E66 /* de */,
@@ -1286,98 +1290,91 @@
 				15F3130D1C7A903500F22608 /* zh-Hans */,
 				1570E11C25F195BE0043560B /* it */,
 			);
-			name = BPBundleWindow.xib;
+			name = BPBundleWindow.strings;
 			sourceTree = "<group>";
 		};
-		15D28A161AE332DB005C8A3E /* DCOAboutWindow.xib */ = {
+		15D28A161AE332DB005C8A3E /* DCOAboutWindow.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				15D28A151AE332DB005C8A3E /* Base */,
 				15D28A371AE3433F005C8A3E /* pt */,
 				15A00B451B84072700528486 /* de */,
 				F752F5541C79875500C0DEFE /* fr */,
 				15F313141C7A903500F22608 /* zh-Hans */,
 				1570E12925F195C40043560B /* it */,
 			);
-			name = DCOAboutWindow.xib;
+			name = DCOAboutWindow.strings;
 			sourceTree = "<group>";
 		};
-		15D28A191AE332E6005C8A3E /* BPDoctorView.xib */ = {
+		15D28A191AE332E6005C8A3E /* BPDoctorView.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				15D28A181AE332E6005C8A3E /* Base */,
 				15D28A381AE3433F005C8A3E /* pt */,
 				15A00B461B84072700528486 /* de */,
 				F752F5551C79875500C0DEFE /* fr */,
 				15F3130E1C7A903500F22608 /* zh-Hans */,
 				1570E11D25F195BE0043560B /* it */,
 			);
-			name = BPDoctorView.xib;
+			name = BPDoctorView.strings;
 			sourceTree = "<group>";
 		};
-		15D28A1C1AE332EA005C8A3E /* BPFormulaOptionsWindow.xib */ = {
+		15D28A1C1AE332EA005C8A3E /* BPFormulaOptionsWindow.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				15D28A1B1AE332EA005C8A3E /* Base */,
 				15D28A391AE3433F005C8A3E /* pt */,
 				15A00B471B84072700528486 /* de */,
 				F752F54B1C79875400C0DEFE /* fr */,
 				15F3130F1C7A903500F22608 /* zh-Hans */,
 				1570E11E25F195BE0043560B /* it */,
 			);
-			name = BPFormulaOptionsWindow.xib;
+			name = BPFormulaOptionsWindow.strings;
 			sourceTree = "<group>";
 		};
-		15D28A1F1AE332EF005C8A3E /* BPFormulaPopoverView.xib */ = {
+		15D28A1F1AE332EF005C8A3E /* BPFormulaPopoverView.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				15D28A1E1AE332EF005C8A3E /* Base */,
 				15D28A3A1AE3433F005C8A3E /* pt */,
 				15A00B481B84072700528486 /* de */,
 				F752F5511C79875500C0DEFE /* fr */,
 				15F313101C7A903500F22608 /* zh-Hans */,
 				1570E12225F195BE0043560B /* it */,
 			);
-			name = BPFormulaPopoverView.xib;
+			name = BPFormulaPopoverView.strings;
 			sourceTree = "<group>";
 		};
-		15D28A221AE332F4005C8A3E /* BPInstallationWindow.xib */ = {
+		15D28A221AE332F4005C8A3E /* BPInstallationWindow.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				15D28A211AE332F4005C8A3E /* Base */,
 				15D28A3B1AE3433F005C8A3E /* pt */,
 				15A00B491B84072700528486 /* de */,
 				F752F54F1C79875400C0DEFE /* fr */,
 				15F313111C7A903500F22608 /* zh-Hans */,
 				1570E12325F195BE0043560B /* it */,
 			);
-			name = BPInstallationWindow.xib;
+			name = BPInstallationWindow.strings;
 			sourceTree = "<group>";
 		};
-		15D28A281AE332FD005C8A3E /* BPSelectedFormula.xib */ = {
+		15D28A281AE332FD005C8A3E /* BPSelectedFormula.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				15D28A271AE332FD005C8A3E /* Base */,
 				150AEC571B3FA58D00163767 /* pt */,
 				15A00B4B1B84072700528486 /* de */,
 				F752F54C1C79875400C0DEFE /* fr */,
 				15F313121C7A903500F22608 /* zh-Hans */,
 				1570E12425F195BE0043560B /* it */,
 			);
-			name = BPSelectedFormula.xib;
+			name = BPSelectedFormula.strings;
 			sourceTree = "<group>";
 		};
-		15D28A2B1AE33301005C8A3E /* BPUpdateView.xib */ = {
+		15D28A2B1AE33301005C8A3E /* BPUpdateView.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				15D28A2A1AE33301005C8A3E /* Base */,
 				15D28A3E1AE34340005C8A3E /* pt */,
 				15A00B4C1B84072700528486 /* de */,
 				F752F54D1C79875400C0DEFE /* fr */,
 				15F313131C7A903500F22608 /* zh-Hans */,
 				1570E12525F195BE0043560B /* it */,
 			);
-			name = BPUpdateView.xib;
+			name = BPUpdateView.strings;
 			sourceTree = "<group>";
 		};
 		15D28A301AE33453005C8A3E /* Localizable.strings */ = {
@@ -1406,44 +1403,41 @@
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
 		};
-		1FE4FE6D148E4CDD008EDE8B /* MainMenu.xib */ = {
+		1FE4FE6D148E4CDD008EDE8B /* MainMenu.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				15D28A131AE332BC005C8A3E /* Base */,
 				15A00B3C1B84000600528486 /* pt */,
 				15A00B441B84072700528486 /* de */,
 				F752F5521C79875500C0DEFE /* fr */,
 				15F313151C7A903500F22608 /* zh-Hans */,
 				1570E12625F195BE0043560B /* it */,
 			);
-			name = MainMenu.xib;
+			name = MainMenu.strings;
 			sourceTree = "<group>";
 		};
-		D2C3E02C1B8E15B2000D89BB /* Disabled.xib */ = {
+		D2C3E02C1B8E15B2000D89BB /* Disabled.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				D2C3E02B1B8E15B2000D89BB /* Base */,
 				D2C3E0351B8E15E2000D89BB /* pt */,
 				D2C3E0371B8E15E4000D89BB /* de */,
 				F752F5531C79875500C0DEFE /* fr */,
 				15F313161C7A903500F22608 /* zh-Hans */,
 				1570E12A25F195C40043560B /* it */,
 			);
-			name = Disabled.xib;
+			name = Disabled.strings;
 			path = Views;
 			sourceTree = "<group>";
 		};
-		D2C3E02F1B8E15D5000D89BB /* Loading.xib */ = {
+		D2C3E02F1B8E15D5000D89BB /* Loading.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				D2C3E02E1B8E15D5000D89BB /* Base */,
 				D2C3E0311B8E15D7000D89BB /* pt */,
 				D2C3E0331B8E15DC000D89BB /* de */,
 				F752F54A1C79875400C0DEFE /* fr */,
 				15F313171C7A903500F22608 /* zh-Hans */,
 				1570E12B25F195C40043560B /* it */,
 			);
-			name = Loading.xib;
+			name = Loading.strings;
 			path = Views;
 			sourceTree = "<group>";
 		};
@@ -1453,7 +1447,10 @@
 		17B08E6F69071D4438CF2774 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				SWIFT_VERSION = 6.0;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
+				LM_SKIP_METADATA_EXTRACTION = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1468,6 +1465,8 @@
 		1A281B4A3465A8FA9240C39C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				SWIFT_VERSION = 6.0;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
@@ -1489,6 +1488,8 @@
 		1E13309AB63A9F561F3E2159 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				SWIFT_VERSION = 6.0;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
@@ -1671,6 +1672,7 @@
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 594;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 27ZDER873F;
@@ -1706,7 +1708,10 @@
 		24CA8BDCAD53D3646B424CFB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				SWIFT_VERSION = 6.0;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
+				LM_SKIP_METADATA_EXTRACTION = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;

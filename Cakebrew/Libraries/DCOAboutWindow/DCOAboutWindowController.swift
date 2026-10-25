@@ -37,12 +37,15 @@ public final class DCOAboutWindowController: NSWindowController {
         }
     }
 
-    @objc public static func nibName() -> String {
-        return "DCOAboutWindow"
-    }
 
-    public init() {
-        super.init(window: nil)
+    public convenience init() {
+        self.init(window: NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 520, height: 440),
+            styleMask: [.titled, .closable], backing: .buffered, defer: false
+        ))
+        window?.title = NSLocalizedString("About Cakebrew", comment: "")
+        window?.isReleasedWhenClosed = false
+        windowDidLoad()
     }
 
     public override init(window: NSWindow?) {
@@ -53,9 +56,6 @@ public final class DCOAboutWindowController: NSWindowController {
         super.init(coder: coder)
     }
 
-    public override var windowNibName: NSNib.Name? {
-        return NSNib.Name(Self.nibName())
-    }
 
     public override func loadWindow() {
         self.window = NSWindow(

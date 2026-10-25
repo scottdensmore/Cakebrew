@@ -28,6 +28,7 @@ private final class BPPreferencesPresentation: ObservableObject {
 @MainActor
 @objc(BPPreferencesHost)
 public final class BPPreferencesHost: NSObject {
+    public var content: some View { BPPreferencesView(presentation: presentation) }
     private let presentation = BPPreferencesPresentation()
     @objc public let viewController: NSViewController
 

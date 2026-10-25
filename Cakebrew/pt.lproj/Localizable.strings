@@ -282,7 +282,7 @@
 
 
 /* Added for the localized-strings pass; English until translated. */
-"Sidebar_Info_Pinned" = "Estas fórmulas estão fixadas e não serão atualizadas.";
+"Sidebar_Info_Pinned" = "As atualizações do Homebrew estão pausadas para estes pacotes fixados.";
 "Services_Status_None" = "Não está em execução";
 "Services_Status_Started" = "Em execução";
 "Services_Status_Stopped" = "Parado";
@@ -483,3 +483,110 @@
 "About_Acknowledgements" = "Agradecimentos";
 "About_Copy_Version" = "Copiar Informação da Versão";
 "About_Visit_Website" = "Visitar Website";
+
+"Services_Filter_All" = "Todos";
+
+"Services_Search" = "Buscar serviços";
+
+/* SwiftUI scenes and commands */
+"About Cakebrew" = "Sobre o Cakebrew";
+"Check for Updates…" = "Buscar atualizações…";
+"Import Brewfile…" = "Importar Brewfile…";
+"Export Brewfile…" = "Exportar Brewfile…";
+"Packages" = "Pacotes";
+"Install Selected Package…" = "Instalar pacote selecionado…";
+"Install with Options…" = "Instalar com opções…";
+"Upgrade Selected Packages…" = "Atualizar pacotes selecionados…";
+"Uninstall Selected Packages…" = "Desinstalar pacotes selecionados…";
+"Unpin Package" = "Desafixar pacote";
+"Pin Package" = "Fixar pacote";
+"Upgrade All Outdated Packages…" = "Atualizar todos os pacotes desatualizados…";
+"Search Packages" = "Buscar pacotes";
+"Command Palette…" = "Paleta de comandos…";
+"Refresh Packages" = "Recarregar pacotes";
+"Update Homebrew" = "Atualizar Homebrew";
+"Run Doctor" = "Executar diagnóstico";
+"Add Repository…" = "Adicionar repositório…";
+"Remove Repository…" = "Remover repositório…";
+"Clean Up…" = "Limpar…";
+"Remove Unused Dependencies…" = "Remover dependências não utilizadas…";
+"Cakebrew Documentation" = "Documentação do Cakebrew";
+"Open Cakebrew" = "Abrir Cakebrew";
+"Show Package Updates" = "Mostrar atualizações de pacotes";
+"Search packages" = "Buscar pacotes";
+"Install…" = "Instalar…";
+"Upgrade…" = "Atualizar…";
+"Uninstall…" = "Desinstalar…";
+"Package Inspector" = "Inspetor de pacotes";
+"Refresh" = "Recarregar";
+"Cancel Refresh" = "Cancelar recarga";
+"Loading Packages…" = "Carregando pacotes…";
+"Get Homebrew" = "Obter Homebrew";
+"Updates" = "Atualizações";
+"Check for Cakebrew updates automatically" = "Buscar atualizações do Cakebrew automaticamente";
+"Menu Bar" = "Barra de menus";
+"Open Login Items Settings" = "Abrir ajustes de itens de início";
+"Install Helper…" = "Instalar auxiliar…";
+"Show Cakebrew" = "Mostrar Cakebrew";
+"Select a Package" = "Selecione um pacote";
+"Choose a package to explore its version, dependencies, and installation details." = "Selecione um pacote para explorar sua versão, dependências e detalhes de instalação.";
+"Multiple Packages" = "Vários pacotes";
+"Copy installation path" = "Copiar caminho de instalação";
+"Reveal installation in Finder" = "Mostrar instalação no Finder";
+"Latest Output" = "Saída mais recente";
+"Repository name" = "Nome do repositório";
+"Show or hide package details" = "Mostrar ou ocultar detalhes do pacote";
+"Refresh packages (⌘R)" = "Recarregar pacotes (⌘R)";
+
+/* Consolidated package inspector */
+"License:" = "Licença:";
+"License" = "Licença";
+"Homebrew Source" = "Código-fonte do Homebrew";
+"Homebrew Output" = "Saída do Homebrew";
+"Copy Output" = "Copiar saída";
+
+/* Package version history */
+"Version History" = "Histórico de versões";
+"Load Versions" = "Carregar versões";
+"Load Older Versions" = "Carregar versões anteriores";
+"Loading versions…" = "Carregando versões…";
+"Version %@" = "Versão %@";
+"Version %@, %@" = "Versão %@, %@";
+"Formula date" = "Data da fórmula";
+"Revision" = "Revisão";
+"Declared Dependencies" = "Dependências declaradas";
+"Formula Source" = "Código da fórmula";
+"Project Website" = "Site do projeto";
+"View Formula at This Revision" = "Ver fórmula nesta revisão";
+"Install & Pin This Version…" = "Instalar e fixar esta versão…";
+"Install & Pin Version %@" = "Instalar e fixar a versão %@";
+"Make this the active version" = "Tornar esta versão ativa";
+"Install & Pin" = "Instalar e fixar";
+"Installing historical version…" = "Instalando versão anterior…";
+"Cancel Operation" = "Cancelar operação";
+"Retry Details" = "Recarregar detalhes";
+"Loading version information…" = "Carregando informações da versão…";
+"Package: %@" = "Pacote: %@";
+"Done" = "Concluído";
+"Releases from this package’s Homebrew formula history." = "Versões do histórico da fórmula Homebrew deste pacote.";
+"Version history requires a package source in a GitHub Homebrew tap." = "O histórico requer uma fonte do pacote em um tap Homebrew no GitHub.";
+"Historical cask installation is not available. You can review each release’s source here." = "A instalação de casks anteriores não está disponível. Você pode consultar o código de cada versão aqui.";
+"No release entries were found in the available formula history." = "Nenhuma versão encontrada no histórico disponível da fórmula.";
+
+/* Historical cask details */
+"Cask date" = "Data do cask";
+"Cask Source" = "Código-fonte do cask";
+"View Cask at This Revision" = "Ver cask nesta revisão";
+"Releases from this package’s Homebrew history." = "Versões do histórico Homebrew deste pacote.";
+
+/* Return a historical package to the current upstream release */
+"Return to Latest Release…" = "Voltar à versão mais recente…";
+"Return to Latest Release" = "Voltar à versão mais recente";
+"Unpin & Switch to Latest" = "Desafixar e mudar para a mais recente";
+"Returning to latest release…" = "Voltando à versão mais recente…";
+"Original Package" = "Pacote original";
+
+"Checking pinned package…" = "Verificando pacote fixado…";
+
+"Choose the original package to return to. Cakebrew found these possible matches." = "Escolha o pacote original para o qual deseja voltar. O Cakebrew encontrou estas possíveis correspondências.";
+"Choose a Package…" = "Escolher um pacote…";

@@ -12,10 +12,7 @@ internal func BPMainMenuLocalizedTitle(_ key: String, fallback: String) -> Strin
 private final class BPInstalledPackageListPresentation: ObservableObject {
     @Published var state = BPInstalledPackageListState()
     @Published var sortOrder: [KeyPathComparator<BPInstalledPackageRow>] = []
-    weak var hostView: NSView?
-    weak var tableView: NSTableView?
     var contextMenu: NSMenu?
-    var bridgeCoordinator: BPInstalledTableBridgeCoordinator?
     var isSyncingTableSelection = false
     var onSelectionChanged: ((String?, Bool) -> Void)?
     var onSortChanged: ((String?, Bool) -> Void)?
@@ -30,18 +27,13 @@ private final class BPInstalledPackageListPresentation: ObservableObject {
         }
     }
 
-    @discardableResult
-    func ensureTableViewAttached() -> NSTableView? {
-        if let hostView {
-            bridgeCoordinator?.attach(in: hostView)
-        }
-        return tableView
-    }
+
 }
 
 @MainActor
 @objc(BPInstalledPackageListHost)
 public final class BPInstalledPackageListHost: NSObject {
+    public var content: some View { BPInstalledPackageListView(presentation: presentation) }
     private let presentation = BPInstalledPackageListPresentation()
     nonisolated(unsafe) private var keyMonitor: Any?
     @objc public let viewController: NSViewController
@@ -70,7 +62,6 @@ public final class BPInstalledPackageListHost: NSObject {
         get { presentation.contextMenu }
         set {
             presentation.contextMenu = newValue
-            presentation.ensureTableViewAttached()?.menu = newValue
         }
     }
 
@@ -109,16 +100,11 @@ public final class BPInstalledPackageListHost: NSObject {
 
     public override init() {
         let presentation = self.presentation
-        let coordinator = BPInstalledTableBridgeCoordinator(presentation: presentation)
-        presentation.bridgeCoordinator = coordinator
-        let host = BPInstalledPackageHostingController(
-            rootView: BPInstalledPackageListView(presentation: presentation),
-            presentation: presentation)
+        let host = NSHostingController(rootView: BPInstalledPackageListView(presentation: presentation))
         host.sizingOptions = []
-        presentation.hostView = host.view
         viewController = host
         super.init()
-        installKeyboardMonitor()
+
     }
 
     deinit {
@@ -266,55 +252,17 @@ public final class BPInstalledPackageListHost: NSObject {
         presentation.state.select(id: nil)
         presentation.isSyncingTableSelection = true
         defer { presentation.isSyncingTableSelection = false }
-        presentation.ensureTableViewAttached()?.deselectAll(nil)
         presentation.notifySelectionChanged()
     }
 
-    @objc public func selectClickedRowIfNeeded() {
-        guard let tableView = presentation.ensureTableViewAttached() else { return }
-        let clicked = tableView.clickedRow
-        guard clicked >= 0 && clicked < presentation.state.displayedRows.count else { return }
-        if !presentation.state.selectedRowIndexes.contains(clicked) {
-            if presentation.state.selectRow(at: clicked) {
-                presentation.isSyncingTableSelection = true
-                defer { presentation.isSyncingTableSelection = false }
-                tableView.selectRowIndexes(IndexSet(integer: clicked), byExtendingSelection: false)
-                presentation.notifySelectionChanged()
-            }
-        }
-    }
+    @objc public func selectClickedRowIfNeeded() { }
 
     @objc(rectOfSelectedRowInView:)
     public func rectOfSelectedRow(in targetView: NSView) -> NSRect {
-        let row = presentation.state.selectedRowIndex
-        if let tableView = presentation.ensureTableViewAttached(),
-           row >= 0,
-           row < tableView.numberOfRows {
-            let rect = tableView.rect(ofRow: row)
-            if !rect.isEmpty {
-                return targetView.convert(rect, from: tableView)
-            }
-        }
-        return NSRect(x: 0, y: 0, width: max(targetView.bounds.width, 1), height: 24)
+        NSRect(x: targetView.bounds.midX, y: targetView.bounds.midY, width: 1, height: 1)
     }
 
-    private func syncUnderlyingTableSelection() {
-        guard let tableView = presentation.ensureTableViewAttached() else { return }
-        presentation.isSyncingTableSelection = true
-        defer { presentation.isSyncingTableSelection = false }
-        let indexes = presentation.state.selectedRowIndexes
-        if !indexes.isEmpty {
-            let validIndexes = IndexSet(indexes.filter { $0 >= 0 && $0 < tableView.numberOfRows })
-            if !validIndexes.isEmpty {
-                tableView.selectRowIndexes(validIndexes, byExtendingSelection: false)
-                if let first = validIndexes.first {
-                    tableView.scrollRowToVisible(first)
-                }
-                return
-            }
-        }
-        tableView.deselectAll(nil)
-    }
+    private func syncUnderlyingTableSelection() { }
 
     private func installKeyboardMonitor() {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
@@ -367,207 +315,9 @@ public final class BPInstalledPackageListHost: NSObject {
 }
 
 @MainActor
-private final class BPInstalledTableBridgeCoordinator: NSObject {
-    private static var patchedMenuTableClasses = Set<ObjectIdentifier>()
-    weak var presentation: BPInstalledPackageListPresentation?
-
-    init(presentation: BPInstalledPackageListPresentation) {
-        self.presentation = presentation
-    }
-
-    func attachIfNeeded(from anchorView: NSView) {
-        if let hostView = presentation?.hostView {
-            attach(in: hostView)
-            return
-        }
-        var root: NSView = anchorView
-        while let parent = root.superview {
-            root = parent
-        }
-        attach(in: root)
-    }
-
-    func attach(in root: NSView) {
-        guard let tableView = Self.findTableView(in: root) else { return }
-        Self.enableAppKitMenuStorageIfNeeded(on: tableView)
-        if presentation?.tableView !== tableView {
-            presentation?.tableView = tableView
-            tableView.setAccessibilityLabel(NSLocalizedString("Formulae", comment: ""))
-        }
-        let allowsMulti = presentation?.state.mode.allowsMultipleSelection ?? false
-        if tableView.allowsMultipleSelection != allowsMulti {
-            tableView.allowsMultipleSelection = allowsMulti
-        }
-        if tableView.target !== self || tableView.doubleAction != #selector(handleDoubleClick(_:)) {
-            tableView.target = self
-            tableView.doubleAction = #selector(handleDoubleClick(_:))
-        }
-        if tableView.menu !== presentation?.contextMenu {
-            tableView.menu = presentation?.contextMenu
-        }
-    }
-
-    private static func enableAppKitMenuStorageIfNeeded(on tableView: NSTableView) {
-        guard let cls: AnyClass = object_getClass(tableView) else { return }
-        let classID = ObjectIdentifier(cls)
-        guard !patchedMenuTableClasses.contains(classID) else { return }
-        patchedMenuTableClasses.insert(classID)
-
-        let getterSel = #selector(getter: NSView.menu)
-        let setterSel = #selector(setter: NSView.menu)
-        guard let nsViewGetter = class_getInstanceMethod(NSView.self, getterSel),
-              let nsViewSetter = class_getInstanceMethod(NSView.self, setterSel),
-              let clsGetter = class_getInstanceMethod(cls, getterSel),
-              let clsSetter = class_getInstanceMethod(cls, setterSel),
-              clsGetter != nsViewGetter || clsSetter != nsViewSetter else {
-            return
-        }
-
-        typealias GetterIMP = @convention(c) (AnyObject, Selector) -> NSMenu?
-        typealias SetterIMP = @convention(c) (AnyObject, Selector, NSMenu?) -> Void
-        let superGet = unsafeBitCast(method_getImplementation(nsViewGetter), to: GetterIMP.self)
-        let superSet = unsafeBitCast(method_getImplementation(nsViewSetter), to: SetterIMP.self)
-        let origGet = unsafeBitCast(method_getImplementation(clsGetter), to: GetterIMP.self)
-
-        let getBlock: @convention(block) (AnyObject) -> NSMenu? = { obj in
-            if let menu = superGet(obj, getterSel) {
-                return menu
-            }
-            return origGet(obj, getterSel)
-        }
-        let setBlock: @convention(block) (AnyObject, NSMenu?) -> Void = { obj, menu in
-            superSet(obj, setterSel, menu)
-        }
-
-        method_setImplementation(clsGetter, imp_implementationWithBlock(getBlock))
-        method_setImplementation(clsSetter, imp_implementationWithBlock(setBlock))
-    }
-
-    @objc private func handleDoubleClick(_ sender: NSTableView) {
-        guard let presentation else { return }
-        let row = sender.clickedRow
-        guard row >= 0,
-              row < sender.numberOfRows,
-              row < presentation.state.displayedRows.count,
-              sender.selectedRowIndexes.contains(row) else {
-            return
-        }
-        if presentation.state.selectedRowIndex != row {
-            _ = presentation.state.selectRow(at: row)
-            presentation.notifySelectionChanged()
-        }
-        presentation.onTableAction?(0) // BPFormulaeTableRequestPrimary
-    }
-
-    private static func findTableView(in view: NSView) -> NSTableView? {
-        if let table = view as? NSTableView, !table.isHiddenOrHasHiddenAncestor {
-            return table
-        }
-        for subview in view.subviews {
-            if let found = findTableView(in: subview) {
-                return found
-            }
-        }
-        if let table = view as? NSTableView {
-            return table
-        }
-        for subview in view.subviews {
-            if let fallback = findAnyTableView(in: subview) {
-                return fallback
-            }
-        }
-        return nil
-    }
-
-    private static func findAnyTableView(in view: NSView) -> NSTableView? {
-        if let table = view as? NSTableView {
-            return table
-        }
-        for subview in view.subviews {
-            if let found = findAnyTableView(in: subview) {
-                return found
-            }
-        }
-        return nil
-    }
-}
-
-@MainActor
-private final class BPInstalledPackageHostingController: NSHostingController<BPInstalledPackageListView> {
-    weak var presentation: BPInstalledPackageListPresentation?
-
-    init(rootView: BPInstalledPackageListView, presentation: BPInstalledPackageListPresentation) {
-        self.presentation = presentation
-        super.init(rootView: rootView)
-    }
-
-    @available(*, unavailable)
-    required dynamic init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    override func viewDidLayout() {
-        super.viewDidLayout()
-        presentation?.ensureTableViewAttached()
-    }
-
-    override func viewDidAppear() {
-        super.viewDidAppear()
-        presentation?.ensureTableViewAttached()
-    }
-}
-
-@MainActor
-private final class BPInstalledTableBridgeAnchorView: NSView {
-    weak var coordinator: BPInstalledTableBridgeCoordinator?
-
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        coordinator?.attachIfNeeded(from: self)
-    }
-
-    override func viewDidMoveToSuperview() {
-        super.viewDidMoveToSuperview()
-        coordinator?.attachIfNeeded(from: self)
-    }
-
-    override func layout() {
-        super.layout()
-        coordinator?.attachIfNeeded(from: self)
-    }
-}
-
-@MainActor
-private struct BPInstalledTableBridgeIntrospector: NSViewRepresentable {
-    @ObservedObject var presentation: BPInstalledPackageListPresentation
-
-    func makeCoordinator() -> BPInstalledTableBridgeCoordinator {
-        presentation.bridgeCoordinator ?? BPInstalledTableBridgeCoordinator(presentation: presentation)
-    }
-
-    func makeNSView(context: Context) -> BPInstalledTableBridgeAnchorView {
-        let view = BPInstalledTableBridgeAnchorView(frame: .zero)
-        let coordinator = context.coordinator
-        view.coordinator = coordinator
-        DispatchQueue.main.async {
-            coordinator.attachIfNeeded(from: view)
-        }
-        return view
-    }
-
-    func updateNSView(_ nsView: BPInstalledTableBridgeAnchorView, context: Context) {
-        let coordinator = context.coordinator
-        nsView.coordinator = coordinator
-        coordinator.attachIfNeeded(from: nsView)
-        DispatchQueue.main.async {
-            coordinator.attachIfNeeded(from: nsView)
-        }
-    }
-}
-
-@MainActor
 private struct BPInstalledPackageListView: View {
     @ObservedObject var presentation: BPInstalledPackageListPresentation
+    @State private var returningPackage: BPInstalledPackageRow?
 
     private var selectionSetBinding: Binding<Set<BPFormulaInformationIdentity>> {
         Binding(
@@ -719,10 +469,54 @@ private struct BPInstalledPackageListView: View {
         }
     }
 
+    private func request(_ action: Int, for ids: Set<BPFormulaInformationIdentity>) {
+        presentation.state.select(ids: ids)
+        presentation.notifySelectionChanged()
+        presentation.onTableAction?(action)
+    }
+
     var body: some View {
-        modeTable
-            .tableStyle(.inset(alternatesRowBackgrounds: true))
-            .background(BPInstalledTableBridgeIntrospector(presentation: presentation))
+        VStack(alignment: .leading, spacing: 8) {
+            if presentation.state.mode == .pinned {
+                HStack {
+                    Spacer()
+                    Button("Return to Latest Release…", systemImage: "arrow.up.circle") {
+                        returningPackage = presentation.state.selectedRow
+                    }
+                    .disabled(presentation.state.selectedIDs.count != 1)
+                    .accessibilityIdentifier("pinned.returnLatest")
+                }
+                .padding(.horizontal, 12).padding(.top, 8)
+            }
+            modeTable
+                .tableStyle(.inset(alternatesRowBackgrounds: true))
+                .accessibilityLabel(NSLocalizedString("Formulae", comment: ""))
+                .contextMenu(forSelectionType: BPFormulaInformationIdentity.self) { ids in
+                    if presentation.state.mode == .pinned {
+                        Button("Return to Latest Release…") {
+                            if let id = ids.first, ids.count == 1 {
+                                returningPackage = presentation.state.displayedRows.first { $0.id == id }
+                            }
+                        }
+                        .disabled(ids.count != 1)
+                        Divider()
+                    }
+                    Button("Install or Upgrade…") { request(0, for: ids) }.disabled(ids.isEmpty)
+                    Button("Uninstall…") { request(1, for: ids) }.disabled(ids.isEmpty)
+                    Button("Package Inspector") {
+                        presentation.state.select(ids: ids)
+                        presentation.notifySelectionChanged()
+                        presentation.onSpacePressed?()
+                    }.disabled(ids.count != 1)
+                } primaryAction: { ids in
+                    presentation.state.select(ids: ids)
+                    presentation.notifySelectionChanged()
+                    presentation.onTableAction?(0)
+                }
+                .onKeyPress(.space) { presentation.onSpacePressed?(); return .handled }
+                .onDeleteCommand { presentation.onTableAction?(1) }
+        }
+        .sheet(item: $returningPackage) { BPPinnedReturnSheet(row: $0) }
     }
 }
 

@@ -13,14 +13,14 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
     var brewfileFixtureDirectory: URL?
 
     private func stringValue(of element: XCUIElement) -> String {
-        (element.value as? String) ?? ""
+        (element.value as? String) ?? element.label
     }
 
     func openAutoremove(withArguments arguments: [String]) {
         launch(withArguments: ["-BPMockBrew"] + arguments)
-        app.menuBars.menuBarItems["Tools"].click()
+        app.menuBars.menuBarItems["Homebrew"].click()
         app.menuItems["Remove Unused Dependencies…"].click()
-        XCTAssertTrue(app.sheets.firstMatch.textViews["autoremove.output"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.sheets.firstMatch.staticTexts["autoremove.output"].waitForExistence(timeout: 10))
     }
 
     func testAutoremoveReviewedRemovalStreamsAndFinishes() {
@@ -28,12 +28,12 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         let remove = app.sheets.firstMatch.buttons["autoremove.remove"]
         expectation(for: NSPredicate(format: "enabled == YES"), evaluatedWith: remove)
         waitForExpectations(timeout: 10)
-        XCTAssertTrue(stringValue(of: app.textViews["autoremove.output"]).contains("mockunused"))
+        XCTAssertTrue(stringValue(of: app.staticTexts["autoremove.output"]).contains("mockunused"))
         remove.click()
         let status = app.staticTexts["autoremove.status"]
         expectation(for: NSPredicate(format: "value CONTAINS 'were removed'"), evaluatedWith: status)
         waitForExpectations(timeout: 10)
-        XCTAssertTrue(stringValue(of: app.textViews["autoremove.output"]).contains("MOCK_AUTOREMOVE_OK"))
+        XCTAssertTrue(stringValue(of: app.staticTexts["autoremove.output"]).contains("MOCK_AUTOREMOVE_OK"))
         XCTAssertTrue(app.sheets.firstMatch.buttons["autoremove.cancel"].isEnabled)
     }
 
@@ -42,7 +42,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         let remove = app.sheets.firstMatch.buttons["autoremove.remove"]
         expectation(for: NSPredicate(format: "enabled == YES"), evaluatedWith: remove)
         waitForExpectations(timeout: 10)
-        XCTAssertFalse(stringValue(of: app.textViews["autoremove.output"]).contains("MOCK_AUTOREMOVE_STARTED"))
+        XCTAssertFalse(stringValue(of: app.staticTexts["autoremove.output"]).contains("MOCK_AUTOREMOVE_STARTED"))
         app.sheets.firstMatch.buttons["autoremove.cancel"].click()
         expectation(for: NSPredicate(format: "exists == NO"), evaluatedWith: app.sheets.firstMatch)
         waitForExpectations(timeout: 5)
@@ -59,7 +59,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
             evaluatedWith: app.staticTexts["autoremove.status"]
         )
         waitForExpectations(timeout: 10)
-        XCTAssertTrue(stringValue(of: app.textViews["autoremove.output"]).contains("MOCK_AUTOREMOVE_OK"))
+        XCTAssertTrue(stringValue(of: app.staticTexts["autoremove.output"]).contains("MOCK_AUTOREMOVE_OK"))
         XCTAssertTrue(app.sheets.firstMatch.buttons["autoremove.cancel"].isEnabled)
     }
 
@@ -81,7 +81,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         )
         waitForExpectations(timeout: 10)
         XCTAssertFalse(app.sheets.firstMatch.buttons["autoremove.remove"].isEnabled)
-        XCTAssertTrue(stringValue(of: app.textViews["autoremove.output"]).contains("MOCK_UNRECOGNIZED"))
+        XCTAssertTrue(stringValue(of: app.staticTexts["autoremove.output"]).contains("MOCK_UNRECOGNIZED"))
     }
 
     func testAutoremoveActiveCancellationReportsPartialChanges() {
@@ -92,7 +92,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         remove.click()
         expectation(
             for: NSPredicate(format: "value CONTAINS 'MOCK_AUTOREMOVE_STARTED'"),
-            evaluatedWith: app.textViews["autoremove.output"]
+            evaluatedWith: app.staticTexts["autoremove.output"]
         )
         waitForExpectations(timeout: 10)
         app.sheets.firstMatch.buttons["autoremove.cancel"].click()
@@ -101,7 +101,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
             evaluatedWith: app.staticTexts["autoremove.status"]
         )
         waitForExpectations(timeout: 10)
-        XCTAssertFalse(stringValue(of: app.textViews["autoremove.output"]).contains("MOCK_AUTOREMOVE_OK"))
+        XCTAssertFalse(stringValue(of: app.staticTexts["autoremove.output"]).contains("MOCK_AUTOREMOVE_OK"))
     }
 
     func testAutoremoveChangedPreviewCannotRunRemoval() {
@@ -115,7 +115,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
             evaluatedWith: app.staticTexts["autoremove.status"]
         )
         waitForExpectations(timeout: 10)
-        XCTAssertFalse(stringValue(of: app.textViews["autoremove.output"]).contains("MOCK_AUTOREMOVE_STARTED"))
+        XCTAssertFalse(stringValue(of: app.staticTexts["autoremove.output"]).contains("MOCK_AUTOREMOVE_STARTED"))
     }
 
     func testAutoremoveFailureKeepsDiagnosticsVisible() {
@@ -129,8 +129,8 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
             evaluatedWith: app.staticTexts["autoremove.status"]
         )
         waitForExpectations(timeout: 10)
-        XCTAssertTrue(stringValue(of: app.textViews["autoremove.output"]).contains("MOCK_AUTOREMOVE_FAILED"))
-        XCTAssertFalse(stringValue(of: app.textViews["autoremove.output"]).contains("MOCK_AUTOREMOVE_OK"))
+        XCTAssertTrue(stringValue(of: app.staticTexts["autoremove.output"]).contains("MOCK_AUTOREMOVE_FAILED"))
+        XCTAssertFalse(stringValue(of: app.staticTexts["autoremove.output"]).contains("MOCK_AUTOREMOVE_OK"))
     }
 
     override func setUp() {
@@ -165,7 +165,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         // run (or the developer's own session) left stored.
         let pinned = ["-BPLastSelectedSidebarRow", "1", "-BPSortColumnIdentifier", ""]
         let alreadyPinned = arguments.contains("-BPLastSelectedSidebarRow")
-        app.launchArguments = alreadyPinned ? arguments : (arguments + pinned)
+        app.launchArguments = ["-NSTreatUnknownArgumentsAsOpen", "NO"] + (alreadyPinned ? arguments : (arguments + pinned))
         app.launch()
         XCTAssertTrue(
             app.windows.firstMatch.waitForExistence(timeout: 30.0),
@@ -210,7 +210,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
     /// duplicate titles by index — "Installed" and "Outdated" each appear under
     /// both Formulae and Casks.
     func sidebarRow(_ identifier: String) -> XCUIElement {
-        sidebar().staticTexts[identifier]
+        app.descendants(matching: .any).matching(identifier: identifier).firstMatch
     }
 
     // Dismiss a confirmation alert sheet with Escape. Avoids matching the ambiguous
@@ -274,7 +274,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         sheet.buttons["Cancel"].click()
         XCTAssertTrue(sheet.waitForNonExistence(timeout: 10))
         XCTAssertTrue(formula.exists)
-        XCTAssertTrue(app.buttons["Install Formula"].exists, "Cancel leaves the selected package uninstalled")
+        XCTAssertTrue(app.buttons["Install…"].exists, "Cancel leaves the selected package uninstalled")
     }
 
     func testDoubleClickOutdatedFormulaAndCaskUseUpgradeConfirmation() {
@@ -324,7 +324,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
                 "MOCK_UPGRADE_OK",
                 commands[index]
             )
-            let output = sheet.textViews.matching(transcript).firstMatch
+            let output = sheet.staticTexts.matching(transcript).firstMatch
             let appeared = output.waitForExistence(timeout: 15)
             if !appeared {
                 NSLog("CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", app.debugDescription)
@@ -373,7 +373,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         sheet.buttons["Cancel"].click()
         XCTAssertTrue(sheet.waitForNonExistence(timeout: 10))
         XCTAssertTrue(cask.exists)
-        XCTAssertTrue(app.buttons["Install Formula"].exists)
+        XCTAssertTrue(app.buttons["Install…"].exists)
     }
 
     func testDoubleClickEmptyTableSpaceDoesNotActOnSelectedFormula() {
@@ -415,19 +415,19 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
             withContents: "brew 'mockwget'\ncask 'missingapp'\ntap 'owner/tap'\nmas 'App', id: 123\nvscode 'pub.ext'",
             extraArguments: []
         )
-        let review = stringValue(of: app.sheets.firstMatch.textViews["brewfile.review.entries"])
+        let review = stringValue(of: app.sheets.firstMatch.staticTexts["brewfile.review.entries"])
         XCTAssertTrue(review.contains("mockwget — Installed"))
         XCTAssertTrue(review.contains("missingapp — Missing"))
         XCTAssertTrue(review.contains("Mac App Store"))
         XCTAssertTrue(review.contains("Not checked"))
         app.sheets.firstMatch.buttons["brewfile.review.cancel"].click()
-        XCTAssertFalse(app.textViews["brewfile.import.output"].exists)
+        XCTAssertFalse(app.staticTexts["brewfile.import.output"].exists)
     }
 
     func testBrewfileReviewBlocksUnsupportedFiles() {
         openBrewfileReview(withContents: "brew 'mockwget'\nsystem('unsafe')", extraArguments: [])
         XCTAssertFalse(app.sheets.firstMatch.buttons["brewfile.review.install"].isEnabled)
-        XCTAssertTrue(stringValue(of: app.sheets.firstMatch.textViews["brewfile.review.entries"]).contains("Line 2"))
+        XCTAssertTrue(stringValue(of: app.sheets.firstMatch.staticTexts["brewfile.review.entries"]).contains("Line 2"))
         app.sheets.firstMatch.buttons["brewfile.review.cancel"].click()
     }
 
@@ -435,7 +435,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         openBrewfileReview(withContents: "# no direct entries\n", extraArguments: [])
         XCTAssertFalse(app.sheets.firstMatch.buttons["brewfile.review.install"].isEnabled)
         XCTAssertTrue(
-            stringValue(of: app.sheets.firstMatch.textViews["brewfile.review.entries"])
+            stringValue(of: app.sheets.firstMatch.staticTexts["brewfile.review.entries"])
                 .contains("No supported package entries")
         )
         app.sheets.firstMatch.buttons["brewfile.review.cancel"].click()
@@ -449,7 +449,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         let finished = NSPredicate(format: "value == %@", "Import finished.")
         expectation(for: finished, evaluatedWith: status)
         waitForExpectations(timeout: 10)
-        XCTAssertTrue(stringValue(of: app.textViews["brewfile.import.output"]).contains("MOCK_IMPORT_OK"))
+        XCTAssertTrue(stringValue(of: app.staticTexts["brewfile.import.output"]).contains("MOCK_IMPORT_OK"))
         app.sheets.firstMatch.buttons["brewfile.import.action"].click()
     }
 
@@ -470,7 +470,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         )
         waitForExpectations(timeout: 10)
         XCTAssertEqual(action.title, "Close")
-        let output = stringValue(of: app.textViews["brewfile.import.output"])
+        let output = stringValue(of: app.staticTexts["brewfile.import.output"])
         XCTAssertTrue(output.contains("MOCK_IMPORT_STARTED"))
         XCTAssertTrue(output.contains("MOCK_IMPORT_CANCELLED"))
         XCTAssertFalse(output.contains("MOCK_IMPORT_OK"))
@@ -491,7 +491,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
             evaluatedWith: status
         )
         waitForExpectations(timeout: 10)
-        XCTAssertTrue(stringValue(of: app.textViews["brewfile.import.output"]).contains("MOCK_IMPORT_FAILED"))
+        XCTAssertTrue(stringValue(of: app.staticTexts["brewfile.import.output"]).contains("MOCK_IMPORT_FAILED"))
         app.sheets.firstMatch.buttons["brewfile.import.action"].click()
     }
 
@@ -504,8 +504,9 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
             withContents: "brew 'mockwget'\ncask 'missingapp'\ntap 'owner/tap'\nmas 'App', id: 123\nvscode 'pub.ext'",
             extraArguments: germanBrewfileArguments()
         )
+        XCTAssertTrue(app.menuBars.menuBarItems["Pakete"].exists)
         let sheet = app.sheets.firstMatch
-        let review = stringValue(of: sheet.textViews["brewfile.review.entries"])
+        let review = stringValue(of: sheet.staticTexts["brewfile.review.entries"])
         XCTAssertTrue(review.contains("mockwget — Installiert"))
         XCTAssertTrue(review.contains("missingapp — Fehlt"))
         XCTAssertTrue(review.contains("Nicht geprüft"))
@@ -517,7 +518,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(sheet.buttons["brewfile.review.cancel"].title, "Abbrechen")
         sheet.buttons["brewfile.review.cancel"].click()
         XCTAssertFalse(app.sheets.firstMatch.exists)
-        XCTAssertFalse(app.textViews["brewfile.import.output"].exists)
+        XCTAssertFalse(app.staticTexts["brewfile.import.output"].exists)
     }
 
     func testGermanBrewfileReviewEscapeRunsNothing() {
@@ -525,7 +526,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         let sheet = app.sheets.firstMatch
         let cancel = sheet.buttons["brewfile.review.cancel"]
         let localizedReview = sheet.staticTexts["Brewfile prüfen"].exists
-            && stringValue(of: sheet.textViews["brewfile.review.entries"]).contains("mockwget — Installiert")
+            && stringValue(of: sheet.staticTexts["brewfile.review.entries"]).contains("mockwget — Installiert")
             && cancel.title == "Abbrechen"
         let applicationState = app.state
         XCTAssertTrue(localizedReview)
@@ -539,7 +540,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         )
         waitForExpectations(timeout: 5)
         XCTAssertFalse(app.sheets.firstMatch.exists)
-        XCTAssertFalse(app.textViews["brewfile.import.output"].exists)
+        XCTAssertFalse(app.staticTexts["brewfile.import.output"].exists)
         XCTAssertFalse(app.staticTexts["brewfile.import.status"].exists)
     }
 
@@ -550,7 +551,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         )
         let sheet = app.sheets.firstMatch
         XCTAssertFalse(sheet.buttons["brewfile.review.install"].isEnabled)
-        let review = stringValue(of: sheet.textViews["brewfile.review.entries"])
+        let review = stringValue(of: sheet.staticTexts["brewfile.review.entries"])
         XCTAssertTrue(review.contains("Zeile 2:"))
         XCTAssertTrue(review.contains("Es wird nichts installiert."))
         sheet.buttons["brewfile.review.cancel"].click()
@@ -577,7 +578,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         expectation(for: NSPredicate(format: "value == %@", expected), evaluatedWith: status)
         waitForExpectations(timeout: 10)
         XCTAssertEqual(action.title, "Schließen")
-        let output = stringValue(of: app.textViews["brewfile.import.output"])
+        let output = stringValue(of: app.staticTexts["brewfile.import.output"])
         if cancel {
             XCTAssertTrue(output.contains("MOCK_IMPORT_STARTED"))
             XCTAssertTrue(output.contains("MOCK_IMPORT_CANCELLED"))
@@ -623,7 +624,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
                 + arguments
         )
         // AppKit exposes the existing German submenu title (Tools) in the menu bar.
-        app.menuBars.menuBarItems["Tools"].click()
+        app.menuBars.menuBarItems["Homebrew"].click()
         app.menuItems["Exportiere Brew Installation..."].click()
     }
 
@@ -663,7 +664,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
     // Unavailable Homebrew cannot satisfy the normal helper's mockwget settle
     // wait. Only these recovery journeys use this distinct launch path.
     func launchRecovery(withArguments arguments: [String]) {
-        app.launchArguments = ["-BPMockBrew", "-BPLastSelectedSidebarRow", "1", "-BPSortColumnIdentifier", ""] + arguments
+        app.launchArguments = ["-NSTreatUnknownArgumentsAsOpen", "NO", "-BPMockBrew", "-BPLastSelectedSidebarRow", "1", "-BPSortColumnIdentifier", ""] + arguments
         app.launch()
         XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 30))
         XCTAssertTrue(app.buttons["homebrew.retry"].waitForExistence(timeout: 30))
@@ -671,7 +672,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
 
     func testMissingHomebrewShowsActionableNonmodalRecovery() {
         launchRecovery(withArguments: ["-BPMockHomebrewMissing"])
-        XCTAssertTrue(app.buttons["homebrew.install"].exists)
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "homebrew.install").firstMatch.exists)
         XCTAssertTrue(app.buttons["homebrew.retry"].isEnabled)
         XCTAssertTrue(app.staticTexts["homebrew.recovery.message"].exists)
         XCTAssertGreaterThan(app.staticTexts["homebrew.recovery.message"].frame.size.height, 30.0)
@@ -712,6 +713,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
     // cannot use the shared helper's Installed-list settle wait.
     func launch(withPendingNotificationTarget target: String) {
         app.launchArguments = [
+            "-NSTreatUnknownArgumentsAsOpen", "NO",
             "-BPMockBrew",
             "-BPMockHoldCatalogUntilReleased",
             "-BPMockNotificationTarget",
@@ -724,7 +726,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         app.launch()
         XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 30.0))
         XCTAssertTrue(
-            app.buttons["Stop Reloading"].waitForExistence(timeout: 30.0),
+            app.buttons["Cancel Refresh"].waitForExistence(timeout: 30.0),
             "the journey must observe the initial reload before its completion"
         )
     }
@@ -746,7 +748,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
 
     func waitForNotificationLaunchReloadToFinish() {
         let finished = NSPredicate(format: "exists == NO")
-        expectation(for: finished, evaluatedWith: app.buttons["Stop Reloading"])
+        expectation(for: finished, evaluatedWith: app.buttons["Cancel Refresh"])
         waitForExpectations(timeout: 30.0)
     }
 
@@ -757,7 +759,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
     ) {
         launch(withPendingNotificationTarget: target)
         assertSelectedSidebarIdentifier(identifier)
-        XCTAssertTrue(app.buttons["Stop Reloading"].exists, "selection must be observed before normal completion")
+        XCTAssertTrue(app.buttons["Cancel Refresh"].exists, "selection must be observed before normal completion")
         clickNotificationTestMenuItem("mock.catalog.complete")
         waitForNotificationLaunchReloadToFinish()
         assertSelectedSidebarIdentifier(identifier)
@@ -802,10 +804,10 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
     func testPendingNotificationDoesNotReplayAfterUserNavigatesDuringReload() {
         launch(withPendingNotificationTarget: "casks")
         assertSelectedSidebarIdentifier("sidebar.casks.outdated")
-        XCTAssertTrue(app.buttons["Stop Reloading"].exists, "navigation must start while the reload is held")
+        XCTAssertTrue(app.buttons["Cancel Refresh"].exists, "navigation must start while the reload is held")
         sidebarRow("sidebar.formulae.installed").click()
         assertSelectedSidebarIdentifier("sidebar.formulae.installed")
-        XCTAssertTrue(app.buttons["Stop Reloading"].exists, "user navigation must precede normal completion")
+        XCTAssertTrue(app.buttons["Cancel Refresh"].exists, "user navigation must precede normal completion")
         clickNotificationTestMenuItem("mock.catalog.complete")
         waitForNotificationLaunchReloadToFinish()
         assertSelectedSidebarIdentifier("sidebar.formulae.installed")
@@ -820,7 +822,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
     // non-key window on CI. It carries semantic payloads, never sidebar row logic.
     func clickNotificationTestMenuItem(_ title: String) {
         app.menuBars.menuBarItems["Notification Test"].click()
-        app.menuItems[title].click()
+        app.menuItems[title == "mock.catalog.complete" ? "Complete Mock Catalog" : title].click()
     }
 
     func assertWarmNotificationTarget(
@@ -1038,7 +1040,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(htopAppeared, "mockhtop should be listed under All Formulae")
         htop.click()
 
-        let installButton = app.buttons["Install Formula"]
+        let installButton = app.buttons["Install…"]
         let appeared = installButton.waitForExistence(timeout: 15.0)
         if !appeared {
             NSLog("CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", app.debugDescription)
@@ -1055,7 +1057,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(htop.waitForExistence(timeout: 30.0), "mockhtop should be listed under All Formulae")
         htop.click()
 
-        let installButton = app.buttons["Install Formula"]
+        let installButton = app.buttons["Install…"]
         XCTAssertTrue(installButton.waitForExistence(timeout: 15.0), "Install should be offered")
         installButton.click()
 
@@ -1080,7 +1082,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(wget.waitForExistence(timeout: 30.0), "mockwget should be in the Installed list")
         wget.click()
 
-        let uninstallButton = app.buttons["Uninstall Formula"]
+        let uninstallButton = app.buttons["Uninstall…"]
         let appeared = uninstallButton.waitForExistence(timeout: 15.0)
         if !appeared {
             NSLog("CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", app.debugDescription)
@@ -1218,7 +1220,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(appeared, "the outdated cask should be listed")
         chrome.click()
 
-        let updateButton = app.buttons["Update Formula"]
+        let updateButton = app.buttons["Upgrade…"]
         XCTAssertTrue(
             updateButton.waitForExistence(timeout: 15.0),
             "selecting an outdated cask should offer Update in the toolbar"
@@ -1267,7 +1269,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         aboutItem.click()
 
         let credits = NSPredicate(format: "value CONTAINS %@", "DCOAboutWindowController")
-        let creditsView = app.textViews.matching(credits).firstMatch
+        let creditsView = app.staticTexts.matching(credits).firstMatch
         let appeared = creditsView.waitForExistence(timeout: 15.0)
         if !appeared {
             NSLog("CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", app.debugDescription)
@@ -1322,7 +1324,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(cask.waitForExistence(timeout: 30.0), "mockchrome should be an installed cask")
         cask.click()
 
-        let uninstall = app.buttons["Uninstall Formula"]
+        let uninstall = app.buttons["Uninstall…"]
         XCTAssertTrue(uninstall.waitForExistence(timeout: 15.0))
         uninstall.click()
 
@@ -1341,7 +1343,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(formula.waitForExistence(timeout: 30.0))
         formula.click()
 
-        let uninstallFormula = app.buttons["Uninstall Formula"]
+        let uninstallFormula = app.buttons["Uninstall…"]
         XCTAssertTrue(uninstallFormula.waitForExistence(timeout: 15.0))
         uninstallFormula.click()
         XCTAssertTrue(app.buttons["Yes"].waitForExistence(timeout: 15.0), "the confirmation should appear")
@@ -1365,7 +1367,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(htop.waitForExistence(timeout: 30.0), "mockhtop should be listed under All Formulae")
         htop.click()
 
-        let installButton = app.buttons["Install Formula"]
+        let installButton = app.buttons["Install…"]
         XCTAssertTrue(installButton.waitForExistence(timeout: 15.0))
         installButton.click()
 
@@ -1378,7 +1380,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
 
         // The marker proves the mock served this, not real brew.
         let streamed = NSPredicate(format: "value CONTAINS %@", "MOCK_INSTALL_OK")
-        let output = app.textViews.matching(streamed).firstMatch
+        let output = app.staticTexts.matching(streamed).firstMatch
         let appeared = output.waitForExistence(timeout: 20.0)
         if !appeared {
             NSLog("CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", app.debugDescription)
@@ -1480,12 +1482,13 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
 
         sidebarRow("sidebar.formulae.outdated").click()
 
-        let explanation = app.staticTexts["Everything Is Up to Date"]
+        let explanation = app.descendants(matching: .any).matching(identifier: "emptyState.title").firstMatch
         let appeared = explanation.waitForExistence(timeout: 20.0)
         if !appeared {
             NSLog("CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", app.debugDescription)
         }
         XCTAssertTrue(appeared, "an empty Outdated list should say so")
+        XCTAssertTrue(stringValue(of: explanation).contains("Everything Is Up to Date"))
     }
 
     // Journey: View ▸ Show/Hide Sidebar collapses the sidebar and restores it.
@@ -1533,7 +1536,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(prefsItem.waitForExistence(timeout: 10.0), "the app menu should show Settings…")
         prefsItem.click()
 
-        let prefsWindow = app.windows["Settings"]
+        let prefsWindow = app.windows["Cakebrew Settings"]
         let appeared = prefsWindow.waitForExistence(timeout: 15.0)
         if !appeared {
             NSLog("CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", app.debugDescription)
@@ -1541,11 +1544,11 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(appeared, "the Preferences window should open")
 
         XCTAssertTrue(
-            prefsWindow.checkBoxes["Check for outdated packages in the background"].exists,
+            prefsWindow.descendants(matching: .any).matching(identifier: "settings.backgroundChecks").firstMatch.exists,
             "the background-check toggle should be present"
         )
         XCTAssertTrue(
-            prefsWindow.checkBoxes["Include auto-updating apps in outdated casks"].exists,
+            prefsWindow.descendants(matching: .any).matching(identifier: "settings.greedyCasks").firstMatch.exists,
             "the greedy-casks toggle should be present"
         )
 
@@ -1595,7 +1598,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
     }
 
     func waitForServiceDetails(containing text: String) {
-        let details = app.textViews["services.details"]
+        let details = app.staticTexts["services.details"]
         XCTAssertTrue(details.waitForExistence(timeout: 10))
         let contains = NSPredicate(format: "value CONTAINS %@", text)
         let exp = XCTNSPredicateExpectation(predicate: contains, object: details)
@@ -1630,7 +1633,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         postgres.click()
         waitForServiceDetails(containing: "Error: mock service details unavailable")
         waitForServiceDetails(containing: "The mock service list is still available.")
-        let details = stringValue(of: app.textViews["services.details"])
+        let details = stringValue(of: app.staticTexts["services.details"])
         XCTAssertTrue(
             details.hasPrefix("Could not load service details. Homebrew reported:\nError: mock service details unavailable"),
             "Failure and diagnostic must appear first without scrolling past metadata placeholders."
@@ -1683,7 +1686,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(appeared, "mockfirefox should be listed under All Casks")
         firefox.click()
 
-        let installButton = app.buttons["Install Formula"]
+        let installButton = app.buttons["Install…"]
         XCTAssertTrue(
             installButton.waitForExistence(timeout: 15.0),
             "selecting a not-installed cask should offer Install in the toolbar"
@@ -1713,7 +1716,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(chrome.waitForExistence(timeout: 15.0), "mockchrome should be listed")
         chrome.click()
 
-        let uninstallButton = app.buttons["Uninstall Formula"]
+        let uninstallButton = app.buttons["Uninstall…"]
         let appeared = uninstallButton.waitForExistence(timeout: 15.0)
         if !appeared {
             NSLog("CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", app.debugDescription)
@@ -1739,7 +1742,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(wget.waitForExistence(timeout: 30.0), "mockwget should be in the Installed list")
         wget.click()
 
-        let uninstallButton = app.buttons["Uninstall Formula"]
+        let uninstallButton = app.buttons["Uninstall…"]
         XCTAssertTrue(uninstallButton.waitForExistence(timeout: 15.0), "Uninstall should be offered")
         uninstallButton.click()
 
@@ -1765,7 +1768,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(git.waitForExistence(timeout: 30.0), "mockgit should be in the Outdated list")
         git.click()
 
-        let updateButton = app.buttons["Update Formula"]
+        let updateButton = app.buttons["Upgrade…"]
         let appeared = updateButton.waitForExistence(timeout: 15.0)
         if !appeared {
             NSLog("CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", app.debugDescription)
@@ -1783,7 +1786,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(git.waitForExistence(timeout: 30.0), "mockgit should be in the Outdated list")
         git.click()
 
-        let updateButton = app.buttons["Update Formula"]
+        let updateButton = app.buttons["Upgrade…"]
         XCTAssertTrue(updateButton.waitForExistence(timeout: 15.0), "Update should be offered")
         updateButton.click()
 
@@ -1821,7 +1824,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
             "MOCK_DOCTOR_OK",
             "MOCK_DOCTOR_DONE"
         )
-        let output = app.textViews.matching(predicate).firstMatch
+        let output = app.staticTexts.matching(predicate).firstMatch
         let appeared = output.waitForExistence(timeout: 15.0)
         if !appeared {
             NSLog("CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", app.debugDescription)
@@ -1845,7 +1848,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         )
 
         let predicate = NSPredicate(format: "value CONTAINS %@", "MOCK_UPDATE_OK")
-        let output = app.textViews.matching(predicate).firstMatch
+        let output = app.staticTexts.matching(predicate).firstMatch
         let appeared = output.waitForExistence(timeout: 15.0)
         if !appeared {
             NSLog("CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", app.debugDescription)
@@ -1932,174 +1935,58 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         XCTAssertGreaterThan(searchField.frame.size.height, 0.0)
     }
 
-    // MARK: - Formula info journey
+    // MARK: - Consolidated package inspector
 
-    // A transient successful frame is not enough: the previous close animation can
-    // still complete after a replacement popover has already rendered its content.
-    func assertMockInformationSurvivesPopoverAnimation() {
-        let settled = expectation(description: "popover close animation completed")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            settled.fulfill()
-        }
-        waitForExpectations(timeout: 5.0)
-        let title = app.descendants(matching: .any)
-            .matching(identifier: "formula.information.title")
-            .firstMatch
-        let information = app.descendants(matching: .any)
-            .matching(identifier: "formula.information.text")
-            .firstMatch
-        XCTAssertTrue(title.exists)
-        XCTAssertTrue(title.label.contains("mockwget"))
-        let content = NSPredicate(
-            format: "label CONTAINS %@ OR value CONTAINS %@",
-            "A mock formula",
-            "A mock formula"
-        )
-        XCTAssertTrue(information.exists)
-        XCTAssertTrue(content.evaluate(with: information))
-    }
-
-    func testMoreInformationWhileOpenKeepsSelectedPackageContent() {
-        launch(withArguments: ["-BPMockBrew"])
-        formulaCell(withName: "mockwget").click()
-        let infoButton = app.buttons["More Information"]
-        infoButton.click()
-        let information = app.descendants(matching: .any)
-            .matching(identifier: "formula.information.text")
-            .firstMatch
-        XCTAssertTrue(information.waitForExistence(timeout: 15.0))
-        infoButton.click()
-        assertMockInformationSurvivesPopoverAnimation()
-    }
-
-    // Journey: More Information shows the selected formula's details in a popover.
-    func testMoreInformationShowsFormulaInfoPopover() {
-        launch(withArguments: ["-BPMockBrew"])
-
-        let wget = formulaCell(withName: "mockwget")
-        XCTAssertTrue(wget.waitForExistence(timeout: 30.0), "mockwget should be in the Installed list")
-        wget.click()
-
-        let infoButton = app.buttons["More Information"]
-        XCTAssertTrue(infoButton.waitForExistence(timeout: 15.0), "More Information should be offered")
-        infoButton.click()
-
-        // The popover shows the formula's info (served by the mock interface).
-        let infoText = app.descendants(matching: .any)
-            .matching(identifier: "formula.information.text")
-            .firstMatch
-        let appeared = infoText.waitForExistence(timeout: 15.0)
-        if !appeared {
-            NSLog("CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", app.debugDescription)
-        }
-        XCTAssertTrue(appeared, "More Information should show the formula info in a popover")
-        let content = NSPredicate(
-            format: "label CONTAINS %@ OR value CONTAINS %@",
-            "A mock formula",
-            "A mock formula"
-        )
-        expectation(for: content, evaluatedWith: infoText)
-        waitForExpectations(timeout: 10.0)
-        XCTAssertGreaterThan(infoText.frame.size.width, 100.0)
-        XCTAssertGreaterThan(infoText.frame.size.height, 20.0)
-        let title = app.descendants(matching: .any)
-            .matching(identifier: "formula.information.title")
-            .firstMatch
-        XCTAssertTrue(title.label.contains("mockwget"))
-
-        // An outside click dismisses the transient popover and keeps the selection.
-        wget.click()
-        let dismissed = NSPredicate(format: "exists == NO")
-        expectation(for: dismissed, evaluatedWith: infoText)
-        waitForExpectations(timeout: 10.0)
-        infoButton.click()
-        XCTAssertTrue(infoText.waitForExistence(timeout: 10.0), "the same selection can reopen information")
-    }
-
-    func testMoreInformationEscapeDismissesAndReopensSelectedPackage() {
-        launch(withArguments: ["-BPMockBrew"])
-        formulaCell(withName: "mockwget").click()
-        let infoButton = app.buttons["More Information"]
-        XCTAssertTrue(infoButton.waitForExistence(timeout: 15))
-        infoButton.click()
-
-        let popover = app.popovers.firstMatch
-        XCTAssertTrue(popover.waitForExistence(timeout: 15))
-        let title = popover.descendants(matching: .any)
-            .matching(identifier: "formula.information.title")
-            .firstMatch
-        let information = popover.descendants(matching: .any)
-            .matching(identifier: "formula.information.text")
-            .firstMatch
-        XCTAssertTrue(information.waitForExistence(timeout: 15))
-        let content = NSPredicate(
-            format: "label CONTAINS %@ OR value CONTAINS %@",
-            "A mock formula",
-            "A mock formula"
-        )
-        let loadedPopover = app.popovers.count == 1
-            && title.exists
-            && title.label.contains("mockwget")
-            && content.evaluate(with: information)
-        let applicationState = app.state
-        XCTAssertTrue(loadedPopover)
-        XCTAssertEqual(applicationState, .runningForeground)
-        guard loadedPopover && applicationState == .runningForeground else { return }
-
-        let beforeEscape = XCTAttachment(string: app.debugDescription)
-        beforeEscape.name = "Loaded information before Escape"
-        beforeEscape.lifetime = .keepAlways
-        add(beforeEscape)
-        app.typeKey(.escape, modifierFlags: [])
-        let dismissed = popover.waitForNonExistence(timeout: 10)
-        XCTAssertTrue(dismissed, "Escape must dismiss the actual popover container")
-        guard dismissed else { return }
-        XCTAssertFalse(title.exists)
-        XCTAssertFalse(information.exists)
-
-        infoButton.click()
-        XCTAssertTrue(popover.waitForExistence(timeout: 10))
-        XCTAssertTrue(
-            information.waitForExistence(timeout: 10),
-            "Reopening must restore the selected package information"
-        )
-        assertMockInformationSurvivesPopoverAnimation()
-        XCTAssertFalse(app.sheets.firstMatch.exists)
-    }
-
-    // Moving between hosted information and hosted dependents views keeps both routes usable.
-    func testInformationAndInstalledDependentsUseTheirOwnContent() {
+    func testPackageDetailsStayInInspectorWithoutPopover() {
         launch(withArguments: ["-BPMockBrew"])
         let wget = formulaCell(withName: "mockwget")
-        wget.doubleClick()
-        let information = app.descendants(matching: .any)
-            .matching(identifier: "formula.information.text")
-            .firstMatch
-        XCTAssertTrue(information.waitForExistence(timeout: 15.0))
+        XCTAssertTrue(wget.waitForExistence(timeout: 30))
         wget.click()
-        app.menuBars.menuBarItems["Formula"].click()
-        app.menuItems["List Installed Dependents"].click()
-        let dependentsTitle = app.descendants(matching: .any)
-            .matching(identifier: "formula.dependents.title")
-            .firstMatch
-        let dependentsText = app.descendants(matching: .any)
-            .matching(identifier: "formula.dependents.text")
-            .firstMatch
-        XCTAssertTrue(dependentsTitle.waitForExistence(timeout: 15.0))
-        XCTAssertTrue(dependentsTitle.label.contains("Installed Dependents of Formula: mockwget"))
-        XCTAssertTrue(dependentsText.waitForExistence(timeout: 15.0))
-        let depContent = NSPredicate(
-            format: "label CONTAINS %@ OR value CONTAINS %@",
-            "mockcurl",
-            "mockcurl"
-        )
-        XCTAssertTrue(depContent.evaluate(with: dependentsText))
-        XCTAssertFalse(information.exists)
+        let license = app.staticTexts["formula.detail.license"]
+        XCTAssertTrue(license.waitForExistence(timeout: 15))
+        XCTAssertEqual(stringValue(of: license), "MIT")
+        XCTAssertTrue(app.links["formula.detail.source"].exists)
+        let dependencies = app.staticTexts["formula.detail.dependencies"]
+        XCTAssertFalse(stringValue(of: dependencies).contains("Analytics"))
+        XCTAssertFalse(stringValue(of: dependencies).contains("install: 42"))
+        XCTAssertTrue(app.buttons["formula.detail.chip.mockgit"].exists)
+        XCTAssertFalse(app.buttons["formula.detail.moreInfo"].exists)
+        XCTAssertFalse(app.popovers.firstMatch.exists)
+
+        let disclosure = app.disclosureTriangles["Homebrew Output"]
+        XCTAssertTrue(disclosure.waitForExistence(timeout: 5))
+        disclosure.click()
+        let output = app.staticTexts["formula.detail.output"]
+        XCTAssertTrue(output.waitForExistence(timeout: 5))
+        XCTAssertTrue(stringValue(of: output).contains("mockwget: stable"))
+        XCTAssertTrue(stringValue(of: output).contains("==> Analytics"))
+        XCTAssertFalse(app.popovers.firstMatch.exists)
+        let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        attachment.name = "Consolidated Inspector"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+
+        formulaCell(withName: "mockgit").click()
+        XCTAssertTrue(app.staticTexts["formula.detail.license"].waitForExistence(timeout: 10))
+        XCTAssertFalse(output.exists, "A new selection starts with raw output collapsed")
+        disclosure.click()
+        XCTAssertTrue(output.waitForExistence(timeout: 5))
+        XCTAssertTrue(stringValue(of: output).contains("mockgit: stable"))
+        XCTAssertFalse(stringValue(of: output).contains("mockwget: stable"))
+    }
+
+    func testInformationCommandRevealsInspectorWithoutOverlay() {
+        launch(withArguments: ["-BPMockBrew"])
+        let wget = formulaCell(withName: "mockwget")
+        XCTAssertTrue(wget.waitForExistence(timeout: 30))
         wget.click()
-        app.buttons["More Information"].click()
-        XCTAssertTrue(information.waitForExistence(timeout: 15.0))
-        assertMockInformationSurvivesPopoverAnimation()
-        XCTAssertFalse(dependentsTitle.exists)
+        let inspectorToggle = app.buttons["workspace.toggleInspector"]
+        inspectorToggle.click()
+        XCTAssertTrue(app.staticTexts["formula.detail.header"].waitForNonExistence(timeout: 5))
+        wget.click()
+        wget.typeKey(.space, modifierFlags: [])
+        XCTAssertTrue(app.staticTexts["formula.detail.header"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.popovers.firstMatch.exists)
     }
 
     // MARK: - Tools journeys
@@ -2111,7 +1998,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
             "the mock data should load"
         )
 
-        app.menuBars.menuBarItems["Tools"].click()
+        app.menuBars.menuBarItems["Homebrew"].click()
         let cleanupItem = app.menuItems["Brew Cleanup…"]
         XCTAssertTrue(cleanupItem.waitForExistence(timeout: 10.0), "Tools > Brew Cleanup should exist")
         cleanupItem.click()
@@ -2174,7 +2061,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
     func testAReloadCanBeStopped() {
         launch(withArguments: ["-BPMockBrew", "-BPMockHoldCatalogUntilCancelled"])
 
-        let stop = app.buttons["Stop Reloading"]
+        let stop = app.buttons["Cancel Refresh"]
         let appeared = stop.waitForExistence(timeout: 30.0)
         if !appeared {
             NSLog("CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", app.debugDescription)
@@ -2220,7 +2107,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         sheet.buttons["Yes"].click()
 
         let predicate = NSPredicate(format: "value CONTAINS %@", "MOCK_CLEANUP_OK")
-        let output = app.textViews.matching(predicate).firstMatch
+        let output = app.staticTexts.matching(predicate).firstMatch
         let appeared = output.waitForExistence(timeout: 20.0)
         if !appeared {
             NSLog("CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", app.debugDescription)
@@ -2239,7 +2126,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         sheet.buttons["Cancel"].click()
 
         let predicate = NSPredicate(format: "value CONTAINS %@", "MOCK_CLEANUP_OK")
-        let output = app.textViews.matching(predicate).firstMatch
+        let output = app.staticTexts.matching(predicate).firstMatch
 
         // Nothing to wait *for*, so wait for the window that would have opened and
         // assert it never does.
@@ -2269,7 +2156,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
 
     func openMockExport(withArguments arguments: [String]) {
         launch(withArguments: ["-BPMockBrew", "-BPMockExportURL", "/fixture/Brewfile"] + arguments)
-        app.menuBars.menuBarItems["Tools"].click()
+        app.menuBars.menuBarItems["Homebrew"].click()
         app.menuItems["Export Brew Installation…"].click()
     }
 
@@ -2309,7 +2196,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
     func testCancelledExportSaveLeavesAppReadyForAnotherOperation() {
         openMockExport(withArguments: ["-BPMockExportCancel"])
         XCTAssertFalse(app.sheets.firstMatch.exists)
-        app.menuBars.menuBarItems["Tools"].click()
+        app.menuBars.menuBarItems["Homebrew"].click()
         app.menuItems["Import Brew Installation…"].click()
         XCTAssertTrue(app.sheets.firstMatch.waitForExistence(timeout: 10))
         XCTAssertFalse(app.sheets.firstMatch.buttons["brewfile.export.close"].exists)
@@ -2327,7 +2214,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
             "the mock data should load"
         )
 
-        app.menuBars.menuBarItems["Tools"].click()
+        app.menuBars.menuBarItems["Homebrew"].click()
 
         let exportPresent = app.menuItems["Export Brew Installation…"].waitForExistence(timeout: 10.0)
         let importPresent = app.menuItems["Import Brew Installation…"].exists
@@ -2369,7 +2256,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         let sheet = app.sheets.firstMatch
         let confirm = sheet.buttons["updates.confirm"]
         XCTAssertTrue(confirm.waitForExistence(timeout: 15))
-        let targets = sheet.textViews.matching(
+        let targets = sheet.staticTexts.matching(
             NSPredicate(
                 format: "identifier == 'updates.targets' AND value CONTAINS 'Formulae: mockgit' AND value CONTAINS 'Casks: mockchrome'"
             )
@@ -2382,7 +2269,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
 
         app.typeKey(.escape, modifierFlags: [])
         XCTAssertTrue(app.sheets.firstMatch.waitForNonExistence(timeout: 10))
-        let output = app.textViews.matching(
+        let output = app.staticTexts.matching(
             NSPredicate(format: "value CONTAINS 'MOCK_UPGRADE_' OR value CONTAINS 'brew upgrade'")
         ).firstMatch
         XCTAssertFalse(output.exists)
@@ -2391,7 +2278,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
     func testUpgradeAllPinnedExclusionAndCancelRunsNothing() {
         openUpgradeAll(withArguments: [])
         let sheet = app.sheets.firstMatch
-        let summary = sheet.textViews.matching(
+        let summary = sheet.staticTexts.matching(
             NSPredicate(
                 format: "identifier == 'updates.targets' AND value CONTAINS 'Casks: mockchrome' AND value CONTAINS 'Pinned formulae will be skipped: mockgit'"
             )
@@ -2400,20 +2287,20 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         sheet.buttons["Cancel"].click()
         XCTAssertTrue(sheet.waitForNonExistence(timeout: 10))
         XCTAssertFalse(
-            app.textViews.matching(NSPredicate(format: "value CONTAINS 'MOCK_UPGRADE_OK'")).firstMatch.exists
+            app.staticTexts.matching(NSPredicate(format: "value CONTAINS 'MOCK_UPGRADE_OK'")).firstMatch.exists
         )
     }
 
     func testUpgradeAllMixedConfirmationRunsExactNamesAndShowsCommandOutcomes() {
         let confirm = openUpgradeAll(withArguments: ["-BPMockMixedUpdates"])
-        let summary = app.sheets.firstMatch.textViews.matching(
+        let summary = app.sheets.firstMatch.staticTexts.matching(
             NSPredicate(
                 format: "identifier == 'updates.targets' AND value CONTAINS 'Formulae: mockgit' AND value CONTAINS 'Casks: mockchrome'"
             )
         ).firstMatch
         XCTAssertTrue(summary.exists)
         confirm.click()
-        let output = app.sheets.firstMatch.textViews.matching(
+        let output = app.sheets.firstMatch.staticTexts.matching(
             NSPredicate(
                 format: "value CONTAINS 'Command succeeded: brew upgrade --formula mockgit' AND value CONTAINS 'Command succeeded: brew upgrade --cask mockchrome'"
             )
@@ -2425,7 +2312,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
     func testUpgradeAllLaterFailurePreservesFirstCommandSuccess() {
         let confirm = openUpgradeAll(withArguments: ["-BPMockMixedUpdates", "-BPMockFailedCaskUpgrade"])
         confirm.click()
-        let output = app.sheets.firstMatch.textViews.matching(
+        let output = app.sheets.firstMatch.staticTexts.matching(
             NSPredicate(
                 format: "value CONTAINS 'Command succeeded: brew upgrade --formula mockgit' AND value CONTAINS 'Command failed; some packages may have changed: brew upgrade --cask mockchrome'"
             )
@@ -2437,7 +2324,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
     func testUpgradeAllCaskOnlyEnablesWithNoOutdatedFormulae() {
         let confirm = openUpgradeAll(withArguments: ["-BPMockEmptyOutdated"])
         confirm.click()
-        let output = app.sheets.firstMatch.textViews.matching(
+        let output = app.sheets.firstMatch.staticTexts.matching(
             NSPredicate(format: "value CONTAINS 'Command succeeded: brew upgrade --cask mockchrome'")
         ).firstMatch
         XCTAssertTrue(output.waitForExistence(timeout: 15))
@@ -2448,17 +2335,17 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
     func testUpgradeAllCancellationReportsActiveAndUnattemptedCommands() {
         let confirm = openUpgradeAll(withArguments: ["-BPMockMixedUpdates", "-BPMockSlowUpgrade"])
         confirm.click()
-        let started = app.sheets.firstMatch.textViews.matching(
+        let started = app.sheets.firstMatch.staticTexts.matching(
             NSPredicate(format: "value CONTAINS 'MOCK_UPGRADE_STARTED'")
         ).firstMatch
         XCTAssertTrue(started.waitForExistence(timeout: 15))
         app.sheets.firstMatch.buttons["Cancel"].click()
-        let cancelling = app.sheets.firstMatch.textViews.matching(
+        let cancelling = app.sheets.firstMatch.staticTexts.matching(
             NSPredicate(format: "value CONTAINS 'MOCK_UPGRADE_CANCELLING'")
         ).firstMatch
         XCTAssertTrue(cancelling.waitForExistence(timeout: 10))
         XCTAssertFalse(app.sheets.firstMatch.buttons["OK"].isEnabled)
-        let output = app.sheets.firstMatch.textViews.matching(
+        let output = app.sheets.firstMatch.staticTexts.matching(
             NSPredicate(
                 format: "value CONTAINS 'Command cancelled; some packages may have changed: brew upgrade --formula mockgit' AND value CONTAINS 'Command not attempted: brew upgrade --cask mockchrome'"
             )
@@ -2557,7 +2444,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
     func testCheckForAppUpdatesMenuItemOpensUpdateWindowAndCloses() {
         launch(withArguments: ["-BPMockBrew"])
         app.menuBars.menuBarItems["Cakebrew"].click()
-        let checkItem = app.menuItems["menu.app.checkForUpdates"]
+        let checkItem = app.menuItems["Check for Updates…"]
         XCTAssertTrue(checkItem.waitForExistence(timeout: 10.0))
         checkItem.click()
 
@@ -2578,7 +2465,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         runDoctor.click()
 
         let doctorDone = NSPredicate(format: "value CONTAINS %@", "MOCK_DOCTOR_DONE")
-        let doctorOutput = app.textViews.matching(doctorDone).firstMatch
+        let doctorOutput = app.staticTexts.matching(doctorDone).firstMatch
         XCTAssertTrue(doctorOutput.waitForExistence(timeout: 15.0))
 
         let clearButton = app.buttons["Clear Log"]
@@ -2594,9 +2481,573 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         runUpdate.click()
 
         let updateDone = NSPredicate(format: "value CONTAINS %@", "MOCK_UPDATE_OK")
-        let updateOutput = app.textViews.matching(updateDone).firstMatch
+        let updateOutput = app.staticTexts.matching(updateDone).firstMatch
         XCTAssertTrue(updateOutput.waitForExistence(timeout: 15.0))
         app.buttons["Clear Log"].click()
         XCTAssertFalse(updateOutput.exists)
+    }
+}
+
+@MainActor
+final class CakebrewSwiftUIJourneyTests: XCTestCase, @unchecked Sendable {
+    private var app: XCUIApplication!
+
+    override func setUp() {
+        MainActor.assumeIsolated {
+        continueAfterFailure = false
+        app = XCUIApplication()
+        app.launchArguments = ["-NSTreatUnknownArgumentsAsOpen", "NO", "-BPMockBrew", "-BPLastSelectedSidebarRow", "1", "-BPBackgroundCheckEnabled", "NO"]
+        app.launch()
+        XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 10), "The navigation scene must open on launch")
+        let loaded = package("mockwget").waitForExistence(timeout: 30)
+        if !loaded { print(app.debugDescription) }
+        XCTAssertTrue(loaded)
+        }
+    }
+
+    override func tearDown() { MainActor.assumeIsolated { app.terminate() } }
+
+    private func package(_ name: String) -> XCUIElement {
+        let predicate = NSPredicate(format: "(elementType == %lu OR elementType == %lu) AND (value == %@ OR label == %@) AND NOT (identifier BEGINSWITH 'formula.')",
+            XCUIElement.ElementType.textField.rawValue, XCUIElement.ElementType.staticText.rawValue, name, name)
+        return app.descendants(matching: .any).matching(predicate).firstMatch
+    }
+
+    private func sidebarItem(_ identifier: String) -> XCUIElement {
+        app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+    }
+
+    func testNativeNavigationAndInspector() {
+        package("mockwget").click()
+        XCTAssertTrue(app.staticTexts["formula.detail.header"].waitForExistence(timeout: 5))
+        sidebarItem("sidebar.casks.installed").click()
+        XCTAssertTrue(package("mockchrome").waitForExistence(timeout: 10))
+        sidebarItem("sidebar.tools.services").click()
+        XCTAssertTrue(app.buttons["Start"].waitForExistence(timeout: 10))
+        let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        attachment.name = "SwiftUI Services"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
+    private func revealInInspector(_ element: XCUIElement) {
+        let inspector = app.scrollViews["formula.inspector"]
+        XCTAssertTrue(inspector.exists)
+        for _ in 0..<8 {
+            let frame = element.frame
+            let center = CGPoint(x: frame.midX, y: frame.midY)
+            if inspector.frame.contains(center), element.isHittable { return }
+            inspector.scroll(byDeltaX: 0, deltaY: -250)
+        }
+        if !element.isHittable {
+            print("Inspector target frame: \(element.frame); viewport: \(inspector.frame)")
+            print(app.debugDescription)
+            let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+            attachment.name = "Inspector Reachability Failure"
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
+        XCTAssertTrue(element.isHittable)
+    }
+
+    private func versionDisclosure(_ version: String) -> XCUIElement {
+        app.disclosureTriangles.matching(NSPredicate(format: "label BEGINSWITH %@", "Version \(version)")).firstMatch
+    }
+
+    private func openHistoricalVersionReview(cask: Bool = false) {
+        if cask {
+            sidebarItem("sidebar.casks.installed").click()
+            XCTAssertTrue(package("mockchrome").waitForExistence(timeout: 10))
+        }
+        package(cask ? "mockchrome" : "mockwget").click()
+        let history = app.disclosureTriangles["Version History"]
+        XCTAssertTrue(history.waitForExistence(timeout: 10))
+        revealInInspector(history)
+        history.click()
+        let release = versionDisclosure("0.9.0")
+        XCTAssertTrue(release.waitForExistence(timeout: 10))
+        revealInInspector(release)
+        release.click()
+        XCTAssertTrue(app.staticTexts["versionHistory.details"].waitForExistence(timeout: 10))
+        let install = app.buttons["versionHistory.install"]
+        revealInInspector(install)
+        XCTAssertTrue(install.isEnabled)
+        let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        attachment.name = "Version History Inspector"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        install.click()
+        XCTAssertTrue(app.buttons["versionHistory.confirm"].waitForExistence(timeout: 5))
+    }
+
+    private func launchPinnedHistory(missingReceipt: Bool = false) {
+        app.terminate()
+        app.launchArguments.append("-BPMockPinnedHistory")
+        if missingReceipt { app.launchArguments.append("-BPMockPinnedMissingReceipt") }
+        app.launch()
+        XCTAssertTrue(package("mockwget").waitForExistence(timeout: 30))
+        sidebarItem("sidebar.formulae.pinned").click()
+        XCTAssertTrue(package("mockwget@0.9.0").waitForExistence(timeout: 10))
+    }
+
+    func testPinnedFormulaReturnsToLatestWithoutOpeningOriginalPackage() {
+        launchPinnedHistory()
+        let action = app.buttons["pinned.returnLatest"]
+        XCTAssertTrue(action.waitForExistence(timeout: 5))
+        XCTAssertFalse(action.isEnabled, "A single pinned row must be selected")
+        package("mockwget@0.9.0").click()
+        XCTAssertTrue(action.isEnabled)
+        action.click()
+        let confirm = app.buttons["versionHistory.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.textFields["pinnedReturn.upstream"].exists, "Saved upstream identity needs no input")
+        let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        attachment.name = "Return Formula Directly from Pinned"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        confirm.click()
+        let result = app.descendants(matching: .any)["versionHistory.result"]
+        XCTAssertTrue(result.waitForExistence(timeout: 15))
+        XCTAssertTrue(result.label.contains("latest formula release is active and unpinned"))
+        app.buttons["versionHistory.close"].click()
+        XCTAssertTrue(package("mockwget@0.9.0").waitForNonExistence(timeout: 10))
+    }
+
+    func testPinnedCaskContextMenuReturnsToLatestWithoutOriginalPackage() {
+        launchPinnedHistory()
+        let cask = package("mockchrome")
+        XCTAssertTrue(cask.waitForExistence(timeout: 10))
+        cask.rightClick()
+        let action = app.menuItems["Return to Latest Release…"]
+        XCTAssertTrue(action.waitForExistence(timeout: 5))
+        action.click()
+        let confirm = app.buttons["versionHistory.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.textFields["pinnedReturn.upstream"].exists)
+        confirm.click()
+        let result = app.descendants(matching: .any)["versionHistory.result"]
+        XCTAssertTrue(result.waitForExistence(timeout: 15))
+        XCTAssertTrue(result.label.contains("latest cask release is installed and unpinned"))
+        let output = app.staticTexts["versionHistory.operationOutput"]
+        XCTAssertTrue((output.value as? String ?? output.label).contains("reinstall --cask homebrew/cask/mockchrome"))
+        app.buttons["versionHistory.close"].click()
+        XCTAssertTrue(package("mockchrome").waitForNonExistence(timeout: 10))
+    }
+
+    func testOrdinaryPinnedPackageCanResumeUpgradesDirectlyFromPinned() {
+        sidebarItem("sidebar.formulae.pinned").click()
+        let pinned = package("mockgit")
+        XCTAssertTrue(pinned.waitForExistence(timeout: 10))
+        pinned.click()
+        app.buttons["pinned.returnLatest"].click()
+        let confirm = app.buttons["versionHistory.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.textFields["pinnedReturn.upstream"].exists)
+        confirm.click()
+        let result = app.descendants(matching: .any)["versionHistory.result"]
+        XCTAssertTrue(result.waitForExistence(timeout: 15))
+        XCTAssertTrue(result.label.contains("latest formula release is active and unpinned"))
+        app.buttons["versionHistory.close"].click()
+        XCTAssertTrue(pinned.waitForNonExistence(timeout: 10))
+    }
+
+    func testPinnedLegacyFormulaDetectsUpstreamWithoutReceipt() {
+        launchPinnedHistory(missingReceipt: true)
+        package("mockwget@0.9.0").click()
+        app.buttons["pinned.returnLatest"].click()
+        let confirm = app.buttons["versionHistory.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.textFields["pinnedReturn.upstream"].exists)
+        XCTAssertTrue(confirm.isEnabled)
+        let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        attachment.name = "Automatically Detected Original Package"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        confirm.click()
+        let result = app.descendants(matching: .any)["versionHistory.result"]
+        XCTAssertTrue(result.waitForExistence(timeout: 15))
+        XCTAssertTrue(result.label.contains("latest formula release is active and unpinned"))
+        app.buttons["versionHistory.close"].click()
+    }
+
+    func testAmbiguousPinnedFormulaOffersOriginalPackageChooser() {
+        app.launchArguments.append("-BPMockPinnedAmbiguousOrigin")
+        launchPinnedHistory(missingReceipt: true)
+        package("mockwget@0.9.0").click()
+        app.buttons["pinned.returnLatest"].click()
+        let chooser = app.popUpButtons["pinnedReturn.candidates"]
+        XCTAssertTrue(chooser.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.textFields["pinnedReturn.upstream"].exists)
+        let confirm = app.buttons["versionHistory.confirm"]
+        XCTAssertFalse(confirm.isEnabled)
+        chooser.click()
+        XCTAssertTrue(app.menuItems["homebrew/core/mockwget"].waitForExistence(timeout: 5))
+        app.menuItems["homebrew/core/mockwget@1"].click()
+        XCTAssertTrue(confirm.isEnabled)
+        let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        attachment.name = "Choose Original Package"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        confirm.click()
+        let result = app.descendants(matching: .any)["versionHistory.result"]
+        XCTAssertTrue(result.waitForExistence(timeout: 15))
+        XCTAssertTrue(result.label.contains("latest formula release is active and unpinned"))
+        let output = app.staticTexts["versionHistory.operationOutput"]
+        XCTAssertTrue((output.value as? String ?? output.label).contains("install --formula --skip-link homebrew/core/mockwget@1"))
+        app.buttons["versionHistory.close"].click()
+    }
+
+    func testAmbiguousPinnedCaskOffersOriginalPackageChooser() {
+        app.launchArguments.append("-BPMockPinnedAmbiguousOrigin")
+        launchPinnedHistory(missingReceipt: true)
+        package("mockchrome").click()
+        app.buttons["pinned.returnLatest"].click()
+        let chooser = app.popUpButtons["pinnedReturn.candidates"]
+        XCTAssertTrue(chooser.waitForExistence(timeout: 10))
+        let confirm = app.buttons["versionHistory.confirm"]
+        XCTAssertFalse(confirm.isEnabled)
+        chooser.click()
+        XCTAssertTrue(app.menuItems["example/apps/mockchrome"].waitForExistence(timeout: 5))
+        app.menuItems["homebrew/cask/mockchrome"].click()
+        XCTAssertTrue(confirm.isEnabled)
+        confirm.click()
+        let result = app.descendants(matching: .any)["versionHistory.result"]
+        XCTAssertTrue(result.waitForExistence(timeout: 15))
+        XCTAssertTrue(result.label.contains("latest cask release is installed and unpinned"))
+        app.buttons["versionHistory.close"].click()
+    }
+
+    func testPinnedOriginWithoutCandidatesKeepsManualFallback() {
+        app.launchArguments.append("-BPMockPinnedNoOrigin")
+        launchPinnedHistory(missingReceipt: true)
+        package("mockwget@0.9.0").click()
+        app.buttons["pinned.returnLatest"].click()
+        let field = app.textFields["pinnedReturn.upstream"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.popUpButtons["pinnedReturn.candidates"].exists)
+        let confirm = app.buttons["versionHistory.confirm"]
+        XCTAssertFalse(confirm.isEnabled)
+        field.click()
+        field.typeText("homebrew/core/mockwget")
+        XCTAssertTrue(confirm.isEnabled)
+        app.buttons["versionHistory.close"].click()
+    }
+
+    func testPinnedLegacyCaskDetectsUpstreamWithoutReceipt() {
+        launchPinnedHistory(missingReceipt: true)
+        package("mockchrome").click()
+        app.buttons["pinned.returnLatest"].click()
+        let confirm = app.buttons["versionHistory.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.textFields["pinnedReturn.upstream"].exists)
+        XCTAssertTrue(confirm.isEnabled)
+        confirm.click()
+        let result = app.descendants(matching: .any)["versionHistory.result"]
+        XCTAssertTrue(result.waitForExistence(timeout: 15))
+        XCTAssertTrue(result.label.contains("latest cask release is installed and unpinned"))
+        let output = app.staticTexts["versionHistory.operationOutput"]
+        XCTAssertTrue((output.value as? String ?? output.label).contains("reinstall --cask homebrew/cask/mockchrome"))
+        app.buttons["versionHistory.close"].click()
+    }
+
+    private func openReturnLatestReview(cask: Bool = false) {
+        openHistoricalVersionReview(cask: cask)
+        app.buttons["versionHistory.confirm"].click()
+        XCTAssertTrue(app.descendants(matching: .any)["versionHistory.result"].waitForExistence(timeout: 15))
+        app.buttons["versionHistory.close"].click()
+        XCTAssertTrue(app.sheets.firstMatch.waitForNonExistence(timeout: 5))
+        let restore = app.buttons["versionHistory.returnLatest"]
+        XCTAssertTrue(restore.waitForExistence(timeout: 5))
+        revealInInspector(restore)
+        restore.click()
+        let confirm = app.buttons["versionHistory.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        XCTAssertEqual(confirm.label, "Unpin & Switch to Latest")
+        XCTAssertFalse(app.checkBoxes["versionHistory.makeActive"].exists)
+        let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        attachment.name = cask ? "Return Cask to Latest Review" : "Return Formula to Latest Review"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
+    func testReturnHistoricalFormulaToLatestUnpinsAndActivatesUpstream() {
+        openReturnLatestReview()
+        app.buttons["versionHistory.confirm"].click()
+        let result = app.descendants(matching: .any)["versionHistory.result"]
+        XCTAssertTrue(result.waitForExistence(timeout: 15))
+        XCTAssertTrue(result.label.contains("latest formula release is active and unpinned"))
+        let output = app.staticTexts["versionHistory.operationOutput"]
+        let text = output.value as? String ?? output.label
+        XCTAssertTrue(text.contains("MOCK_VERSION_COMMAND update"))
+        XCTAssertTrue(text.contains("MOCK_VERSION_COMMAND install --formula --skip-link homebrew/core/mockwget"))
+        XCTAssertTrue(text.contains("MOCK_VERSION_COMMAND link --force homebrew/core/mockwget"))
+        XCTAssertTrue(text.contains("MOCK_VERSION_COMMAND unpin --formula cakebrew/versions/mockwget@0.9.0"))
+        app.buttons["versionHistory.close"].click()
+    }
+
+    func testReturnHistoricalCaskToLatestReinstallsOriginalCaskUnpinned() {
+        openReturnLatestReview(cask: true)
+        app.buttons["versionHistory.confirm"].click()
+        let result = app.descendants(matching: .any)["versionHistory.result"]
+        XCTAssertTrue(result.waitForExistence(timeout: 15))
+        XCTAssertTrue(result.label.contains("latest cask release is installed and unpinned"))
+        let output = app.staticTexts["versionHistory.operationOutput"]
+        let text = output.value as? String ?? output.label
+        XCTAssertTrue(text.contains("MOCK_VERSION_COMMAND fetch --cask homebrew/cask/mockchrome"))
+        XCTAssertTrue(text.contains("MOCK_VERSION_COMMAND reinstall --cask homebrew/cask/mockchrome"))
+        XCTAssertTrue(text.contains("MOCK_VERSION_COMMAND unpin --cask cakebrew/history-"))
+        XCTAssertFalse(text.contains("--zap"))
+        app.buttons["versionHistory.close"].click()
+    }
+
+    func testReturnLatestFailureReportsRestorationInsteadOfSuccess() {
+        app.terminate()
+        app.launchArguments.append("-BPMockReturnLatestFailure")
+        app.launch()
+        XCTAssertTrue(package("mockwget").waitForExistence(timeout: 30))
+        openReturnLatestReview()
+        app.buttons["versionHistory.confirm"].click()
+        let result = app.descendants(matching: .any)["versionHistory.result"]
+        XCTAssertTrue(result.waitForExistence(timeout: 15))
+        XCTAssertTrue(result.label.contains("previous command links and pin policy were preserved or restored"))
+        app.buttons["versionHistory.close"].click()
+    }
+
+    func testVersionRowsExpandAndCollapseDetailsInline() {
+        package("mockwget").click()
+        let history = app.disclosureTriangles["Version History"]
+        XCTAssertTrue(history.waitForExistence(timeout: 10))
+        revealInInspector(history)
+        history.click()
+        let first = versionDisclosure("0.9.0")
+        XCTAssertTrue(first.waitForExistence(timeout: 10))
+        revealInInspector(first)
+        first.click()
+        let details = app.staticTexts["versionHistory.details"]
+        XCTAssertTrue(details.waitForExistence(timeout: 10))
+        XCTAssertLessThan(details.frame.minY, versionDisclosure("0.8.1").frame.minY,
+                          "Version information expands before the next release, rather than below the whole history")
+        revealInInspector(first)
+        first.click()
+        XCTAssertTrue(details.waitForNonExistence(timeout: 5))
+        let second = versionDisclosure("0.8.1")
+        revealInInspector(second)
+        second.click()
+        XCTAssertTrue(details.waitForExistence(timeout: 10))
+        XCTAssertEqual(details.value as? String ?? details.label, "Version 0.8.1")
+    }
+
+    func testHistoricalCaskReviewAndInstallUsesNativeCaskPin() {
+        openHistoricalVersionReview(cask: true)
+        XCTAssertFalse(app.checkBoxes["versionHistory.makeActive"].exists, "Casks replace the app rather than changing command links")
+        let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        attachment.name = "Historical Cask Install Review"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        app.buttons["versionHistory.confirm"].click()
+        let result = app.descendants(matching: .any)["versionHistory.result"]
+        XCTAssertTrue(result.waitForExistence(timeout: 15))
+        let output = app.staticTexts["versionHistory.operationOutput"]
+        XCTAssertTrue(output.waitForExistence(timeout: 5))
+        let text = output.value as? String ?? output.label
+        XCTAssertTrue(text.contains("MOCK_VERSION_COMMAND fetch --cask cakebrew/history-"))
+        XCTAssertTrue(text.contains("MOCK_VERSION_COMMAND reinstall --cask --require-sha cakebrew/history-"))
+        XCTAssertTrue(text.contains("MOCK_VERSION_COMMAND pin --cask cakebrew/history-"))
+        XCTAssertFalse(text.contains("--zap"))
+        XCTAssertFalse(text.contains("MOCK_VERSION_COMMAND extract"))
+        XCTAssertTrue(result.label.contains("installed and pinned"))
+        app.buttons["versionHistory.close"].click()
+    }
+
+    func testVersionHistoryShowsInformationAndInstallReview() {
+        openHistoricalVersionReview()
+        let activate = app.checkBoxes["versionHistory.makeActive"]
+        XCTAssertTrue(activate.exists)
+        let checked = (activate.value as? NSNumber)?.intValue ?? Int(activate.value as? String ?? "")
+        XCTAssertEqual(checked, 0, "Installing history preserves the current command links by default")
+        let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        attachment.name = "Historical Version Install Review"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        app.buttons["versionHistory.close"].click()
+        XCTAssertTrue(app.sheets.firstMatch.waitForNonExistence(timeout: 5))
+        package("mockgit").click()
+        XCTAssertFalse(versionDisclosure("0.9.0").exists, "A different package starts with its history collapsed")
+    }
+
+    func testHistoricalInstallPinsTheSelectedVersionAfterInstalling() {
+        openHistoricalVersionReview()
+        app.buttons["versionHistory.confirm"].click()
+        let result = app.descendants(matching: .any)["versionHistory.result"]
+        XCTAssertTrue(result.waitForExistence(timeout: 15))
+        let output = app.staticTexts["versionHistory.operationOutput"]
+        XCTAssertTrue(output.waitForExistence(timeout: 5))
+        let text = output.value as? String ?? output.label
+        XCTAssertTrue(text.contains("MOCK_VERSION_COMMAND install --formula --skip-link cakebrew/versions/mockwget@0.9.0"))
+        XCTAssertTrue(text.contains("MOCK_VERSION_COMMAND pin cakebrew/versions/mockwget@0.9.0"))
+        XCTAssertFalse(text.contains("MOCK_VERSION_COMMAND unlink"))
+        app.buttons["versionHistory.close"].click()
+        XCTAssertTrue(app.sheets.firstMatch.waitForNonExistence(timeout: 5))
+    }
+
+    func testHistoricalInstallFailureDoesNotPinOrChangeLinks() {
+        app.terminate()
+        app.launchArguments.append("-BPMockVersionInstallFailure")
+        app.launch()
+        XCTAssertTrue(package("mockwget").waitForExistence(timeout: 30))
+        openHistoricalVersionReview()
+        app.buttons["versionHistory.confirm"].click()
+        let result = app.descendants(matching: .any)["versionHistory.result"]
+        XCTAssertTrue(result.waitForExistence(timeout: 15))
+        let output = app.staticTexts["versionHistory.operationOutput"]
+        XCTAssertTrue(output.waitForExistence(timeout: 5))
+        let text = output.value as? String ?? output.label
+        XCTAssertTrue(text.contains("MOCK_VERSION_COMMAND install"))
+        XCTAssertFalse(text.contains("MOCK_VERSION_COMMAND pin"))
+        XCTAssertFalse(text.contains("MOCK_VERSION_COMMAND unlink"))
+        let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        attachment.name = "Historical Version Failure"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        app.buttons["versionHistory.close"].click()
+        XCTAssertTrue(app.sheets.firstMatch.waitForNonExistence(timeout: 5))
+    }
+
+    func testSearchRestoresTheSelectedSection() {
+        sidebarItem("sidebar.casks.installed").click()
+        XCTAssertTrue(package("mockchrome").waitForExistence(timeout: 10))
+        app.typeKey("f", modifierFlags: .command)
+        let search = app.searchFields.firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        app.activate()
+        app.typeText("mockwget")
+        XCTAssertTrue(package("mockwget").waitForExistence(timeout: 10))
+        search.typeKey(.delete, modifierFlags: [])
+        XCTAssertEqual(search.value as? String, "mockwge", "Backspace must edit the query")
+        search.typeText("t")
+        search.typeKey("a", modifierFlags: .command)
+        search.typeKey(.delete, modifierFlags: [])
+        XCTAssertEqual(search.value as? String, "", "Search must retain keyboard focus while results update")
+        XCTAssertTrue(package("mockchrome").waitForExistence(timeout: 10))
+    }
+
+    func testToolbarSearchDoesNotMoveWhenSelectingPackages() {
+        let search = app.searchFields.firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 10))
+        package("mockwget").click()
+        let baseline = search.frame
+        print("SEARCH BASELINE \(baseline)")
+        for name in ["mockgit", "mockwget", "mockgit", "mockwget"] {
+            package(name).click()
+            let frame = search.frame
+            print("SEARCH AFTER \(name) \(frame)")
+            XCTAssertTrue(app.buttons["Uninstall…"].isEnabled)
+            XCTAssertEqual(app.buttons["Upgrade…"].isEnabled, name == "mockgit",
+                           "Action enablement must track selection without rebuilding the toolbar")
+            XCTAssertEqual(frame.minX, baseline.minX, accuracy: 1, "Selection must not move toolbar search")
+            XCTAssertEqual(frame.width, baseline.width, accuracy: 1, "Selection must not resize toolbar search")
+        }
+    }
+
+    func testToolbarSearchStaysWithinPackageColumn() {
+        package("mockwget").click()
+        let window = app.windows.firstMatch
+        for width in [1280.0, 800.0] {
+            let corner = window.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 1))
+                .withOffset(CGVector(dx: -2, dy: -2))
+            let destination = window.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: width - 2, dy: 738))
+            corner.press(forDuration: 0.1, thenDragTo: destination)
+            XCTAssertGreaterThanOrEqual(window.frame.width, 1049,
+                                        "The window must include the main view and the open inspector")
+            let search = app.searchFields.firstMatch
+            XCTAssertTrue(search.waitForExistence(timeout: 5))
+            XCTAssertTrue(search.isHittable)
+            let layout = XCTAttachment(screenshot: window.screenshot())
+            layout.name = "Toolbar Columns \(Int(window.frame.width))"
+            layout.lifetime = .keepAlways
+            add(layout)
+            for label in ["Uninstall…", "Package Inspector", "Refresh"] {
+                let action = app.buttons[label == "Package Inspector" ? "workspace.toggleInspector" : label]
+                if !action.isHittable { print(app.debugDescription) }
+                XCTAssertTrue(action.isHittable, "\(label) must remain available at \(width) points")
+                XCTAssertFalse(search.frame.intersects(action.frame), "Search overlaps \(label) at \(width) points")
+            }
+            XCTAssertTrue(app.staticTexts["formula.detail.header"].exists)
+            let packageList = app.outlines["Formulae"]
+            XCTAssertTrue(packageList.exists)
+            XCTAssertLessThanOrEqual(search.frame.maxX, packageList.frame.maxX + 1,
+                                     "Toolbar search must stay to the left of the inspector at \(width) points")
+            app.activate()
+            app.typeKey("f", modifierFlags: .command)
+            search.click()
+            XCTAssertLessThanOrEqual(search.frame.maxX, packageList.frame.maxX + 1,
+                                     "Focused search must stay outside the inspector at \(width) points")
+            let attachment = XCTAttachment(screenshot: window.screenshot())
+            attachment.name = "Toolbar Search \(Int(window.frame.width))"
+            attachment.lifetime = .keepAlways
+            add(attachment)
+            search.typeKey(.escape, modifierFlags: [])
+        }
+        app.buttons["workspace.toggleInspector"].click()
+        XCTAssertTrue(app.staticTexts["formula.detail.header"].waitForNonExistence(timeout: 5))
+        let corner = window.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 1))
+            .withOffset(CGVector(dx: -2, dy: -2))
+        corner.press(forDuration: 0.1, thenDragTo: window.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: 798, dy: 738)))
+        XCTAssertEqual(window.frame.width, 800, accuracy: 3, "Hiding the inspector permits a narrow window")
+        XCTAssertTrue(app.searchFields.firstMatch.isHittable)
+    }
+
+    func testCommandPaletteCanOpenAnOperationPreview() {
+        app.activate()
+        app.typeKey("k", modifierFlags: .command)
+        let query = app.textFields["commandPalette.searchField"]
+        XCTAssertTrue(query.waitForExistence(timeout: 10))
+        query.click()
+        query.typeText("Remove Unused Dependencies")
+        app.buttons["commandPalette.run"].click()
+        XCTAssertTrue(app.buttons["autoremove.remove"].waitForExistence(timeout: 10))
+        app.buttons["autoremove.cancel"].click()
+        XCTAssertTrue(app.sheets.firstMatch.waitForNonExistence(timeout: 10))
+    }
+
+    func testCloseAndReopenMainWindow() {
+        app.typeKey("w", modifierFlags: .command)
+        XCTAssertTrue(app.windows.firstMatch.waitForNonExistence(timeout: 5))
+        app.typeKey("0", modifierFlags: .command)
+        XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(package("mockwget").waitForExistence(timeout: 10))
+    }
+
+    func testLightAndDarkAppearances() {
+        for style in ["Light", "Dark"] {
+            app.terminate()
+            app.launchArguments = ["-NSTreatUnknownArgumentsAsOpen", "NO", "-BPMockBrew", "-BPLastSelectedSidebarRow", "1", "-BPBackgroundCheckEnabled", "NO", "-BPUITestAppearance", style]
+            app.launch()
+            XCTAssertTrue(package("mockwget").waitForExistence(timeout: 30))
+            package("mockwget").click()
+            let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+            attachment.name = "SwiftUI Main Window " + style
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
+    }
+
+    func testNativeSettingsAndMainWindowScreenshot() {
+        let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        attachment.name = "SwiftUI Main Window"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        app.activate()
+        app.typeKey(",", modifierFlags: .command)
+        let menuBarToggle = app.descendants(matching: .any).matching(identifier: "settings.menuBar").firstMatch
+        XCTAssertTrue(menuBarToggle.waitForExistence(timeout: 10))
+        XCTAssertTrue(menuBarToggle.isHittable)
+        XCTAssertFalse(app.buttons["Install Helper…"].exists, "Direct Homebrew access does not require a helper")
+        let settings = XCTAttachment(screenshot: app.windows["Cakebrew Settings"].screenshot())
+        settings.name = "SwiftUI Settings"
+        settings.lifetime = .keepAlways
+        add(settings)
     }
 }

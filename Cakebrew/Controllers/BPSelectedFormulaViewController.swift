@@ -9,7 +9,6 @@ public protocol BPSelectedFormulaViewControllerDelegate: NSObjectProtocol {
     @objc(selectedFormulaViewDidUpdateFormulaInfoForFormula:)
     func selectedFormulaViewDidUpdateFormulaInfo(forFormula formula: Any?)
     @objc optional func selectedFormulaViewDidRequestSelectRelatedFormulaNamed(_ formulaName: String)
-    @objc optional func selectedFormulaViewDidRequestShowMoreInformation()
     @objc optional func selectedFormulaViewDidRequestOpenWebsite()
 }
 
@@ -107,10 +106,6 @@ public final class BPSelectedFormulaViewController: NSViewController {
             guard let self, !packageName.isEmpty else { return }
             self.delegate?.selectedFormulaViewDidRequestSelectRelatedFormulaNamed?(packageName)
         }
-        host.onShowMoreInfo = { [weak self] in
-            guard let self else { return }
-            self.delegate?.selectedFormulaViewDidRequestShowMoreInformation?()
-        }
         host.onOpenWebsite = { [weak self] in
             guard let self else { return }
             self.delegate?.selectedFormulaViewDidRequestOpenWebsite?()
@@ -182,7 +177,7 @@ public final class BPSelectedFormulaViewController: NSViewController {
 
         let name = formula.name ?? ""
         let cask = formula.cask
-        let pinned = !cask && (bpSharedHomebrewManager()?.isFormulaPinned(firstObj as AnyObject) ?? false)
+        let pinned = (bpSharedHomebrewManager()?.isFormulaPinned(firstObj as AnyObject) ?? false)
         let generation = activeInspectorHost?.beginSelection(
             withName: name,
             cask: cask,
@@ -195,6 +190,9 @@ public final class BPSelectedFormulaViewController: NSViewController {
             shortDescription: formula.shortDescription
         ) ?? 0
 
+        if customInspectorHost == nil {
+            inspectorHost?.receiveInformation(formula.information, name: name, cask: cask)
+        }
         delegate?.selectedFormulaViewDidUpdateFormulaInfo(forFormula: firstObj)
 
         let provider = self.dependentsProvider
@@ -234,7 +232,7 @@ public final class BPSelectedFormulaViewController: NSViewController {
                    (updated.cask != formula.cask || updated.name != formula.name) {
                     return
                 }
-                let pinned = !formula.cask && (bpSharedHomebrewManager()?.isFormulaPinned(firstObj as AnyObject) ?? false)
+                let pinned = (bpSharedHomebrewManager()?.isFormulaPinned(firstObj as AnyObject) ?? false)
                 self.activeInspectorHost?.updateSelection(
                     withName: formula.name ?? "",
                     cask: formula.cask,
@@ -246,6 +244,9 @@ public final class BPSelectedFormulaViewController: NSViewController {
                     conflicts: formula.conflicts,
                     shortDescription: formula.shortDescription
                 )
+                if self.customInspectorHost == nil {
+                    self.inspectorHost?.receiveInformation(formula.information, name: formula.name ?? "", cask: formula.cask)
+                }
                 self.delegate?.selectedFormulaViewDidUpdateFormulaInfo(forFormula: firstObj)
             }
         }

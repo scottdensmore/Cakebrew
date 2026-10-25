@@ -27,6 +27,7 @@ private final class BPUnifiedUpdatesPresentation: ObservableObject {
 @MainActor
 @objc(BPUnifiedUpdatesHost)
 public final class BPUnifiedUpdatesHost: NSObject {
+    public var content: some View { BPUnifiedUpdatesView(presentation: presentation) }
     private let presentation = BPUnifiedUpdatesPresentation()
     @objc public let viewController: NSViewController
 
