@@ -23,7 +23,10 @@ part of your usual Homebrew setup.
 ## Meet your packages
 
 - **Browse and discover.** Search formulae and casks, explore the catalog, or focus
-  on installed, outdated, pinned, and leaf formulae. Manage your taps from Repositories.
+  on installed, outdated, pinned, and leaf formulae. Package rows show cached
+  descriptions, clear version information, and update or pin status. Choose
+  **View ▸ Compact Package Rows** when you want a denser list. Manage your taps
+  from Repositories.
 - **Install and update.** Install, remove, and upgrade packages, with formula build
   options when available. Review outdated formulae and casks together in Updates,
   then upgrade selected packages or all eligible packages. Pinned packages are excluded.

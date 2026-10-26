@@ -584,3 +584,19 @@
 
 "Choose the original package to return to. Cakebrew found these possible matches." = "请选择要恢复的原始软件包。Cakebrew 找到了以下可能的匹配项。";
 "Choose a Package…" = "选择软件包…";
+
+"Clear search" = "清除搜索";
+
+"Compact Package Rows" = "紧凑软件包行";
+
+"Homebrew repository" = "Homebrew 仓库";
+
+"Formula" = "配方";
+
+"Cask" = "Cask";
+
+"Update available" = "有可用更新";
+
+/* Sidebar toolbar toggle */
+"Show Sidebar" = "显示边栏";
+"Hide Sidebar" = "隐藏边栏";

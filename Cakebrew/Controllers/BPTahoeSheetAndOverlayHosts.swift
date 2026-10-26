@@ -2840,9 +2840,26 @@ private struct BPStatusBarView: View {
 // MARK: - SwiftUI Tahoe Sidebar Host & Operation Accessory Cards
 
 @MainActor
-private final class BPSidebarPresentation: ObservableObject {
-    @Published var state = BPSidebarState()
+final class BPSidebarPresentation: ObservableObject {
+    @Published var state = BPSidebarState() {
+        didSet { selectionGeneration &+= 1 }
+    }
+    private var selectionGeneration: UInt64 = 0
     var onSelectRow: ((Int) -> Void)?
+
+    // List can reconcile selection while rendering. Navigation must publish its
+    // package, inspector and status models after that view update has finished.
+    func selectFromList(_ row: Int?) {
+        guard let row else { return }
+        selectionGeneration &+= 1
+        let generation = selectionGeneration
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.selectionGeneration == generation,
+                  self.state.selectedRowIndex != row else { return }
+            self.state.selectedRowIndex = row
+            self.onSelectRow?(row)
+        }
+    }
 }
 
 @MainActor
@@ -2930,11 +2947,7 @@ private struct BPSidebarView: View {
     var body: some View {
         List(selection: Binding<Int?>(
             get: { presentation.state.selectedRowIndex },
-            set: { value in
-                guard let value else { return }
-                presentation.state.selectedRowIndex = value
-                presentation.onSelectRow?(value)
-            }
+            set: { presentation.selectFromList($0) }
         )) {
             ForEach(presentation.state.sections) { section in
                 Section(section.title) {

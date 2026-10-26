@@ -859,13 +859,13 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
                 formulaCell(withName: "mockvscode").waitForExistence(timeout: 15.0),
                 "the journey must observe real search results before routing the notification"
             )
-            XCTAssertEqual(stringValue(of: app.searchFields.firstMatch), "mockvscode")
+            XCTAssertEqual(stringValue(of: app.textFields["workspace.search"]), "mockvscode")
             clickNotificationTestMenuItem("Open Mock Notification")
         }
 
         assertSelectedSidebarIdentifier(identifier)
         XCTAssertEqual(
-            stringValue(of: app.searchFields.firstMatch),
+            stringValue(of: app.textFields["workspace.search"]),
             "",
             "notification navigation should clear the search field"
         )
@@ -1399,7 +1399,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
         // Queue and clear within one main event, before the 150 ms debounce fires.
         // The mock menu drives the toolbar text-change path without keyboard focus.
         clickNotificationTestMenuItem("Search Then Clear Mock Search")
-        XCTAssertEqual(stringValue(of: app.searchFields.firstMatch), "")
+        XCTAssertEqual(stringValue(of: app.textFields["workspace.search"]), "")
         let noLateSearch = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "exists == YES"),
             object: formulaCell(withName: "mockvscode")
@@ -1415,7 +1415,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
             "clearing before debounce must not display late search results"
         )
         assertSelectedSidebarIdentifier("sidebar.formulae.installed")
-        XCTAssertEqual(stringValue(of: app.searchFields.firstMatch), "")
+        XCTAssertEqual(stringValue(of: app.textFields["workspace.search"]), "")
         XCTAssertTrue(formulaCell(withName: "mockwget").exists)
         XCTAssertTrue(formulaCell(withName: "mockgit").exists)
         XCTAssertFalse(formulaCell(withName: "mockvscode").exists)
@@ -1441,7 +1441,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
 
         // The existing mock menu drives the same search entry point without typing,
         // which needs a key window unavailable on CI.
-        let searchField = app.searchFields.firstMatch
+        let searchField = app.textFields["workspace.search"]
         XCTAssertTrue(searchField.waitForExistence(timeout: 15.0), "the toolbar should offer a search field")
         clickNotificationTestMenuItem("Search Mock Packages")
         // mockvscode was already in All Casks. Wait for a nonmatching cask to
@@ -1924,7 +1924,7 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
             "the mock data should load"
         )
 
-        let searchField = app.searchFields.firstMatch
+        let searchField = app.textFields["workspace.search"]
         let exists = searchField.waitForExistence(timeout: 15.0)
         if !exists {
             NSLog("CAKEBREW_UI_TREE_BEGIN\n%@\nCAKEBREW_UI_TREE_END", app.debugDescription)
@@ -2491,11 +2491,16 @@ final class CakebrewUITests: XCTestCase, @unchecked Sendable {
 @MainActor
 final class CakebrewSwiftUIJourneyTests: XCTestCase, @unchecked Sendable {
     private var app: XCUIApplication!
+    private var searchLayoutLog: URL!
 
     override func setUp() {
         MainActor.assumeIsolated {
         continueAfterFailure = false
         app = XCUIApplication()
+        searchLayoutLog = FileManager.default.temporaryDirectory.appendingPathComponent("cakebrew-search-\(UUID().uuidString).log")
+        if name.contains("testToolbarSearchDoesNotMoveWhenSelectingPackages") {
+            app.launchEnvironment["BPUITestSearchLayoutLog"] = searchLayoutLog.path
+        }
         app.launchArguments = ["-NSTreatUnknownArgumentsAsOpen", "NO", "-BPMockBrew", "-BPLastSelectedSidebarRow", "1", "-BPBackgroundCheckEnabled", "NO"]
         app.launch()
         XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 10), "The navigation scene must open on launch")
@@ -2505,7 +2510,12 @@ final class CakebrewSwiftUIJourneyTests: XCTestCase, @unchecked Sendable {
         }
     }
 
-    override func tearDown() { MainActor.assumeIsolated { app.terminate() } }
+    override func tearDown() {
+        MainActor.assumeIsolated {
+            app.terminate()
+            if let searchLayoutLog { try? FileManager.default.removeItem(at: searchLayoutLog) }
+        }
+    }
 
     private func package(_ name: String) -> XCUIElement {
         let predicate = NSPredicate(format: "(elementType == %lu OR elementType == %lu) AND (value == %@ OR label == %@) AND NOT (identifier BEGINSWITH 'formula.')",
@@ -2515,6 +2525,59 @@ final class CakebrewSwiftUIJourneyTests: XCTestCase, @unchecked Sendable {
 
     private func sidebarItem(_ identifier: String) -> XCUIElement {
         app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+    }
+
+    func testPackageBrowserDensityAndCachedDescription() {
+        let summary = app.staticTexts["package.summary.mockwget"]
+        XCTAssertTrue(summary.waitForExistence(timeout: 10))
+        package("mockwget").click()
+        XCTAssertTrue(app.staticTexts["formula.detail.header"].waitForExistence(timeout: 10))
+        XCTAssertEqual(summary.value as? String ?? summary.label, "A mock formula used for Cakebrew UI tests.")
+        let comfortableSpacing = abs(package("mockgit").frame.minY - package("mockwget").frame.minY)
+        XCTAssertGreaterThan(comfortableSpacing, 40)
+        app.menuBars.menuBarItems["View"].click()
+        app.menuItems["Compact Package Rows"].click()
+        XCTAssertTrue(summary.waitForNonExistence(timeout: 5))
+        let selectedRow = app.outlines["Formulae"].outlineRows.containing(.any, identifier: "package.row.mockwget").firstMatch
+        XCTAssertTrue(selectedRow.isSelected, "Changing density must preserve the selected package")
+        XCTAssertTrue(app.staticTexts["formula.detail.header"].exists)
+        let compactSpacing = abs(package("mockgit").frame.minY - package("mockwget").frame.minY)
+        XCTAssertLessThan(compactSpacing, comfortableSpacing)
+        app.menuBars.menuBarItems["View"].click()
+        app.menuItems["Compact Package Rows"].click()
+        XCTAssertTrue(summary.waitForExistence(timeout: 5))
+        package("mockwget").click()
+        XCTAssertTrue(app.staticTexts["formula.detail.description"].waitForExistence(timeout: 10))
+        XCTAssertEqual(summary.value as? String ?? summary.label, "A mock formula used for Cakebrew UI tests.", "Cached descriptions must survive a density change")
+        let screenshot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        screenshot.name = "Package Browser Comfortable Rows"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+        sidebarItem("sidebar.formulae.all").click()
+        let updateStatus = app.descendants(matching: .any).matching(identifier: "package.status.mockgit").firstMatch
+        XCTAssertTrue(updateStatus.waitForExistence(timeout: 10))
+        XCTAssertEqual(updateStatus.value as? String ?? updateStatus.label, "Update available")
+    }
+
+    func testSidebarCollapseKeepsOneToolbarToggle() {
+        package("mockwget").click()
+        let toolbar = app.toolbars.firstMatch
+        let toggle = toolbar.buttons["workspace.toggleSidebar"]
+        let sidebarButtons = toolbar.buttons.matching(NSPredicate(
+            format: "label == 'Show Sidebar' OR label == 'Hide Sidebar'"))
+
+        for _ in 0..<3 {
+            XCTAssertEqual(sidebarButtons.count, 1)
+            XCTAssertEqual(toggle.label, "Hide Sidebar")
+            toggle.click()
+            XCTAssertTrue(sidebarItem("sidebar.formulae.installed").waitForNonExistence(timeout: 5))
+            XCTAssertEqual(sidebarButtons.count, 1, "Collapsing must not add another sidebar button")
+            XCTAssertEqual(toggle.label, "Show Sidebar")
+            XCTAssertTrue(app.textFields["workspace.search"].isHittable)
+            XCTAssertEqual(toolbar.buttons.matching(identifier: "workspace.toggleInspector").count, 1)
+            toggle.click()
+            XCTAssertTrue(sidebarItem("sidebar.formulae.installed").waitForExistence(timeout: 5))
+        }
     }
 
     func testNativeNavigationAndInspector() {
@@ -2917,10 +2980,11 @@ final class CakebrewSwiftUIJourneyTests: XCTestCase, @unchecked Sendable {
         sidebarItem("sidebar.casks.installed").click()
         XCTAssertTrue(package("mockchrome").waitForExistence(timeout: 10))
         app.typeKey("f", modifierFlags: .command)
-        let search = app.searchFields.firstMatch
+        let search = app.textFields["workspace.search"]
         XCTAssertTrue(search.waitForExistence(timeout: 5))
         app.activate()
         app.typeText("mockwget")
+        XCTAssertEqual(search.value as? String, "mockwget", "Command-F must focus the toolbar field")
         XCTAssertTrue(package("mockwget").waitForExistence(timeout: 10))
         search.typeKey(.delete, modifierFlags: [])
         XCTAssertEqual(search.value as? String, "mockwge", "Backspace must edit the query")
@@ -2929,13 +2993,23 @@ final class CakebrewSwiftUIJourneyTests: XCTestCase, @unchecked Sendable {
         search.typeKey(.delete, modifierFlags: [])
         XCTAssertEqual(search.value as? String, "", "Search must retain keyboard focus while results update")
         XCTAssertTrue(package("mockchrome").waitForExistence(timeout: 10))
+        app.typeText("mockgit")
+        XCTAssertEqual(search.value as? String, "mockgit")
+        app.buttons["Clear search"].click()
+        XCTAssertEqual(search.value as? String, "")
+        app.typeText("mockwget")
+        XCTAssertEqual(search.value as? String, "mockwget", "The clear button must return focus to search")
+        search.typeKey(.escape, modifierFlags: [])
+        XCTAssertEqual(search.value as? String, "", "Escape must clear the query")
+        XCTAssertTrue(package("mockchrome").waitForExistence(timeout: 10))
     }
 
     func testToolbarSearchDoesNotMoveWhenSelectingPackages() {
-        let search = app.searchFields.firstMatch
+        let search = app.textFields["workspace.search"]
         XCTAssertTrue(search.waitForExistence(timeout: 10))
         package("mockwget").click()
         let baseline = search.frame
+        let initialSamples = (try? String(contentsOf: searchLayoutLog, encoding: .utf8))?.split(separator: "\n").count ?? 0
         print("SEARCH BASELINE \(baseline)")
         for name in ["mockgit", "mockwget", "mockgit", "mockwget"] {
             package(name).click()
@@ -2947,6 +3021,72 @@ final class CakebrewSwiftUIJourneyTests: XCTestCase, @unchecked Sendable {
             XCTAssertEqual(frame.minX, baseline.minX, accuracy: 1, "Selection must not move toolbar search")
             XCTAssertEqual(frame.width, baseline.width, accuracy: 1, "Selection must not resize toolbar search")
         }
+        let trace = (try? String(contentsOf: searchLayoutLog, encoding: .utf8)) ?? ""
+        let attachment = XCTAttachment(string: trace)
+        attachment.name = "Search positions during package selection"
+        add(attachment)
+        let samples = trace.split(separator: "\n")
+        XCTAssertFalse(samples.isEmpty, "The in-app recorder must observe the native toolbar search field")
+        let reference = samples.prefix(initialSamples).last?.split(separator: ",").compactMap { Double($0) } ?? []
+        XCTAssertEqual(reference.count, 2)
+        for sample in samples.dropFirst(initialSamples) {
+            let values = sample.split(separator: ",").compactMap { Double($0) }
+            guard values.count == 2, reference.count == 2 else { return XCTFail("Invalid search layout trace") }
+            XCTAssertEqual(values[0], reference[0], accuracy: 1, "Search moved during selection, before XCTest waited for idle: \(trace)")
+            XCTAssertEqual(values[1], reference[1], accuracy: 1, "Search resized during selection: \(trace)")
+        }
+    }
+
+    func testPackageInspectorCanBeResized() throws {
+        let window = app.windows.firstMatch
+        let corner = window.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 1))
+            .withOffset(CGVector(dx: -2, dy: -2))
+        corner.press(forDuration: 0.1, thenDragTo: window.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: 1598, dy: 738)))
+        let inspector = app.scrollViews["formula.inspector"]
+        XCTAssertTrue(inspector.waitForExistence(timeout: 5))
+        let inspectorDivider = try XCTUnwrap(window.descendants(matching: .splitter)
+            .allElementsBoundByIndex.max { $0.frame.minX < $1.frame.minX })
+
+        func inspectorWidth() -> CGFloat {
+            window.frame.maxX - inspectorDivider.frame.minX
+        }
+
+        func resizeInspector(to width: CGFloat) -> CGFloat {
+            let previousWidth = inspectorWidth()
+            let origin = window.coordinate(withNormalizedOffset: .zero)
+            let divider = origin.withOffset(CGVector(
+                dx: inspectorDivider.frame.minX - window.frame.minX,
+                dy: inspector.frame.midY - window.frame.minY))
+            let destination = origin.withOffset(CGVector(
+                dx: window.frame.width - width,
+                dy: inspector.frame.midY - window.frame.minY))
+            divider.press(forDuration: 0.1, thenDragTo: destination)
+            // AppKit can constrain the requested width to preserve the main
+            // column's minimum. Require substantial movement in the right direction.
+            expectation(for: NSPredicate { _, _ in
+                width > previousWidth
+                    ? inspectorWidth() >= previousWidth + 40
+                    : inspectorWidth() <= previousWidth - 40
+            }, evaluatedWith: inspectorDivider)
+            waitForExpectations(timeout: 5)
+            let actualWidth = inspectorWidth()
+            XCTAssertGreaterThanOrEqual(actualWidth, 249)
+            XCTAssertLessThanOrEqual(actualWidth, 601)
+            XCTAssertLessThanOrEqual(app.textFields["workspace.search"].frame.maxX,
+                                     inspectorDivider.frame.minX + 1)
+            return actualWidth
+        }
+
+        // The column must resize both before and after loading package details.
+        _ = resizeInspector(to: 400)
+        package("mockwget").click()
+        XCTAssertTrue(app.staticTexts["formula.detail.header"].waitForExistence(timeout: 5))
+        _ = resizeInspector(to: 520)
+        let chosenWidth = resizeInspector(to: 280)
+        package("mockgit").click()
+        XCTAssertEqual(inspectorWidth(), chosenWidth, accuracy: 8,
+                       "Changing packages must preserve the chosen inspector width")
     }
 
     func testToolbarSearchStaysWithinPackageColumn() {
@@ -2960,7 +3100,7 @@ final class CakebrewSwiftUIJourneyTests: XCTestCase, @unchecked Sendable {
             corner.press(forDuration: 0.1, thenDragTo: destination)
             XCTAssertGreaterThanOrEqual(window.frame.width, 1049,
                                         "The window must include the main view and the open inspector")
-            let search = app.searchFields.firstMatch
+            let search = app.textFields["workspace.search"]
             XCTAssertTrue(search.waitForExistence(timeout: 5))
             XCTAssertTrue(search.isHittable)
             let layout = XCTAttachment(screenshot: window.screenshot())
@@ -2996,7 +3136,7 @@ final class CakebrewSwiftUIJourneyTests: XCTestCase, @unchecked Sendable {
         corner.press(forDuration: 0.1, thenDragTo: window.coordinate(withNormalizedOffset: .zero)
             .withOffset(CGVector(dx: 798, dy: 738)))
         XCTAssertEqual(window.frame.width, 800, accuracy: 3, "Hiding the inspector permits a narrow window")
-        XCTAssertTrue(app.searchFields.firstMatch.isHittable)
+        XCTAssertTrue(app.textFields["workspace.search"].isHittable)
     }
 
     func testCommandPaletteCanOpenAnOperationPreview() {
@@ -3027,7 +3167,12 @@ final class CakebrewSwiftUIJourneyTests: XCTestCase, @unchecked Sendable {
             app.launch()
             XCTAssertTrue(package("mockwget").waitForExistence(timeout: 30))
             package("mockwget").click()
-            let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+            let window = app.windows.firstMatch
+            let corner = window.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 1))
+                .withOffset(CGVector(dx: -2, dy: -2))
+            corner.press(forDuration: 0.1, thenDragTo: window.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: 1278, dy: 738)))
+            let attachment = XCTAttachment(screenshot: window.screenshot())
             attachment.name = "SwiftUI Main Window " + style
             attachment.lifetime = .keepAlways
             add(attachment)

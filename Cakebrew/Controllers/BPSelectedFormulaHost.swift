@@ -288,7 +288,7 @@ private struct BPSelectedFormulaInspectorView: View {
                         .foregroundStyle(.secondary)
                     Text(selectionTitle)
                         .font(.title2.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.primary)
                         .accessibilityAddTraits(.isHeader)
                         .accessibilityIdentifier("formula.detail.header")
                     Spacer()
@@ -449,11 +449,7 @@ private struct BPSelectedFormulaInspectorView: View {
                 }
             }
             .padding(20)
-            .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.primary.opacity(0.03))
-            )
-            .padding(12)
+
             .frame(maxWidth: .infinity, alignment: .topLeading)
             }
         }
@@ -471,7 +467,7 @@ private struct BPSelectedFormulaInspectorView: View {
             Text(title)
                 .font(.caption.weight(.medium))
                 .foregroundStyle(.secondary)
-                .gridColumnAlignment(.trailing)
+                .gridColumnAlignment(.leading)
             Text(value)
                 .font(.body)
                 .foregroundStyle(.primary)

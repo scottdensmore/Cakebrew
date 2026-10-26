@@ -343,6 +343,105 @@ final class BPFormulaInformationLifecycleTests: XCTestCase, @unchecked Sendable 
         XCTAssertTrue(inspectorHost.isEmpty)
     }
 
+    func testSidebarSelectionDefersNavigationAndIgnoresUnchangedRows() {
+        let presentation = BPSidebarPresentation()
+        presentation.state.selectedRowIndex = 1
+        var events: [Int] = []
+        presentation.onSelectRow = { events.append($0) }
+        presentation.selectFromList(2)
+        presentation.selectFromList(3)
+        XCTAssertEqual(presentation.state.selectedRowIndex, 1)
+        XCTAssertTrue(events.isEmpty)
+        let delivered = expectation(description: "sidebar navigation delivered after rendering")
+        DispatchQueue.main.async { delivered.fulfill() }
+        waitForExpectations(timeout: 2)
+        XCTAssertEqual(presentation.state.selectedRowIndex, 3)
+        XCTAssertEqual(events, [3])
+        presentation.selectFromList(3)
+        let unchanged = expectation(description: "unchanged sidebar row ignored")
+        DispatchQueue.main.async { unchanged.fulfill() }
+        waitForExpectations(timeout: 2)
+        XCTAssertEqual(events, [3])
+    }
+
+    func testProgrammaticSidebarNavigationSupersedesPendingListSelection() {
+        let presentation = BPSidebarPresentation()
+        var events: [Int] = []
+        presentation.onSelectRow = { events.append($0) }
+        presentation.selectFromList(2)
+        presentation.state.selectedRowIndex = 4
+        let delivered = expectation(description: "stale sidebar selection discarded")
+        DispatchQueue.main.async { delivered.fulfill() }
+        waitForExpectations(timeout: 2)
+        XCTAssertEqual(presentation.state.selectedRowIndex, 4)
+        XCTAssertTrue(events.isEmpty)
+    }
+
+    func testCachedDescriptionsKeepPackageNamespacesAndPendingSelectionSeparate() {
+        let presentation = BPInstalledPackageListPresentation()
+        let formula = BPInstalledPackageRow(name: "shared", cask: false, version: "1", latestVersion: "1", statusRank: 1, isPinned: false, summary: "Cached formula")
+        let cask = BPInstalledPackageRow(name: "shared", cask: true, version: "2", latestVersion: "2", statusRank: 1, isPinned: false)
+        presentation.state.replaceRows([formula, cask], mode: .search)
+        presentation.selectFromTable([cask.id])
+        presentation.receiveSummary("Updated formula", for: formula.id)
+        presentation.receiveSummary("", for: cask.id)
+        let delivered = expectation(description: "selection survives metadata update")
+        DispatchQueue.main.async { delivered.fulfill() }
+        waitForExpectations(timeout: 2)
+        XCTAssertEqual(presentation.state.selectedIDs, [cask.id])
+        XCTAssertEqual(presentation.summaries[formula.id], "Updated formula")
+        XCTAssertNil(presentation.summaries[cask.id])
+        XCTAssertEqual(presentation.state.sourceRows.first?.summary, "Cached formula")
+    }
+
+    func testTableSelectionDefersPublicationAndInspectorCallbacks() {
+        let presentation = BPInstalledPackageListPresentation()
+        let rows = ["wget", "git"].map {
+            BPInstalledPackageRow(name: $0, cask: false, version: "1", latestVersion: "1", statusRank: 1, isPinned: false)
+        }
+        presentation.state.replaceRows(rows, isCaskList: false)
+        var events: [String?] = []
+        presentation.onSelectionChanged = { name, _ in events.append(name) }
+        presentation.selectFromTable([rows[0].id])
+        presentation.selectFromTable([rows[1].id])
+        XCTAssertTrue(presentation.state.selectedIDs.isEmpty, "The Table binding must not publish during reconciliation")
+        XCTAssertTrue(events.isEmpty, "The inspector must not update inside the Table binding setter")
+        let delivered = expectation(description: "selection delivered after view update")
+        DispatchQueue.main.async { delivered.fulfill() }
+        waitForExpectations(timeout: 2)
+        XCTAssertEqual(presentation.state.selectedIDs, [rows[1].id])
+        XCTAssertEqual(events, ["git"], "Only the latest pending selection should reach the inspector")
+    }
+
+    func testProgrammaticSelectionSupersedesPendingTableSelection() {
+        let presentation = BPInstalledPackageListPresentation()
+        let rows = ["wget", "git"].map {
+            BPInstalledPackageRow(name: $0, cask: false, version: "1", latestVersion: "1", statusRank: 1, isPinned: false)
+        }
+        presentation.state.replaceRows(rows, isCaskList: false)
+        presentation.selectFromTable([rows[0].id])
+        presentation.state.select(ids: [rows[1].id])
+        let delivered = expectation(description: "stale selection discarded")
+        DispatchQueue.main.async { delivered.fulfill() }
+        waitForExpectations(timeout: 2)
+        XCTAssertEqual(presentation.state.selectedIDs, [rows[1].id])
+    }
+
+    func testReplacingThePackageListInvalidatesPendingTableSelection() {
+        let presentation = BPInstalledPackageListPresentation()
+        let row = BPInstalledPackageRow(name: "shared", cask: false, version: "1", latestVersion: "1", statusRank: 1, isPinned: false)
+        presentation.state.replaceRows([row], isCaskList: false)
+        var callbacks = 0
+        presentation.onSelectionChanged = { _, _ in callbacks += 1 }
+        presentation.selectFromTable([row.id])
+        presentation.state.replaceRows([], isCaskList: true)
+        let delivered = expectation(description: "old list selection discarded")
+        DispatchQueue.main.async { delivered.fulfill() }
+        waitForExpectations(timeout: 2)
+        XCTAssertTrue(presentation.state.selectedIDs.isEmpty)
+        XCTAssertEqual(callbacks, 0)
+    }
+
     func testInstalledPackageListHostSyncsSelectionSortAndActionCallbacks() {
         let listHost = BPInstalledPackageListHost()
         var selectionEvents: [String] = []
