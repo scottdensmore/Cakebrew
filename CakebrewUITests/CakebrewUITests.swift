@@ -2580,6 +2580,48 @@ final class CakebrewSwiftUIJourneyTests: XCTestCase, @unchecked Sendable {
         }
     }
 
+    func testInspectorToggleStaysUniqueAcrossBothPanelTransitions() {
+        package("mockwget").click()
+        let toolbar = app.toolbars.firstMatch
+        let inspectorButtons = toolbar.buttons.matching(identifier: "workspace.toggleInspector")
+        let inspector = app.scrollViews["formula.inspector"]
+
+        for _ in 0..<2 {
+            for sidebarVisible in [false, true] {
+                toolbar.buttons["workspace.toggleSidebar"].click()
+                let sidebar = sidebarItem("sidebar.formulae.installed")
+                if sidebarVisible {
+                    XCTAssertTrue(sidebar.waitForExistence(timeout: 5))
+                } else {
+                    XCTAssertTrue(sidebar.waitForNonExistence(timeout: 5))
+                }
+                for inspectorVisible in [false, true] {
+                    XCTAssertEqual(inspectorButtons.count, 1)
+                    inspectorButtons.firstMatch.click()
+                    if inspectorVisible {
+                        XCTAssertTrue(inspector.waitForExistence(timeout: 5))
+                    } else {
+                        XCTAssertTrue(inspector.waitForNonExistence(timeout: 5))
+                    }
+                    XCTAssertEqual(inspectorButtons.count, 1,
+                                   "Panel transitions must never retain the previous inspector toolbar item")
+                    let reachable = XCTNSPredicateExpectation(
+                        predicate: NSPredicate(format: "hittable == YES"),
+                        object: inspectorButtons.firstMatch)
+                    _ = XCTWaiter.wait(for: [reachable], timeout: 5)
+                    if !inspectorButtons.firstMatch.isHittable {
+                        print(app.debugDescription)
+                        let screenshot = XCTAttachment(screenshot: app.screenshot())
+                        screenshot.name = "Inspector Toggle Reachability"
+                        screenshot.lifetime = .keepAlways
+                        add(screenshot)
+                    }
+                    XCTAssertTrue(inspectorButtons.firstMatch.isHittable)
+                }
+            }
+        }
+    }
+
     func testNativeNavigationAndInspector() {
         package("mockwget").click()
         XCTAssertTrue(app.staticTexts["formula.detail.header"].waitForExistence(timeout: 5))

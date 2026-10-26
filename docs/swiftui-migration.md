@@ -29,7 +29,8 @@ they are never embedded in the SwiftUI interface.
   controls, and an independently resizable inspector follow macOS conventions.
   Toolbar structure stays independent of package selection; individual action
   views observe enablement changes. Search uses an explicitly sized SwiftUI
-  toolbar item, and the inspector owns its own toolbar controls. No toolbar items
+  toolbar item. The inspector toggle has one permanent workspace toolbar owner
+  across sidebar and inspector transitions. No toolbar items
   are removed or reinserted to repair their position after layout. The selection
   regression test samples search geometry during animations as well as at rest.
   Command-F focuses the SwiftUI toolbar field through the macOS responder chain;
