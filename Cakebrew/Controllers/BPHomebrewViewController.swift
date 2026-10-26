@@ -729,38 +729,17 @@ open class BPHomebrewViewController: NSViewController,
         let rawMode = formulaeDataSource?.mode ?? BPListMode.all.rawValue
         let mode = BPListMode(rawValue: rawMode) ?? .all
         let source = sourceFormulae(forMode: mode)
-        let count = source.count
-        var names: [String] = []
-        var versions: [String] = []
-        var latestVersions: [String] = []
-        var statusRanks: [NSNumber] = []
-        var pinnedFlags: [NSNumber] = []
-        var caskFlags: [NSNumber] = []
-        names.reserveCapacity(count)
-        versions.reserveCapacity(count)
-        latestVersions.reserveCapacity(count)
-        statusRanks.reserveCapacity(count)
-        pinnedFlags.reserveCapacity(count)
-        caskFlags.reserveCapacity(count)
-
-        for formula in source {
-            names.append(formula.name ?? "")
-            versions.append(formula.version ?? "")
-            latestVersions.append(formula.shortLatestVersion ?? "")
-            statusRanks.append(NSNumber(value: _homebrewManager.status(forFormula: formula).rawValue))
-            pinnedFlags.append(NSNumber(value: _homebrewManager.isFormulaPinned(formula)))
-            caskFlags.append(NSNumber(value: formula.cask))
+        let rows = source.map { formula in
+            BPInstalledPackageRow(
+                name: formula.name ?? "",
+                cask: formula.cask,
+                version: formula.version,
+                latestVersion: formula.shortLatestVersion,
+                statusRank: Int(_homebrewManager.status(forFormula: formula).rawValue),
+                isPinned: _homebrewManager.isFormulaPinned(formula),
+                summary: formula.shortDescription)
         }
-
-        installedPackageListHost.updateRowsForObjCMode(
-            names: names,
-            versions: versions,
-            latestVersions: latestVersions,
-            statusRanks: statusRanks,
-            pinnedFlags: pinnedFlags,
-            caskFlags: caskFlags,
-            objcListMode: rawMode
-        )
+        installedPackageListHost.updatePackages(rows, mode: BPPackageListMode(objcListMode: rawMode))
     }
 
     @objc(embedHostView:inContainer:)

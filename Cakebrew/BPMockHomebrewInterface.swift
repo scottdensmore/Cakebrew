@@ -175,8 +175,12 @@ open class BPMockHomebrewInterface: BPHomebrewInterface, @unchecked Sendable {
 
         switch mode {
         case .installed:
+            let wget = BPFormula.formula(withName: "mockwget", andVersion: "1.0.0")
+            // Exercise the browser's cached-description path without asking the
+            // inspector to fetch metadata merely to draw the package list.
+            wget.shortDescription = "A mock formula used for Cakebrew UI tests."
             return [
-                BPFormula.formula(withName: "mockwget", andVersion: "1.0.0"),
+                wget,
                 BPFormula.formula(withName: "mockgit", andVersion: "2.39.0"),
                 BPFormula.formula(withName: "mockcurl", andVersion: "8.0.0")
             ].compactMap { $0 }

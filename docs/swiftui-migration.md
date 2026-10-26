@@ -28,7 +28,21 @@ they are never embedded in the SwiftUI interface.
 - Native sidebar selection, resize behavior, collapsed navigation, system toolbar
   controls, and an independently resizable inspector follow macOS conventions.
   Toolbar structure stays independent of package selection; individual action
-  views observe enablement changes so search does not shift as details update.
+  views observe enablement changes. Search uses an explicitly sized SwiftUI
+  toolbar item, and the inspector owns its own toolbar controls. No toolbar items
+  are removed or reinserted to repair their position after layout. The selection
+  regression test samples search geometry during animations as well as at rest.
+  Command-F focuses the SwiftUI toolbar field through the macOS responder chain;
+  clearing search and Escape preserve the expected search behavior.
+- Sidebar and package-table selection bindings defer their controller handoffs
+  until after SwiftUI reconciliation. Requests are coalesced, and programmatic
+  navigation or list changes invalidate stale pending selections.
+- The package browser uses a continuous table background, subtle separators only
+  between actual rows, package symbols, cached descriptions, and aligned versions.
+  `View > Compact Package Rows` offers a persistent denser layout. Ordinary
+  installed status stays quiet; update and pin indicators remain easy to scan.
+  Cached descriptions update without issuing Homebrew info commands for every row.
+  The inspector uses a flat layout with a primary heading instead of a nested card.
 - Semantic colors and materials adapt to light and dark appearance, accent color,
   contrast, and transparency settings. Transitions do not require motion.
 - System typography, selectable metadata and output, spoken icon-button labels,

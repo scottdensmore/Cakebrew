@@ -26,6 +26,7 @@ final class BPPreferencesTests: XCTestCase, @unchecked Sendable {
         defaults.removeObject(forKey: BPPreferences.greedyCaskUpgradesKey)
         defaults.removeObject(forKey: BPPreferences.automaticAppUpdateCheckEnabledKey)
         defaults.removeObject(forKey: BPPreferences.showMenuBarExtraKey)
+        defaults.removeObject(forKey: BPPreferences.compactPackageRowsKey)
         super.tearDown()
     }
 
@@ -35,6 +36,7 @@ final class BPPreferencesTests: XCTestCase, @unchecked Sendable {
         XCTAssertFalse(BPPreferences.greedyCaskUpgrades, "greedy cask upgrades default to off")
         XCTAssertTrue(BPPreferences.automaticAppUpdateCheckEnabled, "automatic app update check defaults to on")
         XCTAssertFalse(BPPreferences.showMenuBarExtra, "menu bar extra defaults to off")
+        XCTAssertFalse(UserDefaults.standard.bool(forKey: BPPreferences.compactPackageRowsKey), "package rows default to the comfortable layout")
     }
 
     func testSettersRoundTrip() {

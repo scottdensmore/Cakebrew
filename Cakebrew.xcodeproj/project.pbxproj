@@ -7,15 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-  CB150000000000000000000B = {isa = PBXBuildFile; fileRef = CB150000000000000000000C; };
-  CB1500000000000000000009 = {isa = PBXBuildFile; fileRef = CB150000000000000000000A; };
-  CB1500000000000000000005 = {isa = PBXBuildFile; fileRef = CB1500000000000000000007; };
-  CB1500000000000000000006 = {isa = PBXBuildFile; fileRef = CB1500000000000000000007; };
-  CB1500000000000000000001 = {isa = PBXBuildFile; fileRef = CB1500000000000000000003; };
-  CB1500000000000000000002 = {isa = PBXBuildFile; fileRef = CB1500000000000000000003; };
 		0CCA4B9885187C5F2FBE92E1 /* com.scottdensmore.Cakebrew.Helper.plist in Copy Helper LaunchAgent */ = {isa = PBXBuildFile; fileRef = D8582C4CE349B64B6DE6FF75 /* com.scottdensmore.Cakebrew.Helper.plist */; };
 		1536BFF718EBA92400B67C5C /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1536BFF618EBA92400B67C5C /* Images.xcassets */; };
-		89A1C0A02608300000CAFE02 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 89A1C0A02608300000CAFE01 /* AppIcon.icon */; };
 		1540FA3518ECF66B00334A5C /* download.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1540FA3418ECF66B00334A5C /* download.icns */; };
 		15715F611C78050B00AE0E66 /* BPBundleWindow.strings in Resources */ = {isa = PBXBuildFile; fileRef = 15715F5F1C78050B00AE0E66 /* BPBundleWindow.strings */; };
 		1584884A1F0708F000BD2CD9 /* brewinfo_nmap.txt in Resources */ = {isa = PBXBuildFile; fileRef = 158488491F0708F000BD2CD9 /* brewinfo_nmap.txt */; };
@@ -41,18 +34,219 @@
 		1FE4FE59148E4CDD008EDE8B /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FE4FE58148E4CDD008EDE8B /* Cocoa.framework */; };
 		1FE4FE63148E4CDD008EDE8B /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1FE4FE61148E4CDD008EDE8B /* InfoPlist.strings */; };
 		1FE4FE6F148E4CDD008EDE8B /* MainMenu.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1FE4FE6D148E4CDD008EDE8B /* MainMenu.strings */; };
+		22616BD90BD55BD8081222ED /* brewInfo_modern_notinstalled.txt in Resources */ = {isa = PBXBuildFile; fileRef = 21856FE82C89016462465FB2 /* brewInfo_modern_notinstalled.txt */; };
 		234DE928FBCE6DDE7B82183D /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 46BD61BF82D5E8C0C487BD7D /* PrivacyInfo.xcprivacy */; };
+		276AE0A615164A649BE46380 /* BPVersionHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4CBC9D3A33D40B7BF9FA892 /* BPVersionHistory.swift */; };
+		298989A8E2AB63732E0EF773 /* brewInfo_modern_installed.txt in Resources */ = {isa = PBXBuildFile; fileRef = 033BC253AEDFD1C4DB32FD33 /* brewInfo_modern_installed.txt */; };
+		53486C63E6A14E61B322ACEF /* BPVersionHistoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2443974E23744BBAB8A7AEEB /* BPVersionHistoryTests.swift */; };
 		55BE3020BDDC9FCA19C1ECBC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C155F549AE6671B51A3FCAD /* Cocoa.framework */; };
+		631668F17E8D4DC9A190F9C5 /* BPVersionHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4CBC9D3A33D40B7BF9FA892 /* BPVersionHistory.swift */; };
+		7A189AE1603A0005CFFA2216 /* brewInfo_modern_aliases.txt in Resources */ = {isa = PBXBuildFile; fileRef = 0C6C83096C8D6B8D6BE58366 /* brewInfo_modern_aliases.txt */; };
 		7FE49B0EE97F41AC5F5513B9 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C155F549AE6671B51A3FCAD /* Cocoa.framework */; };
+		89A1C0A02608300000CAFE02 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 89A1C0A02608300000CAFE01 /* AppIcon.icon */; };
 		A13730A6BEFE5C0FB6AE5042 /* CakebrewHelper in Embed Helper */ = {isa = PBXBuildFile; fileRef = 9E4730EAEC1D0DE6ACD3DCE4 /* CakebrewHelper */; };
+		A6D93FA070583BC487D79935 /* brewInfo_modern_kegonly.txt in Resources */ = {isa = PBXBuildFile; fileRef = 5A58B1C9C1F6B6B757DDAD79 /* brewInfo_modern_kegonly.txt */; };
+		CB0198D66D6239124FAA5869 /* BPAutoScrollTextViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC6AC240B7A8188EE0D9CAF /* BPAutoScrollTextViewTests.swift */; };
+		CB07A1625D6C04B3247F16D6 /* BPDockMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBAEC1D294A3945337495086 /* BPDockMenuTests.swift */; };
+		CB08295B8DEAC7FB9D3496A4 /* BPFormula.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE0A0D471BD4E411CEAB5A5 /* BPFormula.swift */; };
+		CB0EDEDBFD122DD37F9A6018 /* BPCatalogCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC7063765B31D15AB122FFB /* BPCatalogCacheTests.swift */; };
+		CB12E5398E8179463755BD28 /* BPDoctorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3C5F47DE884CFBACC07B2F /* BPDoctorViewController.swift */; };
+		CB12F95DB449D8BD11C221C1 /* BPFormulaOptionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB5817B4F38A9FBF71524B1E /* BPFormulaOptionTests.swift */; };
+		CB13EE46D5E80CC50A4A0C1A /* BPAutoremovePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD1E3C7A343B1175072AD32 /* BPAutoremovePreview.swift */; };
+		CB1605674828B2D5D22A0ED6 /* BPServiceDetailsControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD17369CB749914A5D51856 /* BPServiceDetailsControllerTests.swift */; };
+		CB1727190B5E448E62C836F2 /* BPBrewfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB18720DCE55E3F538F83232 /* BPBrewfile.swift */; };
+		CB177A34C1107B1475570CFF /* BPBackgroundUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB91DE0D74848EFEBDB8B7A8 /* BPBackgroundUpdater.swift */; };
+		CB19022A8C8B9B2C770ECCC8 /* BPSwiftUIArchitectureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBCE5DD49C565B50DAD7CCCA /* BPSwiftUIArchitectureTests.swift */; };
+		CB190643532DEA93D3BC4CD3 /* BPInstalledPackageListHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB58FD79ACCA03E75665AC6E /* BPInstalledPackageListHost.swift */; };
+		CB19708C097C7B71B011FA1C /* BPDockMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB7502FAFC4749996759A954 /* BPDockMenu.swift */; };
+		CB1BEB94B6161147169C131C /* BPEmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9F03F4640F59844E68C563 /* BPEmptyStateView.swift */; };
+		CB1C67DDD7DEFEAA6B5DF0C3 /* BPTahoeSurfaceStates.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB14AE3C3E251B75806BE515 /* BPTahoeSurfaceStates.swift */; };
+		CB1CB6035CB746F507DF5042 /* BPSideBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9C2335D8D367D038C3CB54 /* BPSideBarController.swift */; };
+		CB1DF705B37BDDBD0D04B48C /* BPServiceDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB3ADE5352D3348EB5EF7D2 /* BPServiceDetails.swift */; };
+		CB2142DE7AB999E38B2A33C2 /* BPHelperCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9D5E36B7E5F35F46FA7DA5 /* BPHelperCommand.swift */; };
+		CB22236563D06A8C27666E3E /* BPPackageOperationPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBCEDB24738E7D7BBB9956E4 /* BPPackageOperationPresenter.swift */; };
+		CB2255083EE67364D9EF36B9 /* BPTimedDispatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD4DF58045D7116CCD9F308 /* BPTimedDispatch.swift */; };
+		CB233E21E59973F033AD9FF4 /* BPHelperSecurityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF22AC34C8F457AFA68BFC9 /* BPHelperSecurityTests.swift */; };
+		CB245CCC4A80584FABEF02F1 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC1AF99A3845AE7A9C751EA /* main.swift */; };
+		CB2498E20159C8618EBE7B24 /* BPBrewfileImportOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD7C8A0799AC8F2B911685E /* BPBrewfileImportOperation.swift */; };
+		CB24CC9705EBD6F17C21BC07 /* BPFormulaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9075C76F7E318E65A099BE /* BPFormulaTests.swift */; };
+		CB2587C42BB812157C979A89 /* BPEmptyStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB325D27C2ECD26BB950F5A8 /* BPEmptyStateTests.swift */; };
+		CB2733ED74458A35102F2CEB /* BPBrewfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB18720DCE55E3F538F83232 /* BPBrewfile.swift */; };
+		CB27BCDDFDCEDC850E673170 /* BPDoctorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3C5F47DE884CFBACC07B2F /* BPDoctorViewController.swift */; };
+		CB28111A8C15B0ABA51BE713 /* BPAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB613075FD47E8903CFF5C2E /* BPAppDelegate.swift */; };
+		CB289C04C343C896A7B5CD6F /* BPAppUpdateHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD2571787EFC14F096EC6A0 /* BPAppUpdateHost.swift */; };
+		CB28ABB454D37C65444BE2C0 /* BPLoadingStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0803FFD1526DA29170B24D /* BPLoadingStatusTests.swift */; };
+		CB28B66B6BB447529D5C87F8 /* BPPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB805E5B4BE1A77D48D97C4D /* BPPreferences.swift */; };
+		CB297537E6AD092E6092740B /* BPFormulaOptionsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBBB34E42D02A44B4A9267DB /* BPFormulaOptionsWindowController.swift */; };
+		CB2981672FC97CF412E415E7 /* BPBrewError.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBFB13E78A3FC3721738AC33 /* BPBrewError.swift */; };
+		CB2A8BAD6651425CE304DE78 /* BPHelperOutputRelayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB99F4AE8F17BE2344C74FF7 /* BPHelperOutputRelayTests.swift */; };
+		CB2D1898C35C4E47B67C16F7 /* DCOAboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9614815471881B269DF1D9 /* DCOAboutWindowController.swift */; };
+		CB2D893AF52D22B24D3B1CD3 /* BPAutoScrollTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8D0C52B8DAF01AFF05E07E /* BPAutoScrollTextView.swift */; };
+		CB2D91B6977DCF97AFA46F2B /* BPBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE3C9961B1C608696F73FFC /* BPBackgroundView.swift */; };
+		CB2E6BE5B71CCBD227F9F080 /* BPFormulaeDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB42D4D37AFDDB6779D513B6 /* BPFormulaeDataSource.swift */; };
+		CB2ECC8AE35F78586BE2D1A5 /* BPAccessibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE95365D57CDA55583C47A6 /* BPAccessibilityTests.swift */; };
+		CB30B823DB001875C10D9DAC /* BPHelperProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6DCDC2FD4D9E1F8875EC06 /* BPHelperProtocol.swift */; };
+		CB32299FBF85F274F795F79B /* BPLoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB551D613276D94B539FD713 /* BPLoadingView.swift */; };
+		CB3274A721EC730DEF04FDA6 /* BPBrewfileExportOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBEE1CB6DE01EF3A666EBE71 /* BPBrewfileExportOperation.swift */; };
+		CB35843454CE6967D648812F /* BPAppUpdateState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBBD60EB5BCFBF2FBC17B076 /* BPAppUpdateState.swift */; };
+		CB37507A404BA4EC430A39EC /* BPProcessTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB84805CCE1F81E1612C9823 /* BPProcessTree.swift */; };
+		CB37901669408DE0F7E6D894 /* BPTaskStreamingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB353AF58F3CDC83FB89C115 /* BPTaskStreamingTests.swift */; };
+		CB39B6727BA574EE967EF958 /* BPAutoScrollTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8D0C52B8DAF01AFF05E07E /* BPAutoScrollTextView.swift */; };
+		CB39D6D32D646615D5D6BD66 /* BPTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0E146DA086F2256D92CF39 /* BPTask.swift */; };
+		CB3A72C740AF834E5C76BA43 /* BPPreferencesHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF009EEEF938E1DBB166E83 /* BPPreferencesHost.swift */; };
+		CB3EE820278578ABAF6A0DF7 /* BPHelperRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB52477112E1C1CF83032BFF /* BPHelperRegistration.swift */; };
+		CB40E5F4D95BE68A4819409D /* BPCatalogRefreshPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD9424556876A520C3BDD05 /* BPCatalogRefreshPolicyTests.swift */; };
+		CB41257C0539C582765E7400 /* BPServiceDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB3ADE5352D3348EB5EF7D2 /* BPServiceDetails.swift */; };
+		CB41507A9C197EF70ED16B5F /* BPHelperRegistrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBFC5D2332311C4760C4AFAD /* BPHelperRegistrationTests.swift */; };
+		CB42FE24DFFC8BB02203F1C7 /* BPHelperOutputRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB7A115D57C6F8CD8806EC1A /* BPHelperOutputRelay.swift */; };
+		CB4313209655926425249E51 /* BPTahoeSurfaceStates.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB14AE3C3E251B75806BE515 /* BPTahoeSurfaceStates.swift */; };
+		CB438523C5053632B429213D /* BPCleanupPreviewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBA9B09BCFCFE1CEB8F6F4A0 /* BPCleanupPreviewTests.swift */; };
+		CB452BA9867644D07B3762A1 /* BPFormulaInformationHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB274BCB0AEABD42043259B4 /* BPFormulaInformationHost.swift */; };
+		CB45FAC6A5C62BEA0CEFF61A /* BPHelperOutputRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB7A115D57C6F8CD8806EC1A /* BPHelperOutputRelay.swift */; };
+		CB471CB852753B1BADB4EFF2 /* BPAppUpdateState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBBD60EB5BCFBF2FBC17B076 /* BPAppUpdateState.swift */; };
+		CB478FB8D8A87324C26A0E08 /* BPSearchCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB11682BEDAA3A43052D0D74 /* BPSearchCoordinator.swift */; };
+		CB48EBA8C913E05997BD4B0B /* BPPreferencesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3E382C9F76592DD6836472 /* BPPreferencesWindowController.swift */; };
+		CB4A1BD0BE7FE513EC0FEE33 /* BPFormulaInformationLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1C41B1209878F1C4C32947 /* BPFormulaInformationLifecycleTests.swift */; };
+		CB4BE60B3A98DA716192DF17 /* BPSelectedFormulaViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB17D133908A55A8E723EBC4 /* BPSelectedFormulaViewController.swift */; };
+		CB4CB2437DA2C7D4396E73FD /* BPFormulaeTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9D32A96F7A4F0A8AD719D6 /* BPFormulaeTableView.swift */; };
+		CB4D8413740953490B3CD6EB /* BPBrewfileExportOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBEE1CB6DE01EF3A666EBE71 /* BPBrewfileExportOperation.swift */; };
+		CB4E784F5A3F112E4D876560 /* BPBrewfilePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB32367AC09DBE48F290DCE0 /* BPBrewfilePlan.swift */; };
+		CB4F6D50982C372C19873BD5 /* BPFormulaModernInfoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB17C03B82D28C01B45248C3 /* BPFormulaModernInfoTests.swift */; };
+		CB52BDEA017F7AA63333212C /* BPMainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3D1503AE446B820A1D1C2C /* BPMainWindowController.swift */; };
+		CB52D774C4787BC446605322 /* BPFormulaeDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB42D4D37AFDDB6779D513B6 /* BPFormulaeDataSource.swift */; };
+		CB53719A362CA5B3721C902F /* BPSelectedFormulaHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB36F932BD57A527C3A5556C /* BPSelectedFormulaHost.swift */; };
+		CB54BE152D9307755B00BB14 /* BPInstalledPackageListHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB58FD79ACCA03E75665AC6E /* BPInstalledPackageListHost.swift */; };
+		CB54DCD33BFEC7E6784C2E1F /* BPHelperSecurity.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB209D9BB64832445AE7A8C4 /* BPHelperSecurity.swift */; };
+		CB55A0D598F0C8A49802532A /* BPProcessTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB84805CCE1F81E1612C9823 /* BPProcessTree.swift */; };
+		CB56E3770D4F5B39F9845BD0 /* BPWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD0BF9E1E35F474B6819905 /* BPWindow.swift */; };
+		CB57672052B8CA511B7F9824 /* BPFormulaInformationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB79D7DB4AB61740B87ADF9 /* BPFormulaInformationState.swift */; };
+		CB5AB39C9AF8B7AEEDC05069 /* BPBundleWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB2E1073D78DFD23EC69028E /* BPBundleWindowController.swift */; };
+		CB5B44C68B0014C8F40F9047 /* BPHelperSecurity.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB209D9BB64832445AE7A8C4 /* BPHelperSecurity.swift */; };
+		CB5B5281CAD301C50276414B /* BPAutoremovePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD1E3C7A343B1175072AD32 /* BPAutoremovePreview.swift */; };
+		CB5BE14EC2D053C148F9AC5A /* BPBrewTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDAB4679EF8885ADA744717 /* BPBrewTransportTests.swift */; };
+		CB5D6F69A7460A5DFFBF40DE /* BPStreamingLogSweepTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB47905A40CE64D5939875F4 /* BPStreamingLogSweepTests.swift */; };
+		CB5E4E5C98234EE770672F2E /* BPUpdatesSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF60E7FD819E2B9B65AA0C5 /* BPUpdatesSnapshot.swift */; };
+		CB5F1DA5FB571630B7E5CB47 /* BPFormulaeTableAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB70AEE2E39C3BACB1D4DDCD /* BPFormulaeTableAction.swift */; };
+		CB5F4B23C61FD95B2D0BC64F /* BPHelperSecurity.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB209D9BB64832445AE7A8C4 /* BPHelperSecurity.swift */; };
+		CB5F7ACAF39CC1B74E65479C /* BPFormulaeTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9D32A96F7A4F0A8AD719D6 /* BPFormulaeTableView.swift */; };
+		CB61262FF804D5D869E0D550 /* BPBrewError.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBFB13E78A3FC3721738AC33 /* BPBrewError.swift */; };
+		CB618BF8F42EEC10F060FFAC /* BPInstallationWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB423F37FC51AA095406CC73 /* BPInstallationWindowController.swift */; };
+		CB62BD04988F7AC240E2B879 /* BPFormulaInformationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB4C534D61830230DB4D5ACA /* BPFormulaInformationTests.swift */; };
+		CB668253841CCA118931CC60 /* BPHelperOutputRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB7A115D57C6F8CD8806EC1A /* BPHelperOutputRelay.swift */; };
+		CB670A1E60FAB25F169EA88A /* BPUpdatesSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF60E7FD819E2B9B65AA0C5 /* BPUpdatesSnapshot.swift */; };
+		CB69A799DC2CBD04D3305FFC /* BPPreferencesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3E382C9F76592DD6836472 /* BPPreferencesWindowController.swift */; };
+		CB6A0E416C600BCE28178852 /* BPServiceDetailsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD786F54DE33F6584581E11 /* BPServiceDetailsTests.swift */; };
+		CB6C54D3FAD78D37AFCFFD6D /* BPAutoremoveOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB1D309E39C92B768523FCA /* BPAutoremoveOperation.swift */; };
+		CB734052DE29489FED59B794 /* BPHelperCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC8E6DFEB4588F1FF2053E4 /* BPHelperCommandTests.swift */; };
+		CB7402FF4EADE89F6B4BB3A3 /* BPServicesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB956D0F9F0D57D551D7A8A1 /* BPServicesViewController.swift */; };
+		CB744620D2FB165BA986724B /* BPSelectedFormulaHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB36F932BD57A527C3A5556C /* BPSelectedFormulaHost.swift */; };
+		CB74BC8F26297F9B6A9AE46D /* BPBrewfilePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB32367AC09DBE48F290DCE0 /* BPBrewfilePlan.swift */; };
+		CB74D9C255EBAF462FE49945 /* BPBrewErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB38F9E0DDA990EA9C34EDC9 /* BPBrewErrorTests.swift */; };
+		CB76350481E8591499B977E6 /* BPServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB561E25A5C8B306DF111EA7 /* BPServiceTests.swift */; };
+		CB76B45389BB434E14F4515E /* BPHelperProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6DCDC2FD4D9E1F8875EC06 /* BPHelperProtocol.swift */; };
+		CB7918CC4D2CC140BE4C429C /* BPMockHomebrewInterface.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB4DA150AC5C3A6FB3E660D8 /* BPMockHomebrewInterface.swift */; };
+		CB79930F8245B7E3EDB5E83F /* BPHomebrewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1D473A65D8E83C135F64F1 /* BPHomebrewViewController.swift */; };
+		CB7A6BEC2A0949FA4761D61C /* BPUpdateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB4D7C3DD05D5813EF099012 /* BPUpdateViewController.swift */; };
+		CB7B83B39546E7F45D5317AF /* BPHomebrewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6B093D1925C02777964A57 /* BPHomebrewManager.swift */; };
+		CB7C16F5247782E7A62587B2 /* BPUpgradePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB77794A2B213C84BB70A519 /* BPUpgradePlan.swift */; };
+		CB7C9A19FE0DC0CC9F612A64 /* BPTahoeSheetAndOverlayHosts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC800FB4D67CE556B970C72 /* BPTahoeSheetAndOverlayHosts.swift */; };
+		CB7E74844179B78630869F5B /* BPPreferencesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF15B476CECC27A40A0036F /* BPPreferencesTests.swift */; };
+		CB81917AD4E99EC03EDAB9D7 /* BPHomebrewInterface.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB4372E8FD0D4679FB9E6C24 /* BPHomebrewInterface.swift */; };
+		CB851868D1F6072B7971934F /* BPUpdateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB4D7C3DD05D5813EF099012 /* BPUpdateViewController.swift */; };
+		CB859D91F6820D88388EB97D /* BPHomebrewRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD5D4DC0EBF975DF5A6C24E /* BPHomebrewRecoveryTests.swift */; };
+		CB8768AEED5CBE2C8EDFB6ED /* BPMainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3D1503AE446B820A1D1C2C /* BPMainWindowController.swift */; };
+		CB8C251350CC58806A44FDA2 /* BPInstallationWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB423F37FC51AA095406CC73 /* BPInstallationWindowController.swift */; };
+		CB8CB20FA7CABB6CDB35F33F /* BPAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB613075FD47E8903CFF5C2E /* BPAppDelegate.swift */; };
+		CB8E9634691E2B07622AF4C0 /* BPBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE3C9961B1C608696F73FFC /* BPBackgroundView.swift */; };
+		CB90FC8B6D9548A3D9BAAAC1 /* BPFormulaeTableActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBA3BBDE1BEBAF581E203F69 /* BPFormulaeTableActionTests.swift */; };
+		CB93D76C4836E553DA498616 /* BPAutoremoveWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3568865012B7520F8387C9 /* BPAutoremoveWindowController.swift */; };
+		CB9435B256B2F4E34A05CF32 /* BPAutoremoveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB68094B1771A72F6B679A84 /* BPAutoremoveTests.swift */; };
+		CB9669EA8731C0182B36C6FB /* BPIncrementalReloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB5CEE312BF3E6E654D49C7F /* BPIncrementalReloadTests.swift */; };
+		CB97F5867DB4F96AD649A401 /* BPBrewfileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB07881430565184C83F30CE /* BPBrewfileTests.swift */; };
+		CB993AEFF05685C3E662C65D /* BPSearchCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB11682BEDAA3A43052D0D74 /* BPSearchCoordinator.swift */; };
+		CB99CA4386B7C75BC04A4C9E /* BPStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6C73916714817DE2D2D918 /* BPStyle.swift */; };
+		CB9B018690A5ABF34FB9E92B /* BPTahoeSheetAndOverlayHosts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC800FB4D67CE556B970C72 /* BPTahoeSheetAndOverlayHosts.swift */; };
+		CB9C1C2B16A2C7ADBFD75B03 /* BPFormula.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE0A0D471BD4E411CEAB5A5 /* BPFormula.swift */; };
+		CB9DAB7C37591FD75EF64825 /* BPFormulaOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF864C02B979112CCD8B1D8 /* BPFormulaOption.swift */; };
+		CBA0ACED229A79E026C700DB /* BPLocalizationParityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB693E4B58503C919B98758 /* BPLocalizationParityTests.swift */; };
+		CBA12D8BD04D8A7FE19554EC /* CakebrewUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9848E00AD4E05EA7995F9B /* CakebrewUITests.swift */; };
+		CBA30BD5B47D8C2D4E2818A3 /* BPFormulaPopoverViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB944155A8766F2A19ED11EC /* BPFormulaPopoverViewController.swift */; };
+		CBA34C336C862EA99100BCC6 /* BPFormulaeTableAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB70AEE2E39C3BACB1D4DDCD /* BPFormulaeTableAction.swift */; };
+		CBA43D466D9A4B35BFD283F4 /* BPEmptyState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB82E022A116B75364B14B1F /* BPEmptyState.swift */; };
+		CBA6EA3023B5B687F84A5FE0 /* BPHelperRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB52477112E1C1CF83032BFF /* BPHelperRegistration.swift */; };
+		CBAA99536D3005DA122D6456 /* BPWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD0BF9E1E35F474B6819905 /* BPWindow.swift */; };
+		CBAB6C441FBC7BD6EA39C143 /* BPFormulaPopoverViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB944155A8766F2A19ED11EC /* BPFormulaPopoverViewController.swift */; };
+		CBABF4BB46D308FDA80E67C4 /* BPDisabledView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF86EBA2C345C99EF0E52CC /* BPDisabledView.swift */; };
+		CBABFA7A2EDFD7E4EB15CA4A /* BPBrewfileImportOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD7C8A0799AC8F2B911685E /* BPBrewfileImportOperation.swift */; };
+		CBACC07876967635A81D8D15 /* BPHomebrewManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDA6E9277E3CBF1449FD33F /* BPHomebrewManagerTests.swift */; };
+		CBAE5E3038E2A2CD2435345D /* BPFormulaInformationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB79D7DB4AB61740B87ADF9 /* BPFormulaInformationState.swift */; };
+		CBB00EE97661DBD0685CC5E1 /* BPDockMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB7502FAFC4749996759A954 /* BPDockMenu.swift */; };
+		CBB34A7E5B0291368BE3C9E7 /* BPToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBAB1CE0EB4310A15E16CD9D /* BPToolbar.swift */; };
+		CBB3C4DFEA6756DD9B3F5A08 /* BPHomebrewInterface.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB4372E8FD0D4679FB9E6C24 /* BPHomebrewInterface.swift */; };
+		CBB3F337B6E23C0BF29421A6 /* BPSelectedFormulaViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB17D133908A55A8E723EBC4 /* BPSelectedFormulaViewController.swift */; };
+		CBB530820666AF45B675A99C /* BPHomebrewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1D473A65D8E83C135F64F1 /* BPHomebrewViewController.swift */; };
+		CBB7BCB7EE72E504BAED4206 /* BPMockHomebrewInterface.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB4DA150AC5C3A6FB3E660D8 /* BPMockHomebrewInterface.swift */; };
+		CBB7D0A300B32C40F2EEFC7A /* BPHomebrewInterfaceListCall.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB91F17DCD10CDF7A9D728E7 /* BPHomebrewInterfaceListCall.swift */; };
+		CBB89BD2C7B6357798B1E4AB /* BPCleanupPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3BF60C8F23FCC230BA4C41 /* BPCleanupPreview.swift */; };
+		CBB8EC3199704A83B512C8D3 /* BPHelperCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9D5E36B7E5F35F46FA7DA5 /* BPHelperCommand.swift */; };
+		CBB9D25DED5443EF9A6C4F95 /* BPProcessTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB84805CCE1F81E1612C9823 /* BPProcessTree.swift */; };
+		CBBC25701C281DBDF3A8F37F /* BPUpgradePlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBCDF47EFD288B33ED6E4CB7 /* BPUpgradePlanTests.swift */; };
+		CBBD4172BFC126A252CEFBC6 /* BPHomebrewInterfaceListCall.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB91F17DCD10CDF7A9D728E7 /* BPHomebrewInterfaceListCall.swift */; };
+		CBBE59E0D7147A5B030C68E0 /* BPPackageOperationPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBCEDB24738E7D7BBB9956E4 /* BPPackageOperationPresenter.swift */; };
+		CBBED5CF434C968F87255D0C /* BPPreferencesHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF009EEEF938E1DBB166E83 /* BPPreferencesHost.swift */; };
+		CBC0FA9D6DB97839D4622495 /* BPInstallationWindowControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1A6B6B4F71879E7E4CE5DF /* BPInstallationWindowControllerTests.swift */; };
+		CBC183AA2E2EE47DEB905E01 /* BPBundleWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB2E1073D78DFD23EC69028E /* BPBundleWindowController.swift */; };
+		CBC1EC226E2243E7C70D923A /* BPVersionStampingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8B8C7D1E97B12EC5E4EB87 /* BPVersionStampingTests.swift */; };
+		CBC33D953F7FC63197E5DD36 /* BPLoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB551D613276D94B539FD713 /* BPLoadingView.swift */; };
+		CBC4E3E278FF01C38BC2B481 /* BPTimedDispatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD4DF58045D7116CCD9F308 /* BPTimedDispatch.swift */; };
+		CBC7E09B2456F28E10E44D03 /* BPStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6C73916714817DE2D2D918 /* BPStyle.swift */; };
+		CBC83FEF990201BEBEC652D0 /* BPServicesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB956D0F9F0D57D551D7A8A1 /* BPServicesViewController.swift */; };
+		CBC868F53F1F2881D569A8A1 /* BPLoadingStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB43FDCD3C55FA63A31E5737 /* BPLoadingStatus.swift */; };
+		CBC89948B8F1CB75D8F0E528 /* BPUpgradePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB77794A2B213C84BB70A519 /* BPUpgradePlan.swift */; };
+		CBC97179067702A7DDE8BDC9 /* BPBrewCompatibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBECF37C6AE40E0445F03CC7 /* BPBrewCompatibilityTests.swift */; };
+		CBCA8C1AA60CA3FC08FA72B9 /* BPMockFidelityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD9770B7B67F19BC66D5A1C /* BPMockFidelityTests.swift */; };
+		CBCAB273255700D27F678F50 /* BPHelperClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6F220045B7290AFC535DC2 /* BPHelperClient.swift */; };
+		CBCB893B72D968F4D2BB81BF /* BPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1DDB63B42E4B9ECBFE4711 /* BPService.swift */; };
+		CBCBEF8E8A62B997C455AB01 /* BPHomebrewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6B093D1925C02777964A57 /* BPHomebrewManager.swift */; };
+		CBCE7E8F29ACC66E0EEAD2C8 /* BPHomebrewInterfaceListCallTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB34AFAE4D5C7F332E38563C /* BPHomebrewInterfaceListCallTests.swift */; };
+		CBD003D06B1AFCFC6E377BDD /* BPTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0E146DA086F2256D92CF39 /* BPTask.swift */; };
+		CBD081FABAB8E9D55AA7512F /* BPCleanupPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3BF60C8F23FCC230BA4C41 /* BPCleanupPreview.swift */; };
+		CBD0A6867CCAD1280ED03ABE /* BPTaskCancelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB30EFBA74AF2602EADEBDB6 /* BPTaskCancelTests.swift */; };
+		CBD447B3AA4E6AF1CF345A35 /* BPUnifiedUpdatesHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3D8A850C9AE5300D9655EA /* BPUnifiedUpdatesHost.swift */; };
+		CBD48A262A65CF4035B04B72 /* BPBackgroundUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB91DE0D74848EFEBDB8B7A8 /* BPBackgroundUpdater.swift */; };
+		CBD5E7F67779446BD86AB216 /* BPSideBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9C2335D8D367D038C3CB54 /* BPSideBarController.swift */; };
+		CBD8282F65CA8DA43F9A1DCB /* BPFormulaeDataSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB431EF9E94E18CDA6985096 /* BPFormulaeDataSourceTests.swift */; };
+		CBDA4970B138EE75E192D844 /* BPFormulaOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF864C02B979112CCD8B1D8 /* BPFormulaOption.swift */; };
+		CBDC0B815CA52AB90D87475F /* BPLoadingStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB43FDCD3C55FA63A31E5737 /* BPLoadingStatus.swift */; };
+		CBDCF32DD243E7983F4E0F88 /* BPLocalizedStringsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB61752F68D38B11FFFB5902 /* BPLocalizedStringsTests.swift */; };
+		CBE0F8220B1F223842158692 /* BPMainMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC4A3C32D6CCFDA26A9AFA5 /* BPMainMenuTests.swift */; };
+		CBE32C14D5B3DD0010C43C2B /* BPAutoremoveOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB1D309E39C92B768523FCA /* BPAutoremoveOperation.swift */; };
+		CBE33762AB03C87B8A4C4815 /* BPHelperClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6F220045B7290AFC535DC2 /* BPHelperClient.swift */; };
+		CBE3B1B5DA1E77C3B306CF9D /* BPSearchCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD4746E85DC72619E9BA202 /* BPSearchCoordinatorTests.swift */; };
+		CBE3F2FB4CCC8083714C6951 /* BPEmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9F03F4640F59844E68C563 /* BPEmptyStateView.swift */; };
+		CBE7EDB7C84E34A692E207D5 /* DCOAboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9614815471881B269DF1D9 /* DCOAboutWindowController.swift */; };
+		CBE825D71DD6914FB6F4022F /* BPUnifiedUpdatesHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3D8A850C9AE5300D9655EA /* BPUnifiedUpdatesHost.swift */; };
+		CBE8A7BC66C4DD193BB785F6 /* BPPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB805E5B4BE1A77D48D97C4D /* BPPreferences.swift */; };
+		CBEAA7CB7B170540EB5DC6AB /* BPAppUpdateHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD2571787EFC14F096EC6A0 /* BPAppUpdateHost.swift */; };
+		CBEB7CC0BABA99205182DB16 /* BPAutoremoveWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3568865012B7520F8387C9 /* BPAutoremoveWindowController.swift */; };
+		CBF077A01D30DD2E25802A28 /* CakebrewApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC1BB58DFEE3EF566494112 /* CakebrewApp.swift */; };
+		CBF07FC189C92FC3AA2F3AE7 /* BPBackgroundTaskGuardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9B106264BED24C9830A812 /* BPBackgroundTaskGuardTests.swift */; };
+		CBF1B8776C062251D7032EE3 /* BPFormulaOptionsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBBB34E42D02A44B4A9267DB /* BPFormulaOptionsWindowController.swift */; };
+		CBF205CC0DBC879D48441267 /* BPFormulaInformationHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB274BCB0AEABD42043259B4 /* BPFormulaInformationHost.swift */; };
+		CBF47BB413EC8D23AB846629 /* BPHelperCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9D5E36B7E5F35F46FA7DA5 /* BPHelperCommand.swift */; };
+		CBF564ED2FB65A2652E937C3 /* BPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1DDB63B42E4B9ECBFE4711 /* BPService.swift */; };
+		CBF5B0C4DFDC91ADAC81D3CE /* BPBackgroundUpdaterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB1E837860C4967489B12F4 /* BPBackgroundUpdaterTests.swift */; };
+		CBF8EF2A65365D975CDB4380 /* BPDisabledView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF86EBA2C345C99EF0E52CC /* BPDisabledView.swift */; };
+		CBF99421BDAAE8F3D3011621 /* BPCancelReloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDAC84A6941099CDFF849D5 /* BPCancelReloadTests.swift */; };
+		CBFB6BCF47C2924561E930F4 /* BPToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBAB1CE0EB4310A15E16CD9D /* BPToolbar.swift */; };
+		CBFD2BA5FAA8952C25602485 /* BPHelperProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6DCDC2FD4D9E1F8875EC06 /* BPHelperProtocol.swift */; };
+		CBFD53BBF14F1E21E041ACA8 /* BPUpgradeArgumentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC6168B9EA9962B7F1CAEA4 /* BPUpgradeArgumentsTests.swift */; };
+		CBFD8ADE71F15812CE186F08 /* BPEmptyState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB82E022A116B75364B14B1F /* BPEmptyState.swift */; };
+		CF9F37950BD1401894DB4687 /* BPVersionHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15345C4693ED485C947BE6C9 /* BPVersionHistoryView.swift */; };
 		D2BBAB681B87142F00F21332 /* brewInfo_acme.txt in Resources */ = {isa = PBXBuildFile; fileRef = D2BBAB621B87142F00F21332 /* brewInfo_acme.txt */; };
 		D2BBAB691B87142F00F21332 /* brewInfo_bfg.txt in Resources */ = {isa = PBXBuildFile; fileRef = D2BBAB631B87142F00F21332 /* brewInfo_bfg.txt */; };
 		D2BBAB6A1B87142F00F21332 /* brewInfo_fakeformula.txt in Resources */ = {isa = PBXBuildFile; fileRef = D2BBAB641B87142F00F21332 /* brewInfo_fakeformula.txt */; };
 		D2BBAB6B1B87142F00F21332 /* brewInfo_ffmpeg.txt in Resources */ = {isa = PBXBuildFile; fileRef = D2BBAB651B87142F00F21332 /* brewInfo_ffmpeg.txt */; };
-		A6D93FA070583BC487D79935 /* brewInfo_modern_kegonly.txt in Resources */ = {isa = PBXBuildFile; fileRef = 5A58B1C9C1F6B6B757DDAD79 /* brewInfo_modern_kegonly.txt */; };
-		7A189AE1603A0005CFFA2216 /* brewInfo_modern_aliases.txt in Resources */ = {isa = PBXBuildFile; fileRef = 0C6C83096C8D6B8D6BE58366 /* brewInfo_modern_aliases.txt */; };
-		22616BD90BD55BD8081222ED /* brewInfo_modern_notinstalled.txt in Resources */ = {isa = PBXBuildFile; fileRef = 21856FE82C89016462465FB2 /* brewInfo_modern_notinstalled.txt */; };
-		298989A8E2AB63732E0EF773 /* brewInfo_modern_installed.txt in Resources */ = {isa = PBXBuildFile; fileRef = 033BC253AEDFD1C4DB32FD33 /* brewInfo_modern_installed.txt */; };
 		D2BBAB6C1B87142F00F21332 /* brewInfo_mysql.txt in Resources */ = {isa = PBXBuildFile; fileRef = D2BBAB661B87142F00F21332 /* brewInfo_mysql.txt */; };
 		D2BBAB6D1B87142F00F21332 /* brewInfo_percona-server.txt in Resources */ = {isa = PBXBuildFile; fileRef = D2BBAB671B87142F00F21332 /* brewInfo_percona-server.txt */; };
 		D2BBAB6F1B87290B00F21332 /* brewInfo_bison.txt in Resources */ = {isa = PBXBuildFile; fileRef = D2BBAB6E1B87290B00F21332 /* brewInfo_bison.txt */; };
@@ -60,207 +254,7 @@
 		D2C3E02A1B8E15B2000D89BB /* Disabled.strings in Resources */ = {isa = PBXBuildFile; fileRef = D2C3E02C1B8E15B2000D89BB /* Disabled.strings */; };
 		D2C3E02D1B8E15D5000D89BB /* Loading.strings in Resources */ = {isa = PBXBuildFile; fileRef = D2C3E02F1B8E15D5000D89BB /* Loading.strings */; };
 		D2CC8CA71B90F04C00F763DF /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2CC8CA61B90F04C00F763DF /* Security.framework */; };
-		CB28111A8C15B0ABA51BE713 /* BPAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB613075FD47E8903CFF5C2E /* BPAppDelegate.swift */; };
-		CBD48A262A65CF4035B04B72 /* BPBackgroundUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB91DE0D74848EFEBDB8B7A8 /* BPBackgroundUpdater.swift */; };
-		CB19708C097C7B71B011FA1C /* BPDockMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB7502FAFC4749996759A954 /* BPDockMenu.swift */; };
-		CB2E6BE5B71CCBD227F9F080 /* BPFormulaeDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB42D4D37AFDDB6779D513B6 /* BPFormulaeDataSource.swift */; };
-		CBB3C4DFEA6756DD9B3F5A08 /* BPHomebrewInterface.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB4372E8FD0D4679FB9E6C24 /* BPHomebrewInterface.swift */; };
-		CBBD4172BFC126A252CEFBC6 /* BPHomebrewInterfaceListCall.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB91F17DCD10CDF7A9D728E7 /* BPHomebrewInterfaceListCall.swift */; };
-		CBCBEF8E8A62B997C455AB01 /* BPHomebrewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6B093D1925C02777964A57 /* BPHomebrewManager.swift */; };
-		CBB7BCB7EE72E504BAED4206 /* BPMockHomebrewInterface.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB4DA150AC5C3A6FB3E660D8 /* BPMockHomebrewInterface.swift */; };
-		CBD5E7F67779446BD86AB216 /* BPSideBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9C2335D8D367D038C3CB54 /* BPSideBarController.swift */; };
-		CBC7E09B2456F28E10E44D03 /* BPStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6C73916714817DE2D2D918 /* BPStyle.swift */; };
-		CBB34A7E5B0291368BE3C9E7 /* BPToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBAB1CE0EB4310A15E16CD9D /* BPToolbar.swift */; };
-		CB56E3770D4F5B39F9845BD0 /* BPWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD0BF9E1E35F474B6819905 /* BPWindow.swift */; };
-		CBEAA7CB7B170540EB5DC6AB /* BPAppUpdateHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD2571787EFC14F096EC6A0 /* BPAppUpdateHost.swift */; };
-		CB93D76C4836E553DA498616 /* BPAutoremoveWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3568865012B7520F8387C9 /* BPAutoremoveWindowController.swift */; };
-		CBC183AA2E2EE47DEB905E01 /* BPBundleWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB2E1073D78DFD23EC69028E /* BPBundleWindowController.swift */; };
-		CB12E5398E8179463755BD28 /* BPDoctorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3C5F47DE884CFBACC07B2F /* BPDoctorViewController.swift */; };
-		CB452BA9867644D07B3762A1 /* BPFormulaInformationHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB274BCB0AEABD42043259B4 /* BPFormulaInformationHost.swift */; };
-		CB297537E6AD092E6092740B /* BPFormulaOptionsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBBB34E42D02A44B4A9267DB /* BPFormulaOptionsWindowController.swift */; };
-		CBAB6C441FBC7BD6EA39C143 /* BPFormulaPopoverViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB944155A8766F2A19ED11EC /* BPFormulaPopoverViewController.swift */; };
-		CBB530820666AF45B675A99C /* BPHomebrewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1D473A65D8E83C135F64F1 /* BPHomebrewViewController.swift */; };
-		CB8C251350CC58806A44FDA2 /* BPInstallationWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB423F37FC51AA095406CC73 /* BPInstallationWindowController.swift */; };
-		CB54BE152D9307755B00BB14 /* BPInstalledPackageListHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB58FD79ACCA03E75665AC6E /* BPInstalledPackageListHost.swift */; };
-		CB8768AEED5CBE2C8EDFB6ED /* BPMainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3D1503AE446B820A1D1C2C /* BPMainWindowController.swift */; };
-		CBBE59E0D7147A5B030C68E0 /* BPPackageOperationPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBCEDB24738E7D7BBB9956E4 /* BPPackageOperationPresenter.swift */; };
-		CB3A72C740AF834E5C76BA43 /* BPPreferencesHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF009EEEF938E1DBB166E83 /* BPPreferencesHost.swift */; };
-		CB69A799DC2CBD04D3305FFC /* BPPreferencesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3E382C9F76592DD6836472 /* BPPreferencesWindowController.swift */; };
-		CB53719A362CA5B3721C902F /* BPSelectedFormulaHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB36F932BD57A527C3A5556C /* BPSelectedFormulaHost.swift */; };
-		CB4BE60B3A98DA716192DF17 /* BPSelectedFormulaViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB17D133908A55A8E723EBC4 /* BPSelectedFormulaViewController.swift */; };
-		CB7402FF4EADE89F6B4BB3A3 /* BPServicesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB956D0F9F0D57D551D7A8A1 /* BPServicesViewController.swift */; };
-		CB9B018690A5ABF34FB9E92B /* BPTahoeSheetAndOverlayHosts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC800FB4D67CE556B970C72 /* BPTahoeSheetAndOverlayHosts.swift */; };
-		CBE825D71DD6914FB6F4022F /* BPUnifiedUpdatesHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3D8A850C9AE5300D9655EA /* BPUnifiedUpdatesHost.swift */; };
-		CB851868D1F6072B7971934F /* BPUpdateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB4D7C3DD05D5813EF099012 /* BPUpdateViewController.swift */; };
-		CBE7EDB7C84E34A692E207D5 /* DCOAboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9614815471881B269DF1D9 /* DCOAboutWindowController.swift */; };
-		CB35843454CE6967D648812F /* BPAppUpdateState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBBD60EB5BCFBF2FBC17B076 /* BPAppUpdateState.swift */; };
-		CB6C54D3FAD78D37AFCFFD6D /* BPAutoremoveOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB1D309E39C92B768523FCA /* BPAutoremoveOperation.swift */; };
-		CB13EE46D5E80CC50A4A0C1A /* BPAutoremovePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD1E3C7A343B1175072AD32 /* BPAutoremovePreview.swift */; };
-		CB61262FF804D5D869E0D550 /* BPBrewError.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBFB13E78A3FC3721738AC33 /* BPBrewError.swift */; };
-		CB2733ED74458A35102F2CEB /* BPBrewfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB18720DCE55E3F538F83232 /* BPBrewfile.swift */; };
-		CB3274A721EC730DEF04FDA6 /* BPBrewfileExportOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBEE1CB6DE01EF3A666EBE71 /* BPBrewfileExportOperation.swift */; };
-		CB2498E20159C8618EBE7B24 /* BPBrewfileImportOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD7C8A0799AC8F2B911685E /* BPBrewfileImportOperation.swift */; };
-		CB4E784F5A3F112E4D876560 /* BPBrewfilePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB32367AC09DBE48F290DCE0 /* BPBrewfilePlan.swift */; };
-		CBB89BD2C7B6357798B1E4AB /* BPCleanupPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3BF60C8F23FCC230BA4C41 /* BPCleanupPreview.swift */; };
-		CBFD8ADE71F15812CE186F08 /* BPEmptyState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB82E022A116B75364B14B1F /* BPEmptyState.swift */; };
-		CB9C1C2B16A2C7ADBFD75B03 /* BPFormula.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE0A0D471BD4E411CEAB5A5 /* BPFormula.swift */; };
-		CB57672052B8CA511B7F9824 /* BPFormulaInformationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB79D7DB4AB61740B87ADF9 /* BPFormulaInformationState.swift */; };
-		CB9DAB7C37591FD75EF64825 /* BPFormulaOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF864C02B979112CCD8B1D8 /* BPFormulaOption.swift */; };
-		CB5F1DA5FB571630B7E5CB47 /* BPFormulaeTableAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB70AEE2E39C3BACB1D4DDCD /* BPFormulaeTableAction.swift */; };
-		CBDC0B815CA52AB90D87475F /* BPLoadingStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB43FDCD3C55FA63A31E5737 /* BPLoadingStatus.swift */; };
-		CBE8A7BC66C4DD193BB785F6 /* BPPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB805E5B4BE1A77D48D97C4D /* BPPreferences.swift */; };
-		CB478FB8D8A87324C26A0E08 /* BPSearchCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB11682BEDAA3A43052D0D74 /* BPSearchCoordinator.swift */; };
-		CBF564ED2FB65A2652E937C3 /* BPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1DDB63B42E4B9ECBFE4711 /* BPService.swift */; };
-		CB1DF705B37BDDBD0D04B48C /* BPServiceDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB3ADE5352D3348EB5EF7D2 /* BPServiceDetails.swift */; };
-		CB4313209655926425249E51 /* BPTahoeSurfaceStates.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB14AE3C3E251B75806BE515 /* BPTahoeSurfaceStates.swift */; };
-		CB39D6D32D646615D5D6BD66 /* BPTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0E146DA086F2256D92CF39 /* BPTask.swift */; };
-		CBC4E3E278FF01C38BC2B481 /* BPTimedDispatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD4DF58045D7116CCD9F308 /* BPTimedDispatch.swift */; };
-		CB670A1E60FAB25F169EA88A /* BPUpdatesSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF60E7FD819E2B9B65AA0C5 /* BPUpdatesSnapshot.swift */; };
-		CB7C16F5247782E7A62587B2 /* BPUpgradePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB77794A2B213C84BB70A519 /* BPUpgradePlan.swift */; };
-		CB2D893AF52D22B24D3B1CD3 /* BPAutoScrollTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8D0C52B8DAF01AFF05E07E /* BPAutoScrollTextView.swift */; };
-		CB8E9634691E2B07622AF4C0 /* BPBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE3C9961B1C608696F73FFC /* BPBackgroundView.swift */; };
-		CBF8EF2A65365D975CDB4380 /* BPDisabledView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF86EBA2C345C99EF0E52CC /* BPDisabledView.swift */; };
-		CBE3F2FB4CCC8083714C6951 /* BPEmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9F03F4640F59844E68C563 /* BPEmptyStateView.swift */; };
-		CB5F7ACAF39CC1B74E65479C /* BPFormulaeTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9D32A96F7A4F0A8AD719D6 /* BPFormulaeTableView.swift */; };
-		CBC33D953F7FC63197E5DD36 /* BPLoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB551D613276D94B539FD713 /* BPLoadingView.swift */; };
-		CBF077A01D30DD2E25802A28 /* CakebrewApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC1BB58DFEE3EF566494112 /* CakebrewApp.swift */; };
-		CB76B45389BB434E14F4515E /* BPHelperProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6DCDC2FD4D9E1F8875EC06 /* BPHelperProtocol.swift */; };
-		CBB8EC3199704A83B512C8D3 /* BPHelperCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9D5E36B7E5F35F46FA7DA5 /* BPHelperCommand.swift */; };
-		CB668253841CCA118931CC60 /* BPHelperOutputRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB7A115D57C6F8CD8806EC1A /* BPHelperOutputRelay.swift */; };
-		CB5B44C68B0014C8F40F9047 /* BPHelperSecurity.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB209D9BB64832445AE7A8C4 /* BPHelperSecurity.swift */; };
-		CBB9D25DED5443EF9A6C4F95 /* BPProcessTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB84805CCE1F81E1612C9823 /* BPProcessTree.swift */; };
-		CBCAB273255700D27F678F50 /* BPHelperClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6F220045B7290AFC535DC2 /* BPHelperClient.swift */; };
-		CBA6EA3023B5B687F84A5FE0 /* BPHelperRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB52477112E1C1CF83032BFF /* BPHelperRegistration.swift */; };
-		CB245CCC4A80584FABEF02F1 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC1AF99A3845AE7A9C751EA /* main.swift */; };
-		CBFD2BA5FAA8952C25602485 /* BPHelperProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6DCDC2FD4D9E1F8875EC06 /* BPHelperProtocol.swift */; };
-		CB2142DE7AB999E38B2A33C2 /* BPHelperCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9D5E36B7E5F35F46FA7DA5 /* BPHelperCommand.swift */; };
-		CB45FAC6A5C62BEA0CEFF61A /* BPHelperOutputRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB7A115D57C6F8CD8806EC1A /* BPHelperOutputRelay.swift */; };
-		CB54DCD33BFEC7E6784C2E1F /* BPHelperSecurity.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB209D9BB64832445AE7A8C4 /* BPHelperSecurity.swift */; };
-		CB37507A404BA4EC430A39EC /* BPProcessTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB84805CCE1F81E1612C9823 /* BPProcessTree.swift */; };
-		CB8CB20FA7CABB6CDB35F33F /* BPAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB613075FD47E8903CFF5C2E /* BPAppDelegate.swift */; };
-		CB177A34C1107B1475570CFF /* BPBackgroundUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB91DE0D74848EFEBDB8B7A8 /* BPBackgroundUpdater.swift */; };
-		CBB00EE97661DBD0685CC5E1 /* BPDockMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB7502FAFC4749996759A954 /* BPDockMenu.swift */; };
-		CB52D774C4787BC446605322 /* BPFormulaeDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB42D4D37AFDDB6779D513B6 /* BPFormulaeDataSource.swift */; };
-		CB81917AD4E99EC03EDAB9D7 /* BPHomebrewInterface.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB4372E8FD0D4679FB9E6C24 /* BPHomebrewInterface.swift */; };
-		CBB7D0A300B32C40F2EEFC7A /* BPHomebrewInterfaceListCall.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB91F17DCD10CDF7A9D728E7 /* BPHomebrewInterfaceListCall.swift */; };
-		CB7B83B39546E7F45D5317AF /* BPHomebrewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6B093D1925C02777964A57 /* BPHomebrewManager.swift */; };
-		CB7918CC4D2CC140BE4C429C /* BPMockHomebrewInterface.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB4DA150AC5C3A6FB3E660D8 /* BPMockHomebrewInterface.swift */; };
-		CB1CB6035CB746F507DF5042 /* BPSideBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9C2335D8D367D038C3CB54 /* BPSideBarController.swift */; };
-		CB99CA4386B7C75BC04A4C9E /* BPStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6C73916714817DE2D2D918 /* BPStyle.swift */; };
-		CBFB6BCF47C2924561E930F4 /* BPToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBAB1CE0EB4310A15E16CD9D /* BPToolbar.swift */; };
-		CBAA99536D3005DA122D6456 /* BPWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD0BF9E1E35F474B6819905 /* BPWindow.swift */; };
-		CB289C04C343C896A7B5CD6F /* BPAppUpdateHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD2571787EFC14F096EC6A0 /* BPAppUpdateHost.swift */; };
-		CBEB7CC0BABA99205182DB16 /* BPAutoremoveWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3568865012B7520F8387C9 /* BPAutoremoveWindowController.swift */; };
-		CB5AB39C9AF8B7AEEDC05069 /* BPBundleWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB2E1073D78DFD23EC69028E /* BPBundleWindowController.swift */; };
-		CB27BCDDFDCEDC850E673170 /* BPDoctorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3C5F47DE884CFBACC07B2F /* BPDoctorViewController.swift */; };
-		CBF205CC0DBC879D48441267 /* BPFormulaInformationHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB274BCB0AEABD42043259B4 /* BPFormulaInformationHost.swift */; };
-		CBF1B8776C062251D7032EE3 /* BPFormulaOptionsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBBB34E42D02A44B4A9267DB /* BPFormulaOptionsWindowController.swift */; };
-		CBA30BD5B47D8C2D4E2818A3 /* BPFormulaPopoverViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB944155A8766F2A19ED11EC /* BPFormulaPopoverViewController.swift */; };
-		CB79930F8245B7E3EDB5E83F /* BPHomebrewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1D473A65D8E83C135F64F1 /* BPHomebrewViewController.swift */; };
-		CB618BF8F42EEC10F060FFAC /* BPInstallationWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB423F37FC51AA095406CC73 /* BPInstallationWindowController.swift */; };
-		CB190643532DEA93D3BC4CD3 /* BPInstalledPackageListHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB58FD79ACCA03E75665AC6E /* BPInstalledPackageListHost.swift */; };
-		CB52BDEA017F7AA63333212C /* BPMainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3D1503AE446B820A1D1C2C /* BPMainWindowController.swift */; };
-		CB22236563D06A8C27666E3E /* BPPackageOperationPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBCEDB24738E7D7BBB9956E4 /* BPPackageOperationPresenter.swift */; };
-		CBBED5CF434C968F87255D0C /* BPPreferencesHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF009EEEF938E1DBB166E83 /* BPPreferencesHost.swift */; };
-		CB48EBA8C913E05997BD4B0B /* BPPreferencesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3E382C9F76592DD6836472 /* BPPreferencesWindowController.swift */; };
-		CB744620D2FB165BA986724B /* BPSelectedFormulaHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB36F932BD57A527C3A5556C /* BPSelectedFormulaHost.swift */; };
-		CBB3F337B6E23C0BF29421A6 /* BPSelectedFormulaViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB17D133908A55A8E723EBC4 /* BPSelectedFormulaViewController.swift */; };
-		CBC83FEF990201BEBEC652D0 /* BPServicesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB956D0F9F0D57D551D7A8A1 /* BPServicesViewController.swift */; };
-		CB7C9A19FE0DC0CC9F612A64 /* BPTahoeSheetAndOverlayHosts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC800FB4D67CE556B970C72 /* BPTahoeSheetAndOverlayHosts.swift */; };
-		CBD447B3AA4E6AF1CF345A35 /* BPUnifiedUpdatesHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3D8A850C9AE5300D9655EA /* BPUnifiedUpdatesHost.swift */; };
-		CB7A6BEC2A0949FA4761D61C /* BPUpdateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB4D7C3DD05D5813EF099012 /* BPUpdateViewController.swift */; };
-		CB2D1898C35C4E47B67C16F7 /* DCOAboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9614815471881B269DF1D9 /* DCOAboutWindowController.swift */; };
-		CB471CB852753B1BADB4EFF2 /* BPAppUpdateState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBBD60EB5BCFBF2FBC17B076 /* BPAppUpdateState.swift */; };
-		CBE32C14D5B3DD0010C43C2B /* BPAutoremoveOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB1D309E39C92B768523FCA /* BPAutoremoveOperation.swift */; };
-		CB5B5281CAD301C50276414B /* BPAutoremovePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD1E3C7A343B1175072AD32 /* BPAutoremovePreview.swift */; };
-		CB2981672FC97CF412E415E7 /* BPBrewError.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBFB13E78A3FC3721738AC33 /* BPBrewError.swift */; };
-		CB1727190B5E448E62C836F2 /* BPBrewfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB18720DCE55E3F538F83232 /* BPBrewfile.swift */; };
-		CB4D8413740953490B3CD6EB /* BPBrewfileExportOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBEE1CB6DE01EF3A666EBE71 /* BPBrewfileExportOperation.swift */; };
-		CBABFA7A2EDFD7E4EB15CA4A /* BPBrewfileImportOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD7C8A0799AC8F2B911685E /* BPBrewfileImportOperation.swift */; };
-		CB74BC8F26297F9B6A9AE46D /* BPBrewfilePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB32367AC09DBE48F290DCE0 /* BPBrewfilePlan.swift */; };
-		CBD081FABAB8E9D55AA7512F /* BPCleanupPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3BF60C8F23FCC230BA4C41 /* BPCleanupPreview.swift */; };
-		CBA43D466D9A4B35BFD283F4 /* BPEmptyState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB82E022A116B75364B14B1F /* BPEmptyState.swift */; };
-		CB08295B8DEAC7FB9D3496A4 /* BPFormula.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE0A0D471BD4E411CEAB5A5 /* BPFormula.swift */; };
-		CBAE5E3038E2A2CD2435345D /* BPFormulaInformationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB79D7DB4AB61740B87ADF9 /* BPFormulaInformationState.swift */; };
-		CBDA4970B138EE75E192D844 /* BPFormulaOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF864C02B979112CCD8B1D8 /* BPFormulaOption.swift */; };
-		CBA34C336C862EA99100BCC6 /* BPFormulaeTableAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB70AEE2E39C3BACB1D4DDCD /* BPFormulaeTableAction.swift */; };
-		CBC868F53F1F2881D569A8A1 /* BPLoadingStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB43FDCD3C55FA63A31E5737 /* BPLoadingStatus.swift */; };
-		CB28B66B6BB447529D5C87F8 /* BPPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB805E5B4BE1A77D48D97C4D /* BPPreferences.swift */; };
-		CB993AEFF05685C3E662C65D /* BPSearchCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB11682BEDAA3A43052D0D74 /* BPSearchCoordinator.swift */; };
-		CBCB893B72D968F4D2BB81BF /* BPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1DDB63B42E4B9ECBFE4711 /* BPService.swift */; };
-		CB41257C0539C582765E7400 /* BPServiceDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB3ADE5352D3348EB5EF7D2 /* BPServiceDetails.swift */; };
-		CB1C67DDD7DEFEAA6B5DF0C3 /* BPTahoeSurfaceStates.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB14AE3C3E251B75806BE515 /* BPTahoeSurfaceStates.swift */; };
-		CBD003D06B1AFCFC6E377BDD /* BPTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0E146DA086F2256D92CF39 /* BPTask.swift */; };
-		CB2255083EE67364D9EF36B9 /* BPTimedDispatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD4DF58045D7116CCD9F308 /* BPTimedDispatch.swift */; };
-		CB5E4E5C98234EE770672F2E /* BPUpdatesSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF60E7FD819E2B9B65AA0C5 /* BPUpdatesSnapshot.swift */; };
-		CBC89948B8F1CB75D8F0E528 /* BPUpgradePlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB77794A2B213C84BB70A519 /* BPUpgradePlan.swift */; };
-		CB39B6727BA574EE967EF958 /* BPAutoScrollTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8D0C52B8DAF01AFF05E07E /* BPAutoScrollTextView.swift */; };
-		CB2D91B6977DCF97AFA46F2B /* BPBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE3C9961B1C608696F73FFC /* BPBackgroundView.swift */; };
-		CBABF4BB46D308FDA80E67C4 /* BPDisabledView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF86EBA2C345C99EF0E52CC /* BPDisabledView.swift */; };
-		CB1BEB94B6161147169C131C /* BPEmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9F03F4640F59844E68C563 /* BPEmptyStateView.swift */; };
-		CB4CB2437DA2C7D4396E73FD /* BPFormulaeTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9D32A96F7A4F0A8AD719D6 /* BPFormulaeTableView.swift */; };
-		CB32299FBF85F274F795F79B /* BPLoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB551D613276D94B539FD713 /* BPLoadingView.swift */; };
-		CB30B823DB001875C10D9DAC /* BPHelperProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6DCDC2FD4D9E1F8875EC06 /* BPHelperProtocol.swift */; };
-		CBF47BB413EC8D23AB846629 /* BPHelperCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9D5E36B7E5F35F46FA7DA5 /* BPHelperCommand.swift */; };
-		CB42FE24DFFC8BB02203F1C7 /* BPHelperOutputRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB7A115D57C6F8CD8806EC1A /* BPHelperOutputRelay.swift */; };
-		CB5F4B23C61FD95B2D0BC64F /* BPHelperSecurity.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB209D9BB64832445AE7A8C4 /* BPHelperSecurity.swift */; };
-		CB55A0D598F0C8A49802532A /* BPProcessTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB84805CCE1F81E1612C9823 /* BPProcessTree.swift */; };
-		CBE33762AB03C87B8A4C4815 /* BPHelperClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6F220045B7290AFC535DC2 /* BPHelperClient.swift */; };
-		CB3EE820278578ABAF6A0DF7 /* BPHelperRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB52477112E1C1CF83032BFF /* BPHelperRegistration.swift */; };
-		CB2ECC8AE35F78586BE2D1A5 /* BPAccessibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE95365D57CDA55583C47A6 /* BPAccessibilityTests.swift */; };
-		CB0198D66D6239124FAA5869 /* BPAutoScrollTextViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC6AC240B7A8188EE0D9CAF /* BPAutoScrollTextViewTests.swift */; };
-		CB9435B256B2F4E34A05CF32 /* BPAutoremoveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB68094B1771A72F6B679A84 /* BPAutoremoveTests.swift */; };
-		CBF07FC189C92FC3AA2F3AE7 /* BPBackgroundTaskGuardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9B106264BED24C9830A812 /* BPBackgroundTaskGuardTests.swift */; };
-		CBF5B0C4DFDC91ADAC81D3CE /* BPBackgroundUpdaterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB1E837860C4967489B12F4 /* BPBackgroundUpdaterTests.swift */; };
-		CBC97179067702A7DDE8BDC9 /* BPBrewCompatibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBECF37C6AE40E0445F03CC7 /* BPBrewCompatibilityTests.swift */; };
-		CB74D9C255EBAF462FE49945 /* BPBrewErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB38F9E0DDA990EA9C34EDC9 /* BPBrewErrorTests.swift */; };
-		CB5BE14EC2D053C148F9AC5A /* BPBrewTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDAB4679EF8885ADA744717 /* BPBrewTransportTests.swift */; };
-		CB97F5867DB4F96AD649A401 /* BPBrewfileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB07881430565184C83F30CE /* BPBrewfileTests.swift */; };
-		CBF99421BDAAE8F3D3011621 /* BPCancelReloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDAC84A6941099CDFF849D5 /* BPCancelReloadTests.swift */; };
-		CB0EDEDBFD122DD37F9A6018 /* BPCatalogCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC7063765B31D15AB122FFB /* BPCatalogCacheTests.swift */; };
-		CB40E5F4D95BE68A4819409D /* BPCatalogRefreshPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD9424556876A520C3BDD05 /* BPCatalogRefreshPolicyTests.swift */; };
-		CB438523C5053632B429213D /* BPCleanupPreviewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBA9B09BCFCFE1CEB8F6F4A0 /* BPCleanupPreviewTests.swift */; };
-		CB07A1625D6C04B3247F16D6 /* BPDockMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBAEC1D294A3945337495086 /* BPDockMenuTests.swift */; };
-		CB2587C42BB812157C979A89 /* BPEmptyStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB325D27C2ECD26BB950F5A8 /* BPEmptyStateTests.swift */; };
-		CB4A1BD0BE7FE513EC0FEE33 /* BPFormulaInformationLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1C41B1209878F1C4C32947 /* BPFormulaInformationLifecycleTests.swift */; };
-		CB62BD04988F7AC240E2B879 /* BPFormulaInformationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB4C534D61830230DB4D5ACA /* BPFormulaInformationTests.swift */; };
-		CB4F6D50982C372C19873BD5 /* BPFormulaModernInfoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB17C03B82D28C01B45248C3 /* BPFormulaModernInfoTests.swift */; };
-		CB12F95DB449D8BD11C221C1 /* BPFormulaOptionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB5817B4F38A9FBF71524B1E /* BPFormulaOptionTests.swift */; };
-		CB24CC9705EBD6F17C21BC07 /* BPFormulaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9075C76F7E318E65A099BE /* BPFormulaTests.swift */; };
-		CBD8282F65CA8DA43F9A1DCB /* BPFormulaeDataSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB431EF9E94E18CDA6985096 /* BPFormulaeDataSourceTests.swift */; };
-		CB90FC8B6D9548A3D9BAAAC1 /* BPFormulaeTableActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBA3BBDE1BEBAF581E203F69 /* BPFormulaeTableActionTests.swift */; };
-		CB734052DE29489FED59B794 /* BPHelperCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC8E6DFEB4588F1FF2053E4 /* BPHelperCommandTests.swift */; };
-		CB2A8BAD6651425CE304DE78 /* BPHelperOutputRelayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB99F4AE8F17BE2344C74FF7 /* BPHelperOutputRelayTests.swift */; };
-		CB41507A9C197EF70ED16B5F /* BPHelperRegistrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBFC5D2332311C4760C4AFAD /* BPHelperRegistrationTests.swift */; };
-		CB233E21E59973F033AD9FF4 /* BPHelperSecurityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF22AC34C8F457AFA68BFC9 /* BPHelperSecurityTests.swift */; };
-		CBCE7E8F29ACC66E0EEAD2C8 /* BPHomebrewInterfaceListCallTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB34AFAE4D5C7F332E38563C /* BPHomebrewInterfaceListCallTests.swift */; };
-		CBACC07876967635A81D8D15 /* BPHomebrewManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDA6E9277E3CBF1449FD33F /* BPHomebrewManagerTests.swift */; };
-		CB859D91F6820D88388EB97D /* BPHomebrewRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD5D4DC0EBF975DF5A6C24E /* BPHomebrewRecoveryTests.swift */; };
-		CB9669EA8731C0182B36C6FB /* BPIncrementalReloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB5CEE312BF3E6E654D49C7F /* BPIncrementalReloadTests.swift */; };
-		CBC0FA9D6DB97839D4622495 /* BPInstallationWindowControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1A6B6B4F71879E7E4CE5DF /* BPInstallationWindowControllerTests.swift */; };
-		CB28ABB454D37C65444BE2C0 /* BPLoadingStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0803FFD1526DA29170B24D /* BPLoadingStatusTests.swift */; };
-		CBA0ACED229A79E026C700DB /* BPLocalizationParityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB693E4B58503C919B98758 /* BPLocalizationParityTests.swift */; };
-		CBDCF32DD243E7983F4E0F88 /* BPLocalizedStringsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB61752F68D38B11FFFB5902 /* BPLocalizedStringsTests.swift */; };
-		CBE0F8220B1F223842158692 /* BPMainMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC4A3C32D6CCFDA26A9AFA5 /* BPMainMenuTests.swift */; };
-		CBCA8C1AA60CA3FC08FA72B9 /* BPMockFidelityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD9770B7B67F19BC66D5A1C /* BPMockFidelityTests.swift */; };
-		CB7E74844179B78630869F5B /* BPPreferencesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF15B476CECC27A40A0036F /* BPPreferencesTests.swift */; };
-		CBE3B1B5DA1E77C3B306CF9D /* BPSearchCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD4746E85DC72619E9BA202 /* BPSearchCoordinatorTests.swift */; };
-		CB1605674828B2D5D22A0ED6 /* BPServiceDetailsControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD17369CB749914A5D51856 /* BPServiceDetailsControllerTests.swift */; };
-		CB6A0E416C600BCE28178852 /* BPServiceDetailsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD786F54DE33F6584581E11 /* BPServiceDetailsTests.swift */; };
-		CB76350481E8591499B977E6 /* BPServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB561E25A5C8B306DF111EA7 /* BPServiceTests.swift */; };
-		CB5D6F69A7460A5DFFBF40DE /* BPStreamingLogSweepTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB47905A40CE64D5939875F4 /* BPStreamingLogSweepTests.swift */; };
-		CBD0A6867CCAD1280ED03ABE /* BPTaskCancelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB30EFBA74AF2602EADEBDB6 /* BPTaskCancelTests.swift */; };
-		CB37901669408DE0F7E6D894 /* BPTaskStreamingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB353AF58F3CDC83FB89C115 /* BPTaskStreamingTests.swift */; };
-		CBFD53BBF14F1E21E041ACA8 /* BPUpgradeArgumentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC6168B9EA9962B7F1CAEA4 /* BPUpgradeArgumentsTests.swift */; };
-		CBBC25701C281DBDF3A8F37F /* BPUpgradePlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBCDF47EFD288B33ED6E4CB7 /* BPUpgradePlanTests.swift */; };
-		CBC1EC226E2243E7C70D923A /* BPVersionStampingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8B8C7D1E97B12EC5E4EB87 /* BPVersionStampingTests.swift */; };
-		CB19022A8C8B9B2C770ECCC8 /* BPSwiftUIArchitectureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBCE5DD49C565B50DAD7CCCA /* BPSwiftUIArchitectureTests.swift */; };
-		CBA12D8BD04D8A7FE19554EC /* CakebrewUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9848E00AD4E05EA7995F9B /* CakebrewUITests.swift */; };
-		276AE0A615164A649BE46380 /* BPVersionHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4CBC9D3A33D40B7BF9FA892 /* BPVersionHistory.swift */; };
-		631668F17E8D4DC9A190F9C5 /* BPVersionHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4CBC9D3A33D40B7BF9FA892 /* BPVersionHistory.swift */; };
-		CF9F37950BD1401894DB4687 /* BPVersionHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15345C4693ED485C947BE6C9 /* BPVersionHistoryView.swift */; };
 		DB5B9AB3018547199B96E84D /* BPVersionHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15345C4693ED485C947BE6C9 /* BPVersionHistoryView.swift */; };
-		53486C63E6A14E61B322ACEF /* BPVersionHistoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2443974E23744BBAB8A7AEEB /* BPVersionHistoryTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -315,18 +309,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-  CB150000000000000000000C = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BPAutoremoveWindowController.m; sourceTree = "<group>"; };
-  CB150000000000000000000D = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BPAutoremoveWindowController.h; sourceTree = "<group>"; };
-  CB150000000000000000000A = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BPAutoremoveTests.m; sourceTree = "<group>"; };
-  CB1500000000000000000007 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPAutoremoveOperation.m; path = Models/BPAutoremoveOperation.m; sourceTree = "<group>"; };
-  CB1500000000000000000008 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPAutoremoveOperation.h; path = Models/BPAutoremoveOperation.h; sourceTree = "<group>"; };
-  CB1500000000000000000003 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPAutoremovePreview.m; path = Models/BPAutoremovePreview.m; sourceTree = "<group>"; };
-  CB1500000000000000000004 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPAutoremovePreview.h; path = Models/BPAutoremovePreview.h; sourceTree = "<group>"; };
+		033BC253AEDFD1C4DB32FD33 /* brewInfo_modern_installed.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_modern_installed.txt; sourceTree = "<group>"; };
+		0C6C83096C8D6B8D6BE58366 /* brewInfo_modern_aliases.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_modern_aliases.txt; sourceTree = "<group>"; };
 		0D42C8684E62ED50FB7A319A /* CakebrewUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CakebrewUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		150AEC571B3FA58D00163767 /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/BPSelectedFormula.strings; sourceTree = "<group>"; };
 		1529086A1927C05B00206767 /* .travis.yml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .travis.yml; sourceTree = SOURCE_ROOT; };
+		15345C4693ED485C947BE6C9 /* BPVersionHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPVersionHistoryView.swift; path = Cakebrew/Controllers/BPVersionHistoryView.swift; sourceTree = SOURCE_ROOT; };
 		1536BFF618EBA92400B67C5C /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
-		89A1C0A02608300000CAFE01 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		1540FA3418ECF66B00334A5C /* download.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = download.icns; sourceTree = "<group>"; };
 		1570E11C25F195BE0043560B /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/BPBundleWindow.strings; sourceTree = "<group>"; };
 		1570E11D25F195BE0043560B /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/BPDoctorView.strings; sourceTree = "<group>"; };
@@ -395,20 +384,149 @@
 		1FE4FE5C148E4CDD008EDE8B /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		1FE4FE5D148E4CDD008EDE8B /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		1FE4FE60148E4CDD008EDE8B /* Cakebrew-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Cakebrew-Info.plist"; sourceTree = "<group>"; };
-		46BD61BF82D5E8C0C487BD7D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		21856FE82C89016462465FB2 /* brewInfo_modern_notinstalled.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_modern_notinstalled.txt; sourceTree = "<group>"; };
+		2443974E23744BBAB8A7AEEB /* BPVersionHistoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPVersionHistoryTests.swift; path = CakebrewTests/BPVersionHistoryTests.swift; sourceTree = SOURCE_ROOT; };
+		46BD61BF82D5E8C0C487BD7D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		52A74D796C4772C04B326231 /* CakebrewHelper-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "CakebrewHelper-Info.plist"; sourceTree = "<group>"; };
+		5A58B1C9C1F6B6B757DDAD79 /* brewInfo_modern_kegonly.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_modern_kegonly.txt; sourceTree = "<group>"; };
+		89A1C0A02608300000CAFE01 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		9C155F549AE6671B51A3FCAD /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
-		9E4730EAEC1D0DE6ACD3DCE4 /* CakebrewHelper */ = {isa = PBXFileReference; includeInIndex = 0; path = CakebrewHelper; sourceTree = BUILT_PRODUCTS_DIR; };
+		9E4730EAEC1D0DE6ACD3DCE4 /* CakebrewHelper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CakebrewHelper; sourceTree = BUILT_PRODUCTS_DIR; };
+		A4CBC9D3A33D40B7BF9FA892 /* BPVersionHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPVersionHistory.swift; path = Cakebrew/Models/BPVersionHistory.swift; sourceTree = SOURCE_ROOT; };
+		CB07881430565184C83F30CE /* BPBrewfileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBrewfileTests.swift; path = CakebrewTests/BPBrewfileTests.swift; sourceTree = SOURCE_ROOT; };
+		CB0803FFD1526DA29170B24D /* BPLoadingStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPLoadingStatusTests.swift; path = CakebrewTests/BPLoadingStatusTests.swift; sourceTree = SOURCE_ROOT; };
+		CB0E146DA086F2256D92CF39 /* BPTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPTask.swift; path = Cakebrew/Models/BPTask.swift; sourceTree = SOURCE_ROOT; };
+		CB11682BEDAA3A43052D0D74 /* BPSearchCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPSearchCoordinator.swift; path = Cakebrew/Models/BPSearchCoordinator.swift; sourceTree = SOURCE_ROOT; };
+		CB14AE3C3E251B75806BE515 /* BPTahoeSurfaceStates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPTahoeSurfaceStates.swift; path = Cakebrew/Models/BPTahoeSurfaceStates.swift; sourceTree = SOURCE_ROOT; };
+		CB1500000000000000000003 /* BPAutoremovePreview.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPAutoremovePreview.m; path = Models/BPAutoremovePreview.m; sourceTree = "<group>"; };
+		CB1500000000000000000004 /* BPAutoremovePreview.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPAutoremovePreview.h; path = Models/BPAutoremovePreview.h; sourceTree = "<group>"; };
+		CB1500000000000000000007 /* BPAutoremoveOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BPAutoremoveOperation.m; path = Models/BPAutoremoveOperation.m; sourceTree = "<group>"; };
+		CB1500000000000000000008 /* BPAutoremoveOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BPAutoremoveOperation.h; path = Models/BPAutoremoveOperation.h; sourceTree = "<group>"; };
+		CB150000000000000000000A /* BPAutoremoveTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BPAutoremoveTests.m; sourceTree = "<group>"; };
+		CB150000000000000000000C /* BPAutoremoveWindowController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BPAutoremoveWindowController.m; sourceTree = "<group>"; };
+		CB150000000000000000000D /* BPAutoremoveWindowController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BPAutoremoveWindowController.h; sourceTree = "<group>"; };
+		CB17C03B82D28C01B45248C3 /* BPFormulaModernInfoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaModernInfoTests.swift; path = CakebrewTests/BPFormulaModernInfoTests.swift; sourceTree = SOURCE_ROOT; };
+		CB17D133908A55A8E723EBC4 /* BPSelectedFormulaViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPSelectedFormulaViewController.swift; path = Cakebrew/Controllers/BPSelectedFormulaViewController.swift; sourceTree = SOURCE_ROOT; };
+		CB18720DCE55E3F538F83232 /* BPBrewfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBrewfile.swift; path = Cakebrew/Models/BPBrewfile.swift; sourceTree = SOURCE_ROOT; };
+		CB1A6B6B4F71879E7E4CE5DF /* BPInstallationWindowControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPInstallationWindowControllerTests.swift; path = CakebrewTests/BPInstallationWindowControllerTests.swift; sourceTree = SOURCE_ROOT; };
+		CB1C41B1209878F1C4C32947 /* BPFormulaInformationLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaInformationLifecycleTests.swift; path = CakebrewTests/BPFormulaInformationLifecycleTests.swift; sourceTree = SOURCE_ROOT; };
+		CB1D473A65D8E83C135F64F1 /* BPHomebrewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHomebrewViewController.swift; path = Cakebrew/Controllers/BPHomebrewViewController.swift; sourceTree = SOURCE_ROOT; };
+		CB1DDB63B42E4B9ECBFE4711 /* BPService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPService.swift; path = Cakebrew/Models/BPService.swift; sourceTree = SOURCE_ROOT; };
+		CB209D9BB64832445AE7A8C4 /* BPHelperSecurity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperSecurity.swift; path = Cakebrew/Helper/BPHelperSecurity.swift; sourceTree = SOURCE_ROOT; };
+		CB274BCB0AEABD42043259B4 /* BPFormulaInformationHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaInformationHost.swift; path = Cakebrew/Controllers/BPFormulaInformationHost.swift; sourceTree = SOURCE_ROOT; };
+		CB2E1073D78DFD23EC69028E /* BPBundleWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBundleWindowController.swift; path = Cakebrew/Controllers/BPBundleWindowController.swift; sourceTree = SOURCE_ROOT; };
+		CB30EFBA74AF2602EADEBDB6 /* BPTaskCancelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPTaskCancelTests.swift; path = CakebrewTests/BPTaskCancelTests.swift; sourceTree = SOURCE_ROOT; };
+		CB32367AC09DBE48F290DCE0 /* BPBrewfilePlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBrewfilePlan.swift; path = Cakebrew/Models/BPBrewfilePlan.swift; sourceTree = SOURCE_ROOT; };
+		CB325D27C2ECD26BB950F5A8 /* BPEmptyStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPEmptyStateTests.swift; path = CakebrewTests/BPEmptyStateTests.swift; sourceTree = SOURCE_ROOT; };
+		CB34AFAE4D5C7F332E38563C /* BPHomebrewInterfaceListCallTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHomebrewInterfaceListCallTests.swift; path = CakebrewTests/BPHomebrewInterfaceListCallTests.swift; sourceTree = SOURCE_ROOT; };
+		CB353AF58F3CDC83FB89C115 /* BPTaskStreamingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPTaskStreamingTests.swift; path = CakebrewTests/BPTaskStreamingTests.swift; sourceTree = SOURCE_ROOT; };
+		CB3568865012B7520F8387C9 /* BPAutoremoveWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAutoremoveWindowController.swift; path = Cakebrew/Controllers/BPAutoremoveWindowController.swift; sourceTree = SOURCE_ROOT; };
+		CB36F932BD57A527C3A5556C /* BPSelectedFormulaHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPSelectedFormulaHost.swift; path = Cakebrew/Controllers/BPSelectedFormulaHost.swift; sourceTree = SOURCE_ROOT; };
+		CB38F9E0DDA990EA9C34EDC9 /* BPBrewErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBrewErrorTests.swift; path = CakebrewTests/BPBrewErrorTests.swift; sourceTree = SOURCE_ROOT; };
+		CB3BF60C8F23FCC230BA4C41 /* BPCleanupPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPCleanupPreview.swift; path = Cakebrew/Models/BPCleanupPreview.swift; sourceTree = SOURCE_ROOT; };
+		CB3C5F47DE884CFBACC07B2F /* BPDoctorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPDoctorViewController.swift; path = Cakebrew/Controllers/BPDoctorViewController.swift; sourceTree = SOURCE_ROOT; };
+		CB3D1503AE446B820A1D1C2C /* BPMainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPMainWindowController.swift; path = Cakebrew/Controllers/BPMainWindowController.swift; sourceTree = SOURCE_ROOT; };
+		CB3D8A850C9AE5300D9655EA /* BPUnifiedUpdatesHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPUnifiedUpdatesHost.swift; path = Cakebrew/Controllers/BPUnifiedUpdatesHost.swift; sourceTree = SOURCE_ROOT; };
+		CB3E382C9F76592DD6836472 /* BPPreferencesWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPPreferencesWindowController.swift; path = Cakebrew/Controllers/BPPreferencesWindowController.swift; sourceTree = SOURCE_ROOT; };
+		CB423F37FC51AA095406CC73 /* BPInstallationWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPInstallationWindowController.swift; path = Cakebrew/Controllers/BPInstallationWindowController.swift; sourceTree = SOURCE_ROOT; };
+		CB42D4D37AFDDB6779D513B6 /* BPFormulaeDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaeDataSource.swift; path = Cakebrew/BPFormulaeDataSource.swift; sourceTree = SOURCE_ROOT; };
+		CB431EF9E94E18CDA6985096 /* BPFormulaeDataSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaeDataSourceTests.swift; path = CakebrewTests/BPFormulaeDataSourceTests.swift; sourceTree = SOURCE_ROOT; };
+		CB4372E8FD0D4679FB9E6C24 /* BPHomebrewInterface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHomebrewInterface.swift; path = Cakebrew/BPHomebrewInterface.swift; sourceTree = SOURCE_ROOT; };
+		CB43FDCD3C55FA63A31E5737 /* BPLoadingStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPLoadingStatus.swift; path = Cakebrew/Models/BPLoadingStatus.swift; sourceTree = SOURCE_ROOT; };
+		CB47905A40CE64D5939875F4 /* BPStreamingLogSweepTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPStreamingLogSweepTests.swift; path = CakebrewTests/BPStreamingLogSweepTests.swift; sourceTree = SOURCE_ROOT; };
+		CB4C534D61830230DB4D5ACA /* BPFormulaInformationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaInformationTests.swift; path = CakebrewTests/BPFormulaInformationTests.swift; sourceTree = SOURCE_ROOT; };
+		CB4D7C3DD05D5813EF099012 /* BPUpdateViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPUpdateViewController.swift; path = Cakebrew/Controllers/BPUpdateViewController.swift; sourceTree = SOURCE_ROOT; };
+		CB4DA150AC5C3A6FB3E660D8 /* BPMockHomebrewInterface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPMockHomebrewInterface.swift; path = Cakebrew/BPMockHomebrewInterface.swift; sourceTree = SOURCE_ROOT; };
+		CB52477112E1C1CF83032BFF /* BPHelperRegistration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperRegistration.swift; path = Cakebrew/Helper/BPHelperRegistration.swift; sourceTree = SOURCE_ROOT; };
+		CB551D613276D94B539FD713 /* BPLoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPLoadingView.swift; path = Cakebrew/Views/BPLoadingView.swift; sourceTree = SOURCE_ROOT; };
+		CB561E25A5C8B306DF111EA7 /* BPServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPServiceTests.swift; path = CakebrewTests/BPServiceTests.swift; sourceTree = SOURCE_ROOT; };
+		CB5817B4F38A9FBF71524B1E /* BPFormulaOptionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaOptionTests.swift; path = CakebrewTests/BPFormulaOptionTests.swift; sourceTree = SOURCE_ROOT; };
+		CB58FD79ACCA03E75665AC6E /* BPInstalledPackageListHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPInstalledPackageListHost.swift; path = Cakebrew/Controllers/BPInstalledPackageListHost.swift; sourceTree = SOURCE_ROOT; };
+		CB5CEE312BF3E6E654D49C7F /* BPIncrementalReloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPIncrementalReloadTests.swift; path = CakebrewTests/BPIncrementalReloadTests.swift; sourceTree = SOURCE_ROOT; };
+		CB613075FD47E8903CFF5C2E /* BPAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAppDelegate.swift; path = Cakebrew/BPAppDelegate.swift; sourceTree = SOURCE_ROOT; };
+		CB61752F68D38B11FFFB5902 /* BPLocalizedStringsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPLocalizedStringsTests.swift; path = CakebrewTests/BPLocalizedStringsTests.swift; sourceTree = SOURCE_ROOT; };
+		CB68094B1771A72F6B679A84 /* BPAutoremoveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAutoremoveTests.swift; path = CakebrewTests/BPAutoremoveTests.swift; sourceTree = SOURCE_ROOT; };
+		CB6B093D1925C02777964A57 /* BPHomebrewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHomebrewManager.swift; path = Cakebrew/BPHomebrewManager.swift; sourceTree = SOURCE_ROOT; };
+		CB6C73916714817DE2D2D918 /* BPStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPStyle.swift; path = Cakebrew/BPStyle.swift; sourceTree = SOURCE_ROOT; };
+		CB6DCDC2FD4D9E1F8875EC06 /* BPHelperProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperProtocol.swift; path = Cakebrew/Helper/BPHelperProtocol.swift; sourceTree = SOURCE_ROOT; };
+		CB6F220045B7290AFC535DC2 /* BPHelperClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperClient.swift; path = Cakebrew/Helper/BPHelperClient.swift; sourceTree = SOURCE_ROOT; };
+		CB70AEE2E39C3BACB1D4DDCD /* BPFormulaeTableAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaeTableAction.swift; path = Cakebrew/Models/BPFormulaeTableAction.swift; sourceTree = SOURCE_ROOT; };
+		CB7502FAFC4749996759A954 /* BPDockMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPDockMenu.swift; path = Cakebrew/BPDockMenu.swift; sourceTree = SOURCE_ROOT; };
+		CB77794A2B213C84BB70A519 /* BPUpgradePlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPUpgradePlan.swift; path = Cakebrew/Models/BPUpgradePlan.swift; sourceTree = SOURCE_ROOT; };
+		CB7A115D57C6F8CD8806EC1A /* BPHelperOutputRelay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperOutputRelay.swift; path = Cakebrew/Helper/BPHelperOutputRelay.swift; sourceTree = SOURCE_ROOT; };
+		CB805E5B4BE1A77D48D97C4D /* BPPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPPreferences.swift; path = Cakebrew/Models/BPPreferences.swift; sourceTree = SOURCE_ROOT; };
+		CB82E022A116B75364B14B1F /* BPEmptyState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPEmptyState.swift; path = Cakebrew/Models/BPEmptyState.swift; sourceTree = SOURCE_ROOT; };
+		CB84805CCE1F81E1612C9823 /* BPProcessTree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPProcessTree.swift; path = Cakebrew/Helper/BPProcessTree.swift; sourceTree = SOURCE_ROOT; };
+		CB8B8C7D1E97B12EC5E4EB87 /* BPVersionStampingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPVersionStampingTests.swift; path = CakebrewTests/BPVersionStampingTests.swift; sourceTree = SOURCE_ROOT; };
+		CB8D0C52B8DAF01AFF05E07E /* BPAutoScrollTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAutoScrollTextView.swift; path = Cakebrew/Views/BPAutoScrollTextView.swift; sourceTree = SOURCE_ROOT; };
+		CB9075C76F7E318E65A099BE /* BPFormulaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaTests.swift; path = CakebrewTests/BPFormulaTests.swift; sourceTree = SOURCE_ROOT; };
+		CB91DE0D74848EFEBDB8B7A8 /* BPBackgroundUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBackgroundUpdater.swift; path = Cakebrew/BPBackgroundUpdater.swift; sourceTree = SOURCE_ROOT; };
+		CB91F17DCD10CDF7A9D728E7 /* BPHomebrewInterfaceListCall.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHomebrewInterfaceListCall.swift; path = Cakebrew/BPHomebrewInterfaceListCall.swift; sourceTree = SOURCE_ROOT; };
+		CB944155A8766F2A19ED11EC /* BPFormulaPopoverViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaPopoverViewController.swift; path = Cakebrew/Controllers/BPFormulaPopoverViewController.swift; sourceTree = SOURCE_ROOT; };
+		CB956D0F9F0D57D551D7A8A1 /* BPServicesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPServicesViewController.swift; path = Cakebrew/Controllers/BPServicesViewController.swift; sourceTree = SOURCE_ROOT; };
+		CB9614815471881B269DF1D9 /* DCOAboutWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DCOAboutWindowController.swift; path = Cakebrew/Libraries/DCOAboutWindow/DCOAboutWindowController.swift; sourceTree = SOURCE_ROOT; };
+		CB9848E00AD4E05EA7995F9B /* CakebrewUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CakebrewUITests.swift; path = CakebrewUITests/CakebrewUITests.swift; sourceTree = SOURCE_ROOT; };
+		CB99F4AE8F17BE2344C74FF7 /* BPHelperOutputRelayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperOutputRelayTests.swift; path = CakebrewTests/BPHelperOutputRelayTests.swift; sourceTree = SOURCE_ROOT; };
+		CB9B106264BED24C9830A812 /* BPBackgroundTaskGuardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBackgroundTaskGuardTests.swift; path = CakebrewTests/BPBackgroundTaskGuardTests.swift; sourceTree = SOURCE_ROOT; };
+		CB9C2335D8D367D038C3CB54 /* BPSideBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPSideBarController.swift; path = Cakebrew/BPSideBarController.swift; sourceTree = SOURCE_ROOT; };
+		CB9D32A96F7A4F0A8AD719D6 /* BPFormulaeTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaeTableView.swift; path = Cakebrew/Views/BPFormulaeTableView.swift; sourceTree = SOURCE_ROOT; };
+		CB9D5E36B7E5F35F46FA7DA5 /* BPHelperCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperCommand.swift; path = Cakebrew/Helper/BPHelperCommand.swift; sourceTree = SOURCE_ROOT; };
+		CB9F03F4640F59844E68C563 /* BPEmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPEmptyStateView.swift; path = Cakebrew/Views/BPEmptyStateView.swift; sourceTree = SOURCE_ROOT; };
+		CBA3BBDE1BEBAF581E203F69 /* BPFormulaeTableActionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaeTableActionTests.swift; path = CakebrewTests/BPFormulaeTableActionTests.swift; sourceTree = SOURCE_ROOT; };
+		CBA9B09BCFCFE1CEB8F6F4A0 /* BPCleanupPreviewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPCleanupPreviewTests.swift; path = CakebrewTests/BPCleanupPreviewTests.swift; sourceTree = SOURCE_ROOT; };
+		CBAB1CE0EB4310A15E16CD9D /* BPToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPToolbar.swift; path = Cakebrew/BPToolbar.swift; sourceTree = SOURCE_ROOT; };
+		CBAEC1D294A3945337495086 /* BPDockMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPDockMenuTests.swift; path = CakebrewTests/BPDockMenuTests.swift; sourceTree = SOURCE_ROOT; };
+		CBB1D309E39C92B768523FCA /* BPAutoremoveOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAutoremoveOperation.swift; path = Cakebrew/Models/BPAutoremoveOperation.swift; sourceTree = SOURCE_ROOT; };
+		CBB1E837860C4967489B12F4 /* BPBackgroundUpdaterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBackgroundUpdaterTests.swift; path = CakebrewTests/BPBackgroundUpdaterTests.swift; sourceTree = SOURCE_ROOT; };
+		CBB3ADE5352D3348EB5EF7D2 /* BPServiceDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPServiceDetails.swift; path = Cakebrew/Models/BPServiceDetails.swift; sourceTree = SOURCE_ROOT; };
+		CBB693E4B58503C919B98758 /* BPLocalizationParityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPLocalizationParityTests.swift; path = CakebrewTests/BPLocalizationParityTests.swift; sourceTree = SOURCE_ROOT; };
+		CBB79D7DB4AB61740B87ADF9 /* BPFormulaInformationState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaInformationState.swift; path = Cakebrew/Models/BPFormulaInformationState.swift; sourceTree = SOURCE_ROOT; };
+		CBBB34E42D02A44B4A9267DB /* BPFormulaOptionsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaOptionsWindowController.swift; path = Cakebrew/Controllers/BPFormulaOptionsWindowController.swift; sourceTree = SOURCE_ROOT; };
+		CBBD60EB5BCFBF2FBC17B076 /* BPAppUpdateState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAppUpdateState.swift; path = Cakebrew/Models/BPAppUpdateState.swift; sourceTree = SOURCE_ROOT; };
+		CBC1AF99A3845AE7A9C751EA /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = main.swift; path = Cakebrew/Helper/main.swift; sourceTree = SOURCE_ROOT; };
+		CBC1BB58DFEE3EF566494112 /* CakebrewApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CakebrewApp.swift; path = Cakebrew/CakebrewApp.swift; sourceTree = SOURCE_ROOT; };
+		CBC4A3C32D6CCFDA26A9AFA5 /* BPMainMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPMainMenuTests.swift; path = CakebrewTests/BPMainMenuTests.swift; sourceTree = SOURCE_ROOT; };
+		CBC6168B9EA9962B7F1CAEA4 /* BPUpgradeArgumentsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPUpgradeArgumentsTests.swift; path = CakebrewTests/BPUpgradeArgumentsTests.swift; sourceTree = SOURCE_ROOT; };
+		CBC6AC240B7A8188EE0D9CAF /* BPAutoScrollTextViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAutoScrollTextViewTests.swift; path = CakebrewTests/BPAutoScrollTextViewTests.swift; sourceTree = SOURCE_ROOT; };
+		CBC7063765B31D15AB122FFB /* BPCatalogCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPCatalogCacheTests.swift; path = CakebrewTests/BPCatalogCacheTests.swift; sourceTree = SOURCE_ROOT; };
+		CBC800FB4D67CE556B970C72 /* BPTahoeSheetAndOverlayHosts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPTahoeSheetAndOverlayHosts.swift; path = Cakebrew/Controllers/BPTahoeSheetAndOverlayHosts.swift; sourceTree = SOURCE_ROOT; };
+		CBC8E6DFEB4588F1FF2053E4 /* BPHelperCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperCommandTests.swift; path = CakebrewTests/BPHelperCommandTests.swift; sourceTree = SOURCE_ROOT; };
+		CBCDF47EFD288B33ED6E4CB7 /* BPUpgradePlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPUpgradePlanTests.swift; path = CakebrewTests/BPUpgradePlanTests.swift; sourceTree = SOURCE_ROOT; };
+		CBCE5DD49C565B50DAD7CCCA /* BPSwiftUIArchitectureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPSwiftUIArchitectureTests.swift; path = CakebrewTests/BPSwiftUIArchitectureTests.swift; sourceTree = SOURCE_ROOT; };
+		CBCEDB24738E7D7BBB9956E4 /* BPPackageOperationPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPPackageOperationPresenter.swift; path = Cakebrew/Controllers/BPPackageOperationPresenter.swift; sourceTree = SOURCE_ROOT; };
+		CBD0BF9E1E35F474B6819905 /* BPWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPWindow.swift; path = Cakebrew/BPWindow.swift; sourceTree = SOURCE_ROOT; };
+		CBD17369CB749914A5D51856 /* BPServiceDetailsControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPServiceDetailsControllerTests.swift; path = CakebrewTests/BPServiceDetailsControllerTests.swift; sourceTree = SOURCE_ROOT; };
+		CBD1E3C7A343B1175072AD32 /* BPAutoremovePreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAutoremovePreview.swift; path = Cakebrew/Models/BPAutoremovePreview.swift; sourceTree = SOURCE_ROOT; };
+		CBD2571787EFC14F096EC6A0 /* BPAppUpdateHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAppUpdateHost.swift; path = Cakebrew/Controllers/BPAppUpdateHost.swift; sourceTree = SOURCE_ROOT; };
+		CBD4746E85DC72619E9BA202 /* BPSearchCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPSearchCoordinatorTests.swift; path = CakebrewTests/BPSearchCoordinatorTests.swift; sourceTree = SOURCE_ROOT; };
+		CBD4DF58045D7116CCD9F308 /* BPTimedDispatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPTimedDispatch.swift; path = Cakebrew/Models/BPTimedDispatch.swift; sourceTree = SOURCE_ROOT; };
+		CBD5D4DC0EBF975DF5A6C24E /* BPHomebrewRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHomebrewRecoveryTests.swift; path = CakebrewTests/BPHomebrewRecoveryTests.swift; sourceTree = SOURCE_ROOT; };
+		CBD786F54DE33F6584581E11 /* BPServiceDetailsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPServiceDetailsTests.swift; path = CakebrewTests/BPServiceDetailsTests.swift; sourceTree = SOURCE_ROOT; };
+		CBD7C8A0799AC8F2B911685E /* BPBrewfileImportOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBrewfileImportOperation.swift; path = Cakebrew/Models/BPBrewfileImportOperation.swift; sourceTree = SOURCE_ROOT; };
+		CBD9424556876A520C3BDD05 /* BPCatalogRefreshPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPCatalogRefreshPolicyTests.swift; path = CakebrewTests/BPCatalogRefreshPolicyTests.swift; sourceTree = SOURCE_ROOT; };
+		CBD9770B7B67F19BC66D5A1C /* BPMockFidelityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPMockFidelityTests.swift; path = CakebrewTests/BPMockFidelityTests.swift; sourceTree = SOURCE_ROOT; };
+		CBDA6E9277E3CBF1449FD33F /* BPHomebrewManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHomebrewManagerTests.swift; path = CakebrewTests/BPHomebrewManagerTests.swift; sourceTree = SOURCE_ROOT; };
+		CBDAB4679EF8885ADA744717 /* BPBrewTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBrewTransportTests.swift; path = CakebrewTests/BPBrewTransportTests.swift; sourceTree = SOURCE_ROOT; };
+		CBDAC84A6941099CDFF849D5 /* BPCancelReloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPCancelReloadTests.swift; path = CakebrewTests/BPCancelReloadTests.swift; sourceTree = SOURCE_ROOT; };
+		CBE0A0D471BD4E411CEAB5A5 /* BPFormula.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormula.swift; path = Cakebrew/Models/BPFormula.swift; sourceTree = SOURCE_ROOT; };
+		CBE3C9961B1C608696F73FFC /* BPBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBackgroundView.swift; path = Cakebrew/Views/BPBackgroundView.swift; sourceTree = SOURCE_ROOT; };
+		CBE95365D57CDA55583C47A6 /* BPAccessibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAccessibilityTests.swift; path = CakebrewTests/BPAccessibilityTests.swift; sourceTree = SOURCE_ROOT; };
+		CBECF37C6AE40E0445F03CC7 /* BPBrewCompatibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBrewCompatibilityTests.swift; path = CakebrewTests/BPBrewCompatibilityTests.swift; sourceTree = SOURCE_ROOT; };
+		CBEE1CB6DE01EF3A666EBE71 /* BPBrewfileExportOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBrewfileExportOperation.swift; path = Cakebrew/Models/BPBrewfileExportOperation.swift; sourceTree = SOURCE_ROOT; };
+		CBF009EEEF938E1DBB166E83 /* BPPreferencesHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPPreferencesHost.swift; path = Cakebrew/Controllers/BPPreferencesHost.swift; sourceTree = SOURCE_ROOT; };
+		CBF15B476CECC27A40A0036F /* BPPreferencesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPPreferencesTests.swift; path = CakebrewTests/BPPreferencesTests.swift; sourceTree = SOURCE_ROOT; };
+		CBF22AC34C8F457AFA68BFC9 /* BPHelperSecurityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperSecurityTests.swift; path = CakebrewTests/BPHelperSecurityTests.swift; sourceTree = SOURCE_ROOT; };
+		CBF60E7FD819E2B9B65AA0C5 /* BPUpdatesSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPUpdatesSnapshot.swift; path = Cakebrew/Models/BPUpdatesSnapshot.swift; sourceTree = SOURCE_ROOT; };
+		CBF864C02B979112CCD8B1D8 /* BPFormulaOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaOption.swift; path = Cakebrew/Models/BPFormulaOption.swift; sourceTree = SOURCE_ROOT; };
+		CBF86EBA2C345C99EF0E52CC /* BPDisabledView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPDisabledView.swift; path = Cakebrew/Views/BPDisabledView.swift; sourceTree = SOURCE_ROOT; };
+		CBFB13E78A3FC3721738AC33 /* BPBrewError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBrewError.swift; path = Cakebrew/Models/BPBrewError.swift; sourceTree = SOURCE_ROOT; };
+		CBFC5D2332311C4760C4AFAD /* BPHelperRegistrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperRegistrationTests.swift; path = CakebrewTests/BPHelperRegistrationTests.swift; sourceTree = SOURCE_ROOT; };
 		D261C9C01B852FA300409803 /* CakebrewTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CakebrewTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D261C9C31B852FA300409803 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D2BBAB621B87142F00F21332 /* brewInfo_acme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_acme.txt; sourceTree = "<group>"; };
 		D2BBAB631B87142F00F21332 /* brewInfo_bfg.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_bfg.txt; sourceTree = "<group>"; };
 		D2BBAB641B87142F00F21332 /* brewInfo_fakeformula.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_fakeformula.txt; sourceTree = "<group>"; };
 		D2BBAB651B87142F00F21332 /* brewInfo_ffmpeg.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_ffmpeg.txt; sourceTree = "<group>"; };
-		5A58B1C9C1F6B6B757DDAD79 /* brewInfo_modern_kegonly.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_modern_kegonly.txt; sourceTree = "<group>"; };
-		0C6C83096C8D6B8D6BE58366 /* brewInfo_modern_aliases.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_modern_aliases.txt; sourceTree = "<group>"; };
-		21856FE82C89016462465FB2 /* brewInfo_modern_notinstalled.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_modern_notinstalled.txt; sourceTree = "<group>"; };
-		033BC253AEDFD1C4DB32FD33 /* brewInfo_modern_installed.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_modern_installed.txt; sourceTree = "<group>"; };
 		D2BBAB661B87142F00F21332 /* brewInfo_mysql.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_mysql.txt; sourceTree = "<group>"; };
 		D2BBAB671B87142F00F21332 /* brewInfo_percona-server.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "brewInfo_percona-server.txt"; sourceTree = "<group>"; };
 		D2BBAB6E1B87290B00F21332 /* brewInfo_bison.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = brewInfo_bison.txt; sourceTree = "<group>"; };
@@ -432,130 +550,6 @@
 		F752F5541C79875500C0DEFE /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/DCOAboutWindow.strings; sourceTree = "<group>"; };
 		F752F5551C79875500C0DEFE /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/BPDoctorView.strings; sourceTree = "<group>"; };
 		F752F5561C79875500C0DEFE /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/BPBundleWindow.strings; sourceTree = "<group>"; };
-		CB613075FD47E8903CFF5C2E /* BPAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAppDelegate.swift; path = Cakebrew/BPAppDelegate.swift; sourceTree = SOURCE_ROOT; };
-		CB91DE0D74848EFEBDB8B7A8 /* BPBackgroundUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBackgroundUpdater.swift; path = Cakebrew/BPBackgroundUpdater.swift; sourceTree = SOURCE_ROOT; };
-		CB7502FAFC4749996759A954 /* BPDockMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPDockMenu.swift; path = Cakebrew/BPDockMenu.swift; sourceTree = SOURCE_ROOT; };
-		CB42D4D37AFDDB6779D513B6 /* BPFormulaeDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaeDataSource.swift; path = Cakebrew/BPFormulaeDataSource.swift; sourceTree = SOURCE_ROOT; };
-		CB4372E8FD0D4679FB9E6C24 /* BPHomebrewInterface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHomebrewInterface.swift; path = Cakebrew/BPHomebrewInterface.swift; sourceTree = SOURCE_ROOT; };
-		CB91F17DCD10CDF7A9D728E7 /* BPHomebrewInterfaceListCall.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHomebrewInterfaceListCall.swift; path = Cakebrew/BPHomebrewInterfaceListCall.swift; sourceTree = SOURCE_ROOT; };
-		CB6B093D1925C02777964A57 /* BPHomebrewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHomebrewManager.swift; path = Cakebrew/BPHomebrewManager.swift; sourceTree = SOURCE_ROOT; };
-		CB4DA150AC5C3A6FB3E660D8 /* BPMockHomebrewInterface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPMockHomebrewInterface.swift; path = Cakebrew/BPMockHomebrewInterface.swift; sourceTree = SOURCE_ROOT; };
-		CB9C2335D8D367D038C3CB54 /* BPSideBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPSideBarController.swift; path = Cakebrew/BPSideBarController.swift; sourceTree = SOURCE_ROOT; };
-		CB6C73916714817DE2D2D918 /* BPStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPStyle.swift; path = Cakebrew/BPStyle.swift; sourceTree = SOURCE_ROOT; };
-		CBAB1CE0EB4310A15E16CD9D /* BPToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPToolbar.swift; path = Cakebrew/BPToolbar.swift; sourceTree = SOURCE_ROOT; };
-		CBD0BF9E1E35F474B6819905 /* BPWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPWindow.swift; path = Cakebrew/BPWindow.swift; sourceTree = SOURCE_ROOT; };
-		CBD2571787EFC14F096EC6A0 /* BPAppUpdateHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAppUpdateHost.swift; path = Cakebrew/Controllers/BPAppUpdateHost.swift; sourceTree = SOURCE_ROOT; };
-		CB3568865012B7520F8387C9 /* BPAutoremoveWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAutoremoveWindowController.swift; path = Cakebrew/Controllers/BPAutoremoveWindowController.swift; sourceTree = SOURCE_ROOT; };
-		CB2E1073D78DFD23EC69028E /* BPBundleWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBundleWindowController.swift; path = Cakebrew/Controllers/BPBundleWindowController.swift; sourceTree = SOURCE_ROOT; };
-		CB3C5F47DE884CFBACC07B2F /* BPDoctorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPDoctorViewController.swift; path = Cakebrew/Controllers/BPDoctorViewController.swift; sourceTree = SOURCE_ROOT; };
-		CB274BCB0AEABD42043259B4 /* BPFormulaInformationHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaInformationHost.swift; path = Cakebrew/Controllers/BPFormulaInformationHost.swift; sourceTree = SOURCE_ROOT; };
-		CBBB34E42D02A44B4A9267DB /* BPFormulaOptionsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaOptionsWindowController.swift; path = Cakebrew/Controllers/BPFormulaOptionsWindowController.swift; sourceTree = SOURCE_ROOT; };
-		CB944155A8766F2A19ED11EC /* BPFormulaPopoverViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaPopoverViewController.swift; path = Cakebrew/Controllers/BPFormulaPopoverViewController.swift; sourceTree = SOURCE_ROOT; };
-		CB1D473A65D8E83C135F64F1 /* BPHomebrewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHomebrewViewController.swift; path = Cakebrew/Controllers/BPHomebrewViewController.swift; sourceTree = SOURCE_ROOT; };
-		CB423F37FC51AA095406CC73 /* BPInstallationWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPInstallationWindowController.swift; path = Cakebrew/Controllers/BPInstallationWindowController.swift; sourceTree = SOURCE_ROOT; };
-		CB58FD79ACCA03E75665AC6E /* BPInstalledPackageListHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPInstalledPackageListHost.swift; path = Cakebrew/Controllers/BPInstalledPackageListHost.swift; sourceTree = SOURCE_ROOT; };
-		CB3D1503AE446B820A1D1C2C /* BPMainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPMainWindowController.swift; path = Cakebrew/Controllers/BPMainWindowController.swift; sourceTree = SOURCE_ROOT; };
-		CBCEDB24738E7D7BBB9956E4 /* BPPackageOperationPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPPackageOperationPresenter.swift; path = Cakebrew/Controllers/BPPackageOperationPresenter.swift; sourceTree = SOURCE_ROOT; };
-		CBF009EEEF938E1DBB166E83 /* BPPreferencesHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPPreferencesHost.swift; path = Cakebrew/Controllers/BPPreferencesHost.swift; sourceTree = SOURCE_ROOT; };
-		CB3E382C9F76592DD6836472 /* BPPreferencesWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPPreferencesWindowController.swift; path = Cakebrew/Controllers/BPPreferencesWindowController.swift; sourceTree = SOURCE_ROOT; };
-		CB36F932BD57A527C3A5556C /* BPSelectedFormulaHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPSelectedFormulaHost.swift; path = Cakebrew/Controllers/BPSelectedFormulaHost.swift; sourceTree = SOURCE_ROOT; };
-		CB17D133908A55A8E723EBC4 /* BPSelectedFormulaViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPSelectedFormulaViewController.swift; path = Cakebrew/Controllers/BPSelectedFormulaViewController.swift; sourceTree = SOURCE_ROOT; };
-		CB956D0F9F0D57D551D7A8A1 /* BPServicesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPServicesViewController.swift; path = Cakebrew/Controllers/BPServicesViewController.swift; sourceTree = SOURCE_ROOT; };
-		CBC800FB4D67CE556B970C72 /* BPTahoeSheetAndOverlayHosts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPTahoeSheetAndOverlayHosts.swift; path = Cakebrew/Controllers/BPTahoeSheetAndOverlayHosts.swift; sourceTree = SOURCE_ROOT; };
-		CB3D8A850C9AE5300D9655EA /* BPUnifiedUpdatesHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPUnifiedUpdatesHost.swift; path = Cakebrew/Controllers/BPUnifiedUpdatesHost.swift; sourceTree = SOURCE_ROOT; };
-		CB4D7C3DD05D5813EF099012 /* BPUpdateViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPUpdateViewController.swift; path = Cakebrew/Controllers/BPUpdateViewController.swift; sourceTree = SOURCE_ROOT; };
-		CB6F220045B7290AFC535DC2 /* BPHelperClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperClient.swift; path = Cakebrew/Helper/BPHelperClient.swift; sourceTree = SOURCE_ROOT; };
-		CB9D5E36B7E5F35F46FA7DA5 /* BPHelperCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperCommand.swift; path = Cakebrew/Helper/BPHelperCommand.swift; sourceTree = SOURCE_ROOT; };
-		CB7A115D57C6F8CD8806EC1A /* BPHelperOutputRelay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperOutputRelay.swift; path = Cakebrew/Helper/BPHelperOutputRelay.swift; sourceTree = SOURCE_ROOT; };
-		CB6DCDC2FD4D9E1F8875EC06 /* BPHelperProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperProtocol.swift; path = Cakebrew/Helper/BPHelperProtocol.swift; sourceTree = SOURCE_ROOT; };
-		CB52477112E1C1CF83032BFF /* BPHelperRegistration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperRegistration.swift; path = Cakebrew/Helper/BPHelperRegistration.swift; sourceTree = SOURCE_ROOT; };
-		CB209D9BB64832445AE7A8C4 /* BPHelperSecurity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperSecurity.swift; path = Cakebrew/Helper/BPHelperSecurity.swift; sourceTree = SOURCE_ROOT; };
-		CB84805CCE1F81E1612C9823 /* BPProcessTree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPProcessTree.swift; path = Cakebrew/Helper/BPProcessTree.swift; sourceTree = SOURCE_ROOT; };
-		CBC1AF99A3845AE7A9C751EA /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = main.swift; path = Cakebrew/Helper/main.swift; sourceTree = SOURCE_ROOT; };
-		CB9614815471881B269DF1D9 /* DCOAboutWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DCOAboutWindowController.swift; path = Cakebrew/Libraries/DCOAboutWindow/DCOAboutWindowController.swift; sourceTree = SOURCE_ROOT; };
-		CBBD60EB5BCFBF2FBC17B076 /* BPAppUpdateState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAppUpdateState.swift; path = Cakebrew/Models/BPAppUpdateState.swift; sourceTree = SOURCE_ROOT; };
-		CBB1D309E39C92B768523FCA /* BPAutoremoveOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAutoremoveOperation.swift; path = Cakebrew/Models/BPAutoremoveOperation.swift; sourceTree = SOURCE_ROOT; };
-		CBD1E3C7A343B1175072AD32 /* BPAutoremovePreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAutoremovePreview.swift; path = Cakebrew/Models/BPAutoremovePreview.swift; sourceTree = SOURCE_ROOT; };
-		CBFB13E78A3FC3721738AC33 /* BPBrewError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBrewError.swift; path = Cakebrew/Models/BPBrewError.swift; sourceTree = SOURCE_ROOT; };
-		CB18720DCE55E3F538F83232 /* BPBrewfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBrewfile.swift; path = Cakebrew/Models/BPBrewfile.swift; sourceTree = SOURCE_ROOT; };
-		CBEE1CB6DE01EF3A666EBE71 /* BPBrewfileExportOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBrewfileExportOperation.swift; path = Cakebrew/Models/BPBrewfileExportOperation.swift; sourceTree = SOURCE_ROOT; };
-		CBD7C8A0799AC8F2B911685E /* BPBrewfileImportOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBrewfileImportOperation.swift; path = Cakebrew/Models/BPBrewfileImportOperation.swift; sourceTree = SOURCE_ROOT; };
-		CB32367AC09DBE48F290DCE0 /* BPBrewfilePlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBrewfilePlan.swift; path = Cakebrew/Models/BPBrewfilePlan.swift; sourceTree = SOURCE_ROOT; };
-		CB3BF60C8F23FCC230BA4C41 /* BPCleanupPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPCleanupPreview.swift; path = Cakebrew/Models/BPCleanupPreview.swift; sourceTree = SOURCE_ROOT; };
-		CB82E022A116B75364B14B1F /* BPEmptyState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPEmptyState.swift; path = Cakebrew/Models/BPEmptyState.swift; sourceTree = SOURCE_ROOT; };
-		CBE0A0D471BD4E411CEAB5A5 /* BPFormula.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormula.swift; path = Cakebrew/Models/BPFormula.swift; sourceTree = SOURCE_ROOT; };
-		CBB79D7DB4AB61740B87ADF9 /* BPFormulaInformationState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaInformationState.swift; path = Cakebrew/Models/BPFormulaInformationState.swift; sourceTree = SOURCE_ROOT; };
-		CBF864C02B979112CCD8B1D8 /* BPFormulaOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaOption.swift; path = Cakebrew/Models/BPFormulaOption.swift; sourceTree = SOURCE_ROOT; };
-		CB70AEE2E39C3BACB1D4DDCD /* BPFormulaeTableAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaeTableAction.swift; path = Cakebrew/Models/BPFormulaeTableAction.swift; sourceTree = SOURCE_ROOT; };
-		CB43FDCD3C55FA63A31E5737 /* BPLoadingStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPLoadingStatus.swift; path = Cakebrew/Models/BPLoadingStatus.swift; sourceTree = SOURCE_ROOT; };
-		CB805E5B4BE1A77D48D97C4D /* BPPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPPreferences.swift; path = Cakebrew/Models/BPPreferences.swift; sourceTree = SOURCE_ROOT; };
-		CB11682BEDAA3A43052D0D74 /* BPSearchCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPSearchCoordinator.swift; path = Cakebrew/Models/BPSearchCoordinator.swift; sourceTree = SOURCE_ROOT; };
-		CB1DDB63B42E4B9ECBFE4711 /* BPService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPService.swift; path = Cakebrew/Models/BPService.swift; sourceTree = SOURCE_ROOT; };
-		CBB3ADE5352D3348EB5EF7D2 /* BPServiceDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPServiceDetails.swift; path = Cakebrew/Models/BPServiceDetails.swift; sourceTree = SOURCE_ROOT; };
-		CB14AE3C3E251B75806BE515 /* BPTahoeSurfaceStates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPTahoeSurfaceStates.swift; path = Cakebrew/Models/BPTahoeSurfaceStates.swift; sourceTree = SOURCE_ROOT; };
-		CB0E146DA086F2256D92CF39 /* BPTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPTask.swift; path = Cakebrew/Models/BPTask.swift; sourceTree = SOURCE_ROOT; };
-		CBD4DF58045D7116CCD9F308 /* BPTimedDispatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPTimedDispatch.swift; path = Cakebrew/Models/BPTimedDispatch.swift; sourceTree = SOURCE_ROOT; };
-		CBF60E7FD819E2B9B65AA0C5 /* BPUpdatesSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPUpdatesSnapshot.swift; path = Cakebrew/Models/BPUpdatesSnapshot.swift; sourceTree = SOURCE_ROOT; };
-		CB77794A2B213C84BB70A519 /* BPUpgradePlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPUpgradePlan.swift; path = Cakebrew/Models/BPUpgradePlan.swift; sourceTree = SOURCE_ROOT; };
-		CB8D0C52B8DAF01AFF05E07E /* BPAutoScrollTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAutoScrollTextView.swift; path = Cakebrew/Views/BPAutoScrollTextView.swift; sourceTree = SOURCE_ROOT; };
-		CBE3C9961B1C608696F73FFC /* BPBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBackgroundView.swift; path = Cakebrew/Views/BPBackgroundView.swift; sourceTree = SOURCE_ROOT; };
-		CBF86EBA2C345C99EF0E52CC /* BPDisabledView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPDisabledView.swift; path = Cakebrew/Views/BPDisabledView.swift; sourceTree = SOURCE_ROOT; };
-		CB9F03F4640F59844E68C563 /* BPEmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPEmptyStateView.swift; path = Cakebrew/Views/BPEmptyStateView.swift; sourceTree = SOURCE_ROOT; };
-		CB9D32A96F7A4F0A8AD719D6 /* BPFormulaeTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaeTableView.swift; path = Cakebrew/Views/BPFormulaeTableView.swift; sourceTree = SOURCE_ROOT; };
-		CB551D613276D94B539FD713 /* BPLoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPLoadingView.swift; path = Cakebrew/Views/BPLoadingView.swift; sourceTree = SOURCE_ROOT; };
-		CBC1BB58DFEE3EF566494112 /* CakebrewApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CakebrewApp.swift; path = Cakebrew/CakebrewApp.swift; sourceTree = SOURCE_ROOT; };
-		CBE95365D57CDA55583C47A6 /* BPAccessibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAccessibilityTests.swift; path = CakebrewTests/BPAccessibilityTests.swift; sourceTree = SOURCE_ROOT; };
-		CBC6AC240B7A8188EE0D9CAF /* BPAutoScrollTextViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAutoScrollTextViewTests.swift; path = CakebrewTests/BPAutoScrollTextViewTests.swift; sourceTree = SOURCE_ROOT; };
-		CB68094B1771A72F6B679A84 /* BPAutoremoveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPAutoremoveTests.swift; path = CakebrewTests/BPAutoremoveTests.swift; sourceTree = SOURCE_ROOT; };
-		CB9B106264BED24C9830A812 /* BPBackgroundTaskGuardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBackgroundTaskGuardTests.swift; path = CakebrewTests/BPBackgroundTaskGuardTests.swift; sourceTree = SOURCE_ROOT; };
-		CBB1E837860C4967489B12F4 /* BPBackgroundUpdaterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBackgroundUpdaterTests.swift; path = CakebrewTests/BPBackgroundUpdaterTests.swift; sourceTree = SOURCE_ROOT; };
-		CBECF37C6AE40E0445F03CC7 /* BPBrewCompatibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBrewCompatibilityTests.swift; path = CakebrewTests/BPBrewCompatibilityTests.swift; sourceTree = SOURCE_ROOT; };
-		CB38F9E0DDA990EA9C34EDC9 /* BPBrewErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBrewErrorTests.swift; path = CakebrewTests/BPBrewErrorTests.swift; sourceTree = SOURCE_ROOT; };
-		CBDAB4679EF8885ADA744717 /* BPBrewTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBrewTransportTests.swift; path = CakebrewTests/BPBrewTransportTests.swift; sourceTree = SOURCE_ROOT; };
-		CB07881430565184C83F30CE /* BPBrewfileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPBrewfileTests.swift; path = CakebrewTests/BPBrewfileTests.swift; sourceTree = SOURCE_ROOT; };
-		CBDAC84A6941099CDFF849D5 /* BPCancelReloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPCancelReloadTests.swift; path = CakebrewTests/BPCancelReloadTests.swift; sourceTree = SOURCE_ROOT; };
-		CBC7063765B31D15AB122FFB /* BPCatalogCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPCatalogCacheTests.swift; path = CakebrewTests/BPCatalogCacheTests.swift; sourceTree = SOURCE_ROOT; };
-		CBD9424556876A520C3BDD05 /* BPCatalogRefreshPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPCatalogRefreshPolicyTests.swift; path = CakebrewTests/BPCatalogRefreshPolicyTests.swift; sourceTree = SOURCE_ROOT; };
-		CBA9B09BCFCFE1CEB8F6F4A0 /* BPCleanupPreviewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPCleanupPreviewTests.swift; path = CakebrewTests/BPCleanupPreviewTests.swift; sourceTree = SOURCE_ROOT; };
-		CBAEC1D294A3945337495086 /* BPDockMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPDockMenuTests.swift; path = CakebrewTests/BPDockMenuTests.swift; sourceTree = SOURCE_ROOT; };
-		CB325D27C2ECD26BB950F5A8 /* BPEmptyStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPEmptyStateTests.swift; path = CakebrewTests/BPEmptyStateTests.swift; sourceTree = SOURCE_ROOT; };
-		CB1C41B1209878F1C4C32947 /* BPFormulaInformationLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaInformationLifecycleTests.swift; path = CakebrewTests/BPFormulaInformationLifecycleTests.swift; sourceTree = SOURCE_ROOT; };
-		CB4C534D61830230DB4D5ACA /* BPFormulaInformationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaInformationTests.swift; path = CakebrewTests/BPFormulaInformationTests.swift; sourceTree = SOURCE_ROOT; };
-		CB17C03B82D28C01B45248C3 /* BPFormulaModernInfoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaModernInfoTests.swift; path = CakebrewTests/BPFormulaModernInfoTests.swift; sourceTree = SOURCE_ROOT; };
-		CB5817B4F38A9FBF71524B1E /* BPFormulaOptionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaOptionTests.swift; path = CakebrewTests/BPFormulaOptionTests.swift; sourceTree = SOURCE_ROOT; };
-		CB9075C76F7E318E65A099BE /* BPFormulaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaTests.swift; path = CakebrewTests/BPFormulaTests.swift; sourceTree = SOURCE_ROOT; };
-		CB431EF9E94E18CDA6985096 /* BPFormulaeDataSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaeDataSourceTests.swift; path = CakebrewTests/BPFormulaeDataSourceTests.swift; sourceTree = SOURCE_ROOT; };
-		CBA3BBDE1BEBAF581E203F69 /* BPFormulaeTableActionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPFormulaeTableActionTests.swift; path = CakebrewTests/BPFormulaeTableActionTests.swift; sourceTree = SOURCE_ROOT; };
-		CBC8E6DFEB4588F1FF2053E4 /* BPHelperCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperCommandTests.swift; path = CakebrewTests/BPHelperCommandTests.swift; sourceTree = SOURCE_ROOT; };
-		CB99F4AE8F17BE2344C74FF7 /* BPHelperOutputRelayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperOutputRelayTests.swift; path = CakebrewTests/BPHelperOutputRelayTests.swift; sourceTree = SOURCE_ROOT; };
-		CBFC5D2332311C4760C4AFAD /* BPHelperRegistrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperRegistrationTests.swift; path = CakebrewTests/BPHelperRegistrationTests.swift; sourceTree = SOURCE_ROOT; };
-		CBF22AC34C8F457AFA68BFC9 /* BPHelperSecurityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHelperSecurityTests.swift; path = CakebrewTests/BPHelperSecurityTests.swift; sourceTree = SOURCE_ROOT; };
-		CB34AFAE4D5C7F332E38563C /* BPHomebrewInterfaceListCallTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHomebrewInterfaceListCallTests.swift; path = CakebrewTests/BPHomebrewInterfaceListCallTests.swift; sourceTree = SOURCE_ROOT; };
-		CBDA6E9277E3CBF1449FD33F /* BPHomebrewManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHomebrewManagerTests.swift; path = CakebrewTests/BPHomebrewManagerTests.swift; sourceTree = SOURCE_ROOT; };
-		CBD5D4DC0EBF975DF5A6C24E /* BPHomebrewRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPHomebrewRecoveryTests.swift; path = CakebrewTests/BPHomebrewRecoveryTests.swift; sourceTree = SOURCE_ROOT; };
-		CB5CEE312BF3E6E654D49C7F /* BPIncrementalReloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPIncrementalReloadTests.swift; path = CakebrewTests/BPIncrementalReloadTests.swift; sourceTree = SOURCE_ROOT; };
-		CB1A6B6B4F71879E7E4CE5DF /* BPInstallationWindowControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPInstallationWindowControllerTests.swift; path = CakebrewTests/BPInstallationWindowControllerTests.swift; sourceTree = SOURCE_ROOT; };
-		CB0803FFD1526DA29170B24D /* BPLoadingStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPLoadingStatusTests.swift; path = CakebrewTests/BPLoadingStatusTests.swift; sourceTree = SOURCE_ROOT; };
-		CBB693E4B58503C919B98758 /* BPLocalizationParityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPLocalizationParityTests.swift; path = CakebrewTests/BPLocalizationParityTests.swift; sourceTree = SOURCE_ROOT; };
-		CB61752F68D38B11FFFB5902 /* BPLocalizedStringsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPLocalizedStringsTests.swift; path = CakebrewTests/BPLocalizedStringsTests.swift; sourceTree = SOURCE_ROOT; };
-		CBC4A3C32D6CCFDA26A9AFA5 /* BPMainMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPMainMenuTests.swift; path = CakebrewTests/BPMainMenuTests.swift; sourceTree = SOURCE_ROOT; };
-		CBD9770B7B67F19BC66D5A1C /* BPMockFidelityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPMockFidelityTests.swift; path = CakebrewTests/BPMockFidelityTests.swift; sourceTree = SOURCE_ROOT; };
-		CBF15B476CECC27A40A0036F /* BPPreferencesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPPreferencesTests.swift; path = CakebrewTests/BPPreferencesTests.swift; sourceTree = SOURCE_ROOT; };
-		CBD4746E85DC72619E9BA202 /* BPSearchCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPSearchCoordinatorTests.swift; path = CakebrewTests/BPSearchCoordinatorTests.swift; sourceTree = SOURCE_ROOT; };
-		CBD17369CB749914A5D51856 /* BPServiceDetailsControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPServiceDetailsControllerTests.swift; path = CakebrewTests/BPServiceDetailsControllerTests.swift; sourceTree = SOURCE_ROOT; };
-		CBD786F54DE33F6584581E11 /* BPServiceDetailsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPServiceDetailsTests.swift; path = CakebrewTests/BPServiceDetailsTests.swift; sourceTree = SOURCE_ROOT; };
-		CB561E25A5C8B306DF111EA7 /* BPServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPServiceTests.swift; path = CakebrewTests/BPServiceTests.swift; sourceTree = SOURCE_ROOT; };
-		CB47905A40CE64D5939875F4 /* BPStreamingLogSweepTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPStreamingLogSweepTests.swift; path = CakebrewTests/BPStreamingLogSweepTests.swift; sourceTree = SOURCE_ROOT; };
-		CB30EFBA74AF2602EADEBDB6 /* BPTaskCancelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPTaskCancelTests.swift; path = CakebrewTests/BPTaskCancelTests.swift; sourceTree = SOURCE_ROOT; };
-		CB353AF58F3CDC83FB89C115 /* BPTaskStreamingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPTaskStreamingTests.swift; path = CakebrewTests/BPTaskStreamingTests.swift; sourceTree = SOURCE_ROOT; };
-		CBC6168B9EA9962B7F1CAEA4 /* BPUpgradeArgumentsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPUpgradeArgumentsTests.swift; path = CakebrewTests/BPUpgradeArgumentsTests.swift; sourceTree = SOURCE_ROOT; };
-		CBCDF47EFD288B33ED6E4CB7 /* BPUpgradePlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPUpgradePlanTests.swift; path = CakebrewTests/BPUpgradePlanTests.swift; sourceTree = SOURCE_ROOT; };
-		CB8B8C7D1E97B12EC5E4EB87 /* BPVersionStampingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPVersionStampingTests.swift; path = CakebrewTests/BPVersionStampingTests.swift; sourceTree = SOURCE_ROOT; };
-		CBCE5DD49C565B50DAD7CCCA /* BPSwiftUIArchitectureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPSwiftUIArchitectureTests.swift; path = CakebrewTests/BPSwiftUIArchitectureTests.swift; sourceTree = SOURCE_ROOT; };
-		CB9848E00AD4E05EA7995F9B /* CakebrewUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CakebrewUITests.swift; path = CakebrewUITests/CakebrewUITests.swift; sourceTree = SOURCE_ROOT; };
-		A4CBC9D3A33D40B7BF9FA892 /* BPVersionHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPVersionHistory.swift; path = Cakebrew/Models/BPVersionHistory.swift; sourceTree = SOURCE_ROOT; };
-		15345C4693ED485C947BE6C9 /* BPVersionHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPVersionHistoryView.swift; path = Cakebrew/Controllers/BPVersionHistoryView.swift; sourceTree = SOURCE_ROOT; };
-		2443974E23744BBAB8A7AEEB /* BPVersionHistoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BPVersionHistoryTests.swift; path = CakebrewTests/BPVersionHistoryTests.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -602,7 +596,6 @@
 				D8582C4CE349B64B6DE6FF75 /* com.scottdensmore.Cakebrew.Helper.plist */,
 				52A74D796C4772C04B326231 /* CakebrewHelper-Info.plist */,
 			);
-			name = Helper;
 			path = Helper;
 			sourceTree = "<group>";
 		};
@@ -677,12 +670,12 @@
 		15D5BEFB18EBD006001DDED7 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-    CB1500000000000000000003,
-    CB150000000000000000000C,
-    CB150000000000000000000D,
-    CB1500000000000000000007,
-    CB1500000000000000000008,
-    CB1500000000000000000004,
+				CB1500000000000000000003 /* BPAutoremovePreview.m */,
+				CB150000000000000000000C /* BPAutoremoveWindowController.m */,
+				CB150000000000000000000D /* BPAutoremoveWindowController.h */,
+				CB1500000000000000000007 /* BPAutoremoveOperation.m */,
+				CB1500000000000000000008 /* BPAutoremoveOperation.h */,
+				CB1500000000000000000004 /* BPAutoremovePreview.h */,
 			);
 			name = Models;
 			sourceTree = "<group>";
@@ -695,6 +688,7 @@
 				1FE4FE57148E4CDD008EDE8B /* Frameworks */,
 				1FE4FE55148E4CDD008EDE8B /* Products */,
 				9DF1C447B2F02AF931AB0454 /* CakebrewUITests */,
+				DE986A15308DB95100614D81 /* Recovered References */,
 			);
 			sourceTree = "<group>";
 			tabWidth = 4;
@@ -738,7 +732,6 @@
 			children = (
 				15345C4693ED485C947BE6C9 /* BPVersionHistoryView.swift */,
 				A4CBC9D3A33D40B7BF9FA892 /* BPVersionHistory.swift */,
-				D2F732EE19190B75002B2512 /* Categories */,
 				15A974AB1968A3C900621C35 /* Controllers */,
 				15A974AC1968A3E800621C35 /* Homebrew */,
 				15D5BEED18EBB3D9001DDED7 /* Icons */,
@@ -781,7 +774,6 @@
 			isa = PBXGroup;
 			children = (
 			);
-			name = CakebrewUITests;
 			path = CakebrewUITests;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -803,7 +795,7 @@
 				D2BBAB671B87142F00F21332 /* brewInfo_percona-server.txt */,
 				158488491F0708F000BD2CD9 /* brewinfo_nmap.txt */,
 				D261C9C21B852FA300409803 /* Supporting Files */,
-    CB150000000000000000000A,
+				CB150000000000000000000A /* BPAutoremoveTests.m */,
 			);
 			path = CakebrewTests;
 			sourceTree = "<group>";
@@ -816,11 +808,132 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		D2F732EE19190B75002B2512 /* Categories */ = {
+		DE986A15308DB95100614D81 /* Recovered References */ = {
 			isa = PBXGroup;
 			children = (
+				CB613075FD47E8903CFF5C2E /* BPAppDelegate.swift */,
+				CB91DE0D74848EFEBDB8B7A8 /* BPBackgroundUpdater.swift */,
+				CB7502FAFC4749996759A954 /* BPDockMenu.swift */,
+				CB42D4D37AFDDB6779D513B6 /* BPFormulaeDataSource.swift */,
+				CB4372E8FD0D4679FB9E6C24 /* BPHomebrewInterface.swift */,
+				CB91F17DCD10CDF7A9D728E7 /* BPHomebrewInterfaceListCall.swift */,
+				CB6B093D1925C02777964A57 /* BPHomebrewManager.swift */,
+				CB4DA150AC5C3A6FB3E660D8 /* BPMockHomebrewInterface.swift */,
+				CB9C2335D8D367D038C3CB54 /* BPSideBarController.swift */,
+				CB6C73916714817DE2D2D918 /* BPStyle.swift */,
+				CBAB1CE0EB4310A15E16CD9D /* BPToolbar.swift */,
+				CBD0BF9E1E35F474B6819905 /* BPWindow.swift */,
+				CBD2571787EFC14F096EC6A0 /* BPAppUpdateHost.swift */,
+				CB3568865012B7520F8387C9 /* BPAutoremoveWindowController.swift */,
+				CB2E1073D78DFD23EC69028E /* BPBundleWindowController.swift */,
+				CB3C5F47DE884CFBACC07B2F /* BPDoctorViewController.swift */,
+				CB274BCB0AEABD42043259B4 /* BPFormulaInformationHost.swift */,
+				CBBB34E42D02A44B4A9267DB /* BPFormulaOptionsWindowController.swift */,
+				CB944155A8766F2A19ED11EC /* BPFormulaPopoverViewController.swift */,
+				CB1D473A65D8E83C135F64F1 /* BPHomebrewViewController.swift */,
+				CB423F37FC51AA095406CC73 /* BPInstallationWindowController.swift */,
+				CB58FD79ACCA03E75665AC6E /* BPInstalledPackageListHost.swift */,
+				CB3D1503AE446B820A1D1C2C /* BPMainWindowController.swift */,
+				CBCEDB24738E7D7BBB9956E4 /* BPPackageOperationPresenter.swift */,
+				CBF009EEEF938E1DBB166E83 /* BPPreferencesHost.swift */,
+				CB3E382C9F76592DD6836472 /* BPPreferencesWindowController.swift */,
+				CB36F932BD57A527C3A5556C /* BPSelectedFormulaHost.swift */,
+				CB17D133908A55A8E723EBC4 /* BPSelectedFormulaViewController.swift */,
+				CB956D0F9F0D57D551D7A8A1 /* BPServicesViewController.swift */,
+				CBC800FB4D67CE556B970C72 /* BPTahoeSheetAndOverlayHosts.swift */,
+				CB3D8A850C9AE5300D9655EA /* BPUnifiedUpdatesHost.swift */,
+				CB4D7C3DD05D5813EF099012 /* BPUpdateViewController.swift */,
+				CB9614815471881B269DF1D9 /* DCOAboutWindowController.swift */,
+				CBBD60EB5BCFBF2FBC17B076 /* BPAppUpdateState.swift */,
+				CBB1D309E39C92B768523FCA /* BPAutoremoveOperation.swift */,
+				CBD1E3C7A343B1175072AD32 /* BPAutoremovePreview.swift */,
+				CBFB13E78A3FC3721738AC33 /* BPBrewError.swift */,
+				CB18720DCE55E3F538F83232 /* BPBrewfile.swift */,
+				CBEE1CB6DE01EF3A666EBE71 /* BPBrewfileExportOperation.swift */,
+				CBD7C8A0799AC8F2B911685E /* BPBrewfileImportOperation.swift */,
+				CB32367AC09DBE48F290DCE0 /* BPBrewfilePlan.swift */,
+				CB3BF60C8F23FCC230BA4C41 /* BPCleanupPreview.swift */,
+				CB82E022A116B75364B14B1F /* BPEmptyState.swift */,
+				CBE0A0D471BD4E411CEAB5A5 /* BPFormula.swift */,
+				CBB79D7DB4AB61740B87ADF9 /* BPFormulaInformationState.swift */,
+				CBF864C02B979112CCD8B1D8 /* BPFormulaOption.swift */,
+				CB70AEE2E39C3BACB1D4DDCD /* BPFormulaeTableAction.swift */,
+				CB43FDCD3C55FA63A31E5737 /* BPLoadingStatus.swift */,
+				CB805E5B4BE1A77D48D97C4D /* BPPreferences.swift */,
+				CB11682BEDAA3A43052D0D74 /* BPSearchCoordinator.swift */,
+				CB1DDB63B42E4B9ECBFE4711 /* BPService.swift */,
+				CBB3ADE5352D3348EB5EF7D2 /* BPServiceDetails.swift */,
+				CB14AE3C3E251B75806BE515 /* BPTahoeSurfaceStates.swift */,
+				CB0E146DA086F2256D92CF39 /* BPTask.swift */,
+				CBD4DF58045D7116CCD9F308 /* BPTimedDispatch.swift */,
+				CBF60E7FD819E2B9B65AA0C5 /* BPUpdatesSnapshot.swift */,
+				CB77794A2B213C84BB70A519 /* BPUpgradePlan.swift */,
+				CB8D0C52B8DAF01AFF05E07E /* BPAutoScrollTextView.swift */,
+				CBE3C9961B1C608696F73FFC /* BPBackgroundView.swift */,
+				CBF86EBA2C345C99EF0E52CC /* BPDisabledView.swift */,
+				CB9F03F4640F59844E68C563 /* BPEmptyStateView.swift */,
+				CB9D32A96F7A4F0A8AD719D6 /* BPFormulaeTableView.swift */,
+				CB551D613276D94B539FD713 /* BPLoadingView.swift */,
+				CBC1BB58DFEE3EF566494112 /* CakebrewApp.swift */,
+				CB6DCDC2FD4D9E1F8875EC06 /* BPHelperProtocol.swift */,
+				CB9D5E36B7E5F35F46FA7DA5 /* BPHelperCommand.swift */,
+				CB7A115D57C6F8CD8806EC1A /* BPHelperOutputRelay.swift */,
+				CB209D9BB64832445AE7A8C4 /* BPHelperSecurity.swift */,
+				CB84805CCE1F81E1612C9823 /* BPProcessTree.swift */,
+				CB6F220045B7290AFC535DC2 /* BPHelperClient.swift */,
+				CB52477112E1C1CF83032BFF /* BPHelperRegistration.swift */,
+				CBE95365D57CDA55583C47A6 /* BPAccessibilityTests.swift */,
+				CBC6AC240B7A8188EE0D9CAF /* BPAutoScrollTextViewTests.swift */,
+				CB68094B1771A72F6B679A84 /* BPAutoremoveTests.swift */,
+				CB9B106264BED24C9830A812 /* BPBackgroundTaskGuardTests.swift */,
+				CBB1E837860C4967489B12F4 /* BPBackgroundUpdaterTests.swift */,
+				CBECF37C6AE40E0445F03CC7 /* BPBrewCompatibilityTests.swift */,
+				CB38F9E0DDA990EA9C34EDC9 /* BPBrewErrorTests.swift */,
+				CBDAB4679EF8885ADA744717 /* BPBrewTransportTests.swift */,
+				CB07881430565184C83F30CE /* BPBrewfileTests.swift */,
+				CBDAC84A6941099CDFF849D5 /* BPCancelReloadTests.swift */,
+				CBC7063765B31D15AB122FFB /* BPCatalogCacheTests.swift */,
+				CBD9424556876A520C3BDD05 /* BPCatalogRefreshPolicyTests.swift */,
+				CBA9B09BCFCFE1CEB8F6F4A0 /* BPCleanupPreviewTests.swift */,
+				CBAEC1D294A3945337495086 /* BPDockMenuTests.swift */,
+				CB325D27C2ECD26BB950F5A8 /* BPEmptyStateTests.swift */,
+				CB1C41B1209878F1C4C32947 /* BPFormulaInformationLifecycleTests.swift */,
+				CB4C534D61830230DB4D5ACA /* BPFormulaInformationTests.swift */,
+				CB17C03B82D28C01B45248C3 /* BPFormulaModernInfoTests.swift */,
+				CB5817B4F38A9FBF71524B1E /* BPFormulaOptionTests.swift */,
+				CB9075C76F7E318E65A099BE /* BPFormulaTests.swift */,
+				CB431EF9E94E18CDA6985096 /* BPFormulaeDataSourceTests.swift */,
+				CBA3BBDE1BEBAF581E203F69 /* BPFormulaeTableActionTests.swift */,
+				CBC8E6DFEB4588F1FF2053E4 /* BPHelperCommandTests.swift */,
+				CB99F4AE8F17BE2344C74FF7 /* BPHelperOutputRelayTests.swift */,
+				CBFC5D2332311C4760C4AFAD /* BPHelperRegistrationTests.swift */,
+				CBF22AC34C8F457AFA68BFC9 /* BPHelperSecurityTests.swift */,
+				CB34AFAE4D5C7F332E38563C /* BPHomebrewInterfaceListCallTests.swift */,
+				CBDA6E9277E3CBF1449FD33F /* BPHomebrewManagerTests.swift */,
+				CBD5D4DC0EBF975DF5A6C24E /* BPHomebrewRecoveryTests.swift */,
+				CB5CEE312BF3E6E654D49C7F /* BPIncrementalReloadTests.swift */,
+				CB1A6B6B4F71879E7E4CE5DF /* BPInstallationWindowControllerTests.swift */,
+				CB0803FFD1526DA29170B24D /* BPLoadingStatusTests.swift */,
+				CBB693E4B58503C919B98758 /* BPLocalizationParityTests.swift */,
+				CB61752F68D38B11FFFB5902 /* BPLocalizedStringsTests.swift */,
+				CBC4A3C32D6CCFDA26A9AFA5 /* BPMainMenuTests.swift */,
+				CBD9770B7B67F19BC66D5A1C /* BPMockFidelityTests.swift */,
+				CBF15B476CECC27A40A0036F /* BPPreferencesTests.swift */,
+				CBD4746E85DC72619E9BA202 /* BPSearchCoordinatorTests.swift */,
+				CBD17369CB749914A5D51856 /* BPServiceDetailsControllerTests.swift */,
+				CBD786F54DE33F6584581E11 /* BPServiceDetailsTests.swift */,
+				CB561E25A5C8B306DF111EA7 /* BPServiceTests.swift */,
+				CB47905A40CE64D5939875F4 /* BPStreamingLogSweepTests.swift */,
+				CB30EFBA74AF2602EADEBDB6 /* BPTaskCancelTests.swift */,
+				CB353AF58F3CDC83FB89C115 /* BPTaskStreamingTests.swift */,
+				CBC6168B9EA9962B7F1CAEA4 /* BPUpgradeArgumentsTests.swift */,
+				CBCDF47EFD288B33ED6E4CB7 /* BPUpgradePlanTests.swift */,
+				CB8B8C7D1E97B12EC5E4EB87 /* BPVersionStampingTests.swift */,
+				CBCE5DD49C565B50DAD7CCCA /* BPSwiftUIArchitectureTests.swift */,
+				CB9848E00AD4E05EA7995F9B /* CakebrewUITests.swift */,
+				CBC1AF99A3845AE7A9C751EA /* main.swift */,
 			);
-			path = Categories;
+			name = "Recovered References";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -907,7 +1020,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				CLASSPREFIX = BP;
-				LastUpgradeCheck = 2600;
+				LastUpgradeCheck = 2660;
 				ORGANIZATIONNAME = "Bruno Philipe";
 				TargetAttributes = {
 					1FE4FE53148E4CDD008EDE8B = {
@@ -1447,17 +1560,16 @@
 		17B08E6F69071D4438CF2774 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				SWIFT_VERSION = 6.0;
-				SWIFT_STRICT_CONCURRENCY = complete;
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
-				LM_SKIP_METADATA_EXTRACTION = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
+				LM_SKIP_METADATA_EXTRACTION = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scottdensmore.CakebrewUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 				TEST_TARGET_NAME = Cakebrew;
 			};
 			name = Debug;
@@ -1465,46 +1577,46 @@
 		1A281B4A3465A8FA9240C39C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				SWIFT_VERSION = 6.0;
-				SWIFT_STRICT_CONCURRENCY = complete;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				CURRENT_PROJECT_VERSION = 595;
 				DEVELOPMENT_TEAM = 27ZDER873F;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/Cakebrew/Helper";
 				INFOPLIST_FILE = "Cakebrew/Helper/CakebrewHelper-Info.plist";
-				MARKETING_VERSION = 1.3;
-				CURRENT_PROJECT_VERSION = 594;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scottdensmore.Cakebrew.Helper;
 				PRODUCT_NAME = CakebrewHelper;
 				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};
 		1E13309AB63A9F561F3E2159 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				SWIFT_VERSION = 6.0;
-				SWIFT_STRICT_CONCURRENCY = complete;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				CURRENT_PROJECT_VERSION = 595;
 				DEVELOPMENT_TEAM = 27ZDER873F;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/Cakebrew/Helper";
 				INFOPLIST_FILE = "Cakebrew/Helper/CakebrewHelper-Info.plist";
-				MARKETING_VERSION = 1.3;
-				CURRENT_PROJECT_VERSION = 594;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scottdensmore.Cakebrew.Helper;
 				PRODUCT_NAME = CakebrewHelper;
 				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
@@ -1512,6 +1624,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -1558,9 +1671,9 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 			};
 			name = Debug;
 		};
@@ -1568,6 +1681,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -1606,6 +1720,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
 			};
@@ -1614,10 +1729,6 @@
 		1FE4FE73148E4CDD008EDE8B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				SWIFT_VERSION = 6.0;
-				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_OBJC_INTERFACE_HEADER_NAME = "BPFormulaInformation-Swift.h";
-				LM_SKIP_METADATA_EXTRACTION = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -1625,26 +1736,25 @@
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 594;
+				CURRENT_PROJECT_VERSION = 595;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 27ZDER873F;
 				ENABLE_HARDENED_RUNTIME = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/Cakebrew/Helper",
 				);
 				INFOPLIST_FILE = "Cakebrew/Cakebrew-Info.plist";
-				MARKETING_VERSION = 1.3;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				LM_SKIP_METADATA_EXTRACTION = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.3;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -1654,6 +1764,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.scottdensmore.Cakebrew;
 				PRODUCT_NAME = Cakebrew;
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_OBJC_INTERFACE_HEADER_NAME = "BPFormulaInformation-Swift.h";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -1661,10 +1774,6 @@
 		1FE4FE74148E4CDD008EDE8B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				SWIFT_VERSION = 6.0;
-				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_OBJC_INTERFACE_HEADER_NAME = "BPFormulaInformation-Swift.h";
-				LM_SKIP_METADATA_EXTRACTION = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -1673,25 +1782,24 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 594;
+				CURRENT_PROJECT_VERSION = 595;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 27ZDER873F;
 				ENABLE_HARDENED_RUNTIME = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/Cakebrew/Helper",
 				);
 				INFOPLIST_FILE = "Cakebrew/Cakebrew-Info.plist";
-				MARKETING_VERSION = 1.3;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				LM_SKIP_METADATA_EXTRACTION = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.3;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -1701,6 +1809,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.scottdensmore.Cakebrew;
 				PRODUCT_NAME = Cakebrew;
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_OBJC_INTERFACE_HEADER_NAME = "BPFormulaInformation-Swift.h";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -1708,17 +1819,16 @@
 		24CA8BDCAD53D3646B424CFB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				SWIFT_VERSION = 6.0;
-				SWIFT_STRICT_CONCURRENCY = complete;
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
-				LM_SKIP_METADATA_EXTRACTION = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
+				LM_SKIP_METADATA_EXTRACTION = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.scottdensmore.CakebrewUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 				TEST_TARGET_NAME = Cakebrew;
 			};
 			name = Release;
@@ -1726,10 +1836,6 @@
 		D261C9C81B852FA300409803 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				SWIFT_VERSION = 6.0;
-				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_OBJC_INTERFACE_HEADER_NAME = "BPFormulaInformation-Swift.h";
-				LM_SKIP_METADATA_EXTRACTION = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -1759,6 +1865,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
+				LM_SKIP_METADATA_EXTRACTION = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				OTHER_LDFLAGS = (
@@ -1768,16 +1875,15 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.scottdensmore.CakebrewTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_INTERFACE_HEADER_NAME = "BPFormulaInformation-Swift.h";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
 		D261C9C91B852FA300409803 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				SWIFT_VERSION = 6.0;
-				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_OBJC_INTERFACE_HEADER_NAME = "BPFormulaInformation-Swift.h";
-				LM_SKIP_METADATA_EXTRACTION = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -1804,6 +1910,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
+				LM_SKIP_METADATA_EXTRACTION = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = (
@@ -1813,6 +1920,9 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.scottdensmore.CakebrewTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_INTERFACE_HEADER_NAME = "BPFormulaInformation-Swift.h";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};

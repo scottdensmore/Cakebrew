@@ -588,3 +588,19 @@
 
 "Choose the original package to return to. Cakebrew found these possible matches." = "Choisissez le paquet d’origine à rétablir. Cakebrew a trouvé ces correspondances possibles.";
 "Choose a Package…" = "Choisir un paquet…";
+
+"Clear search" = "Effacer la recherche";
+
+"Compact Package Rows" = "Lignes de paquets compactes";
+
+"Homebrew repository" = "Dépôt Homebrew";
+
+"Formula" = "Formule";
+
+"Cask" = "Cask";
+
+"Update available" = "Mise à jour disponible";
+
+/* Sidebar toolbar toggle */
+"Show Sidebar" = "Afficher la barre latérale";
+"Hide Sidebar" = "Masquer la barre latérale";

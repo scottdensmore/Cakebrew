@@ -55,7 +55,7 @@ struct CakebrewApp: App {
                     .disabled(!workspace.hasUpdates)
             }
             CommandGroup(after: .textEditing) {
-                Button("Search Packages") { workspace.requestSearch.toggle() }
+                Button("Search Packages") { workspace.focusToolbarSearch() }
                     .keyboardShortcut("f")
                 Button("Command Palette…") { workspace.controller.showCommandPalette(nil) }
                     .keyboardShortcut("k")
@@ -139,9 +139,11 @@ final class BPWorkspace: ObservableObject {
     @Published private(set) var row = Int(FormulaeSideBarItem.installed.rawValue)
     @Published var revision = 0
     @Published var search = ""
-    @Published var requestSearch = false
     @Published var columnVisibility: NavigationSplitViewVisibility = .all
     @Published var inspectorVisible = true
+    #if DEBUG
+    private var searchLayoutRecorder: BPToolbarSearchLayoutRecorder?
+    #endif
 
     init() {
         // App scene declarations can evaluate command enablement before AppKit's
@@ -191,6 +193,12 @@ final class BPWorkspace: ObservableObject {
 
     func connect(to delegate: BPAppDelegate) {
         prepare()
+        #if DEBUG
+        if searchLayoutRecorder == nil,
+           let path = ProcessInfo.processInfo.environment["BPUITestSearchLayoutLog"] {
+            searchLayoutRecorder = BPToolbarSearchLayoutRecorder(path: path)
+        }
+        #endif
         controller.appDelegate = delegate
         // Register queued file and notification navigation only once the scene's
         // window exists, so their sheets have a valid presentation parent.
@@ -202,6 +210,18 @@ final class BPWorkspace: ObservableObject {
         }
         sidebar.refreshSidebarBadges()
         controller.syncInstalledPackageListHostRows()
+    }
+
+    /// Toolbar-hosted SwiftUI text fields do not reliably participate in the
+    /// content view's FocusState on macOS. Use the window's responder chain for
+    /// Command-F while SwiftUI continues to own the field and its binding.
+    func focusToolbarSearch() {
+        guard let window = BPAppDelegate.current?.window,
+              let field = window.toolbar?.items.compactMap(\.view)
+                .compactMap({ BPToolbarSearchTextField(in: $0) }).first else { return }
+        window.makeKeyAndOrderFront(nil)
+        window.makeFirstResponder(field)
+        field.selectText(nil)
     }
 
     func select(_ item: FormulaeSideBarItem) {
@@ -234,8 +254,6 @@ final class BPWorkspace: ObservableObject {
 @MainActor
 private struct BPWorkspaceView: View {
     @ObservedObject var workspace: BPWorkspace
-    @State private var inspectorWidth: CGFloat = 320
-    @FocusState private var searchFocused: Bool
 
     var body: some View {
         NavigationSplitView(columnVisibility: $workspace.columnVisibility) {
@@ -243,15 +261,14 @@ private struct BPWorkspaceView: View {
                 if workspace.isPrepared { workspace.sidebar.sidebarHost.content }
             }
             .navigationSplitViewColumnWidth(min: 190, ideal: 220, max: 290)
+            .toolbar(removing: .sidebarToggle)
         } detail: {
             content
+                .toolbar(removing: .sidebarToggle)
                 .navigationTitle(workspace.title)
-                .searchable(text: $workspace.search, placement: .toolbar, prompt: "Search packages")
-                .searchFocused($searchFocused)
-                .searchPresentationToolbarBehavior(.avoidHidingContent)
                 .background {
                     BPWorkspaceToolbarChrome(workspace: workspace, isTool: workspace.isTool,
-                        showsInspector: showsInspector, inspectorWidth: inspectorWidth,
+                        showsInspector: showsInspector, search: workspace.search,
                         refreshing: BPHomebrewManager.sharedManager().reloadInFlight)
                         .equatable()
                 }
@@ -263,23 +280,19 @@ private struct BPWorkspaceView: View {
             get: { showsInspector },
             set: { workspace.inspectorVisible = $0 }
         )) {
-            if workspace.isPrepared, let host = workspace.controller.selectedFormulaeViewController?.inspectorHost {
-                host.content
-                    .inspectorColumnWidth(min: 250, ideal: 320, max: 420)
-                    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
-                        if width > 0 { inspectorWidth = width }
-                        DispatchQueue.main.async { alignWindowMinimum() }
-                    }
+            VStack(spacing: 0) {
+                if workspace.isPrepared, let host = workspace.controller.selectedFormulaeViewController?.inspectorHost {
+                    host.content
+                        .frame(minWidth: 0, maxWidth: .infinity)
+                        .toolbar {
+                            ToolbarItem(id: "inspectorToggle", placement: .primaryAction) {
+                                BPInspectorToggle(workspace: workspace)
+                            }
+                        }
+                }
             }
+            .inspectorColumnWidth(min: 250, ideal: 320, max: 600)
         }
-        .onReceive(NotificationCenter.default.publisher(for: NSToolbar.willAddItemNotification)) { _ in
-            DispatchQueue.main.async { alignWindowMinimum() }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: NSControl.textDidBeginEditingNotification)) { _ in
-            DispatchQueue.main.async { alignWindowMinimum() }
-        }
-        .onChange(of: searchFocused) { _, _ in DispatchQueue.main.async { alignWindowMinimum() } }
-        .onChange(of: workspace.requestSearch) { _, _ in searchFocused = true }
         .onChange(of: workspace.search) { _, query in
             workspace.controller.performSearch(with: query)
         }
@@ -300,19 +313,9 @@ private struct BPWorkspaceView: View {
         guard let window = BPAppDelegate.current?.window ?? NSApp.windows.first(where: {
             BPAppDelegate.isWorkspaceWindow($0, title: workspace.title)
         }) else { return }
-        if let toolbar = window.toolbar,
-           let inspectorIndex = toolbar.items.firstIndex(where: { $0.itemIdentifier.rawValue == "packageInspector" }),
-           let searchIndex = toolbar.items.firstIndex(where: { $0.itemIdentifier.rawValue == "com.apple.SwiftUI.search" }),
-           inspectorIndex < searchIndex {
-            let identifier = toolbar.items[inspectorIndex].itemIdentifier
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0
-                context.allowsImplicitAnimation = false
-                toolbar.removeItem(at: inspectorIndex)
-                toolbar.insertItem(withItemIdentifier: identifier, at: searchIndex)
-            }
-        }
-        let reservedWidth = showsInspector ? inspectorWidth : 0
+        // Use the column's minimum, not its live width. Changing the window's
+        // minimum during a divider drag interferes with native split-view tracking.
+        let reservedWidth: CGFloat = showsInspector ? 250 : 0
         let minimumWidth = 800 + reservedWidth
         if abs(window.contentMinSize.width - minimumWidth) > 0.5 {
             var minimum = window.contentMinSize
@@ -403,25 +406,32 @@ private struct BPWorkspaceView: View {
     }
 }
 
-/// Keep toolbar structure independent of package selection. Enablement updates inside
-/// the action view, without rebuilding SwiftUI's toolbar preferences and item order.
+/// Keep search and toolbar preferences independent of package selection. Action
+/// views observe enablement separately. An explicitly sized search item avoids
+/// automatic search placement migrating above the full-height inspector.
 @MainActor
 private struct BPWorkspaceToolbarChrome: View, Equatable {
     let workspace: BPWorkspace
     let isTool: Bool
     let showsInspector: Bool
-    let inspectorWidth: CGFloat
+    let search: String
     let refreshing: Bool
 
     nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.workspace === rhs.workspace && lhs.isTool == rhs.isTool &&
-        lhs.showsInspector == rhs.showsInspector && lhs.inspectorWidth == rhs.inspectorWidth &&
+        lhs.showsInspector == rhs.showsInspector && lhs.search == rhs.search &&
         lhs.refreshing == rhs.refreshing
     }
 
     var body: some View {
         Color.clear.frame(width: 0, height: 0)
             .toolbar {
+                ToolbarItem(id: "workspaceSidebarToggle", placement: .navigation) {
+                    BPSidebarToggle(workspace: workspace)
+                }
+                ToolbarItem(id: "packageSearch", placement: .principal) {
+                    BPToolbarSearchField(workspace: workspace, search: search)
+                }
                 if !isTool {
                     ToolbarItem(id: "packageInstall", placement: .navigation) {
                         BPWorkspacePackageAction(workspace: workspace, action: .install)
@@ -443,32 +453,81 @@ private struct BPWorkspaceToolbarChrome: View, Equatable {
                     .help("Refresh packages (⌘R)")
                     .disabled(refreshing)
                 }
-                if !isTool {
-                    if #available(macOS 26.0, *) {
-                        ToolbarItem(id: "packageInspector", placement: .primaryAction) { inspectorToolbar }
-                            .sharedBackgroundVisibility(.hidden)
-                    } else {
-                        ToolbarItem(id: "packageInspector", placement: .primaryAction) { inspectorToolbar }
+                if !isTool && !showsInspector {
+                    ToolbarItem(id: "showInspector", placement: .primaryAction) {
+                        BPInspectorToggle(workspace: workspace)
                     }
                 }
             }
     }
 
-    private var inspectorToolbar: some View {
-        HStack {
-            Spacer(minLength: 0)
-            Button("Package Inspector", systemImage: "sidebar.right") { workspace.inspectorVisible.toggle() }
-                .labelStyle(.iconOnly)
-                .buttonStyle(.borderless)
-                .frame(width: 28, height: 28)
-                .help("Show or hide package details")
-                .accessibilityIdentifier("workspace.toggleInspector")
-        }
-        .padding(.horizontal, 8)
-        .frame(width: showsInspector ? inspectorWidth : 44, alignment: .trailing)
-        .accessibilityElement(children: .contain)
+}
+
+@MainActor
+private struct BPSidebarToggle: View {
+    @ObservedObject var workspace: BPWorkspace
+
+    private var isCollapsed: Bool { workspace.columnVisibility == .detailOnly }
+    private var title: String {
+        NSLocalizedString(isCollapsed ? "Show Sidebar" : "Hide Sidebar", comment: "Sidebar toolbar toggle")
     }
 
+    var body: some View {
+        Button {
+            workspace.columnVisibility = isCollapsed ? .all : .detailOnly
+        } label: {
+            Label(title, systemImage: "sidebar.left")
+        }
+        .help(title)
+        .accessibilityIdentifier("workspace.toggleSidebar")
+    }
+}
+
+@MainActor
+private struct BPToolbarSearchField: View {
+    let workspace: BPWorkspace
+    let search: String
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+            TextField("Search packages", text: Binding(get: { workspace.search }, set: { workspace.search = $0 }))
+                .textFieldStyle(.plain)
+                .accessibilityIdentifier("workspace.search")
+                .onExitCommand {
+                    if !workspace.search.isEmpty { workspace.search = "" }
+                    else { BPAppDelegate.current?.window?.makeFirstResponder(nil) }
+                }
+            Button {
+                workspace.search = ""
+                workspace.focusToolbarSearch()
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Clear search")
+            .opacity(search.isEmpty ? 0 : 1)
+            .disabled(search.isEmpty)
+        }
+        .padding(.horizontal, 10)
+        .frame(width: 220, height: 30)
+        .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
+    }
+
+}
+
+@MainActor
+private struct BPInspectorToggle: View {
+    let workspace: BPWorkspace
+
+    var body: some View {
+        Button("Package Inspector", systemImage: "sidebar.right") { workspace.inspectorVisible.toggle() }
+            .help("Show or hide package details")
+            .accessibilityIdentifier("workspace.toggleInspector")
+    }
 }
 
 @MainActor
@@ -558,9 +617,14 @@ private struct BPSettingsView: View {
 @MainActor
 private struct BPSceneCommands: Commands {
     let workspace: BPWorkspace
+    @AppStorage(BPPreferences.compactPackageRowsKey) private var compactPackageRows = false
     @Environment(\.openWindow) private var openWindow
     var body: some Commands {
         let _ = installSceneOpener()
+        CommandGroup(after: .sidebar) {
+            Toggle("Compact Package Rows", isOn: $compactPackageRows)
+                .accessibilityIdentifier("menu.view.compactPackageRows")
+        }
         CommandGroup(after: .windowArrangement) {
             Button("Show Cakebrew") { BPAppDelegate.current?.showMainWindow() }
                 .keyboardShortcut("0")
@@ -619,6 +683,44 @@ private struct BPDebugCommands: Commands {
                 }
             }
         }
+    }
+}
+#endif
+
+@MainActor
+private func BPToolbarSearchTextField(in view: NSView) -> NSTextField? {
+    if let field = view as? NSTextField, field.isEditable { return field }
+    return view.subviews.lazy.compactMap { BPToolbarSearchTextField(in: $0) }.first
+}
+
+#if DEBUG
+/// UI tests sample during animations: XCTest's normal element queries wait for
+/// idle and would miss a search field that moves away and then returns.
+@MainActor
+private final class BPToolbarSearchLayoutRecorder {
+    private var timer: Timer?
+    private let output: FileHandle?
+    private var previous: CGRect?
+
+    init(path: String) {
+        FileManager.default.createFile(atPath: path, contents: nil)
+        output = FileHandle(forWritingAtPath: path)
+        let timer = Timer(timeInterval: 1.0 / 120, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.sample() }
+        }
+        self.timer = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
+    private func sample() {
+        guard let window = BPAppDelegate.current?.window,
+              let field = window.toolbar?.items.compactMap(\.view).compactMap({ BPToolbarSearchTextField(in: $0) }).first,
+              field.window != nil else { return }
+        let frame = field.convert(field.bounds, to: nil)
+        guard frame.width > 0, frame != previous else { return }
+        previous = frame
+        let line = "\(frame.minX),\(frame.width)\n"
+        if let data = line.data(using: .utf8) { try? output?.write(contentsOf: data) }
     }
 }
 #endif

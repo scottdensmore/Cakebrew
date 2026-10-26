@@ -9,8 +9,12 @@ internal func BPMainMenuLocalizedTitle(_ key: String, fallback: String) -> Strin
 }
 
 @MainActor
-private final class BPInstalledPackageListPresentation: ObservableObject {
-    @Published var state = BPInstalledPackageListState()
+final class BPInstalledPackageListPresentation: ObservableObject {
+    @Published var state = BPInstalledPackageListState() {
+        didSet { tableSelectionGeneration &+= 1 }
+    }
+    private var tableSelectionGeneration: UInt64 = 0
+    @Published var summaries: [BPFormulaInformationIdentity: String] = [:]
     @Published var sortOrder: [KeyPathComparator<BPInstalledPackageRow>] = []
     var contextMenu: NSMenu?
     var isSyncingTableSelection = false
@@ -18,6 +22,30 @@ private final class BPInstalledPackageListPresentation: ObservableObject {
     var onSortChanged: ((String?, Bool) -> Void)?
     var onTableAction: ((Int) -> Void)?
     var onSpacePressed: (() -> Void)?
+
+    /// Table may write its selection binding during SwiftUI reconciliation.
+    /// Publish the selection and notify the inspector after that update ends.
+    /// A newer table request or any programmatic state change supersedes it.
+    func selectFromTable(_ ids: Set<BPFormulaInformationIdentity>) {
+        guard !isSyncingTableSelection else { return }
+        tableSelectionGeneration &+= 1
+        let generation = tableSelectionGeneration
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.tableSelectionGeneration == generation else { return }
+            var next = self.state
+            next.select(ids: ids)
+            guard next.selectedIDs != self.state.selectedIDs else { return }
+            self.state = next
+            self.notifySelectionChanged()
+        }
+    }
+
+    func receiveSummary(_ summary: String?, for identity: BPFormulaInformationIdentity) {
+        guard state.index(ofName: identity.name, cask: identity.cask) >= 0,
+              let summary = summary?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !summary.isEmpty, summaries[identity] != summary else { return }
+        summaries[identity] = summary
+    }
 
     func notifySelectionChanged() {
         if let selected = state.selectedRow {
@@ -212,6 +240,18 @@ public final class BPInstalledPackageListHost: NSObject {
         }
     }
 
+    /// The SwiftUI scene passes cached metadata directly, without fetching info
+    /// or converting package rows into parallel Objective-C arrays.
+    public func updatePackages(_ rows: [BPInstalledPackageRow], mode: BPPackageListMode) {
+        let previousSelection = presentation.state.selectedIDs
+        presentation.state.replaceRows(rows, mode: mode)
+        let ids = Set(rows.map(\.id))
+        presentation.summaries = presentation.summaries.filter { ids.contains($0.key) }
+        if presentation.state.selectedIDs != previousSelection {
+            presentation.notifySelectionChanged()
+        }
+    }
+
     @objc(applySortColumnIdentifier:ascending:)
     public func applySort(columnIdentifier: String?, ascending: Bool) {
         guard let columnIdentifier,
@@ -315,21 +355,84 @@ public final class BPInstalledPackageListHost: NSObject {
 }
 
 @MainActor
+private struct BPPackageRowContent<Content: View>: View {
+    @AppStorage(BPPreferences.compactPackageRowsKey) private var compactRows = false
+    let alignment: Alignment
+    private let content: Content
+
+    init(alignment: Alignment = .leading, @ViewBuilder content: () -> Content) {
+        self.alignment = alignment
+        self.content = content()
+    }
+
+    var body: some View {
+        content.frame(maxWidth: .infinity, minHeight: compactRows ? 28 : 44, alignment: alignment)
+    }
+}
+
+@MainActor
+private struct BPPackageNameCell: View {
+    @ObservedObject var presentation: BPInstalledPackageListPresentation
+    @AppStorage(BPPreferences.compactPackageRowsKey) private var compactRows = false
+    let row: BPInstalledPackageRow
+
+    private var subtitle: String {
+        if let summary = presentation.summaries[row.id] ?? row.summary { return summary }
+        if presentation.state.mode == .repositories { return NSLocalizedString("Homebrew repository", comment: "") }
+        let kind = NSLocalizedString(row.cask ? "Cask" : "Formula", comment: "")
+        let parts = row.name.split(separator: "/")
+        return parts.count > 1 ? "\(kind) · \(parts.dropLast().joined(separator: "/"))" : kind
+    }
+
+    var body: some View {
+        BPPackageRowContent {
+            HStack(spacing: compactRows ? 8 : 12) {
+                Image(systemName: presentation.state.mode == .repositories ? "externaldrive" : (row.cask ? "app" : "shippingbox"))
+                    .font(.system(size: compactRows ? 14 : 21, weight: .regular))
+                    .foregroundStyle(.secondary)
+                    .frame(width: compactRows ? 18 : 28)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 7) {
+                        Text(row.name)
+                            .font(compactRows ? .body : .body.weight(.medium))
+                            .lineLimit(1)
+                            .accessibilityValue(row.name)
+                            .accessibilityIdentifier("package.row.\(row.name)")
+                        if row.isPinned {
+                            Label(NSLocalizedString("Sidebar_Item_Pinned", comment: ""), systemImage: "pin.fill")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                                .fixedSize()
+                        }
+                    }
+                    if !compactRows {
+                        Text(subtitle)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .accessibilityIdentifier("package.summary.\(row.name)")
+                    }
+                }
+                .padding(.vertical, compactRows ? 0 : 6)
+            }
+        }
+        .help(subtitle)
+    }
+
+}
+
+@MainActor
 private struct BPInstalledPackageListView: View {
     @ObservedObject var presentation: BPInstalledPackageListPresentation
     @State private var returningPackage: BPInstalledPackageRow?
+    @AppStorage(BPPreferences.compactPackageRowsKey) private var compactRows = false
 
     private var selectionSetBinding: Binding<Set<BPFormulaInformationIdentity>> {
         Binding(
             get: { presentation.state.selectedIDs },
-            set: { newValue in
-                guard !presentation.isSyncingTableSelection else { return }
-                let oldSelection = presentation.state.selectedIDs
-                presentation.state.select(ids: newValue)
-                if presentation.state.selectedIDs != oldSelection {
-                    presentation.notifySelectionChanged()
-                }
-            }
+            set: { presentation.selectFromTable($0) }
         )
     }
 
@@ -356,49 +459,50 @@ private struct BPInstalledPackageListView: View {
         )
     }
 
-    @ViewBuilder
     private func nameCell(_ row: BPInstalledPackageRow) -> some View {
-        HStack(spacing: 5) {
-            Text(row.name)
+        BPPackageNameCell(presentation: presentation, row: row)
+    }
+
+    private func versionCell(_ row: BPInstalledPackageRow, latest: Bool = false) -> some View {
+        let version = latest ? row.latestVersion : row.version
+        return BPPackageRowContent(alignment: .trailing) {
+            Text(version)
+                .font(.callout.weight(latest ? .medium : .regular))
+                .monospacedDigit()
+                .foregroundStyle(latest ? .primary : .secondary)
                 .lineLimit(1)
-                .accessibilityValue(row.name)
-                .accessibilityIdentifier("package.row.\(row.name)")
-            if row.isPinned {
-                Image(systemName: "pin.fill")
-                    .font(.system(size: NSFont.smallSystemFontSize))
-                    .foregroundStyle(.secondary)
-                    .accessibilityLabel(NSLocalizedString("Sidebar_Item_Pinned", comment: ""))
-            }
+                .accessibilityValue(version)
+                .help(version)
         }
     }
 
     private func statusText(for statusRank: Int) -> String {
         switch statusRank {
-        case 1:
-            return NSLocalizedString("Formula_Status_Installed", comment: "")
-        case 2:
-            return NSLocalizedString("Formula_Status_Outdated", comment: "")
-        default:
-            return NSLocalizedString("Formula_Status_Not_Installed", comment: "")
+        case 1: return NSLocalizedString("Formula_Status_Installed", comment: "")
+        case 2: return NSLocalizedString("Update available", comment: "")
+        default: return NSLocalizedString("Formula_Status_Not_Installed", comment: "")
         }
     }
 
-    @ViewBuilder
-    private func statusBadge(for statusRank: Int) -> some View {
-        let text = statusText(for: statusRank)
-        let tint: Color = (statusRank == 2) ? .orange : ((statusRank == 1) ? .green : .secondary)
-        Text(text)
-            .font(.caption)
-            .fontWeight(statusRank == 2 ? .medium : .regular)
-            .foregroundStyle(statusRank == 0 ? .secondary : .primary)
-            .lineLimit(1)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 2)
-            .background(
-                Capsule()
-                    .fill(tint.opacity(statusRank == 0 ? 0.10 : 0.16))
-            )
-            .accessibilityValue(text)
+    private func statusCell(_ row: BPInstalledPackageRow) -> some View {
+        let text = statusText(for: row.statusRank)
+        return BPPackageRowContent(alignment: .trailing) {
+            HStack(spacing: 5) {
+                if row.statusRank == 2 {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .foregroundStyle(.orange)
+                        .accessibilityHidden(true)
+                }
+                Text(text)
+                    .font(.caption.weight(row.statusRank == 2 ? .medium : .regular))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .accessibilityLabel(text)
+                    .accessibilityValue(text)
+                    .accessibilityIdentifier("package.status.\(row.name)")
+            }
+            .help(text)
+        }
     }
 
     @ViewBuilder
@@ -408,63 +512,49 @@ private struct BPInstalledPackageListView: View {
             Table(presentation.state.displayedRows, selection: selectionSetBinding, sortOrder: sortOrderBinding) {
                 TableColumn(BPMainMenuLocalizedTitle("A78-TI-Q8X.headerCell.title", fallback: "Name"), value: \.name) { row in
                     nameCell(row)
-                }
+                }.width(min: 180, ideal: 360)
             }
         } else if mode.showsLatestVersionColumn {
             Table(presentation.state.displayedRows, selection: selectionSetBinding, sortOrder: sortOrderBinding) {
                 TableColumn(BPMainMenuLocalizedTitle("A78-TI-Q8X.headerCell.title", fallback: "Name"), value: \.name) { row in
                     nameCell(row)
-                }
+                }.width(min: 180, ideal: 360)
                 TableColumn(BPMainMenuLocalizedTitle("h5d-xc-Jih.headerCell.title", fallback: "Version"), value: \.version) { row in
-                    Text(row.version)
-                        .font(.system(.body, design: .monospaced))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .accessibilityValue(row.version)
-                }
+                    versionCell(row)
+                }.width(min: 75, ideal: 100, max: 160)
                 TableColumn(BPMainMenuLocalizedTitle("d93-10-421.headerCell.title", fallback: "Latest Version"), value: \.latestVersion) { row in
-                    Text(row.latestVersion)
-                        .font(.system(.body, design: .monospaced))
-                        .fontWeight(.medium)
-                        .lineLimit(1)
-                        .accessibilityValue(row.latestVersion)
-                }
+                    versionCell(row, latest: true)
+                }.width(min: 90, ideal: 110, max: 160)
             }
         } else if mode.showsStatusColumn && !mode.showsInstalledVersionColumn {
             Table(presentation.state.displayedRows, selection: selectionSetBinding, sortOrder: sortOrderBinding) {
                 TableColumn(BPMainMenuLocalizedTitle("A78-TI-Q8X.headerCell.title", fallback: "Name"), value: \.name) { row in
                     nameCell(row)
-                }
+                }.width(min: 180, ideal: 360)
                 TableColumn(BPMainMenuLocalizedTitle("Be6-3F-p4b.headerCell.title", fallback: "Status"), value: \.statusRank) { row in
-                    statusBadge(for: row.statusRank)
-                }
+                    statusCell(row)
+                }.width(min: 100, ideal: 135, max: 160)
             }
         } else if mode.showsStatusColumn {
             Table(presentation.state.displayedRows, selection: selectionSetBinding, sortOrder: sortOrderBinding) {
                 TableColumn(BPMainMenuLocalizedTitle("A78-TI-Q8X.headerCell.title", fallback: "Name"), value: \.name) { row in
                     nameCell(row)
-                }
+                }.width(min: 180, ideal: 360)
                 TableColumn(BPMainMenuLocalizedTitle("h5d-xc-Jih.headerCell.title", fallback: "Version"), value: \.version) { row in
-                    Text(row.version)
-                        .font(.system(.body, design: .monospaced))
-                        .lineLimit(1)
-                        .accessibilityValue(row.version)
-                }
+                    versionCell(row)
+                }.width(min: 75, ideal: 100, max: 160)
                 TableColumn(BPMainMenuLocalizedTitle("Be6-3F-p4b.headerCell.title", fallback: "Status"), value: \.statusRank) { row in
-                    statusBadge(for: row.statusRank)
-                }
+                    statusCell(row)
+                }.width(min: 100, ideal: 135, max: 160)
             }
         } else {
             Table(presentation.state.displayedRows, selection: selectionSetBinding, sortOrder: sortOrderBinding) {
                 TableColumn(BPMainMenuLocalizedTitle("A78-TI-Q8X.headerCell.title", fallback: "Name"), value: \.name) { row in
                     nameCell(row)
-                }
+                }.width(min: 180, ideal: 360)
                 TableColumn(BPMainMenuLocalizedTitle("h5d-xc-Jih.headerCell.title", fallback: "Version"), value: \.version) { row in
-                    Text(row.version)
-                        .font(.system(.body, design: .monospaced))
-                        .lineLimit(1)
-                        .accessibilityValue(row.version)
-                }
+                    versionCell(row)
+                }.width(min: 75, ideal: 100, max: 160)
             }
         }
     }
@@ -489,7 +579,13 @@ private struct BPInstalledPackageListView: View {
                 .padding(.horizontal, 12).padding(.top, 8)
             }
             modeTable
-                .tableStyle(.inset(alternatesRowBackgrounds: true))
+                // Table caches its measured row height. A density change needs
+                // a fresh layout; selection and sorting live in presentation.
+                .id(compactRows)
+                .tableStyle(.inset)
+                .alternatingRowBackgrounds(.disabled)
+                .scrollContentBackground(.hidden)
+                .background(.background)
                 .accessibilityLabel(NSLocalizedString("Formulae", comment: ""))
                 .contextMenu(forSelectionType: BPFormulaInformationIdentity.self) { ids in
                     if presentation.state.mode == .pinned {
@@ -515,8 +611,43 @@ private struct BPInstalledPackageListView: View {
                 }
                 .onKeyPress(.space) { presentation.onSpacePressed?(); return .handled }
                 .onDeleteCommand { presentation.onTableAction?(1) }
+                .onReceive(NotificationCenter.default.publisher(for: BPFormula.didUpdateNotification).receive(on: RunLoop.main)) { notification in
+                    guard let formula = notification.object as? BPFormula, let name = formula.name else { return }
+                    let identity = BPFormulaInformationIdentity(name: name, cask: formula.cask, mode: .general)
+                    presentation.receiveSummary(formula.shortDescription, for: identity)
+                }
         }
         .sheet(item: $returningPackage) { BPPinnedReturnSheet(row: $0) }
     }
 }
 
+
+#if DEBUG
+@MainActor
+private struct BPPackageBrowserPreview: View {
+    private let host: BPInstalledPackageListHost = {
+        let host = BPInstalledPackageListHost()
+        host.updatePackages([
+            BPInstalledPackageRow(name: "ffmpeg", cask: false, version: "7.1.1", latestVersion: "7.1.1", statusRank: 1, isPinned: false, summary: "Record, convert, and stream audio and video"),
+            BPInstalledPackageRow(name: "git", cask: false, version: "2.47.0", latestVersion: "2.48.1", statusRank: 2, isPinned: false, summary: "Distributed version control"),
+            BPInstalledPackageRow(name: "node@22", cask: false, version: "22.11.0", latestVersion: "22.11.0", statusRank: 1, isPinned: true, summary: "JavaScript runtime built on V8"),
+            BPInstalledPackageRow(name: "ripgrep", cask: false, version: "14.1.0", latestVersion: "14.1.0", statusRank: 1, isPinned: false, summary: "Search your files with speed and precision"),
+            BPInstalledPackageRow(name: "visual-studio-code", cask: true, version: "1.96.2", latestVersion: "1.96.2", statusRank: 1, isPinned: false, summary: "Code editor with integrated debugging"),
+            BPInstalledPackageRow(name: "wget", cask: false, version: "1.25.0", latestVersion: "1.25.0", statusRank: 1, isPinned: false, summary: "Retrieve files from the web")
+        ], mode: .search)
+        return host
+    }()
+
+    var body: some View {
+        host.content.frame(width: 720, height: 460)
+    }
+}
+
+#Preview("Package Browser · Light") {
+    BPPackageBrowserPreview().preferredColorScheme(.light)
+}
+
+#Preview("Package Browser · Dark") {
+    BPPackageBrowserPreview().preferredColorScheme(.dark)
+}
+#endif

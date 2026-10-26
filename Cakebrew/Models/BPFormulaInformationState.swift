@@ -294,6 +294,7 @@ public struct BPInstalledPackageRow: Identifiable, Equatable, Sendable {
     public let latestVersion: String
     public let statusRank: Int
     public let isPinned: Bool
+    public let summary: String?
     public let lowercasedName: String
 
     public var id: BPFormulaInformationIdentity { identity }
@@ -305,12 +306,15 @@ public struct BPInstalledPackageRow: Identifiable, Equatable, Sendable {
                 version: String?,
                 latestVersion: String?,
                 statusRank: Int,
-                isPinned: Bool) {
+                isPinned: Bool,
+                summary: String? = nil) {
         self.identity = BPFormulaInformationIdentity(name: name, cask: cask, mode: .general)
         self.version = version ?? ""
         self.latestVersion = latestVersion ?? ""
         self.statusRank = statusRank
         self.isPinned = isPinned
+        let trimmedSummary = summary?.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.summary = trimmedSummary.flatMap { $0.isEmpty ? nil : $0 }
         self.lowercasedName = name.lowercased()
     }
 }

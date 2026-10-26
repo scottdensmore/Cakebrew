@@ -12,6 +12,7 @@ public final class BPPreferences: NSObject {
     public static let sortAscendingKey = "BPSortAscending"
     public static let zapCasksOnUninstallKey = "BPZapCasksOnUninstall"
     public static let automaticAppUpdateCheckEnabledKey = "BPAutomaticAppUpdateCheckEnabled"
+    public static let compactPackageRowsKey = "BPCompactPackageRows"
     public static let showMenuBarExtraKey = "BPShowMenuBarExtra"
 
     @objc public static func registerDefaults() {
@@ -23,7 +24,8 @@ public final class BPPreferences: NSObject {
             sortAscendingKey: true,
             zapCasksOnUninstallKey: false,
             automaticAppUpdateCheckEnabledKey: true,
-            showMenuBarExtraKey: false
+            showMenuBarExtraKey: false,
+            compactPackageRowsKey: false
         ])
     }
 

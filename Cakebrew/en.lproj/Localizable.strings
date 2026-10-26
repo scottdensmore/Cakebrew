@@ -450,3 +450,19 @@
 
 "Choose the original package to return to. Cakebrew found these possible matches." = "Choose the original package to return to. Cakebrew found these possible matches.";
 "Choose a Package…" = "Choose a Package…";
+
+"Clear search" = "Clear search";
+
+"Compact Package Rows" = "Compact Package Rows";
+
+"Homebrew repository" = "Homebrew repository";
+
+"Formula" = "Formula";
+
+"Cask" = "Cask";
+
+"Update available" = "Update available";
+
+/* Sidebar toolbar toggle */
+"Show Sidebar" = "Show Sidebar";
+"Hide Sidebar" = "Hide Sidebar";
