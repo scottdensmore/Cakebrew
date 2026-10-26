@@ -268,7 +268,7 @@ private struct BPWorkspaceView: View {
                 .navigationTitle(workspace.title)
                 .background {
                     BPWorkspaceToolbarChrome(workspace: workspace, isTool: workspace.isTool,
-                        showsInspector: showsInspector, search: workspace.search,
+                        search: workspace.search,
                         refreshing: BPHomebrewManager.sharedManager().reloadInFlight)
                         .equatable()
                 }
@@ -284,11 +284,6 @@ private struct BPWorkspaceView: View {
                 if workspace.isPrepared, let host = workspace.controller.selectedFormulaeViewController?.inspectorHost {
                     host.content
                         .frame(minWidth: 0, maxWidth: .infinity)
-                        .toolbar {
-                            ToolbarItem(id: "inspectorToggle", placement: .primaryAction) {
-                                BPInspectorToggle(workspace: workspace)
-                            }
-                        }
                 }
             }
             .inspectorColumnWidth(min: 250, ideal: 320, max: 600)
@@ -413,13 +408,12 @@ private struct BPWorkspaceView: View {
 private struct BPWorkspaceToolbarChrome: View, Equatable {
     let workspace: BPWorkspace
     let isTool: Bool
-    let showsInspector: Bool
     let search: String
     let refreshing: Bool
 
     nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.workspace === rhs.workspace && lhs.isTool == rhs.isTool &&
-        lhs.showsInspector == rhs.showsInspector && lhs.search == rhs.search &&
+        lhs.search == rhs.search &&
         lhs.refreshing == rhs.refreshing
     }
 
@@ -453,8 +447,8 @@ private struct BPWorkspaceToolbarChrome: View, Equatable {
                     .help("Refresh packages (⌘R)")
                     .disabled(refreshing)
                 }
-                if !isTool && !showsInspector {
-                    ToolbarItem(id: "showInspector", placement: .primaryAction) {
+                if !isTool {
+                    ToolbarItem(id: "workspaceInspectorToggle", placement: .primaryAction) {
                         BPInspectorToggle(workspace: workspace)
                     }
                 }
